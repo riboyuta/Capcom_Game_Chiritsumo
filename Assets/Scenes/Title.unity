@@ -275,7 +275,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0666726d906d2c4db5928351b3a1c42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TitleSceneController
-  startKey: 94
+  startKey: 102
 --- !u!4 &855637338
 Transform:
   m_ObjectHideFlags: 0

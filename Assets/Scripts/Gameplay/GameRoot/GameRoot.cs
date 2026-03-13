@@ -57,7 +57,7 @@ public sealed class GameRoot : MonoBehaviour
     {
         readyTimer -= Time.deltaTime;
 
-        if (readyTimer <= 0f)
+        if (readyTimer > 0f)
         {
             return;
         }
@@ -93,7 +93,8 @@ public sealed class GameRoot : MonoBehaviour
         isTransitioning = true;
         SceneFlow.LoadResult();
     }
-
+    // デバッグ表示用に、現在の状態名を文字列で返す
     public string GetCurrentStateName() { return currentState.ToString(); }
+    // デバッグ表示用に、残りプレイ時間を返す
     public float GetRemainingPlayTime() { return playTimer; }
 }

@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 public sealed class TitleSceneController : MonoBehaviour
 {
     [Header("デバッグ入力")]
-    [SerializeField] private Key startKey = Key.Enter;
+    [SerializeField] private Key startKey = Key.F9;
 
     //入力連打で二重遷移防止
 
