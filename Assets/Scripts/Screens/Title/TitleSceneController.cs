@@ -3,8 +3,6 @@ using UnityEngine.InputSystem;
 
 public sealed class TitleSceneController : MonoBehaviour
 {
-    [Header("デバッグ入力")]
-    [SerializeField] private Key startKey = Key.F9;
 
     //入力連打で二重遷移防止
 
@@ -22,16 +20,11 @@ public sealed class TitleSceneController : MonoBehaviour
             return;
         }
 
-        var keyboard = Keyboard.current;
-        if (keyboard == null)
-        {
-            return;
-        }
-
-        if (keyboard[startKey].wasPressedThisFrame)
+        if (BootSceneController.Instance.DebugInput.NextScenePressed)
         {
             StartGame();
         }
+
     }
 
     public void StartGame()

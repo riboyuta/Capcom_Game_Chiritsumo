@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace Game.Input
 {
-
-    /// RawInputSource の低レベル入力を、プレイヤー用の意味入力へ変換する。
-    /// デバイス API には一切触れない。
-    
     public sealed class PlayerInputReader
     {
         private const float MoveInputEpsilon = 0.0001f;
@@ -34,8 +30,6 @@ namespace Game.Input
             _bindings = bindings ?? throw new ArgumentNullException(nameof(bindings));
         }
 
-        /// このフレームのプレイヤー意味入力を更新する。
-        /// RawInputSource が先に Update 済みである前提。
         public void Update()
         {
             Move = ResolveMove();
@@ -65,7 +59,7 @@ namespace Game.Input
             return _rawInputSource.KeyboardMoveVector;
         }
 
-        private RawButtonFrameState ResolveActionState(PlayerActionBinding binding)
+        private RawButtonFrameState ResolveActionState(InputActionBinding binding)
         {
             bool primaryCurrent = _rawInputSource.IsKeyHeld(binding.PrimaryKeyboardKey);
             bool primaryPressed = _rawInputSource.WasKeyPressedThisFrame(binding.PrimaryKeyboardKey);
@@ -92,7 +86,6 @@ namespace Game.Input
                 releasedThisFrame: !currentHeld && previousHeld);
         }
 
-        /// current / pressed / released から前フレームの held を復元する。
         private static bool ReconstructPreviousHeld(
             bool currentHeld,
             bool pressedThisFrame,
@@ -100,13 +93,9 @@ namespace Game.Input
         {
             if (currentHeld)
             {
-                // 現在押されているなら、
-                // 今フレーム押されたのでなければ前フレームも押されていた。
                 return !pressedThisFrame;
             }
 
-            // 現在押されていないなら、
-            // 今フレーム離された時だけ前フレームは押されていた。
             return releasedThisFrame;
         }
     }

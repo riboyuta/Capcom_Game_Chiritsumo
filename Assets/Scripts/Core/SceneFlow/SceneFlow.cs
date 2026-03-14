@@ -1,5 +1,5 @@
-using UnityEngine.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public static class SceneFlow
 {
@@ -18,15 +18,67 @@ public static class SceneFlow
         Debug.Log("[SceneFlow] LoadGame requested.");
         SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
     }
+
     public static void LoadResult()
     {
         Debug.Log("[SceneFlow] LoadResult requested.");
         SceneManager.LoadScene(ResultSceneName, LoadSceneMode.Single);
     }
 
-    public static void ReloadGame()
+    public static void ReloadCurrent()
     {
-        Debug.Log("[SceneFlow] ReloadGame requested.");
-        SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        Debug.Log($"[SceneFlow] ReloadCurrent requested. scene={currentSceneName}");
+        SceneManager.LoadScene(currentSceneName, LoadSceneMode.Single);
+    }
+
+    public static void LoadDebugNextScene()
+    {
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        Debug.Log($"[SceneFlow] LoadDebugNextScene requested. current={currentSceneName}");
+
+        switch (currentSceneName)
+        {
+            case TitleSceneName:
+                LoadGame();
+                break;
+
+            case GameSceneName:
+                LoadResult();
+                break;
+
+            case ResultSceneName:
+                LoadTitle();
+                break;
+
+            default:
+                Debug.LogWarning($"[SceneFlow] Unknown scene for debug next: {currentSceneName}");
+                break;
+        }
+    }
+
+    public static void LoadDebugPreviousScene()
+    {
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        Debug.Log($"[SceneFlow] LoadDebugPreviousScene requested. current={currentSceneName}");
+
+        switch (currentSceneName)
+        {
+            case TitleSceneName:
+                LoadResult();
+                break;
+
+            case GameSceneName:
+                LoadTitle();
+                break;
+
+            case ResultSceneName:
+                LoadGame();
+                break;
+
+            default:
+                Debug.LogWarning($"[SceneFlow] Unknown scene for debug previous: {currentSceneName}");
+                break;
+        }
     }
 }

@@ -18,12 +18,7 @@ public sealed class GameRoot : MonoBehaviour
     private float readyTimer;
     private bool isTransitioning;
 
-    private InputReader inputReader;
 
-    private void Awake()
-    {
-        inputReader = new InputReader();
-    }
 
     private void Start()
     {
@@ -32,7 +27,6 @@ public sealed class GameRoot : MonoBehaviour
 
     private void Update()
     {
-        inputReader.Update();
 
         if (isTransitioning)
         {
@@ -81,12 +75,11 @@ public sealed class GameRoot : MonoBehaviour
 
     private void UpdatePlaying()
     {
-        if (inputReader.DebugTransitionPressed)
+        if (BootSceneController.Instance.DebugInput.NextScenePressed)
         {
             EnterResult();
             return;
         }
-
         playTimer -= Time.deltaTime;
 
         if (playTimer > 0f)
