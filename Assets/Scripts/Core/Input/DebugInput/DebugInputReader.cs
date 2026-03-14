@@ -4,20 +4,69 @@ namespace Game.Input
 {
     public sealed class DebugInputReader
     {
+        
+
+        private bool IsDebugInputEnabled =
+#if UNITY_EDITOR 
+            true;
+#else
+            false;
+#endif
+
         private readonly RawInputSource _rawInputSource;
         private readonly DebugInputBindings _bindings;
 
-        public bool ToggleDebugViewPressed =>
-            _rawInputSource.WasKeyPressedThisFrame(_bindings.ToggleDebugViewKey);
+        public bool ToggleDebugViewPressed
+        {
+            get
+            {
+                if (!IsDebugInputEnabled)
+                {
+                    return false;
+                }
 
-        public bool ReloadScenePressed =>
-            _rawInputSource.WasKeyPressedThisFrame(_bindings.ReloadSceneKey);
+                return _rawInputSource.WasKeyPressedThisFrame(_bindings.ToggleDebugViewKey);
+            }
+        }
 
-        public bool NextScenePressed =>
-            _rawInputSource.WasKeyPressedThisFrame(_bindings.NextSceneKey);
+        public bool ReloadScenePressed
+        {
+            get
+            {
+                if (!IsDebugInputEnabled)
+                {
+                    return false;
+                }
 
-        public bool PreviousScenePressed =>
-            _rawInputSource.WasKeyPressedThisFrame(_bindings.PreviousSceneKey);
+                return _rawInputSource.WasKeyPressedThisFrame(_bindings.ReloadSceneKey);
+            }
+        }
+
+        public bool NextScenePressed
+        {
+            get
+            {
+                if (!IsDebugInputEnabled)
+                {
+                    return false;
+                }
+
+                return _rawInputSource.WasKeyPressedThisFrame(_bindings.NextSceneKey);
+            }
+        }
+
+        public bool PreviousScenePressed
+        {
+            get
+            {
+                if (!IsDebugInputEnabled)
+                {
+                    return false;
+                }
+
+                return _rawInputSource.WasKeyPressedThisFrame(_bindings.PreviousSceneKey);
+            }
+        }
 
         public DebugInputReader(RawInputSource rawInputSource, DebugInputBindings bindings)
         {
