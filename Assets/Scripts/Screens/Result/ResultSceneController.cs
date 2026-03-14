@@ -3,8 +3,7 @@ using UnityEngine.InputSystem;
 
 public sealed class ResultSceneController : MonoBehaviour
 {
-    [Header("デバッグ入力")]
-    [SerializeField] private Key returnToTitleKey = Key.F9;
+
     //入力連打で二重遷移防止
     private bool isTransitioning;
 
@@ -20,13 +19,7 @@ public sealed class ResultSceneController : MonoBehaviour
             return;
         }
 
-        var keyboard = Keyboard.current;
-        if (keyboard == null)
-        {
-            return;
-        }
-
-        if (keyboard[returnToTitleKey].wasPressedThisFrame)
+        if (BootSceneController.Instance.DebugInput.NextScenePressed)
         {
             ReturnToTitle();
         }

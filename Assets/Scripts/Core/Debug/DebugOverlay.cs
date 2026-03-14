@@ -14,8 +14,7 @@ public sealed class DebugOverlay : MonoBehaviour
     // 実行中にキーで表示ON/OFFを切り替えられるようにするか
     [SerializeField] private bool allowRuntimeToggle = true;
 
-    // 実行中に表示を切り替えるキー
-    [SerializeField] private Key toggleKey = Key.F1;
+
 
     [Header("レイアウト設定")]
     // 左上からどの位置に表示を始めるか
@@ -34,17 +33,13 @@ public sealed class DebugOverlay : MonoBehaviour
         {
             return;
         }
-        var keyboard = Keyboard.current;
-        if (keyboard == null)
-        {
-            return;
-        }
 
-        // 指定キーが押されたら表示/非表示を反転する
-        if (keyboard[toggleKey].wasPressedThisFrame)
+
+        if (BootSceneController.Instance.DebugInput.ToggleDebugViewPressed)
         {
             isVisible = !isVisible;
         }
+
     }
 
     private void OnGUI()
