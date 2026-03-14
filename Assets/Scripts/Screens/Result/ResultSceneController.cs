@@ -34,6 +34,7 @@ public sealed class ResultSceneController : MonoBehaviour
 
     public void ReturnToTitle()
     {
+        
         if (isTransitioning)
         {
             return;

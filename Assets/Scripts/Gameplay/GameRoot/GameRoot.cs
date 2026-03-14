@@ -18,6 +18,13 @@ public sealed class GameRoot : MonoBehaviour
     private float readyTimer;
     private bool isTransitioning;
 
+    private InputReader inputReader;
+
+    private void Awake()
+    {
+        inputReader = new InputReader();
+    }
+
     private void Start()
     {
         EnterReady();
@@ -25,6 +32,8 @@ public sealed class GameRoot : MonoBehaviour
 
     private void Update()
     {
+        inputReader.Update();
+
         if (isTransitioning)
         {
             return;
@@ -72,6 +81,12 @@ public sealed class GameRoot : MonoBehaviour
 
     private void UpdatePlaying()
     {
+        if (inputReader.DebugTransitionPressed)
+        {
+            EnterResult();
+            return;
+        }
+
         playTimer -= Time.deltaTime;
 
         if (playTimer > 0f)
@@ -93,8 +108,7 @@ public sealed class GameRoot : MonoBehaviour
         isTransitioning = true;
         SceneFlow.LoadResult();
     }
-    // デバッグ表示用に、現在の状態名を文字列で返す
+
     public string GetCurrentStateName() { return currentState.ToString(); }
-    // デバッグ表示用に、残りプレイ時間を返す
     public float GetRemainingPlayTime() { return playTimer; }
 }
