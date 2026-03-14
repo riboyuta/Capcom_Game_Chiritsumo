@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 public sealed class ResultSceneController : MonoBehaviour
 {
     [Header("デバッグ入力")]
-    [SerializeField] private Key returnToTitleKey = Key.Enter;
+    [SerializeField] private Key returnToTitleKey = Key.F9;
     //入力連打で二重遷移防止
     private bool isTransitioning;
 
@@ -34,6 +34,7 @@ public sealed class ResultSceneController : MonoBehaviour
 
     public void ReturnToTitle()
     {
+        
         if (isTransitioning)
         {
             return;

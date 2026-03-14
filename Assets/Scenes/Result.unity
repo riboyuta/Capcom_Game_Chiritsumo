@@ -412,7 +412,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1340831152419e44ca7ab347bdff5ca6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ResultSceneController
-  returnToTitleKey: 94
+  returnToTitleKey: 102
 --- !u!4 &1904320903
 Transform:
   m_ObjectHideFlags: 0
