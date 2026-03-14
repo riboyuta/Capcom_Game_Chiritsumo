@@ -18,6 +18,13 @@ public sealed class GameRoot : MonoBehaviour
     private float readyTimer;
     private bool isTransitioning;
 
+    private InputReader inputReader;
+
+    private void Awake()
+    {
+        inputReader = new InputReader();
+    }
+
     private void Start()
     {
         EnterReady();
@@ -25,6 +32,8 @@ public sealed class GameRoot : MonoBehaviour
 
     private void Update()
     {
+        inputReader.Update();
+
         if (isTransitioning)
         {
             return;
@@ -57,7 +66,7 @@ public sealed class GameRoot : MonoBehaviour
     {
         readyTimer -= Time.deltaTime;
 
-        if (readyTimer <= 0f)
+        if (readyTimer > 0f)
         {
             return;
         }
@@ -72,6 +81,12 @@ public sealed class GameRoot : MonoBehaviour
 
     private void UpdatePlaying()
     {
+        if (inputReader.DebugTransitionPressed)
+        {
+            EnterResult();
+            return;
+        }
+
         playTimer -= Time.deltaTime;
 
         if (playTimer > 0f)
