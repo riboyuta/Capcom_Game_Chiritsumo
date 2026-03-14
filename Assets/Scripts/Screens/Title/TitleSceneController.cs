@@ -44,4 +44,15 @@ public sealed class TitleSceneController : MonoBehaviour
         isTransitioning = true;
         SceneFlow.LoadGame();
     }
+
+    public void ExitGame()
+    {
+        Debug.Log("[TitleSceneController] ExitGame requested.");
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
 }
