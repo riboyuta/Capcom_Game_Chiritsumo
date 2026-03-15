@@ -16,22 +16,22 @@ public abstract class EnemyAttackBase : MonoBehaviour
     }
 
     [Header("Base Attack Settings")]
-    [SerializeField] protected string m_attack_name = "Attack";  // 攻撃の名前
-    [SerializeField] protected int m_priority = 0;                 // 攻撃の優先度（高いほど優先される）
-    [SerializeField] protected float m_cooldown = 1.0f;            // 攻撃のクールダウン時間（秒）
+    [SerializeField] protected string attackName = "Attack";       // 攻撃の名前
+    [SerializeField] protected int priority = 0;                    // 攻撃の優先度（高いほど優先される）
+    [SerializeField] protected float cooldown = 1.0f;               // 攻撃のクールダウン時間（秒）
 
     [Header("Debug")]
-    [SerializeField] protected bool m_show_debug_log = false;      // デバッグログの表示フラグ
+    [SerializeField] protected bool showDebugLog = false;           // デバッグログの表示フラグ
 
-    protected bool m_is_running = false;                           // 攻撃実行中かどうか
-    protected float m_last_attack_time = -999.0f;                  // 最後に攻撃を実行した時刻
-    protected AttackState m_attack_state = AttackState.Idle;       // 現在の攻撃状態
+    protected bool isRunning = false;                               // 攻撃実行中かどうか
+    protected float lastAttackTime = -999.0f;                       // 最後に攻撃を実行した時刻
+    protected AttackState attackState = AttackState.Idle;           // 現在の攻撃状態
 
     // プロパティ：外部からアクセス可能な読み取り専用情報
-    public string AttackName => m_attack_name;       // 攻撃名
-    public int Priority => m_priority;               // 優先度
-    public bool IsRunning => m_is_running;           // 実行中フラグ
-    public AttackState State => m_attack_state;      // 現在の状態
+    public string AttackName => attackName;       // 攻撃名
+    public int Priority => priority;              // 優先度
+    public bool IsRunning => isRunning;           // 実行中フラグ
+    public AttackState State => attackState;      // 現在の状態
 
     /// <summary>
     /// 攻撃を開始できるかどうかを判定
@@ -39,13 +39,13 @@ public abstract class EnemyAttackBase : MonoBehaviour
     public bool CanStart(EnemyContext context)
     {
         // 既に実行中の場合は開始できない
-        if (m_is_running)
+        if (isRunning)
         {
             return false;
         }
 
         // クールダウン中は開始できない
-        if (Time.time < m_last_attack_time + m_cooldown)
+        if (Time.time < lastAttackTime + cooldown)
         {
             return false;
         }
