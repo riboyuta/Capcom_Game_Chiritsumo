@@ -28,12 +28,10 @@ public sealed class PlayerDebugView : MonoBehaviour
             return;
         }
 
-        // 画面デバッグ表示用のラベルスタイルを初期化する。
-        labelStyle = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = 16,
-            normal = { textColor = Color.white }
-        };
+
+        labelStyle = new GUIStyle();
+        labelStyle.fontSize = 16;
+        labelStyle.normal.textColor = Color.white;
     }
 
     private void OnGUI()
@@ -52,6 +50,8 @@ public sealed class PlayerDebugView : MonoBehaviour
         DrawLine($"Velocity X: {playerController.CurrentVelocity.x:F3}", startX, ref y, lineHeight);
         DrawLine($"Velocity Y: {playerController.CurrentVelocity.y:F3}", startX, ref y, lineHeight);
         DrawLine($"Jump Requested: {playerController.JumpRequested}", startX, ref y, lineHeight);
+        DrawLine($"Coyote Timer: {playerController.CoyoteTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"Jump Buffer Timer: {playerController.JumpBufferTimer:F3}", startX, ref y, lineHeight);
         DrawLine($"Ground Hit: {playerController.GroundCheckHit}", startX, ref y, lineHeight);
     }
 

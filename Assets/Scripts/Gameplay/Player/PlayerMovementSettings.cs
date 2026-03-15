@@ -37,6 +37,34 @@ public sealed class PlayerMovementSettings
     // 2 なら追加重力を足して合計で 2 倍相当にする。
     [Min(0f)] public float gravityScale = 1f;
 
+    // ボタン短押しでジャンプを低くする機能を使うか。
+    public bool useVariableJump = true;
+
+    // ジャンプ上昇中にボタンを離した際の上向き速度倍率。
+    // 1 に近いほど変化が小さく、0 に近いほど強く減衰する。
+    [Range(0f, 1f)] public float jumpCutMultiplier = 0.5f;
+
+    // 床から離れた直後の猶予ジャンプ(コヨーテタイム)を使うか。
+    public bool useCoyoteTime = true;
+
+    // コヨーテタイムの猶予秒数。
+    [Min(0f)] public float coyoteTime = 0.1f;
+
+    // 着地前入力を保持して着地直後にジャンプする機能を使うか。
+    public bool useJumpBuffer = true;
+
+    // ジャンプ入力を保持する秒数。
+    [Min(0f)] public float jumpBufferTime = 0.1f;
+
+    // 落下中に適用する追加重力倍率。
+    // 1 なら追加なし、2 なら標準重力1個分を追加する。
+    [Min(1f)] public float fallGravityMultiplier = 1f;
+
+    // 落下速度の下限(負方向)を制限するための最大値。
+    // 実際の clamp は -maxFallSpeed までを許可する。
+    [Min(0f)] public float maxFallSpeed = 20f;
+
+
     [Header("Ground Check")]
 
     // 接地判定で使う下方向の判定距離。

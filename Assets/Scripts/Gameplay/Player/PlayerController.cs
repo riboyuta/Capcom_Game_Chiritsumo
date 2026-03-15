@@ -41,6 +41,12 @@ public sealed class PlayerController : MonoBehaviour
     // これにより物理フレームとのズレで押下を取りこぼしにくくする。
     private bool jumpRequested;
 
+    // 床離れ直後でもジャンプ可能にする猶予タイマー。
+    private float coyoteTimer;
+
+    // 着地直前のジャンプ入力を保持するタイマー。
+    private float jumpBufferTimer;
+
     // Ground 判定デバッグ可視化用の SphereCast 開始位置。
     private Vector3 groundCheckOrigin;
 
@@ -62,6 +68,12 @@ public sealed class PlayerController : MonoBehaviour
     // デバッグ表示向けのジャンプ要求状態。
     // Update で押下された入力が次の FixedUpdate で消費されるまで true になる。
     public bool JumpRequested => jumpRequested;
+
+    // デバッグ表示向けのコヨーテタイマー。
+    public float CoyoteTimer => coyoteTimer;
+
+    // デバッグ表示向けのジャンプバッファタイマー。
+    public float JumpBufferTimer => jumpBufferTimer;
 
     // デバッグ表示向けの Ground 判定開始位置。
     public Vector3 GroundCheckOrigin => groundCheckOrigin;
@@ -145,9 +157,13 @@ public sealed class PlayerController : MonoBehaviour
         // 物理フレームで接地状態を更新する。
         isGrounded = CheckGrounded();
 
-        // 横移動、ジャンプ、追加重力、Z軸固定を順に適用する。
+        // ジャンプ補助タイマーを更新する。
+        UpdateJumpAssistTimers(Time.fixedDeltaTime);
+
+        // 横移動、ジャンプ、可変ジャンプ、追加重力を順に適用する。
         ApplyHorizontalMovement(Time.fixedDeltaTime);
         ApplyJump();
+        ApplyVariableJumpCut();
         ApplyCustomGravity();
     }
 
@@ -211,6 +227,28 @@ public sealed class PlayerController : MonoBehaviour
         return Mathf.Max(0.01f, capsuleCollider.radius * maxHorizontalScale);
     }
 
+    private void UpdateJumpAssistTimers(float deltaTime)
+    {
+        // 接地中はコヨーテタイムを満タンにし、空中では減算する。
+        if (isGrounded)
+        {
+            coyoteTimer = movementSettings.useCoyoteTime ? movementSettings.coyoteTime : 0f;
+        }
+        else
+        {
+            coyoteTimer = Mathf.Max(0f, coyoteTimer - deltaTime);
+        }
+
+        // バッファ利用時のみ減算して保持する。
+        if (!movementSettings.useJumpBuffer)
+        {
+            jumpBufferTimer = 0f;
+            return;
+        }
+
+        jumpBufferTimer = Mathf.Max(0f, jumpBufferTimer - deltaTime);
+    }
+
     private void ApplyHorizontalMovement(float deltaTime)
     {
         // 入力の X 成分を -1 ～ 1 に正規化する。
@@ -240,8 +278,22 @@ public sealed class PlayerController : MonoBehaviour
         bool requested = jumpRequested;
         jumpRequested = false;
 
-        // 接地していない、またはジャンプ要求がないなら何もしない。
-        if (!isGrounded || !requested)
+        // 押下があったフレームでバッファを満たす。
+        if (requested && movementSettings.useJumpBuffer)
+        {
+            jumpBufferTimer = movementSettings.jumpBufferTime;
+        }
+
+        // バッファ利用時は jumpBufferTimer、非利用時は当フレーム押下のみで判定する。
+        bool hasJumpRequest = movementSettings.useJumpBuffer ? jumpBufferTimer > 0f : requested;
+        if (!hasJumpRequest)
+        {
+            return;
+        }
+
+        // コヨーテタイム利用時は coyoteTimer、非利用時は接地中のみで判定する。
+        bool canJump = movementSettings.useCoyoteTime ? coyoteTimer > 0f : isGrounded;
+        if (!canJump)
         {
             return;
         }
@@ -251,23 +303,63 @@ public sealed class PlayerController : MonoBehaviour
         velocity.y = movementSettings.jumpVelocity;
         rb.linearVelocity = velocity;
 
-        // この物理フレームでは地面を離れたものとして扱う。
+        // ジャンプ成立後は各種猶予を使い切る。
         isGrounded = false;
+        coyoteTimer = 0f;
+        jumpBufferTimer = 0f;
     }
 
-    private void ApplyCustomGravity()
+    private void ApplyVariableJumpCut()
     {
-        // gravityScale が 1 のときは Unity 標準重力のままなので追加不要。
-        if (Mathf.Approximately(movementSettings.gravityScale, 1f))
+        // 可変ジャンプを使わない設定なら何もしない。
+        if (!movementSettings.useVariableJump)
         {
             return;
         }
 
-        // 標準重力との差分を追加加速度として加える。
-        // 例:
-        // gravityScale = 2 なら、標準重力 1 個分を追加する。
-        Vector3 extraGravity = Physics.gravity * (movementSettings.gravityScale - 1f);
-        rb.AddForce(extraGravity, ForceMode.Acceleration);
+        // 押し続け中は上昇を維持する。
+        if (playerInputReader.JumpHeld)
+        {
+            return;
+        }
+
+        Vector3 velocity = rb.linearVelocity;
+
+        // 上昇中のみジャンプカットを適用する。
+        if (velocity.y <= 0f)
+        {
+            return;
+        }
+
+        // jumpVelocity * jumpCutMultiplier を上向き速度の上限として短押しを表現する。
+        float cutVelocityY = movementSettings.jumpVelocity * movementSettings.jumpCutMultiplier;
+        velocity.y = Mathf.Min(velocity.y, cutVelocityY);
+        rb.linearVelocity = velocity;
     }
 
+    private void ApplyCustomGravity()
+    {
+        // 落下中は設定倍率に応じて追加重力を強める。
+        float gravityMultiplier = movementSettings.gravityScale;
+        if (rb.linearVelocity.y < 0f)
+        {
+            gravityMultiplier *= movementSettings.fallGravityMultiplier;
+        }
+
+        // 標準重力との差分を追加加速度として加える。
+        if (!Mathf.Approximately(gravityMultiplier, 1f))
+        {
+            Vector3 extraGravity = Physics.gravity * (gravityMultiplier - 1f);
+            rb.AddForce(extraGravity, ForceMode.Acceleration);
+        }
+
+        // 落下速度の下限を制限して、加速しすぎを防ぐ。
+        Vector3 velocity = rb.linearVelocity;
+        float minVelocityY = -movementSettings.maxFallSpeed;
+        if (velocity.y < minVelocityY)
+        {
+            velocity.y = minVelocityY;
+            rb.linearVelocity = velocity;
+        }
+    }
 }
