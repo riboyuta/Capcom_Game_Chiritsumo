@@ -49,6 +49,18 @@ public sealed class PlayerController : MonoBehaviour
     // 現在壁滑り中かどうか。
     private bool isWallSliding;
 
+    // 現在前ステ中かどうか。
+    private bool isStepping;
+
+    // 前ステ残り時間。
+    private float stepTimer;
+
+    // 前ステクールダウン残り時間。
+    private float stepCooldownTimer;
+
+    // 最後に向いていた左右方向。(-1:left / +1:right)
+    private int facing = 1;
+
     // Update で検出したジャンプ押下を FixedUpdate まで保持する。
     // これにより物理フレームとのズレで押下を取りこぼしにくくする。
     private bool jumpRequested;
@@ -125,6 +137,18 @@ public sealed class PlayerController : MonoBehaviour
     // デバッグ表示向けの壁キック入力ロックタイマー。
     public float WallJumpControlLockTimer => wallJumpControlLockTimer;
 
+    // デバッグ表示向けの向き。(-1:left / +1:right)
+    public int Facing => facing;
+
+    // デバッグ表示向けの前ステ状態。
+    public bool IsStepping => isStepping;
+
+    // デバッグ表示向けの前ステ残り時間。
+    public float StepTimer => stepTimer;
+
+    // デバッグ表示向けの前ステクールダウン残り時間。
+    public float StepCooldownTimer => stepCooldownTimer;
+
     // デバッグ表示向けの左壁判定開始位置。
     public Vector3 LeftWallCheckOrigin => leftWallCheckOrigin;
 
@@ -200,6 +224,9 @@ public sealed class PlayerController : MonoBehaviour
         {
             jumpRequested = true;
         }
+
+        // 横入力がしきい値を超えたときのみ向きを更新する。
+        UpdateFacingFromMoveInput();
     }
 
     private void FixedUpdate()
@@ -223,6 +250,12 @@ public sealed class PlayerController : MonoBehaviour
 
         // 壁キック入力ロックタイマーを減算する。
         UpdateWallJumpLockTimer(deltaTime);
+
+        // 前ステの継続/クールダウンタイマーを減算する。
+        UpdateStepTimers(deltaTime);
+
+        // 前ステ開始条件を満たす場合は開始する。
+        TryStartStep();
 
         // 横移動、ジャンプ、可変ジャンプ、壁滑り、追加重力を順に適用する。
         ApplyHorizontalMovement(deltaTime);
@@ -338,8 +371,80 @@ public sealed class PlayerController : MonoBehaviour
         wallJumpControlLockTimer = Mathf.Max(0f, wallJumpControlLockTimer - deltaTime);
     }
 
+    private void UpdateFacingFromMoveInput()
+    {
+        float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
+        const float facingThreshold = 0.1f;
+
+        if (inputX > facingThreshold)
+        {
+            facing = 1;
+        }
+        else if (inputX < -facingThreshold)
+        {
+            facing = -1;
+        }
+    }
+
+    private void UpdateStepTimers(float deltaTime)
+    {
+        stepCooldownTimer = Mathf.Max(0f, stepCooldownTimer - deltaTime);
+
+        if (!isStepping)
+        {
+            stepTimer = 0f;
+            return;
+        }
+
+        stepTimer = Mathf.Max(0f, stepTimer - deltaTime);
+        if (stepTimer <= 0f)
+        {
+            isStepping = false;
+        }
+    }
+
+    private void TryStartStep()
+    {
+        if (!movementSettings.useStep)
+        {
+            return;
+        }
+
+        if (!playerInputReader.StepPressed)
+        {
+            return;
+        }
+
+        if (isStepping)
+        {
+            return;
+        }
+
+        if (stepCooldownTimer > 0f)
+        {
+            return;
+        }
+
+        if (!isGrounded)
+        {
+            return;
+        }
+
+        isStepping = true;
+        stepTimer = movementSettings.stepDuration;
+        stepCooldownTimer = movementSettings.stepCooldown;
+    }
+
     private void ApplyHorizontalMovement(float deltaTime)
     {
+        if (isStepping)
+        {
+            Vector3 steppingVelocity = rb.linearVelocity;
+            steppingVelocity.x = facing * movementSettings.stepSpeed;
+            rb.linearVelocity = steppingVelocity;
+            return;
+        }
+
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
         float targetSpeed = inputX * movementSettings.moveMaxSpeed;
         bool hasMoveInput = Mathf.Abs(inputX) > 0.01f;
@@ -361,6 +466,17 @@ public sealed class PlayerController : MonoBehaviour
 
     private void ApplyJump()
     {
+        if (isStepping)
+        {
+            jumpRequested = false;
+            if (movementSettings.useJumpBuffer)
+            {
+                jumpBufferTimer = 0f;
+            }
+
+            return;
+        }
+
         bool requested = jumpRequested;
         jumpRequested = false;
 
@@ -399,6 +515,11 @@ public sealed class PlayerController : MonoBehaviour
 
     private bool TryApplyWallKick()
     {
+        if (isStepping)
+        {
+            return false;
+        }
+
         if (!movementSettings.useWallKick)
         {
             return false;

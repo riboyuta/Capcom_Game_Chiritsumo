@@ -57,6 +57,10 @@ public sealed class PlayerDebugView : MonoBehaviour
         DrawLine($"Wall Side: {playerController.WallSide}", startX, ref y, lineHeight);
         DrawLine($"Wall Sliding: {playerController.IsWallSliding}", startX, ref y, lineHeight);
         DrawLine($"Wall Jump Lock: {playerController.WallJumpControlLockTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"Facing: {playerController.Facing}", startX, ref y, lineHeight);
+        DrawLine($"Stepping: {playerController.IsStepping}", startX, ref y, lineHeight);
+        DrawLine($"Step Timer: {playerController.StepTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"Step Cooldown: {playerController.StepCooldownTimer:F3}", startX, ref y, lineHeight);
     }
 
     private void OnDrawGizmos()

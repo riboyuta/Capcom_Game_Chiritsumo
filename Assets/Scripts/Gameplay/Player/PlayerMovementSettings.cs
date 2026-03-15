@@ -100,8 +100,30 @@ public sealed class PlayerMovementSettings
 
     // 壁キック直後の横入力上書きを抑える時間。
     [Min(0f)] public float wallJumpControlLockTime = 0.1f;
-
     // 「壁方向へ入力している」と判定する入力しきい値。
     [Range(0f, 1f)] public float wallInputThreshold = 0.1f;
+
+    [Header("Step")]
+
+    // 前ステを有効化するか。
+    public bool useStep = true;
+
+    // 前ステ中の固定横速度。
+    [Min(0f)] public float stepSpeed = 12f;
+
+    // 前ステ継続時間(秒)。
+    [Min(0f)] public float stepDuration = 0.12f;
+
+    // 前ステ再使用までのクールダウン(秒)。
+    [Min(0f)] public float stepCooldown = 0.35f;
+
+    // 空中前ステを許可するか。
+    // Phase 4 では設定値のみ保持し、挙動には未使用。
+    public bool allowAirStep;
+
+    // 前ステ中の無敵を有効化するか。
+    // Phase 4 では設定値のみ保持し、挙動には未使用。
+    public bool stepInvulnerable;
+
 
 }
