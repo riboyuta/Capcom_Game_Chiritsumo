@@ -279,7 +279,7 @@ Transform:
   m_GameObject: {fileID: 170316126}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 100, y: -24.6, z: 89}
+  m_LocalPosition: {x: 100, y: -21.2, z: 89}
   m_LocalScale: {x: 6.4634976, y: 14.078978, z: 2.7649083}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -554,9 +554,9 @@ MonoBehaviour:
   m_animator: {fileID: 0}
   m_base_speed: 10
   m_stop_distance_x: 0
-  m_catchup_distance: 50
+  m_catchup_distance: 40
   m_catchup_multiplier: 1.75
-  m_max_speed: 10
+  m_max_speed: 25
   m_show_debug_log: 0
 --- !u!61 &637158477
 BoxCollider2D:
@@ -1033,7 +1033,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27db49c2b3ef421478d07e2037d68f33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PursuitSpeedArea
-  m_speed_multiplier: 0.25
+  m_speed_multiplier: 0.6
   m_draw_gizmos: 1
 --- !u!61 &1844524688
 BoxCollider2D:
@@ -1091,7 +1091,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 14.186, y: -0.2, z: 89}
-  m_LocalScale: {x: 36.525826, y: 81.00885, z: 1.4468197}
+  m_LocalScale: {x: 24.827246, y: 81.00885, z: 1.4468197}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
