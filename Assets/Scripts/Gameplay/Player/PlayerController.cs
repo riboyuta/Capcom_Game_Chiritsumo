@@ -37,6 +37,18 @@ public sealed class PlayerController : MonoBehaviour
     // 現在接地中かどうか。
     private bool isGrounded;
 
+    // 壁接触中かどうか。
+    private bool isTouchingWall;
+
+    // 接触している壁の左右。(-1:left / +1:right / 0:none)
+    private int wallSide;
+
+    // 壁キック直後の横入力上書きロックタイマー。
+    private float wallJumpControlLockTimer;
+
+    // 現在壁滑り中かどうか。
+    private bool isWallSliding;
+
     // Update で検出したジャンプ押下を FixedUpdate まで保持する。
     // これにより物理フレームとのズレで押下を取りこぼしにくくする。
     private bool jumpRequested;
@@ -58,6 +70,20 @@ public sealed class PlayerController : MonoBehaviour
 
     // Ground 判定デバッグ可視化用のヒット結果。
     private bool groundCheckHit;
+
+    // Wall 判定デバッグ可視化用の左右 SphereCast 開始位置。
+    private Vector3 leftWallCheckOrigin;
+    private Vector3 rightWallCheckOrigin;
+
+    // Wall 判定デバッグ可視化用の SphereCast 半径。
+    private float wallCheckRadius;
+
+    // Wall 判定デバッグ可視化用の SphereCast 距離。
+    private float wallCheckDistance;
+
+    // Wall 判定デバッグ可視化用の左右ヒット結果。
+    private bool leftWallCheckHit;
+    private bool rightWallCheckHit;
 
     // デバッグ表示向けの接地状態。
     public bool IsGrounded => isGrounded;
@@ -86,6 +112,36 @@ public sealed class PlayerController : MonoBehaviour
 
     // デバッグ表示向けの Ground 判定ヒット結果。
     public bool GroundCheckHit => groundCheckHit;
+
+    // デバッグ表示向けの壁接触状態。
+    public bool IsTouchingWall => isTouchingWall;
+
+    // デバッグ表示向けの壁左右情報。(-1:left / +1:right / 0:none)
+    public int WallSide => wallSide;
+
+    // デバッグ表示向けの壁滑り状態。
+    public bool IsWallSliding => isWallSliding;
+
+    // デバッグ表示向けの壁キック入力ロックタイマー。
+    public float WallJumpControlLockTimer => wallJumpControlLockTimer;
+
+    // デバッグ表示向けの左壁判定開始位置。
+    public Vector3 LeftWallCheckOrigin => leftWallCheckOrigin;
+
+    // デバッグ表示向けの右壁判定開始位置。
+    public Vector3 RightWallCheckOrigin => rightWallCheckOrigin;
+
+    // デバッグ表示向けの壁判定半径。
+    public float WallCheckRadius => wallCheckRadius;
+
+    // デバッグ表示向けの壁判定距離。
+    public float WallCheckDistance => wallCheckDistance;
+
+    // デバッグ表示向けの左壁判定ヒット結果。
+    public bool LeftWallCheckHit => leftWallCheckHit;
+
+    // デバッグ表示向けの右壁判定ヒット結果。
+    public bool RightWallCheckHit => rightWallCheckHit;
 
     private void Awake()
     {
@@ -154,59 +210,47 @@ public sealed class PlayerController : MonoBehaviour
             return;
         }
 
+        float deltaTime = Time.fixedDeltaTime;
+
         // 物理フレームで接地状態を更新する。
         isGrounded = CheckGrounded();
 
-        // ジャンプ補助タイマーを更新する。
-        UpdateJumpAssistTimers(Time.fixedDeltaTime);
+        // 物理フレームで壁接触状態を更新する。
+        CheckWallContact();
 
-        // 横移動、ジャンプ、可変ジャンプ、追加重力を順に適用する。
-        ApplyHorizontalMovement(Time.fixedDeltaTime);
+        // ジャンプ補助タイマーを更新する。
+        UpdateJumpAssistTimers(deltaTime);
+
+        // 壁キック入力ロックタイマーを減算する。
+        UpdateWallJumpLockTimer(deltaTime);
+
+        // 横移動、ジャンプ、可変ジャンプ、壁滑り、追加重力を順に適用する。
+        ApplyHorizontalMovement(deltaTime);
         ApplyJump();
         ApplyVariableJumpCut();
+        ApplyWallSlide();
         ApplyCustomGravity();
     }
 
     private bool CheckGrounded()
     {
-        // カプセルの上方向ベクトルを取得する。
-        // 通常は Vector3.up と同義だが、回転を考慮して transform.up を使う。
         Vector3 up = transform.up;
-
-        // CapsuleCollider.center はローカル座標なので、
-        // ワールド座標へ変換して実際の中心位置を求める。
         Vector3 worldCenter = transform.TransformPoint(capsuleCollider.center);
-
-        // ワールド空間でのカプセル半径を求める。
         float worldRadius = GetWorldCapsuleRadius();
-
-        // カプセルの半高さを求める。
-        // height が小さい場合でも radius 未満にならないよう補正する。
         float halfHeight = Mathf.Max(capsuleCollider.height * 0.5f, capsuleCollider.radius);
-
-        // Y スケールを考慮してワールド空間の半高さへ変換する。
         float worldHalfHeight = halfHeight * Mathf.Abs(transform.lossyScale.y);
-
-        // 下側の球の中心を求める。
-        // カプセル下端の接地確認の起点として使う。
         Vector3 bottomSphereCenter = worldCenter - up * (worldHalfHeight - worldRadius);
-
-        // 接地確認用の SphereCast 距離。
-        // わずかな余裕を足して、接地直前や段差での取りこぼしを減らす。
         float castDistance = movementSettings.groundCheckDistance + 0.01f;
 
-        // 下方向へ SphereCast して、
-        // 指定レイヤーの地面が接地距離内にあるかを調べる。
         bool hit = Physics.SphereCast(
             bottomSphereCenter,
-            worldRadius * 0.95f,                  // 半径を少し縮めて誤判定を減らす意図
+            worldRadius * 0.95f,
             -up,
             out _,
             castDistance,
             movementSettings.groundLayerMask,
             QueryTriggerInteraction.Ignore);
 
-        // DebugView が利用できるよう、今回の Ground 判定情報を保持する。
         groundCheckOrigin = bottomSphereCenter;
         groundCheckRadius = worldRadius * 0.95f;
         groundCheckDistance = castDistance;
@@ -215,21 +259,62 @@ public sealed class PlayerController : MonoBehaviour
         return hit;
     }
 
+    private void CheckWallContact()
+    {
+        Vector3 right = transform.right;
+        Vector3 worldCenter = transform.TransformPoint(capsuleCollider.center);
+        float worldRadius = GetWorldCapsuleRadius();
+
+        float castRadius = Mathf.Max(0.01f, movementSettings.wallCheckRadius);
+        float castDistance = movementSettings.wallCheckDistance + 0.01f;
+
+        leftWallCheckOrigin = worldCenter;
+        rightWallCheckOrigin = worldCenter;
+        wallCheckRadius = castRadius;
+        wallCheckDistance = castDistance;
+
+        bool hitLeft = Physics.SphereCast(
+            worldCenter,
+            castRadius,
+            -right,
+            out _,
+            castDistance + worldRadius,
+            movementSettings.groundLayerMask,
+            QueryTriggerInteraction.Ignore);
+
+        bool hitRight = Physics.SphereCast(
+            worldCenter,
+            castRadius,
+            right,
+            out _,
+            castDistance + worldRadius,
+            movementSettings.groundLayerMask,
+            QueryTriggerInteraction.Ignore);
+
+        leftWallCheckHit = hitLeft;
+        rightWallCheckHit = hitRight;
+
+        if (hitLeft == hitRight)
+        {
+            wallSide = 0;
+            isTouchingWall = false;
+            return;
+        }
+
+        wallSide = hitLeft ? -1 : 1;
+        isTouchingWall = true;
+    }
+
     private float GetWorldCapsuleRadius()
     {
-        // カプセル半径は水平断面の大きさに影響されるため、
-        // X/Z スケールの大きい方を使ってワールド半径へ変換する。
         float scaleX = Mathf.Abs(transform.lossyScale.x);
         float scaleZ = Mathf.Abs(transform.lossyScale.z);
         float maxHorizontalScale = Mathf.Max(scaleX, scaleZ);
-
-        // 極端に小さい値にならないよう最小値を設ける。
         return Mathf.Max(0.01f, capsuleCollider.radius * maxHorizontalScale);
     }
 
     private void UpdateJumpAssistTimers(float deltaTime)
     {
-        // 接地中はコヨーテタイムを満タンにし、空中では減算する。
         if (isGrounded)
         {
             coyoteTimer = movementSettings.useCoyoteTime ? movementSettings.coyoteTime : 0f;
@@ -239,7 +324,6 @@ public sealed class PlayerController : MonoBehaviour
             coyoteTimer = Mathf.Max(0f, coyoteTimer - deltaTime);
         }
 
-        // バッファ利用時のみ減算して保持する。
         if (!movementSettings.useJumpBuffer)
         {
             jumpBufferTimer = 0f;
@@ -249,24 +333,27 @@ public sealed class PlayerController : MonoBehaviour
         jumpBufferTimer = Mathf.Max(0f, jumpBufferTimer - deltaTime);
     }
 
+    private void UpdateWallJumpLockTimer(float deltaTime)
+    {
+        wallJumpControlLockTimer = Mathf.Max(0f, wallJumpControlLockTimer - deltaTime);
+    }
+
     private void ApplyHorizontalMovement(float deltaTime)
     {
-        // 入力の X 成分を -1 ～ 1 に正規化する。
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
-
-        // 入力方向に応じた目標横速度を求める。
         float targetSpeed = inputX * movementSettings.moveMaxSpeed;
-
-        // 移動入力があるかどうかを判定する。
         bool hasMoveInput = Mathf.Abs(inputX) > 0.01f;
 
-        // 入力ありなら加速、入力なしなら減速。
-        // さらに地上 / 空中で別パラメータを使い分ける。
         float accel = hasMoveInput
             ? (isGrounded ? movementSettings.groundAcceleration : movementSettings.airAcceleration)
             : (isGrounded ? movementSettings.groundDeceleration : movementSettings.airDeceleration);
 
-        // 現在速度を目標速度へ徐々に近づける。
+        // 壁キック直後は入力上書きを抑えて初速を維持する。
+        if (wallJumpControlLockTimer > 0f)
+        {
+            return;
+        }
+
         Vector3 velocity = rb.linearVelocity;
         velocity.x = Mathf.MoveTowards(velocity.x, targetSpeed, accel * deltaTime);
         rb.linearVelocity = velocity;
@@ -274,86 +361,140 @@ public sealed class PlayerController : MonoBehaviour
 
     private void ApplyJump()
     {
-        // Update 側で拾った要求をこの物理フレームで消費する。
         bool requested = jumpRequested;
         jumpRequested = false;
 
-        // 押下があったフレームでバッファを満たす。
         if (requested && movementSettings.useJumpBuffer)
         {
             jumpBufferTimer = movementSettings.jumpBufferTime;
         }
 
-        // バッファ利用時は jumpBufferTimer、非利用時は当フレーム押下のみで判定する。
         bool hasJumpRequest = movementSettings.useJumpBuffer ? jumpBufferTimer > 0f : requested;
         if (!hasJumpRequest)
         {
             return;
         }
 
-        // コヨーテタイム利用時は coyoteTimer、非利用時は接地中のみで判定する。
+        // 非接地 + 壁接触中のジャンプは壁キックを優先する。
+        if (TryApplyWallKick())
+        {
+            jumpBufferTimer = 0f;
+            return;
+        }
+
         bool canJump = movementSettings.useCoyoteTime ? coyoteTimer > 0f : isGrounded;
         if (!canJump)
         {
             return;
         }
 
-        // 現在速度の Y 成分をジャンプ初速へ置き換える。
         Vector3 velocity = rb.linearVelocity;
         velocity.y = movementSettings.jumpVelocity;
         rb.linearVelocity = velocity;
 
-        // ジャンプ成立後は各種猶予を使い切る。
         isGrounded = false;
         coyoteTimer = 0f;
         jumpBufferTimer = 0f;
     }
 
+    private bool TryApplyWallKick()
+    {
+        if (!movementSettings.useWallKick)
+        {
+            return false;
+        }
+
+        if (isGrounded || !isTouchingWall || wallSide == 0)
+        {
+            return false;
+        }
+
+        Vector3 velocity = rb.linearVelocity;
+        velocity.x = -wallSide * movementSettings.wallJumpHorizontalVelocity;
+        velocity.y = movementSettings.wallJumpVerticalVelocity;
+        rb.linearVelocity = velocity;
+
+        wallJumpControlLockTimer = movementSettings.wallJumpControlLockTime;
+        coyoteTimer = 0f;
+        isGrounded = false;
+        return true;
+    }
+
     private void ApplyVariableJumpCut()
     {
-        // 可変ジャンプを使わない設定なら何もしない。
         if (!movementSettings.useVariableJump)
         {
             return;
         }
 
-        // 押し続け中は上昇を維持する。
         if (playerInputReader.JumpHeld)
         {
             return;
         }
 
         Vector3 velocity = rb.linearVelocity;
-
-        // 上昇中のみジャンプカットを適用する。
         if (velocity.y <= 0f)
         {
             return;
         }
 
-        // jumpVelocity * jumpCutMultiplier を上向き速度の上限として短押しを表現する。
         float cutVelocityY = movementSettings.jumpVelocity * movementSettings.jumpCutMultiplier;
         velocity.y = Mathf.Min(velocity.y, cutVelocityY);
         rb.linearVelocity = velocity;
     }
 
+    private void ApplyWallSlide()
+    {
+        isWallSliding = false;
+
+        if (!movementSettings.useWallSlide)
+        {
+            return;
+        }
+
+        if (isGrounded || !isTouchingWall || wallSide == 0)
+        {
+            return;
+        }
+
+        Vector3 velocity = rb.linearVelocity;
+        if (velocity.y >= 0f)
+        {
+            return;
+        }
+
+        float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
+        float wallDirection = wallSide;
+        bool pushingToWall = inputX * wallDirection >= movementSettings.wallInputThreshold;
+        if (!pushingToWall)
+        {
+            return;
+        }
+
+        float minVelocityY = -movementSettings.wallSlideMaxSpeed;
+        if (velocity.y < minVelocityY)
+        {
+            velocity.y = minVelocityY;
+            rb.linearVelocity = velocity;
+        }
+
+        isWallSliding = true;
+    }
+
     private void ApplyCustomGravity()
     {
-        // 落下中は設定倍率に応じて追加重力を強める。
         float gravityMultiplier = movementSettings.gravityScale;
         if (rb.linearVelocity.y < 0f)
         {
             gravityMultiplier *= movementSettings.fallGravityMultiplier;
         }
 
-        // 標準重力との差分を追加加速度として加える。
         if (!Mathf.Approximately(gravityMultiplier, 1f))
         {
             Vector3 extraGravity = Physics.gravity * (gravityMultiplier - 1f);
             rb.AddForce(extraGravity, ForceMode.Acceleration);
         }
 
-        // 落下速度の下限を制限して、加速しすぎを防ぐ。
         Vector3 velocity = rb.linearVelocity;
         float minVelocityY = -movementSettings.maxFallSpeed;
         if (velocity.y < minVelocityY)

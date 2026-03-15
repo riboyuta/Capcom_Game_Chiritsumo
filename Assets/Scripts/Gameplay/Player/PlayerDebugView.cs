@@ -53,6 +53,10 @@ public sealed class PlayerDebugView : MonoBehaviour
         DrawLine($"Coyote Timer: {playerController.CoyoteTimer:F3}", startX, ref y, lineHeight);
         DrawLine($"Jump Buffer Timer: {playerController.JumpBufferTimer:F3}", startX, ref y, lineHeight);
         DrawLine($"Ground Hit: {playerController.GroundCheckHit}", startX, ref y, lineHeight);
+        DrawLine($"Touching Wall: {playerController.IsTouchingWall}", startX, ref y, lineHeight);
+        DrawLine($"Wall Side: {playerController.WallSide}", startX, ref y, lineHeight);
+        DrawLine($"Wall Sliding: {playerController.IsWallSliding}", startX, ref y, lineHeight);
+        DrawLine($"Wall Jump Lock: {playerController.WallJumpControlLockTimer:F3}", startX, ref y, lineHeight);
     }
 
     private void OnDrawGizmos()
@@ -64,6 +68,13 @@ public sealed class PlayerDebugView : MonoBehaviour
             return;
         }
 
+        DrawGroundCheckGizmo(target);
+        DrawWallCheckGizmo(target, true);
+        DrawWallCheckGizmo(target, false);
+    }
+
+    private void DrawGroundCheckGizmo(PlayerController target)
+    {
         // Ground 判定ヒット結果に応じて色を切り替える。
         Gizmos.color = target.GroundCheckHit ? Color.green : Color.red;
 
@@ -71,7 +82,24 @@ public sealed class PlayerDebugView : MonoBehaviour
         float radius = target.GroundCheckRadius;
         float distance = target.GroundCheckDistance;
         Vector3 castEnd = origin + (-target.transform.up * distance);
+
         // SphereCast の開始球と終了球、方向線を描く。
+        Gizmos.DrawWireSphere(origin, radius);
+        Gizmos.DrawWireSphere(castEnd, radius);
+        Gizmos.DrawLine(origin, castEnd);
+    }
+
+    private void DrawWallCheckGizmo(PlayerController target, bool isLeft)
+    {
+        bool hit = isLeft ? target.LeftWallCheckHit : target.RightWallCheckHit;
+        Vector3 origin = isLeft ? target.LeftWallCheckOrigin : target.RightWallCheckOrigin;
+        float radius = target.WallCheckRadius;
+        float distance = target.WallCheckDistance;
+        Vector3 direction = isLeft ? -target.transform.right : target.transform.right;
+
+        Gizmos.color = hit ? Color.cyan : Color.yellow;
+
+        Vector3 castEnd = origin + (direction * distance);
         Gizmos.DrawWireSphere(origin, radius);
         Gizmos.DrawWireSphere(castEnd, radius);
         Gizmos.DrawLine(origin, castEnd);

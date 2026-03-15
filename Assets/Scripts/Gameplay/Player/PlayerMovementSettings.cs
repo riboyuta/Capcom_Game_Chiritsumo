@@ -71,8 +71,37 @@ public sealed class PlayerMovementSettings
     // 小さすぎると段差や境界を取りこぼしやすい。
     [Min(0f)] public float groundCheckDistance = 0.1f;
 
-    // 地面として扱うレイヤーマスク。
-    // SphereCast の対象をここで制限する。
     // 初期値の ~0 は全レイヤーを対象にする。
     public LayerMask groundLayerMask = ~0;
+
+    [Header("Wall Action")]
+
+    // 壁滑りを有効化するか。
+    public bool useWallSlide = true;
+
+    // 壁判定で使う左右方向の判定距離。
+    [Min(0f)] public float wallCheckDistance = 0.15f;
+
+    // 壁判定で使う SphereCast 半径。
+    [Min(0f)] public float wallCheckRadius = 0.2f;
+
+    // 壁滑り中に許可する最大落下速度。
+    // 実際の clamp は -wallSlideMaxSpeed までを許可する。
+    [Min(0f)] public float wallSlideMaxSpeed = 3f;
+
+    // 壁キックを有効化するか。
+    public bool useWallKick = true;
+
+    // 壁キック時に壁から離れる方向へ与える横速度。
+    [Min(0f)] public float wallJumpHorizontalVelocity = 7f;
+
+    // 壁キック時に与える上向き速度。
+    public float wallJumpVerticalVelocity = 9f;
+
+    // 壁キック直後の横入力上書きを抑える時間。
+    [Min(0f)] public float wallJumpControlLockTime = 0.1f;
+
+    // 「壁方向へ入力している」と判定する入力しきい値。
+    [Range(0f, 1f)] public float wallInputThreshold = 0.1f;
+
 }
