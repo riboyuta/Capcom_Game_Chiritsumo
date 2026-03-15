@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f502cc353df9fbc4abdebfb257b4de59
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - _mixer: {instanceID: 0}
+  - _bgmGroup: {instanceID: 0}
+  - _sfxGroup: {instanceID: 0}
+  - _voiceGroup: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
