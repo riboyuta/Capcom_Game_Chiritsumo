@@ -15,21 +15,21 @@ public sealed class EnemyHitBox : MonoBehaviour
     }
 
     [Header("HitBox Settings")]
-    [SerializeField] private LayerMask m_target_layer;                          // ヒット対象となるレイヤー
-    [SerializeField] private HitEffectType m_hit_effect_type = HitEffectType.Damage;  // ヒット効果のタイプ
-    [SerializeField] private int m_damage = 1;                                  // 与えるダメージ量
-    [SerializeField] private float m_knockback_force = 5.0f;                    // ノックバックの力
-    [SerializeField] private float m_grab_duration = 1.0f;                      // 掴み攻撃の持続時間（秒）
-    [SerializeField] private bool m_hit_once_per_activation = true;             // 1回の有効化で1回だけヒットするか
+    [SerializeField] private LayerMask targetLayer;                             // ヒット対象となるレイヤー
+    [SerializeField] private HitEffectType hitEffectType = HitEffectType.Damage;  // ヒット効果のタイプ
+    [SerializeField] private int damage = 1;                                     // 与えるダメージ量
+    [SerializeField] private float knockbackForce = 5.0f;                        // ノックバックの力
+    [SerializeField] private float grabDuration = 1.0f;                          // 掴み攻撃の持続時間（秒）
+    [SerializeField] private bool hitOncePerActivation = true;                   // 1回の有効化で1回だけヒットするか
 
     [Header("Debug")]
-    [SerializeField] private bool m_show_debug_log = false;                     // デバッグログの表示フラグ
+    [SerializeField] private bool showDebugLog = false;                          // デバッグログの表示フラグ
 
-    private bool m_is_active = false;                                           // ヒットボックスが有効かどうか
-    private bool m_has_hit = false;                                             // 今回の有効化でヒット済みかどうか
+    private bool isActive = false;                                               // ヒットボックスが有効かどうか
+    private bool hasHit = false;                                                 // 今回の有効化でヒット済みかどうか
 
     // プロパティ：外部からアクセス可能な読み取り専用情報
-    public bool IsActive => m_is_active;                                        // ヒットボックスがアクティブか
+    public bool IsActive => isActive;                                            // ヒットボックスがアクティブか
 
     /// <summary>
     /// ヒットボックスを有効化する
@@ -37,8 +37,8 @@ public sealed class EnemyHitBox : MonoBehaviour
     /// </summary>
     public void ActivateHitBox()
     {
-        m_is_active = true;
-        m_has_hit = false;  // ヒット済みフラグをリセット
+        isActive = true;
+        hasHit = false;  // ヒット済みフラグをリセット
         LogDebug("Activate");
     }
 
@@ -48,7 +48,7 @@ public sealed class EnemyHitBox : MonoBehaviour
     /// </summary>
     public void DeactivateHitBox()
     {
-        m_is_active = false;
+        isActive = false;
         LogDebug("Deactivate");
     }
 
@@ -186,9 +186,9 @@ public interface IDamageable
     /// ダメージを受ける処理
     /// </summary>
     /// <param name="damage">受けるダメージ量</param>
-    /// <param name="hit_direction">ヒットした方向（ノックバック方向の計算に使用）</param>
-    /// <param name="knockback_force">ノックバックの力（0の場合はノックバックなし）</param>
-    void TakeDamage(int damage, Vector2 hit_direction, float knockback_force);
+    /// <param name="hitDirection">ヒットした方向（ノックバック方向の計算に使用）</param>
+    /// <param name="knockbackForce">ノックバックの力（0の場合はノックバックなし）</param>
+    void TakeDamage(int damage, Vector2 hitDirection, float knockbackForce);
 }
 
 /// <summary>
