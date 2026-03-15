@@ -37,11 +37,31 @@ public sealed class PlayerController : MonoBehaviour
     // 現在接地中かどうか。
     private bool isGrounded;
 
+    // Update で検出したジャンプ押下を FixedUpdate まで保持する。
+    // これにより物理フレームとのズレで押下を取りこぼしにくくする。
+    private bool jumpRequested;
+
     private void Awake()
     {
         // 必須コンポーネントを取得する。
         rb = GetComponent<Rigidbody>();
         capsuleCollider = GetComponent<CapsuleCollider>();
+
+        // 疑似 3D 横スク用の拘束を Rigidbody 側でまとめて設定する。
+        // 毎フレームの座標補正よりも物理挙動を壊しにくい。
+        rb.constraints |= RigidbodyConstraints.FreezePositionZ
+            | RigidbodyConstraints.FreezeRotationX
+            | RigidbodyConstraints.FreezeRotationY
+            | RigidbodyConstraints.FreezeRotationZ;
+
+        // 接地判定は Y 軸カプセル前提。
+        // 前提が崩れると Ground 判定位置が不正になるため停止する。
+        if (capsuleCollider.direction != 1)
+        {
+            Debug.LogError("PlayerController requires CapsuleCollider.direction to be Y-axis (1).", this);
+            enabled = false;
+            return;
+        }
 
         // Inspector 未設定なら同一 GameObject から RawInputSource を探す。
         if (rawInputSource == null)
@@ -72,6 +92,12 @@ public sealed class PlayerController : MonoBehaviour
 
         // 入力取得は Update で行う。
         playerInputReader.Update();
+
+        // 押下エッジを物理フレームまで保持する。
+        if (playerInputReader.JumpPressed)
+        {
+            jumpRequested = true;
+        }
     }
 
     private void FixedUpdate()
@@ -89,7 +115,6 @@ public sealed class PlayerController : MonoBehaviour
         ApplyHorizontalMovement(Time.fixedDeltaTime);
         ApplyJump();
         ApplyCustomGravity();
-        LockZAxis();
     }
 
     private bool CheckGrounded()
@@ -171,8 +196,12 @@ public sealed class PlayerController : MonoBehaviour
 
     private void ApplyJump()
     {
-        // 接地していない、またはジャンプ入力がないなら何もしない。
-        if (!isGrounded || !playerInputReader.JumpPressed)
+        // Update 側で拾った要求をこの物理フレームで消費する。
+        bool requested = jumpRequested;
+        jumpRequested = false;
+
+        // 接地していない、またはジャンプ要求がないなら何もしない。
+        if (!isGrounded || !requested)
         {
             return;
         }
@@ -201,23 +230,4 @@ public sealed class PlayerController : MonoBehaviour
         rb.AddForce(extraGravity, ForceMode.Acceleration);
     }
 
-    private void LockZAxis()
-    {
-        // 横スクロール前提なので、速度の Z 成分を 0 に戻す。
-        Vector3 velocity = rb.linearVelocity;
-        if (!Mathf.Approximately(velocity.z, 0f))
-        {
-            velocity.z = 0f;
-            rb.linearVelocity = velocity;
-        }
-
-        // 位置の Z 成分も 0 に固定する。
-        // これにより物理演算や衝突で奥行き方向へずれるのを防ぐ。
-        Vector3 position = rb.position;
-        if (!Mathf.Approximately(position.z, 0f))
-        {
-            position.z = 0f;
-            rb.MovePosition(position);
-        }
-    }
 }
