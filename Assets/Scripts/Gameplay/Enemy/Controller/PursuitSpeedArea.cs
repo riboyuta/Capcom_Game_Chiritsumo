@@ -9,10 +9,10 @@ using UnityEngine;
 public sealed class PursuitSpeedArea : MonoBehaviour
 {
     [Header("Speed")]
-    [SerializeField] private float m_speed_multiplier = 0.7f;       // このエリア内での速度倍率（1.0未満で減速、1.0より大きいと加速）
+    [SerializeField] private float speedMultiplier = 0.7f;       // このエリア内での速度倍率（1.0未満で減速、1.0より大きいと加速）
 
     [Header("Debug")]
-    [SerializeField] private bool m_draw_gizmos = true;             // エリア範囲のギズモを描画するか
+    [SerializeField] private bool drawGizmos = true;             // エリア範囲のギズモを描画するか
 
     /// <summary>
     /// Unityエディタでコンポーネント追加時に自動で呼ばれる
@@ -45,7 +45,7 @@ public sealed class PursuitSpeedArea : MonoBehaviour
         // コントローラーが見つかった場合、速度倍率を適用
         if (controller != null)
         {
-            controller.SetAreaSpeedMultiplier(m_speed_multiplier);
+            controller.SetAreaSpeedMultiplier(speedMultiplier);
         }
     }
 
@@ -77,7 +77,7 @@ public sealed class PursuitSpeedArea : MonoBehaviour
     /// </summary>
     private void OnDrawGizmosSelected()
     {
-        if (!m_draw_gizmos)
+        if (!drawGizmos)
         {
             return;
         }
