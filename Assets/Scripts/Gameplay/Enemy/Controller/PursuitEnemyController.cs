@@ -15,32 +15,32 @@ public sealed class PursuitEnemyController : MonoBehaviour
     }
 
     [Header("References")]
-    [SerializeField] private Transform m_player_transform;                  // プレイヤーのTransform参照
-    [SerializeField] private EnemyAttackController m_attack_controller;     // 攻撃コントローラーの参照
-    [SerializeField] private Animator m_animator;                           // アニメーターの参照
+    [SerializeField] private Transform playerTransform;                     // プレイヤーのTransform参照
+    [SerializeField] private EnemyAttackController attackController;        // 攻撃コントローラーの参照
+    [SerializeField] private Animator animator;                             // アニメーターの参照
 
     [Header("Move")]
-    [SerializeField] private float m_base_speed = 10.0f;                    // 基本移動速度
-    [SerializeField] private float m_stop_distance_x = 0.0f;                // この距離以下になったら停止（X軸）
-    [SerializeField] private float m_catchup_distance = 50.0f;              // この距離以上離れると追いつき速度ブースト発動
-    [SerializeField] private float m_catchup_multiplier = 1.75f;            // 追いつき時の速度倍率
-    [SerializeField] private float m_max_speed = 20.0f;                     // 最大移動速度
+    [SerializeField] private float baseSpeed = 10.0f;                       // 基本移動速度
+    [SerializeField] private float stopDistanceX = 0.0f;                    // この距離以下になったら停止（X軸）
+    [SerializeField] private float catchupDistance = 50.0f;                 // この距離以上離れると追いつき速度ブースト発動
+    [SerializeField] private float catchupMultiplier = 1.75f;               // 追いつき時の速度倍率
+    [SerializeField] private float maxSpeed = 20.0f;                        // 最大移動速度
 
-    private float m_area_speed_multiplier = 1.0f;                           // エリアによる速度倍率（外部から設定可能）
+    private float areaSpeedMultiplier = 1.0f;                               // エリアによる速度倍率（外部から設定可能）
 
     [Header("Debug")]
-    [SerializeField] private bool m_show_debug_log = false;                 // デバッグログの表示フラグ
+    [SerializeField] private bool showDebugLog = false;                     // デバッグログの表示フラグ
 
-    private Rigidbody2D m_rigidbody_2d;                                     // Rigidbody2Dコンポーネント
-    private EnemyContext m_context;                                         // 敵の情報をまとめたコンテキスト
+    private Rigidbody2D rigidbody2D;                                        // Rigidbody2Dコンポーネント
+    private EnemyContext context;                                           // 敵の情報をまとめたコンテキスト
 
-    private EnemyState m_state = EnemyState.Chase;                          // 現在の行動状態
+    private EnemyState state = EnemyState.Chase;                            // 現在の行動状態
 
     // プロパティ：外部からアクセス可能な読み取り専用情報
-    public Transform PlayerTransform => m_player_transform;        // プレイヤーのTransform
-    public Rigidbody2D EnemyRigidbody2D => m_rigidbody_2d;         // 敵のRigidbody2D
-    public Animator EnemyAnimator => m_animator;                   // 敵のAnimator
-    public EnemyState State => m_state;                            // 現在の状態
+    public Transform PlayerTransform => playerTransform;           // プレイヤーのTransform
+    public Rigidbody2D EnemyRigidbody2D => rigidbody2D;            // 敵のRigidbody2D
+    public Animator EnemyAnimator => animator;                     // 敵のAnimator
+    public EnemyState State => state;                              // 現在の状態
 
     /// <summary>
     /// 初期化処理
@@ -273,9 +273,9 @@ public sealed class PursuitEnemyController : MonoBehaviour
 /// </summary>
 public sealed class EnemyContext
 {
-    public Transform enemy_transform;                   // 敵のTransform
-    public Transform player_transform;                  // プレイヤーのTransform
-    public Rigidbody2D enemy_rigidbody_2d;              // 敵のRigidbody2D
-    public Animator enemy_animator;                     // 敵のAnimator
-    public PursuitEnemyController enemy_controller;     // 敵のコントローラー
+    public Transform enemyTransform;                    // 敵のTransform
+    public Transform playerTransform;                   // プレイヤーのTransform
+    public Rigidbody2D enemyRigidbody2D;                // 敵のRigidbody2D
+    public Animator enemyAnimator;                      // 敵のAnimator
+    public PursuitEnemyController enemyController;      // 敵のコントローラー
 }
