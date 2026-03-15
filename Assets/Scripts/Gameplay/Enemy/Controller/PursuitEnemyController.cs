@@ -1,0 +1,180 @@
+using UnityEngine;
+
+[RequireComponent(typeof(Rigidbody2D))]
+public sealed class PursuitEnemyController : MonoBehaviour
+{
+    public enum EnemyState
+    {
+        Chase,
+        Attack
+    }
+
+    [Header("References")]
+    [SerializeField] private Transform m_player_transform;
+    [SerializeField] private EnemyAttackController m_attack_controller;
+    [SerializeField] private Animator m_animator;
+
+    [Header("Move")]
+    [SerializeField] private float m_move_speed = 2.0f;
+    [SerializeField] private float m_catchup_speed = 3.5f;
+    [SerializeField] private float m_catchup_distance = 6.0f;
+    [SerializeField] private float m_stop_distance_x = 1.0f;
+
+    [Header("Debug")]
+    [SerializeField] private bool m_show_debug_log = false;
+
+    private Rigidbody2D m_rigidbody_2d;
+    private EnemyContext m_context;
+
+    private EnemyState m_state = EnemyState.Chase;
+
+    public Transform PlayerTransform => m_player_transform;
+    public Rigidbody2D EnemyRigidbody2D => m_rigidbody_2d;
+    public Animator EnemyAnimator => m_animator;
+    public EnemyState State => m_state;
+
+    private void Awake()
+    {
+        m_rigidbody_2d = GetComponent<Rigidbody2D>();
+
+        if (m_attack_controller == null)
+        {
+            m_attack_controller = GetComponent<EnemyAttackController>();
+        }
+
+        m_context = new EnemyContext();
+        RefreshContext();
+    }
+
+    private void Update()
+    {
+        if (m_player_transform == null || m_attack_controller == null)
+        {
+            return;
+        }
+
+        RefreshContext();
+
+        if (m_attack_controller.IsAttacking)
+        {
+            m_state = EnemyState.Attack;
+            m_attack_controller.TickCurrentAttack(m_context);
+            return;
+        }
+
+        bool started_attack = m_attack_controller.TryStartAttack(m_context);
+        if (started_attack)
+        {
+            m_state = EnemyState.Attack;
+            StopMove();
+            LogDebug("Start Attack");
+            return;
+        }
+
+        m_state = EnemyState.Chase;
+    }
+
+    private void FixedUpdate()
+    {
+        if (m_player_transform == null || m_attack_controller == null)
+        {
+            return;
+        }
+
+        if (m_attack_controller.IsAttacking)
+        {
+            StopMove();
+            return;
+        }
+
+        ChasePlayer();
+    }
+
+    private void RefreshContext()
+    {
+        m_context.enemy_transform = transform;
+        m_context.player_transform = m_player_transform;
+        m_context.enemy_rigidbody_2d = m_rigidbody_2d;
+        m_context.enemy_animator = m_animator;
+        m_context.enemy_controller = this;
+    }
+
+    private void ChasePlayer()
+    {
+        float distance_x = GetPlayerDistanceX();
+
+        if (distance_x <= m_stop_distance_x)
+        {
+            StopMove();
+            return;
+        }
+
+        float move_speed = distance_x >= m_catchup_distance ? m_catchup_speed : m_move_speed;
+
+        m_rigidbody_2d.linearVelocity = new Vector2(move_speed, m_rigidbody_2d.linearVelocity.y);
+    }
+
+    public void StopMove()
+    {
+        m_rigidbody_2d.linearVelocity = new Vector2(0.0f, m_rigidbody_2d.linearVelocity.y);
+    }
+
+    public float GetPlayerDistanceX()
+    {
+        if (m_player_transform == null)
+        {
+            return float.MaxValue;
+        }
+
+        return m_player_transform.position.x - transform.position.x;
+    }
+
+    public float GetPlayerDistanceY()
+    {
+        if (m_player_transform == null)
+        {
+            return float.MaxValue;
+        }
+
+        return Mathf.Abs(m_player_transform.position.y - transform.position.y);
+    }
+
+    public void SetPlayerTransform(Transform player_transform)
+    {
+        m_player_transform = player_transform;
+    }
+
+    private void LogDebug(string message)
+    {
+        if (!m_show_debug_log)
+        {
+            return;
+        }
+
+        Debug.Log($"[PursuitEnemyController] {name} : {message}");
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(
+            transform.position,
+            transform.position + Vector3.right * m_stop_distance_x
+        );
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawLine(
+            transform.position,
+            transform.position + Vector3.right * m_catchup_distance
+        );
+    }
+}
+
+public sealed class EnemyContext
+{
+    public Transform enemy_transform;
+    public Transform player_transform;
+    public Rigidbody2D enemy_rigidbody_2d;
+    public Animator enemy_animator;
+    public PursuitEnemyController enemy_controller;
+}
