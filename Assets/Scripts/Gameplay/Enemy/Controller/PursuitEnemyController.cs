@@ -15,10 +15,13 @@ public sealed class PursuitEnemyController : MonoBehaviour
     [SerializeField] private Animator m_animator;
 
     [Header("Move")]
-    [SerializeField] private float m_move_speed = 2.0f;
-    [SerializeField] private float m_catchup_speed = 3.5f;
-    [SerializeField] private float m_catchup_distance = 6.0f;
-    [SerializeField] private float m_stop_distance_x = 1.0f;
+    [SerializeField] private float m_base_speed = 10.0f;
+    [SerializeField] private float m_stop_distance_x = 0.0f;
+    [SerializeField] private float m_catchup_distance = 50.0f;
+    [SerializeField] private float m_catchup_multiplier = 1.75f;
+    [SerializeField] private float m_max_speed = 20.0f;
+
+    private float m_area_speed_multiplier = 1.0f;
 
     [Header("Debug")]
     [SerializeField] private bool m_show_debug_log = false;
@@ -48,27 +51,29 @@ public sealed class PursuitEnemyController : MonoBehaviour
 
     private void Update()
     {
-        if (m_player_transform == null || m_attack_controller == null)
+        if (m_player_transform == null)
         {
             return;
         }
 
         RefreshContext();
 
-        if (m_attack_controller.IsAttacking)
+        if (m_attack_controller != null && m_attack_controller.IsAttacking)
         {
             m_state = EnemyState.Attack;
             m_attack_controller.TickCurrentAttack(m_context);
             return;
         }
 
-        bool started_attack = m_attack_controller.TryStartAttack(m_context);
-        if (started_attack)
+        if (m_attack_controller != null)
         {
-            m_state = EnemyState.Attack;
-            StopMove();
-            LogDebug("Start Attack");
-            return;
+            bool started_attack = m_attack_controller.TryStartAttack(m_context);
+            if (started_attack)
+            {
+                m_state = EnemyState.Attack;
+                LogDebug("Start Attack");
+                return;
+            }
         }
 
         m_state = EnemyState.Chase;
@@ -76,14 +81,8 @@ public sealed class PursuitEnemyController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (m_player_transform == null || m_attack_controller == null)
+        if (m_player_transform == null)
         {
-            return;
-        }
-
-        if (m_attack_controller.IsAttacking)
-        {
-            StopMove();
             return;
         }
 
@@ -109,9 +108,29 @@ public sealed class PursuitEnemyController : MonoBehaviour
             return;
         }
 
-        float move_speed = distance_x >= m_catchup_distance ? m_catchup_speed : m_move_speed;
-
+        float move_speed = CalculateMoveSpeed(distance_x);
         m_rigidbody_2d.linearVelocity = new Vector2(move_speed, m_rigidbody_2d.linearVelocity.y);
+    }
+
+    private float CalculateMoveSpeed(float distance_x)
+    {
+        float speed = m_base_speed;
+
+        speed *= CalculateCatchupMultiplier(distance_x);
+        speed *= m_area_speed_multiplier;
+
+        speed = Mathf.Min(speed, m_max_speed);
+        return speed;
+    }
+
+    private float CalculateCatchupMultiplier(float distance_x)
+    {
+        if (distance_x >= m_catchup_distance)
+        {
+            return m_catchup_multiplier;
+        }
+
+        return 1.0f;
     }
 
     public void StopMove()
@@ -142,6 +161,16 @@ public sealed class PursuitEnemyController : MonoBehaviour
     public void SetPlayerTransform(Transform player_transform)
     {
         m_player_transform = player_transform;
+    }
+
+    public void SetAreaSpeedMultiplier(float multiplier)
+    {
+        m_area_speed_multiplier = multiplier;
+    }
+
+    public void ResetAreaSpeedMultiplier()
+    {
+        m_area_speed_multiplier = 1.0f;
     }
 
     private void LogDebug(string message)
