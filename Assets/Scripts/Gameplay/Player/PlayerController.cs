@@ -41,6 +41,40 @@ public sealed class PlayerController : MonoBehaviour
     // これにより物理フレームとのズレで押下を取りこぼしにくくする。
     private bool jumpRequested;
 
+    // Ground 判定デバッグ可視化用の SphereCast 開始位置。
+    private Vector3 groundCheckOrigin;
+
+    // Ground 判定デバッグ可視化用の SphereCast 半径。
+    private float groundCheckRadius;
+
+    // Ground 判定デバッグ可視化用の SphereCast 距離。
+    private float groundCheckDistance;
+
+    // Ground 判定デバッグ可視化用のヒット結果。
+    private bool groundCheckHit;
+
+    // デバッグ表示向けの接地状態。
+    public bool IsGrounded => isGrounded;
+
+    // デバッグ表示向けの現在速度。
+    public Vector3 CurrentVelocity => rb != null ? rb.linearVelocity : Vector3.zero;
+
+    // デバッグ表示向けのジャンプ要求状態。
+    // Update で押下された入力が次の FixedUpdate で消費されるまで true になる。
+    public bool JumpRequested => jumpRequested;
+
+    // デバッグ表示向けの Ground 判定開始位置。
+    public Vector3 GroundCheckOrigin => groundCheckOrigin;
+
+    // デバッグ表示向けの Ground 判定半径。
+    public float GroundCheckRadius => groundCheckRadius;
+
+    // デバッグ表示向けの Ground 判定距離。
+    public float GroundCheckDistance => groundCheckDistance;
+
+    // デバッグ表示向けの Ground 判定ヒット結果。
+    public bool GroundCheckHit => groundCheckHit;
+
     private void Awake()
     {
         // 必須コンポーネントを取得する。
@@ -155,6 +189,12 @@ public sealed class PlayerController : MonoBehaviour
             castDistance,
             movementSettings.groundLayerMask,
             QueryTriggerInteraction.Ignore);
+
+        // DebugView が利用できるよう、今回の Ground 判定情報を保持する。
+        groundCheckOrigin = bottomSphereCenter;
+        groundCheckRadius = worldRadius * 0.95f;
+        groundCheckDistance = castDistance;
+        groundCheckHit = hit;
 
         return hit;
     }
