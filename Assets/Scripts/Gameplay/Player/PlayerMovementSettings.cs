@@ -118,11 +118,17 @@ public sealed class PlayerMovementSettings
     [Min(0f)] public float stepCooldown = 0.35f;
 
     // 空中前ステを許可するか。
-    // Phase 4 では設定値のみ保持し、挙動には未使用。
+    // 設定値のみ保持し、挙動には未使用。
     public bool allowAirStep;
 
+    // 前ステ入力バッファを有効化するか。
+    public bool useStepBuffer = true;
+
+    // 前ステ入力を保持する秒数。
+    [Min(0f)] public float stepBufferTime = 0.1f;
+
     // 前ステ中の無敵を有効化するか。
-    // Phase 4 では設定値のみ保持し、挙動には未使用。
+    // 設定値のみ保持し、挙動には未使用。
     public bool stepInvulnerable;
 
 

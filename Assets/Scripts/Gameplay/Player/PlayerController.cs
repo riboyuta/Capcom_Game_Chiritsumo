@@ -65,6 +65,13 @@ public sealed class PlayerController : MonoBehaviour
     // これにより物理フレームとのズレで押下を取りこぼしにくくする。
     private bool jumpRequested;
 
+    // Update で検出した前ステ押下を FixedUpdate まで保持する。
+    // これにより物理フレームとのズレで押下を取りこぼしにくくする。
+    private bool stepRequested;
+
+    // 着地/クールダウン解除直前の前ステ入力を保持するタイマー。
+    private float stepBufferTimer;
+
     // 床離れ直後でもジャンプ可能にする猶予タイマー。
     private float coyoteTimer;
 
@@ -112,7 +119,11 @@ public sealed class PlayerController : MonoBehaviour
 
     // デバッグ表示向けのジャンプバッファタイマー。
     public float JumpBufferTimer => jumpBufferTimer;
+    // デバッグ表示向けの前ステ要求状態。
+    public bool StepRequested => stepRequested;
 
+    // デバッグ表示向けの前ステバッファタイマー。
+    public float StepBufferTimer => stepBufferTimer;
     // デバッグ表示向けの Ground 判定開始位置。
     public Vector3 GroundCheckOrigin => groundCheckOrigin;
 
@@ -224,6 +235,10 @@ public sealed class PlayerController : MonoBehaviour
         {
             jumpRequested = true;
         }
+        if (playerInputReader.StepPressed)
+        {
+            stepRequested = true;
+        }
 
         // 横入力がしきい値を超えたときのみ向きを更新する。
         UpdateFacingFromMoveInput();
@@ -253,7 +268,8 @@ public sealed class PlayerController : MonoBehaviour
 
         // 前ステの継続/クールダウンタイマーを減算する。
         UpdateStepTimers(deltaTime);
-
+        // 前ステ入力バッファタイマーを減算する。
+        UpdateStepBufferTimer(deltaTime);
         // 前ステ開始条件を満たす場合は開始する。
         TryStartStep();
 
@@ -403,14 +419,39 @@ public sealed class PlayerController : MonoBehaviour
         }
     }
 
+    private void UpdateStepBufferTimer(float deltaTime)
+    {
+        if (!movementSettings.useStepBuffer)
+        {
+            stepBufferTimer = 0f;
+            return;
+        }
+
+        stepBufferTimer = Mathf.Max(0f, stepBufferTimer - deltaTime);
+    }
     private void TryStartStep()
     {
         if (!movementSettings.useStep)
         {
+            stepRequested = false;
+            stepBufferTimer = 0f;
             return;
         }
 
-        if (!playerInputReader.StepPressed)
+        bool immediateStepRequest = stepRequested;
+        if (immediateStepRequest)
+        {
+            if (movementSettings.useStepBuffer)
+            {
+                stepBufferTimer = movementSettings.stepBufferTime;
+            }
+
+            stepRequested = false;
+        }
+
+        bool hasBufferedStep = movementSettings.useStepBuffer && stepBufferTimer > 0f;
+        bool hasStepRequest = immediateStepRequest || hasBufferedStep;
+        if (!hasStepRequest)
         {
             return;
         }
@@ -425,7 +466,7 @@ public sealed class PlayerController : MonoBehaviour
             return;
         }
 
-        if (!isGrounded)
+        if (!isGrounded && !movementSettings.allowAirStep)
         {
             return;
         }
@@ -433,6 +474,16 @@ public sealed class PlayerController : MonoBehaviour
         isStepping = true;
         stepTimer = movementSettings.stepDuration;
         stepCooldownTimer = movementSettings.stepCooldown;
+
+
+        stepRequested = false;
+        stepBufferTimer = 0f;
+
+        jumpRequested = false;
+        if (movementSettings.useJumpBuffer)
+        {
+            jumpBufferTimer = 0f;
+        }
     }
 
     private void ApplyHorizontalMovement(float deltaTime)

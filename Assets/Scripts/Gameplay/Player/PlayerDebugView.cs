@@ -61,6 +61,8 @@ public sealed class PlayerDebugView : MonoBehaviour
         DrawLine($"Stepping: {playerController.IsStepping}", startX, ref y, lineHeight);
         DrawLine($"Step Timer: {playerController.StepTimer:F3}", startX, ref y, lineHeight);
         DrawLine($"Step Cooldown: {playerController.StepCooldownTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"Step Requested: {playerController.StepRequested}", startX, ref y, lineHeight);
+        DrawLine($"Step Buffer Timer: {playerController.StepBufferTimer:F3}", startX, ref y, lineHeight);
     }
 
     private void OnDrawGizmos()
