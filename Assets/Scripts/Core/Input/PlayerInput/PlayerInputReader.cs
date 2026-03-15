@@ -138,7 +138,7 @@ namespace Game.Input
         }
 
         // current / pressedThisFrame / releasedThisFrame から
-        // 前フレームで Held だったかを推定する補助関数。
+        // 前フレームで Held だったかを推定する311補助関数。
         //
         // ケース:
         // 1. currentHeld == true
