@@ -48,6 +48,9 @@ public sealed partial class PlayerController
     // デバッグ表示向けの壁キック入力ロックタイマー。
     public float WallJumpControlLockTimer => wallJumpControlLockTimer;
 
+    // デバッグ表示向けの壁再付着ロックタイマー。
+    public float WallReattachLockTimer => wallReattachLockTimer;
+
     // デバッグ表示向けの向き。(-1:left / +1:right)
     public int Facing => facing;
 

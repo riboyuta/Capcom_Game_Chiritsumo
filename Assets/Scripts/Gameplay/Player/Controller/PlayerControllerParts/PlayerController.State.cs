@@ -14,6 +14,9 @@ public sealed partial class PlayerController
     // 壁キック直後の横入力上書きロックタイマー。
     private float wallJumpControlLockTimer;
 
+    // 壁キック直後の壁再付着ロックタイマー。
+    private float wallReattachLockTimer;
+
     // 現在壁滑り中かどうか。
     private bool isWallSliding;
 

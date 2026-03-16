@@ -98,6 +98,14 @@ public sealed partial class PlayerController
         leftWallCheckHit = hitLeft;
         rightWallCheckHit = hitRight;
 
+        // 壁キック後の再付着ロック中は壁アクション候補を無効化する。
+        if (wallReattachLockTimer > 0f)
+        {
+            wallSide = 0;
+            isTouchingWall = false;
+            return;
+        }
+
         // 両方ヒット、または両方非ヒットのときは
         // 壁方向を確定できないので未接触として扱う。
         if (hitLeft == hitRight)

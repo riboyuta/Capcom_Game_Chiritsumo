@@ -107,6 +107,12 @@ public sealed partial class PlayerController
             return false;
         }
 
+        // 再付着ロック中は壁キック候補にしない。
+        if (wallReattachLockTimer > 0f)
+        {
+            return false;
+        }
+
         // 壁と反対方向へ横速度を与え、
         // 上方向には壁ジャンプ用の初速を与える。
         Vector3 velocity = rb.linearVelocity;
@@ -114,8 +120,9 @@ public sealed partial class PlayerController
         velocity.y = movementSettings.wallJumpVerticalVelocity;
         rb.linearVelocity = velocity;
 
-        // 壁ジャンプ直後は一定時間だけ横制御を制限する。
+        // 壁ジャンプ直後は一定時間だけ横制御と再付着を制限する。
         wallJumpControlLockTimer = movementSettings.wallJumpControlLockTime;
+        wallReattachLockTimer = movementSettings.wallReattachLockTime;
         coyoteTimer = 0f;
         isGrounded = false;
         return true;
@@ -158,6 +165,12 @@ public sealed partial class PlayerController
 
         // 機能が無効なら何もしない。
         if (!movementSettings.useWallSlide)
+        {
+            return;
+        }
+
+        // 再付着ロック中は壁滑りへ入れない。
+        if (wallReattachLockTimer > 0f)
         {
             return;
         }

@@ -10,11 +10,17 @@ public sealed class PlayerMovementSettings
     [Header("地上加速度")]
     [Min(0f)] public float groundAcceleration = 50f;
 
+    [Header("地上反転加速度")]
+    [Min(0f)] public float groundTurnAcceleration = 65f;
+
     [Header("地上減速度")]
     [Min(0f)] public float groundDeceleration = 60f;
 
     [Header("空中加速度")]
     [Min(0f)] public float airAcceleration = 25f;
+
+    [Header("空中反転加速度")]
+    [Min(0f)] public float airTurnAcceleration = 32f;
 
     [Header("空中減速度")]
     [Min(0f)] public float airDeceleration = 20f;
@@ -87,6 +93,9 @@ public sealed class PlayerMovementSettings
 
     [Header("壁キック後入力ロック時間")]
     [Min(0f)] public float wallJumpControlLockTime = 0.1f;
+
+    [Header("壁キック後再付着ロック時間")]
+    [Min(0f)] public float wallReattachLockTime = 0.12f;
 
     [Header("壁入力しきい値")]
     [Range(0f, 1f)] public float wallInputThreshold = 0.1f;

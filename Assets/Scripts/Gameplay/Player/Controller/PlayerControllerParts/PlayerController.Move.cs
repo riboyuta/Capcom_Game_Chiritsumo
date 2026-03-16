@@ -6,6 +6,9 @@ public sealed partial class PlayerController
     {
         // 壁キック後の入力ロック残り時間を減らす。
         wallJumpControlLockTimer = Mathf.Max(0f, wallJumpControlLockTimer - deltaTime);
+
+        // 壁キック後の再付着ロック残り時間を減らす。
+        wallReattachLockTimer = Mathf.Max(0f, wallReattachLockTimer - deltaTime);
     }
 
     private void ApplyHorizontalMovement(float deltaTime)
@@ -30,10 +33,25 @@ public sealed partial class PlayerController
         bool hasMoveInput = Mathf.Abs(inputX) > 0.01f;
 
         // 入力ありなら加速、入力なしなら減速を使う。
-        // 地上と空中で使う値も切り替える。
-        float accel = hasMoveInput
-            ? (isGrounded ? movementSettings.groundAcceleration : movementSettings.airAcceleration)
-            : (isGrounded ? movementSettings.groundDeceleration : movementSettings.airDeceleration);
+        // 反転入力時は専用加速度へ切り替える。
+        float accel;
+        if (hasMoveInput)
+        {
+            // 入力方向と現在速度の符号が逆なら反転中とみなす。
+            bool isTurning = rb.linearVelocity.x * inputX < 0f;
+            if (isTurning)
+            {
+                accel = isGrounded ? movementSettings.groundTurnAcceleration : movementSettings.airTurnAcceleration;
+            }
+            else
+            {
+                accel = isGrounded ? movementSettings.groundAcceleration : movementSettings.airAcceleration;
+            }
+        }
+        else
+        {
+            accel = isGrounded ? movementSettings.groundDeceleration : movementSettings.airDeceleration;
+        }
 
         // 壁キック直後の入力ロック中は横移動入力を受け付けない。
         if (wallJumpControlLockTimer > 0f)
