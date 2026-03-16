@@ -194,5 +194,29 @@ public sealed partial class PlayerController
         }
 
         isWallSliding = true;
+        isFastFalling = false;
+    }
+
+    private void TryStartFastFall()
+    {
+        // 機能が無効なら何もしない。
+        if (!movementSettings.useFastFall)
+        {
+            return;
+        }
+
+        // 接地中・前ステ中・壁滑り中は開始しない。
+        if (isGrounded || isStepping || isWallSliding)
+        {
+            return;
+        }
+
+        // 下入力押下時のみ急降下状態へ入る。
+        if (!playerInputReader.DownPressed)
+        {
+            return;
+        }
+
+        isFastFalling = true;
     }
 }

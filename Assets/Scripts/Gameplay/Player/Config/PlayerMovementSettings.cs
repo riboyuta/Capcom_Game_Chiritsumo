@@ -49,6 +49,15 @@ public sealed class PlayerMovementSettings
     [Header("最大落下速度")]
     [Min(0f)] public float maxFallSpeed = 20f;
 
+    [Header("急降下を使う")]
+    public bool useFastFall = true;
+
+    [Header("急降下時の落下重力倍率")]
+    [Min(1f)] public float fastFallGravityMultiplier = 2.5f;
+
+    [Header("急降下時の最大落下速度")]
+    [Min(0f)] public float fastFallMaxSpeed = 28f;
+
     [Header("接地判定距離")]
     [Min(0f)] public float groundCheckDistance = 0.1f;
 

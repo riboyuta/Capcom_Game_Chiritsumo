@@ -112,6 +112,10 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // 物理フレームで接地状態を更新する。
         isGrounded = CheckGrounded();
+        if (isGrounded)
+        {
+            isFastFalling = false;
+        }
 
         // 物理フレームで壁接触状態を更新する。
         CheckWallContact();
@@ -133,6 +137,7 @@ public sealed partial class PlayerController : MonoBehaviour
         ApplyHorizontalMovement(deltaTime);
         ApplyJump();
         ApplyVariableJumpCut();
+        TryStartFastFall();
         ApplyWallSlide();
         ApplyCustomGravity();
     }

@@ -92,6 +92,7 @@ public sealed partial class PlayerController
 
         // 前ステップ開始状態へ入る。
         isStepping = true;
+        isFastFalling = false;
         stepTimer = movementSettings.stepDuration;
         stepCooldownTimer = movementSettings.stepCooldown;
 

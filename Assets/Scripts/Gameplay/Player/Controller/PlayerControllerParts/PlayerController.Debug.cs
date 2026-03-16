@@ -54,6 +54,9 @@ public sealed partial class PlayerController
     // デバッグ表示向けの前ステ状態。
     public bool IsStepping => isStepping;
 
+    // デバッグ表示向けの急降下状態。
+    public bool IsFastFalling => isFastFalling;
+
     // デバッグ表示向けの前ステ残り時間。
     public float StepTimer => stepTimer;
 

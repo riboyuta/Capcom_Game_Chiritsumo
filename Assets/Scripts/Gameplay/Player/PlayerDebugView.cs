@@ -46,23 +46,24 @@ public sealed class PlayerDebugView : MonoBehaviour
         float y = 16f;
         const float lineHeight = 22f;
 
-        DrawLine($"Grounded: {playerController.IsGrounded}", startX, ref y, lineHeight);
-        DrawLine($"Velocity X: {playerController.CurrentVelocity.x:F3}", startX, ref y, lineHeight);
-        DrawLine($"Velocity Y: {playerController.CurrentVelocity.y:F3}", startX, ref y, lineHeight);
-        DrawLine($"Jump Requested: {playerController.JumpRequested}", startX, ref y, lineHeight);
-        DrawLine($"Coyote Timer: {playerController.CoyoteTimer:F3}", startX, ref y, lineHeight);
-        DrawLine($"Jump Buffer Timer: {playerController.JumpBufferTimer:F3}", startX, ref y, lineHeight);
-        DrawLine($"Ground Hit: {playerController.GroundCheckHit}", startX, ref y, lineHeight);
-        DrawLine($"Touching Wall: {playerController.IsTouchingWall}", startX, ref y, lineHeight);
-        DrawLine($"Wall Side: {playerController.WallSide}", startX, ref y, lineHeight);
-        DrawLine($"Wall Sliding: {playerController.IsWallSliding}", startX, ref y, lineHeight);
-        DrawLine($"Wall Jump Lock: {playerController.WallJumpControlLockTimer:F3}", startX, ref y, lineHeight);
-        DrawLine($"Facing: {playerController.Facing}", startX, ref y, lineHeight);
-        DrawLine($"Stepping: {playerController.IsStepping}", startX, ref y, lineHeight);
-        DrawLine($"Step Timer: {playerController.StepTimer:F3}", startX, ref y, lineHeight);
-        DrawLine($"Step Cooldown: {playerController.StepCooldownTimer:F3}", startX, ref y, lineHeight);
-        DrawLine($"Step Requested: {playerController.StepRequested}", startX, ref y, lineHeight);
-        DrawLine($"Step Buffer Timer: {playerController.StepBufferTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"接地中: {playerController.IsGrounded}", startX, ref y, lineHeight);
+        DrawLine($"速度 X: {playerController.CurrentVelocity.x:F3}", startX, ref y, lineHeight);
+        DrawLine($"速度 Y: {playerController.CurrentVelocity.y:F3}", startX, ref y, lineHeight);
+        DrawLine($"ジャンプ要求: {playerController.JumpRequested}", startX, ref y, lineHeight);
+        DrawLine($"コヨーテタイマー: {playerController.CoyoteTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"ジャンプバッファタイマー: {playerController.JumpBufferTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"接地ヒット: {playerController.GroundCheckHit}", startX, ref y, lineHeight);
+        DrawLine($"壁接触中: {playerController.IsTouchingWall}", startX, ref y, lineHeight);
+        DrawLine($"壁方向: {playerController.WallSide}", startX, ref y, lineHeight);
+        DrawLine($"壁滑り中: {playerController.IsWallSliding}", startX, ref y, lineHeight);
+        DrawLine($"急降下中: {playerController.IsFastFalling}", startX, ref y, lineHeight);
+        DrawLine($"壁キック入力ロック: {playerController.WallJumpControlLockTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"向き: {playerController.Facing}", startX, ref y, lineHeight);
+        DrawLine($"前ステップ中: {playerController.IsStepping}", startX, ref y, lineHeight);
+        DrawLine($"前ステップタイマー: {playerController.StepTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"前ステップクールダウン: {playerController.StepCooldownTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"前ステップ要求: {playerController.StepRequested}", startX, ref y, lineHeight);
+        DrawLine($"前ステップバッファタイマー: {playerController.StepBufferTimer:F3}", startX, ref y, lineHeight);
     }
 
     private void OnDrawGizmos()

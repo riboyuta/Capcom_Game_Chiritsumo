@@ -20,6 +20,9 @@ public sealed partial class PlayerController
     // 現在前ステ中かどうか。
     private bool isStepping;
 
+    // 現在急降下中かどうか。
+    private bool isFastFalling;
+
     // 前ステ残り時間。
     private float stepTimer;
 
