@@ -132,6 +132,8 @@ GameObject:
   - component: {fileID: 764449971}
   - component: {fileID: 764449970}
   - component: {fileID: 764449969}
+  - component: {fileID: 764449975}
+  - component: {fileID: 764449974}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -261,6 +263,54 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &764449974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 764449968}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d92c46fb874b4ae4696d00ac6d22a42e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Input.RawInputSource
+  _leftStickDeadzone: 0.2
+  _rightStickDeadzone: 0.2
+--- !u!114 &764449975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 764449968}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38a04b1e34f0d13499df7a41144428db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+  rawInputSource: {fileID: 764449974}
+  inputBindings:
+    _jump:
+      _primaryKeyboardKey: 1
+      _secondaryKeyboardKey: 40
+      _gamepadButton: 0
+    _step:
+      _primaryKeyboardKey: 51
+      _secondaryKeyboardKey: 0
+      _gamepadButton: 11
+  movementSettings:
+    moveMaxSpeed: 6
+    groundAcceleration: 50
+    groundDeceleration: 60
+    airAcceleration: 25
+    airDeceleration: 20
+    jumpVelocity: 10
+    gravityScale: 1
+    groundCheckDistance: 0.1
+    groundLayerMask:
+      serializedVersion: 2
+      m_Bits: 8
 --- !u!1 &1066270906
 GameObject:
   m_ObjectHideFlags: 0
