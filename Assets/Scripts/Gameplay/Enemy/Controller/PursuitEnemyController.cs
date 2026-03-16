@@ -29,9 +29,9 @@ public sealed class PursuitEnemyController : MonoBehaviour
     private float m_area_speed_multiplier = 1.0f;                           // エリアによる速度倍率（外部から設定可能）
 
     [Header("Body Contact")]
-    [SerializeField] private bool m_enable_body_contact = true;
-    [SerializeField] private string m_player_tag = "Player";
-    [SerializeField] private string m_contact_message = "Kill";
+    [SerializeField] private bool m_enable_body_contact = true;             // 敵の体当たり判定を有効にするか
+    [SerializeField] private string m_player_tag = "Player";               // 体当たり判定の対象となるタグ
+    [SerializeField] private string m_contact_message = "Kill";            // 体当たり時に送信するメッセージ名
 
     [Header("Debug")]
     [SerializeField] private bool m_show_debug_log = false;                 // デバッグログの表示フラグ
@@ -237,6 +237,10 @@ public sealed class PursuitEnemyController : MonoBehaviour
         m_area_speed_multiplier = 1.0f;
     }
 
+    /// <summary>
+    /// 物理衝突検出（Collisionモード）
+    /// 通常のCollider同士の衡突時に呼ばれる
+    /// </summary>
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (!m_enable_body_contact)
@@ -247,6 +251,10 @@ public sealed class PursuitEnemyController : MonoBehaviour
         HandleBodyContact(collision.collider);
     }
 
+    /// <summary>
+    /// トリガー衝突検出（Triggerモード）
+    /// トリガー設定されたColliderとの接触時に呼ばれる
+    /// </summary>
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (!m_enable_body_contact)
@@ -257,13 +265,19 @@ public sealed class PursuitEnemyController : MonoBehaviour
         HandleBodyContact(other);
     }
 
+    /// <summary>
+    /// 敵の体当たり判定処理
+    /// プレイヤーと接触した際に、指定されたメッセージを送信する（例：即死処理）
+    /// </summary>
     private void HandleBodyContact(Collider2D other)
     {
+        // 対象タグでない場合は処理しない
         if (!other.CompareTag(m_player_tag))
         {
             return;
         }
 
+        // ルートオブジェクトにメッセージを送信（例："Kill"メッセージでプレイヤーを死亡させる）
         other.transform.root.SendMessage(
             m_contact_message,
             SendMessageOptions.DontRequireReceiver
