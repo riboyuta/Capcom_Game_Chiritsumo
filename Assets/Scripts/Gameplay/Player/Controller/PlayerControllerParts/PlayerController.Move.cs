@@ -71,6 +71,7 @@ public sealed partial class PlayerController
 
         // 下向き速度なら落下中とみなす。
         bool isFalling = velocity.y < 0f;
+        bool isRising = velocity.y > 0f;
 
         // 前ステ中は専用倍率を使い、通常時は既存倍率を使う。
         float gravityMultiplier;
@@ -81,6 +82,12 @@ public sealed partial class PlayerController
         else
         {
             gravityMultiplier = movementSettings.gravityScale;
+
+            // 上昇中は、長押し中かつ有効時間内のみ上昇用倍率を掛ける。
+            if (isRising && playerInputReader.JumpHeld && jumpHoldTimer > 0f)
+            {
+                gravityMultiplier *= movementSettings.riseGravityMultiplier;
+            }
 
             // 落下中は落下用の重力倍率を掛ける。
             // 急降下中なら専用倍率を優先する。

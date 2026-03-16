@@ -18,6 +18,12 @@ public sealed partial class PlayerController
     // デバッグ表示向けのジャンプバッファタイマー。
     public float JumpBufferTimer => jumpBufferTimer;
 
+    // デバッグ表示向けのジャンプ上昇維持タイマー。
+    public float JumpHoldTimer => jumpHoldTimer;
+
+    // デバッグ表示向けの上昇中追加重力倍率。
+    public float RiseGravityMultiplier => movementSettings.riseGravityMultiplier;
+
     // デバッグ表示向けの前ステ要求状態。
     public bool StepRequested => stepRequested;
 

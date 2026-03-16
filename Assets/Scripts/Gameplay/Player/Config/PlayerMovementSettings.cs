@@ -34,6 +34,12 @@ public sealed class PlayerMovementSettings
     [Header("可変ジャンプを使う")]
     public bool useVariableJump = true;
 
+    [Header("ジャンプ長押しの最大有効時間")]
+    [Min(0f)] public float maxJumpHoldTime = 0.12f;
+
+    [Header("上昇中追加重力倍率")]
+    [Min(0f)] public float riseGravityMultiplier = 1f;
+
     [Header("ジャンプ短押し時の減衰率")]
     [Range(0f, 1f)] public float jumpCutMultiplier = 0.5f;
 

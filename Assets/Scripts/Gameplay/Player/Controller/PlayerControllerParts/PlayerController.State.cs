@@ -55,6 +55,9 @@ public sealed partial class PlayerController
     // 着地直前のジャンプ入力を保持するタイマー。
     private float jumpBufferTimer;
 
+    // ジャンプ上昇維持の残り時間。
+    private float jumpHoldTimer;
+
     // Ground 判定デバッグ可視化用の SphereCast 開始位置。
     private Vector3 groundCheckOrigin;
 

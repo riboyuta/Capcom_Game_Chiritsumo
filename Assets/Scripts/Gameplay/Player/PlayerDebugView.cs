@@ -52,6 +52,8 @@ public sealed class PlayerDebugView : MonoBehaviour
         DrawLine($"ジャンプ要求: {playerController.JumpRequested}", startX, ref y, lineHeight);
         DrawLine($"コヨーテタイマー: {playerController.CoyoteTimer:F3}", startX, ref y, lineHeight);
         DrawLine($"ジャンプバッファタイマー: {playerController.JumpBufferTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"Jump Hold Timer: {playerController.JumpHoldTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"Rise Gravity Multiplier: {playerController.RiseGravityMultiplier:F3}", startX, ref y, lineHeight);
         DrawLine($"接地ヒット: {playerController.GroundCheckHit}", startX, ref y, lineHeight);
         DrawLine($"壁接触中: {playerController.IsTouchingWall}", startX, ref y, lineHeight);
         DrawLine($"壁方向: {playerController.WallSide}", startX, ref y, lineHeight);

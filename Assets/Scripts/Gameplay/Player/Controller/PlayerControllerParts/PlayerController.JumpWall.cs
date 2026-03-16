@@ -20,11 +20,15 @@ public sealed partial class PlayerController
         if (!movementSettings.useJumpBuffer)
         {
             jumpBufferTimer = 0f;
-            return;
+        }
+        else
+        {
+            // ジャンプバッファの残り時間を減らす。
+            jumpBufferTimer = Mathf.Max(0f, jumpBufferTimer - deltaTime);
         }
 
-        // ジャンプバッファの残り時間を減らす。
-        jumpBufferTimer = Mathf.Max(0f, jumpBufferTimer - deltaTime);
+        // ジャンプ上昇維持タイマーの残り時間を減らす。
+        jumpHoldTimer = Mathf.Max(0f, jumpHoldTimer - deltaTime);
     }
 
     private void ApplyJump()
@@ -85,6 +89,7 @@ public sealed partial class PlayerController
         isGrounded = false;
         coyoteTimer = 0f;
         jumpBufferTimer = 0f;
+        jumpHoldTimer = movementSettings.maxJumpHoldTime;
     }
 
     private bool TryApplyWallKick()
@@ -124,6 +129,7 @@ public sealed partial class PlayerController
         wallJumpControlLockTimer = movementSettings.wallJumpControlLockTime;
         wallReattachLockTimer = movementSettings.wallReattachLockTime;
         coyoteTimer = 0f;
+        jumpHoldTimer = movementSettings.maxJumpHoldTime;
         isGrounded = false;
         return true;
     }
