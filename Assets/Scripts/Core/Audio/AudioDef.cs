@@ -1,5 +1,13 @@
 using UnityEngine;
 
+/// オーディオのカテゴリ分類。AudioMixer の Group と 1:1 対応する。
+public enum AudioChannel
+{
+    BGM,
+    SFX,
+    Voice
+}
+
 /// 音声アセットの事前登録定義 (ScriptableObject)。
 [CreateAssetMenu(fileName = "NewAudioDef", menuName = "Audio/AudioDef")]
 public sealed class AudioDef : ScriptableObject
