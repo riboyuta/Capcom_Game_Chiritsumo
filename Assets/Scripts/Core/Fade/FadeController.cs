@@ -10,9 +10,9 @@ using UnityEngine.UI;
 /// 使用例:
 ///   FadeManager.Instance.FadeOut(0.5f, () => SceneFlow.LoadResult());
 ///   FadeManager.Instance.FadeIn(0.5f);
-public sealed class FadeManager : MonoBehaviour
+public sealed class FadeController : MonoBehaviour
 {
-    public static FadeManager Instance { get; private set; }
+    public static FadeController Instance { get; private set; }
 
     // フェード中かどうか。
     public bool IsFading { get; private set; }
