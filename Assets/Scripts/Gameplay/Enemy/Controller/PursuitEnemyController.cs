@@ -28,6 +28,11 @@ public sealed class PursuitEnemyController : MonoBehaviour
 
     private float m_area_speed_multiplier = 1.0f;                           // エリアによる速度倍率（外部から設定可能）
 
+    [Header("Body Contact")]
+    [SerializeField] private bool m_enable_body_contact = true;
+    [SerializeField] private string m_player_tag = "Player";
+    [SerializeField] private string m_contact_message = "Kill";
+
     [Header("Debug")]
     [SerializeField] private bool m_show_debug_log = false;                 // デバッグログの表示フラグ
 
@@ -230,6 +235,41 @@ public sealed class PursuitEnemyController : MonoBehaviour
     public void ResetAreaSpeedMultiplier()
     {
         m_area_speed_multiplier = 1.0f;
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (!m_enable_body_contact)
+        {
+            return;
+        }
+
+        HandleBodyContact(collision.collider);
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (!m_enable_body_contact)
+        {
+            return;
+        }
+
+        HandleBodyContact(other);
+    }
+
+    private void HandleBodyContact(Collider2D other)
+    {
+        if (!other.CompareTag(m_player_tag))
+        {
+            return;
+        }
+
+        other.transform.root.SendMessage(
+            m_contact_message,
+            SendMessageOptions.DontRequireReceiver
+        );
+
+        LogDebug($"Body Contact : {other.name}");
     }
 
     /// <summary>
