@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 259605074}
   - component: {fileID: 259605073}
   - component: {fileID: 259605075}
+  - component: {fileID: 259605076}
   m_Layer: 0
   m_Name: BootRoot
   m_TagString: Untagged
@@ -213,6 +214,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Input.RawInputSource
   _leftStickDeadzone: 0.2
   _rightStickDeadzone: 0.2
+--- !u!114 &259605076
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 259605072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f65c3217c12592a4f9673bd771c30ac6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FadeManager
 --- !u!1 &447867120
 GameObject:
   m_ObjectHideFlags: 0
