@@ -17,8 +17,10 @@ public sealed partial class PlayerController
         // 向いている方向へ一定速度で移動する。
         if (isStepping)
         {
+            int movingDirection = movementSettings.allowTurnDuringStep ? facing : stepDirection;
+
             Vector3 steppingVelocity = rb.linearVelocity;
-            steppingVelocity.x = facing * movementSettings.stepSpeed;
+            steppingVelocity.x = movingDirection * movementSettings.stepSpeed;
             rb.linearVelocity = steppingVelocity;
             return;
         }

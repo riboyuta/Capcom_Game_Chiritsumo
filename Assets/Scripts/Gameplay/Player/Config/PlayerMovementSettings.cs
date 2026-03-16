@@ -126,7 +126,8 @@ public sealed class PlayerMovementSettings
 
     [Header("空中前ステを許可")]
     public bool allowAirStep = true;
-
+    [Header("前ステ中の方向転換を許可")]
+    public bool allowTurnDuringStep = true;
     [Header("前ステ入力バッファを使う")]
     public bool useStepBuffer = true;
 
