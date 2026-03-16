@@ -72,20 +72,28 @@ public sealed partial class PlayerController
         // 下向き速度なら落下中とみなす。
         bool isFalling = velocity.y < 0f;
 
-        // 基本の重力倍率を取得する。
-        float gravityMultiplier = movementSettings.gravityScale;
-
-        // 落下中は落下用の重力倍率を掛ける。
-        // 急降下中なら専用倍率を優先する。
-        if (isFalling)
+        // 前ステ中は専用倍率を使い、通常時は既存倍率を使う。
+        float gravityMultiplier;
+        if (isStepping)
         {
-            float fallingMultiplier = movementSettings.fallGravityMultiplier;
-            if (isFastFalling)
-            {
-                fallingMultiplier = movementSettings.fastFallGravityMultiplier;
-            }
+            gravityMultiplier = movementSettings.stepGravityMultiplier;
+        }
+        else
+        {
+            gravityMultiplier = movementSettings.gravityScale;
 
-            gravityMultiplier *= fallingMultiplier;
+            // 落下中は落下用の重力倍率を掛ける。
+            // 急降下中なら専用倍率を優先する。
+            if (isFalling)
+            {
+                float fallingMultiplier = movementSettings.fallGravityMultiplier;
+                if (isFastFalling)
+                {
+                    fallingMultiplier = movementSettings.fastFallGravityMultiplier;
+                }
+
+                gravityMultiplier *= fallingMultiplier;
+            }
         }
 
         // 標準重力との差分だけを追加する。

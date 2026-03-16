@@ -20,8 +20,22 @@ public sealed partial class PlayerController
         // 残り時間がなくなったら前ステップ終了とする。
         if (stepTimer <= 0f)
         {
-            isStepping = false;
+            EndStep();
         }
+    }
+
+    private void EndStep()
+    {
+        isStepping = false;
+
+        if (!movementSettings.restoreStepStartVerticalVelocity)
+        {
+            return;
+        }
+
+        Vector3 velocity = rb.linearVelocity;
+        velocity.y = stepStartVerticalVelocity;
+        rb.linearVelocity = velocity;
     }
 
     private void UpdateStepBufferTimer(float deltaTime)
@@ -95,6 +109,7 @@ public sealed partial class PlayerController
         isFastFalling = false;
         stepTimer = movementSettings.stepDuration;
         stepCooldownTimer = movementSettings.stepCooldown;
+        stepStartVerticalVelocity = rb.linearVelocity.y;
 
         // ステップ入力とバッファを消費する。
         stepRequested = false;

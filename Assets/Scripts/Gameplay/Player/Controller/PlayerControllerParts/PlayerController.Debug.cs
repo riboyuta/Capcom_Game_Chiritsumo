@@ -66,6 +66,15 @@ public sealed partial class PlayerController
     // デバッグ表示向けの前ステクールダウン残り時間。
     public float StepCooldownTimer => stepCooldownTimer;
 
+    // デバッグ表示向けの前ステ中重力倍率。
+    public float StepGravityMultiplier => movementSettings.stepGravityMultiplier;
+
+    // デバッグ表示向けの前ステ開始時Y速度。
+    public float StepStartVerticalVelocity => stepStartVerticalVelocity;
+
+    // デバッグ表示向けの前ステ開始時Y速度復元設定。
+    public bool RestoreStepStartVerticalVelocity => movementSettings.restoreStepStartVerticalVelocity;
+
     // デバッグ表示向けの左壁判定開始位置。
     public Vector3 LeftWallCheckOrigin => leftWallCheckOrigin;
 

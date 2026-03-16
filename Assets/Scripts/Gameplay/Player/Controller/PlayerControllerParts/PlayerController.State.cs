@@ -32,6 +32,9 @@ public sealed partial class PlayerController
     // 前ステクールダウン残り時間。
     private float stepCooldownTimer;
 
+    // 前ステ開始時のY速度。
+    private float stepStartVerticalVelocity;
+
     // 最後に向いていた左右方向。(-1:left / +1:right)
     private int facing = 1;
 

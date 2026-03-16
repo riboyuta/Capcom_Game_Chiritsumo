@@ -109,6 +109,12 @@ public sealed class PlayerMovementSettings
     [Header("前ステ時間")]
     [Min(0f)] public float stepDuration = 0.12f;
 
+    [Header("前ステ中重力倍率")]
+    [Min(0f)] public float stepGravityMultiplier = 1f;
+
+    [Header("前ステ終了時に開始時Y速度を復元")]
+    public bool restoreStepStartVerticalVelocity;
+
     [Header("前ステクールダウン")]
     [Min(0f)] public float stepCooldown = 0.35f;
 

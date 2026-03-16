@@ -63,6 +63,11 @@ public sealed class PlayerDebugView : MonoBehaviour
         DrawLine($"前ステップ中: {playerController.IsStepping}", startX, ref y, lineHeight);
         DrawLine($"前ステップタイマー: {playerController.StepTimer:F3}", startX, ref y, lineHeight);
         DrawLine($"前ステップクールダウン: {playerController.StepCooldownTimer:F3}", startX, ref y, lineHeight);
+        DrawLine($"Step Gravity Multiplier: {playerController.StepGravityMultiplier:F3}", startX, ref y, lineHeight);
+        if (playerController.RestoreStepStartVerticalVelocity || playerController.IsStepping)
+        {
+            DrawLine($"Step Start Vertical Velocity: {playerController.StepStartVerticalVelocity:F3}", startX, ref y, lineHeight);
+        }
         DrawLine($"前ステップ要求: {playerController.StepRequested}", startX, ref y, lineHeight);
         DrawLine($"前ステップバッファタイマー: {playerController.StepBufferTimer:F3}", startX, ref y, lineHeight);
     }
