@@ -535,4 +535,17 @@ public sealed class AudioManager : MonoBehaviour
             }
         }
     }
+
+    // ======================================================================
+    //  AudioHandle — 再生中サウンド 1 件の管理情報
+    // ======================================================================
+
+    private sealed class AudioHandle
+    {
+        public string       Id;
+        public AudioChannel Channel;
+        public AudioSource  Source;
+        public float        BaseVolume;
+        public bool         Loop;
+    }
 }

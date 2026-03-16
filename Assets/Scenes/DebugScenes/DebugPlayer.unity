@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 764449969}
   - component: {fileID: 764449975}
   - component: {fileID: 764449974}
+  - component: {fileID: 764449976}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -175,7 +176,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 764449968}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 630b6018882b3394697958da43429b95, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -307,10 +308,48 @@ MonoBehaviour:
     airDeceleration: 20
     jumpVelocity: 10
     gravityScale: 1
+    useVariableJump: 1
+    jumpCutMultiplier: 0.5
+    useCoyoteTime: 1
+    coyoteTime: 0.1
+    useJumpBuffer: 1
+    jumpBufferTime: 0.1
+    fallGravityMultiplier: 1
+    maxFallSpeed: 20
     groundCheckDistance: 0.1
     groundLayerMask:
       serializedVersion: 2
       m_Bits: 8
+    useWallSlide: 1
+    wallCheckDistance: 0.15
+    wallCheckRadius: 0.2
+    wallSlideMaxSpeed: 3
+    useWallKick: 1
+    wallJumpHorizontalVelocity: 7
+    wallJumpVerticalVelocity: 9
+    wallJumpControlLockTime: 0.1
+    wallInputThreshold: 0.1
+    useStep: 1
+    stepSpeed: 12
+    stepDuration: 0.12
+    stepCooldown: 0.35
+    allowAirStep: 1
+    useStepBuffer: 1
+    stepBufferTime: 0.1
+    stepInvulnerable: 1
+--- !u!114 &764449976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 764449968}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ed9d46179d515b4b8d8d95b6d75c16c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDebugView
+  playerController: {fileID: 0}
 --- !u!1 &1066270906
 GameObject:
   m_ObjectHideFlags: 0
