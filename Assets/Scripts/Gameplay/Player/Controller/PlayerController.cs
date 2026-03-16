@@ -10,7 +10,7 @@ using UnityEngine;
 
 // 接地判定にカプセル形状を使うため CapsuleCollider を必須にする。
 [RequireComponent(typeof(CapsuleCollider))]
-public sealed class PlayerController : MonoBehaviour
+public sealed partial class PlayerController : MonoBehaviour
 {
     [Header("Input")]
     // 生入力の供給元。
