@@ -23,13 +23,13 @@ public sealed class PlayerMovementSettings
     [Min(0f)] public float airTurnAcceleration = 40f;
 
     [Header("空中減速度")]
-    [Min(0f)] public float airDeceleration = 12f;
+    [Min(0f)] public float airDeceleration = 14f;
 
     [Header("ジャンプ初速")]
     public float jumpVelocity = 10f;
 
     [Header("重力倍率")]
-    [Min(0f)] public float gravityScale = 1f;
+    [Min(0f)] public float gravityScale = 3f;
 
     [Header("可変ジャンプを使う")]
     public bool useVariableJump = true;
