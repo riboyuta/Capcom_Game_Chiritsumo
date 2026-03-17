@@ -23,10 +23,10 @@ public sealed class PlayerMovementSettings
     [Min(0f)] public float airTurnAcceleration = 40f;
 
     [Header("空中減速度")]
-    [Min(0f)] public float airDeceleration = 14f;
+    [Min(0f)] public float airDeceleration = 12f;
 
     [Header("ジャンプ初速")]
-    public float jumpVelocity = 10f;
+    public float jumpVelocity = 14f;
 
     [Header("重力倍率")]
     [Min(0f)] public float gravityScale = 3f;
