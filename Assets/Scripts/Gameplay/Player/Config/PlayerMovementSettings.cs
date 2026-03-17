@@ -26,10 +26,10 @@ public sealed class PlayerMovementSettings
     [Min(0f)] public float airDeceleration = 12f;
 
     [Header("ジャンプ初速")]
-    public float jumpVelocity = 10f;
+    public float jumpVelocity = 14f;
 
     [Header("重力倍率")]
-    [Min(0f)] public float gravityScale = 1f;
+    [Min(0f)] public float gravityScale = 3f;
 
     [Header("可変ジャンプを使う")]
     public bool useVariableJump = true;
@@ -126,7 +126,8 @@ public sealed class PlayerMovementSettings
 
     [Header("空中前ステを許可")]
     public bool allowAirStep = true;
-
+    [Header("前ステ中の方向転換を許可")]
+    public bool allowTurnDuringStep = true;
     [Header("前ステ入力バッファを使う")]
     public bool useStepBuffer = true;
 

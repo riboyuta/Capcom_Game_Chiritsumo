@@ -2,6 +2,28 @@ using UnityEngine;
 
 public sealed partial class PlayerController
 {
+    private void ApplyStepVelocity()
+    {
+        int movingDirection = movementSettings.allowTurnDuringStep ? facing : stepDirection;
+
+        Vector2 steppingVelocity = rb.linearVelocity;
+        steppingVelocity.x = movingDirection * movementSettings.stepSpeed;
+
+        // 前ステップ中の縦挙動は専用処理を優先し、
+        // 通常の重力/落下/壁滑り処理で上書きしない。
+        if (movementSettings.stepGravityMultiplier <= 0f)
+        {
+            steppingVelocity.y = 0f;
+        }
+        else
+        {
+            float stepGravityScale = movementSettings.gravityScale * movementSettings.stepGravityMultiplier;
+            steppingVelocity.y += Physics.gravity.y * stepGravityScale * Time.fixedDeltaTime;
+        }
+
+        rb.linearVelocity = steppingVelocity;
+    }
+
     private void UpdateWallJumpLockTimer(float deltaTime)
     {
         // 壁キック後の入力ロック残り時間を減らす。
@@ -13,16 +35,6 @@ public sealed partial class PlayerController
 
     private void ApplyHorizontalMovement(float deltaTime)
     {
-        // 前ステップ中は通常移動を行わず、
-        // 向いている方向へ一定速度で移動する。
-        if (isStepping)
-        {
-            Vector3 steppingVelocity = rb.linearVelocity;
-            steppingVelocity.x = facing * movementSettings.stepSpeed;
-            rb.linearVelocity = steppingVelocity;
-            return;
-        }
-
         // 移動入力の X 成分を -1 から 1 の範囲に収める。
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
 
@@ -73,34 +85,25 @@ public sealed partial class PlayerController
         bool isFalling = velocity.y < 0f;
         bool isRising = velocity.y > 0f;
 
-        // 前ステ中は専用倍率を使い、通常時は既存倍率を使う。
-        float gravityMultiplier;
-        if (isStepping)
+        float gravityMultiplier = movementSettings.gravityScale;
+
+        // 上昇中は、長押し中かつ有効時間内のみ上昇用倍率を掛ける。
+        if (isRising && playerInputReader.JumpHeld && jumpHoldTimer > 0f)
         {
-            gravityMultiplier = movementSettings.stepGravityMultiplier;
+            gravityMultiplier *= movementSettings.riseGravityMultiplier;
         }
-        else
+
+        // 落下中は落下用の重力倍率を掛ける。
+        // 急降下中なら専用倍率を優先する。
+        if (isFalling)
         {
-            gravityMultiplier = movementSettings.gravityScale;
-
-            // 上昇中は、長押し中かつ有効時間内のみ上昇用倍率を掛ける。
-            if (isRising && playerInputReader.JumpHeld && jumpHoldTimer > 0f)
+            float fallingMultiplier = movementSettings.fallGravityMultiplier;
+            if (isFastFalling)
             {
-                gravityMultiplier *= movementSettings.riseGravityMultiplier;
+                fallingMultiplier = movementSettings.fastFallGravityMultiplier;
             }
 
-            // 落下中は落下用の重力倍率を掛ける。
-            // 急降下中なら専用倍率を優先する。
-            if (isFalling)
-            {
-                float fallingMultiplier = movementSettings.fallGravityMultiplier;
-                if (isFastFalling)
-                {
-                    fallingMultiplier = movementSettings.fastFallGravityMultiplier;
-                }
-
-                gravityMultiplier *= fallingMultiplier;
-            }
+            gravityMultiplier *= fallingMultiplier;
         }
 
         // 標準重力との差分だけを追加する。
