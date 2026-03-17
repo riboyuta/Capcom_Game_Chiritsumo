@@ -3,6 +3,7 @@ using UnityEngine;
 /// <summary>
 /// スマッシュ攻撃の実装
 /// 予備動作→攻撃実行→硬直の3段階で構成される近接攻撃
+/// ビジュアル表現付き：伸縮と回転でハンマーのようなモーションを再現
 /// </summary>
 public sealed class SmashAttack : EnemyAttackBase
 {
@@ -21,10 +22,53 @@ public sealed class SmashAttack : EnemyAttackBase
     [Header("Animation")]
     [SerializeField] private string m_trigger_name = "smash";       // アニメーション再生用のトリガー名
 
+    [Header("Visibility")]
+    [SerializeField] private GameObject m_smash_visual_root;        // スマッシュのビジュアルのルートオブジェクト（表示/非表示切り替え用）
+
+    [Header("Smash Motion")]
+    [SerializeField] private Transform m_smash_pivot;               // スマッシュの回転軸（この点を中心に回転）
+    [SerializeField] private Transform m_smash_visual;              // スマッシュのビジュアル部分（伸縮させるScale変更対象）
+    [SerializeField] private Transform m_hit_box_root;              // ヒットボックスのルート（スマッシュの長さに合わせて移動）
+
+    [SerializeField] private float m_retracted_length = 0.25f;      // 収納状態の長さ（短い）
+    [SerializeField] private float m_extended_length = 1.40f;       // 展開状態の長さ（長い）
+
+    [SerializeField] private float m_forward_angle = 0.0f;          // 前方向きの角度（通常状態）
+    [SerializeField] private float m_raised_angle = 75.0f;          // 振りかぶり状態の角度（上に上げた状態）
+    [SerializeField] private float m_slam_angle = -95.0f;           // 叩きつけ状態の角度（下に振り下ろした状態）
+
+    [SerializeField, Range(0.0f, 1.0f)] private float m_extend_ratio_in_windup = 0.35f;  // 予備動作中の伸長フェーズの比率（0~1）
+
     [Header("Debug")]
     [SerializeField] private bool m_draw_range_gizmo = true;        // 攻撃範囲のギズモを描画するか
 
     private float m_timer = 0.0f;                                   // 攻撃の各フェーズを計測するタイマー
+    private int m_attack_direction_sign = 1;                        // 攻撃方向の符号（1=右、-1=左）
+
+    /// <summary>
+    /// 攻撃ビジュアルの初期化処理
+    /// 初期ポーズ（収納・前方向き）を設定
+    /// </summary>
+    protected override void OnInitializeAttackVisual()
+    {
+        ApplyPose(m_retracted_length, m_forward_angle);
+
+        if (m_hit_box != null)
+        {
+            m_hit_box.DeactivateHitBox();
+        }
+    }
+
+    /// <summary>
+    /// 攻撃ビジュアルの表示/非表示を切り替える
+    /// </summary>
+    protected override void SetAttackVisualVisible(bool visible)
+    {
+        if (m_smash_visual_root != null)
+        {
+            m_smash_visual_root.SetActive(visible);
+        }
+    }
 
     /// <summary>
     /// 攻撃開始条件をチェック
@@ -53,7 +97,7 @@ public sealed class SmashAttack : EnemyAttackBase
 
     /// <summary>
     /// 攻撃開始時の処理
-    /// タイマーをリセットし、予備動作状態に遷移、アニメーションを再生
+    /// タイマーをリセットし、予備動作状態に遷移、攻撃方向を計算
     /// </summary>
     protected override void OnStartAttack(EnemyContext context)
     {
@@ -66,6 +110,20 @@ public sealed class SmashAttack : EnemyAttackBase
             m_hit_box.DeactivateHitBox();
         }
 
+        // プレイヤーの方向に応じて攻撃方向を決定（右=1、左=-1）
+        if (context != null && context.player_transform != null)
+        {
+            float delta_x = context.player_transform.position.x - transform.position.x;
+            m_attack_direction_sign = (delta_x >= 0.0f) ? 1 : -1;
+        }
+        else
+        {
+            m_attack_direction_sign = 1;
+        }
+
+        // 初期ポーズを適用（収納・前方向き）
+        ApplyPose(m_retracted_length, m_forward_angle);
+
         // アニメーショントリガーを設定
         if (context.enemy_animator != null && !string.IsNullOrEmpty(m_trigger_name))
         {
@@ -76,6 +134,7 @@ public sealed class SmashAttack : EnemyAttackBase
     /// <summary>
     /// 攻撃の更新処理（毎フレーム呼ばれる）
     /// 状態に応じてタイマーを進め、WindUp→Active→Recoverと遷移
+    /// 各状態でビジュアルポーズも更新
     /// </summary>
     protected override void OnTickAttack(EnemyContext context)
     {
@@ -84,44 +143,38 @@ public sealed class SmashAttack : EnemyAttackBase
         switch (State)
         {
             case AttackState.WindUp:  // 予備動作フェーズ
+                UpdateWindUpPose();   // 予備動作のポーズを更新
+                if (m_timer >= m_windup_time)
                 {
-                    // 予備動作時間が経過したら攻撃実行フェーズへ
-                    if (m_timer >= m_windup_time)
-                    {
-                        m_timer = 0.0f;
-                        SetAttackState(AttackState.Active);
+                    m_timer = 0.0f;
+                    SetAttackState(AttackState.Active);
 
-                        // ヒットボックスを有効化（攻撃判定開始）
-                        if (m_hit_box != null)
-                        {
-                            m_hit_box.ActivateHitBox();
-                        }
+                    // ヒットボックスを有効化（攻撃判定開始）
+                    if (m_hit_box != null)
+                    {
+                        m_hit_box.ActivateHitBox();
                     }
-                    break;
                 }
+                break;
 
             case AttackState.Active:  // 攻撃実行フェーズ
+                UpdateActivePose();   // 攻撃実行のポーズを更新
+                if (m_timer >= m_active_time)
                 {
-                    // 攻撃実行時間が経過したら硬直フェーズへ
-                    if (m_timer >= m_active_time)
-                    {
-                        m_timer = 0.0f;
-                        SetAttackState(AttackState.Recover);
+                    m_timer = 0.0f;
+                    SetAttackState(AttackState.Recover);
 
-                        // ヒットボックスを無効化（攻撃判定終了）
-                        if (m_hit_box != null)
-                        {
-                            m_hit_box.DeactivateHitBox();
-                        }
+                    // ヒットボックスを無効化（攻撃判定終了）
+                    if (m_hit_box != null)
+                    {
+                        m_hit_box.DeactivateHitBox();
                     }
-                    break;
                 }
+                break;
 
             case AttackState.Recover:  // 硬直フェーズ
-                {
-                    // タイマーが進むだけで特別な処理なし
-                    break;
-                }
+                UpdateRecoverPose();   // 硬直のポーズを更新
+                break;
         }
     }
 
@@ -143,7 +196,7 @@ public sealed class SmashAttack : EnemyAttackBase
 
     /// <summary>
     /// 攻撃終了時の処理（正常終了）
-    /// ヒットボックスを確実に無効化してクリーンアップ
+    /// ヒットボックスを確実に無効化し、初期ポーズに戻す
     /// </summary>
     protected override void OnFinishAttack(EnemyContext context)
     {
@@ -151,11 +204,13 @@ public sealed class SmashAttack : EnemyAttackBase
         {
             m_hit_box.DeactivateHitBox();
         }
+
+        ApplyPose(m_retracted_length, m_forward_angle);
     }
 
     /// <summary>
     /// 攻撃キャンセル時の処理（強制中断）
-    /// ヒットボックスを確実に無効化してクリーンアップ
+    /// ヒットボックスを確実に無効化し、初期ポーズに戻す
     /// </summary>
     protected override void OnCancelAttack(EnemyContext context)
     {
@@ -163,6 +218,168 @@ public sealed class SmashAttack : EnemyAttackBase
         {
             m_hit_box.DeactivateHitBox();
         }
+
+        ApplyPose(m_retracted_length, m_forward_angle);
+    }
+
+    /// <summary>
+    /// 予備動作フェーズのポーズを更新
+    /// 2段階構成：1)伸ばすフェーズ 2)上に振りかぶるフェーズ
+    /// </summary>
+    private void UpdateWindUpPose()
+    {
+        if (m_windup_time <= 0.0f)
+        {
+            ApplyPose(m_extended_length, m_raised_angle);
+            return;
+        }
+
+        float normalized = Mathf.Clamp01(m_timer / m_windup_time);
+        float split = Mathf.Clamp01(m_extend_ratio_in_windup);
+
+        // フェーズ1：伸ばす動き（splitの割合まで）
+        if (normalized < split)
+        {
+            float t = (split <= 0.0001f) ? 1.0f : normalized / split;
+            t = EaseOutCubic(t);  // イージング適用
+
+            float length = Mathf.Lerp(m_retracted_length, m_extended_length, t);
+            ApplyPose(length, m_forward_angle);
+        }
+        // フェーズ2：振りかぶる動き（splitから終わりまで）
+        else
+        {
+            float denom = Mathf.Max(0.0001f, 1.0f - split);
+            float t = (normalized - split) / denom;
+            t = EaseInOutCubic(t);  // イージング適用
+
+            float angle = Mathf.Lerp(m_forward_angle, m_raised_angle, t);
+            ApplyPose(m_extended_length, angle);
+        }
+    }
+
+    /// <summary>
+    /// 攻撃実行フェーズのポーズを更新
+    /// 振りかぶり状態から叩きつけ状態へ高速で振り下ろす
+    /// </summary>
+    private void UpdateActivePose()
+    {
+        if (m_active_time <= 0.0f)
+        {
+            ApplyPose(m_extended_length, m_slam_angle);
+            return;
+        }
+
+        float normalized = Mathf.Clamp01(m_timer / m_active_time);
+        float t = EaseInCubic(normalized);  // イージング適用（加速）
+
+        float angle = Mathf.Lerp(m_raised_angle, m_slam_angle, t);
+        ApplyPose(m_extended_length, angle);
+    }
+
+    /// <summary>
+    /// 硬直フェーズのポーズを更新
+    /// 叩きつけ状態から初期ポーズ（収納・前方向き）に戻る
+    /// </summary>
+    private void UpdateRecoverPose()
+    {
+        if (m_recover_time <= 0.0f)
+        {
+            ApplyPose(m_retracted_length, m_forward_angle);
+            return;
+        }
+
+        float normalized = Mathf.Clamp01(m_timer / m_recover_time);
+        float t = EaseInOutCubic(normalized);  // イージング適用
+
+        float length = Mathf.Lerp(m_extended_length, m_retracted_length, t);
+        float angle = Mathf.Lerp(m_slam_angle, m_forward_angle, t);
+        ApplyPose(length, angle);
+    }
+
+    /// <summary>
+    /// ポーズを適用する（長さと角度を同時に設定）
+    /// </summary>
+    private void ApplyPose(float length, float angle)
+    {
+        SetSmashLength(length);
+        SetSmashAngle(angle);
+        UpdateHitBoxRoot(length);
+    }
+
+    /// <summary>
+    /// スマッシュの長さを設定（ScaleのX値を変更）
+    /// </summary>
+    private void SetSmashLength(float length)
+    {
+        if (m_smash_visual == null)
+        {
+            return;
+        }
+
+        Vector3 scale = m_smash_visual.localScale;
+        scale.x = Mathf.Max(0.01f, length);  // 最小値でクランプ（ゼロ除算防止）
+        m_smash_visual.localScale = scale;
+    }
+
+    /// <summary>
+    /// スマッシュの角度を設定（ピボットを回転）
+    /// </summary>
+    private void SetSmashAngle(float angle)
+    {
+        if (m_smash_pivot == null)
+        {
+            return;
+        }
+
+        // 攻撃方向の符号を適用（左右反転）
+        float signed_angle = angle * m_attack_direction_sign;
+        m_smash_pivot.localRotation = Quaternion.Euler(0.0f, 0.0f, signed_angle);
+    }
+
+    /// <summary>
+    /// ヒットボックスの位置を更新（スマッシュの長さに合わせて移動）
+    /// </summary>
+    private void UpdateHitBoxRoot(float length)
+    {
+        if (m_hit_box_root == null)
+        {
+            return;
+        }
+
+        Vector3 local_pos = m_hit_box_root.localPosition;
+        local_pos.x = length;  // X座標を長さに合わせる
+        m_hit_box_root.localPosition = local_pos;
+    }
+
+    /// <summary>
+    /// イージング関数：Ease In Cubic（加速）
+    /// アニメーションの開始が遅く、後半で加速
+    /// </summary>
+    private static float EaseInCubic(float x)
+    {
+        return x * x * x;
+    }
+
+    /// <summary>
+    /// イージング関数：Ease Out Cubic（減速）
+    /// アニメーションの開始が速く、後半で減速
+    /// </summary>
+    private static float EaseOutCubic(float x)
+    {
+        float inv = 1.0f - x;
+        return 1.0f - inv * inv * inv;
+    }
+
+    /// <summary>
+    /// イージング関数：Ease In-Out Cubic（加減速）
+    /// アニメーションの開始と終わりが滞らか、中間が速い
+    /// </summary>
+    private static float EaseInOutCubic(float x)
+    {
+        return (x < 0.5f)
+            ? 4.0f * x * x * x
+            : 1.0f - Mathf.Pow(-2.0f * x + 2.0f, 3.0f) * 0.5f;
     }
 
     /// <summary>
@@ -176,10 +393,22 @@ public sealed class SmashAttack : EnemyAttackBase
             return;
         }
 
-        // 攻撃範囲を赤いワイヤーボックスで描画
         Gizmos.color = Color.red;
-        Vector3 center = transform.position + Vector3.right * (m_range_x * 0.5f);  // 範囲の中心位置
-        Vector3 size = new Vector3(m_range_x, m_range_y * 2.0f, 0.0f);             // ボックスのサイズ
+
+        // 攻撃方向の符号を決定（実行時はm_attack_direction_sign、編集時はScaleから判定）
+        float sign = 1.0f;
+        if (Application.isPlaying)
+        {
+            sign = m_attack_direction_sign;
+        }
+        else
+        {
+            sign = transform.lossyScale.x >= 0.0f ? 1.0f : -1.0f;
+        }
+
+        // 攻攣範囲を赤いワイヤーボックスで描画
+        Vector3 center = transform.position + Vector3.right * (m_range_x * 0.5f * sign);  // 範囲の中心位置
+        Vector3 size = new Vector3(m_range_x, m_range_y * 2.0f, 0.0f);                  // ボックスのサイズ
         Gizmos.DrawWireCube(center, size);
     }
 }
