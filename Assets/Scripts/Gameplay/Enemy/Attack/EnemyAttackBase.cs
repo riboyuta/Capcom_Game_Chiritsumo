@@ -34,6 +34,16 @@ public abstract class EnemyAttackBase : MonoBehaviour
     public AttackState State => m_attack_state;      // 現在の状態
 
     /// <summary>
+    /// 初期化処理
+    /// 攻撃ビジュアルを非表示にして初期化
+    /// </summary>
+    protected virtual void Awake()
+    {
+        SetAttackVisualVisible(false);
+        OnInitializeAttackVisual();
+    }
+
+    /// <summary>
     /// 攻撃を開始できるかどうかを判定
     /// </summary>
     public bool CanStart(EnemyContext context)
@@ -60,8 +70,11 @@ public abstract class EnemyAttackBase : MonoBehaviour
     public void StartAttack(EnemyContext context)
     {
         m_is_running = true;
-        m_attack_state = AttackState.WindUp;
+        m_attack_state = AttackState.WindUp;  // 予備動作状態へ
+
+        SetAttackVisualVisible(true);         // ビジュアルを表示
         OnStartAttack(context);
+
         LogDebug("Start");
     }
 
@@ -106,6 +119,8 @@ public abstract class EnemyAttackBase : MonoBehaviour
         m_attack_state = AttackState.Idle;
 
         OnFinishAttack(context);
+        SetAttackVisualVisible(false);   // ビジュアルを非表示
+
         LogDebug("Finish");
     }
 
@@ -119,6 +134,8 @@ public abstract class EnemyAttackBase : MonoBehaviour
         m_attack_state = AttackState.Idle;
 
         OnCancelAttack(context);
+        SetAttackVisualVisible(false);   // ビジュアルを非表示
+
         LogDebug("Cancel");
     }
 
@@ -143,6 +160,22 @@ public abstract class EnemyAttackBase : MonoBehaviour
         Debug.Log($"[EnemyAttackBase] {name} ({m_attack_name}) : {message}");
     }
 
+    /// <summary>
+    /// 攻撃ビジュアルの初期化処理
+    /// 必要なら派生クラスでオーバーライドして使用
+    /// </summary>
+    protected virtual void OnInitializeAttackVisual()
+    {
+    }
+
+    /// <summary>
+    /// 攻撃ビジュアルの表示/非表示を切り替える
+    /// 必要な攻撃だけ派生クラスでオーバーライドする
+    /// </summary>
+    protected virtual void SetAttackVisualVisible(bool visible)
+    {
+    }
+
     // 派生クラスで実装する必要がある抽象メソッド
     protected abstract bool CheckCanStart(EnemyContext context);    // 攻撃開始条件のチェック
     protected abstract void OnStartAttack(EnemyContext context);     // 攻撃開始時の処理
@@ -150,8 +183,11 @@ public abstract class EnemyAttackBase : MonoBehaviour
     protected abstract bool CheckIsFinished();                       // 攻撃終了判定
     protected abstract void OnFinishAttack(EnemyContext context);    // 攻撃終了時の処理
 
-    // 派生クラスでオーバーライド可能な仮想メソッド
-    protected virtual void OnCancelAttack(EnemyContext context)      // 攻撃キャンセル時の処理
+    /// <summary>
+    /// 攻撃キャンセル時の処理
+    /// 派生クラスで必要に応じてオーバーライド
+    /// </summary>
+    protected virtual void OnCancelAttack(EnemyContext context)
     {
     }
 }

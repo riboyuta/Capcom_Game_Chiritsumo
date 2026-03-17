@@ -15,7 +15,7 @@ public sealed class EnemyHitBox : MonoBehaviour
     }
 
     [Header("HitBox Settings")]
-    [SerializeField] private LayerMask m_target_layer;                          // ヒット対象となるレイヤー
+    [SerializeField] private string m_player_tag = "Player";                    // ヒット対象となるタグ
     [SerializeField] private HitEffectType m_hit_effect_type = HitEffectType.Damage;  // ヒット効果のタイプ
     [SerializeField] private int m_damage = 1;                                  // 与えるダメージ量
     [SerializeField] private float m_knockback_force = 5.0f;                    // ノックバックの力
@@ -70,8 +70,8 @@ public sealed class EnemyHitBox : MonoBehaviour
             return;
         }
 
-        // 対象レイヤーでない場合は処理しない
-        if (!IsTargetLayer(other.gameObject.layer))
+        // 対象タグでない場合は処理しない
+        if (!IsTargetTag(other.gameObject))
         {
             return;
         }
@@ -126,11 +126,11 @@ public sealed class EnemyHitBox : MonoBehaviour
     }
 
     /// <summary>
-    /// 指定されたレイヤーが対象レイヤーに含まれているかチェック
+    /// 指定されたオブジェクトが対象タグを持っているかチェック
     /// </summary>
-    private bool IsTargetLayer(int layer)
+    private bool IsTargetTag(GameObject obj)
     {
-        return ((1 << layer) & m_target_layer) != 0;
+        return obj.CompareTag(m_player_tag);
     }
 
     /// <summary>
