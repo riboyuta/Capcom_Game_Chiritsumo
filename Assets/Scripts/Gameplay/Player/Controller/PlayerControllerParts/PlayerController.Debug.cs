@@ -84,6 +84,8 @@ public sealed partial class PlayerController
     // デバッグ表示向けの左壁判定開始位置。
     public Vector3 LeftWallCheckOrigin => leftWallCheckOrigin;
 
+    // デバッグ表示向けの前ステ中方向転換許可設定。
+
     // デバッグ表示向けの右壁判定開始位置。
     public Vector3 RightWallCheckOrigin => rightWallCheckOrigin;
 

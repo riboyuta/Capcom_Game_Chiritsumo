@@ -132,8 +132,8 @@ GameObject:
   - component: {fileID: 764449971}
   - component: {fileID: 764449970}
   - component: {fileID: 764449969}
-  - component: {fileID: 764449975}
   - component: {fileID: 764449974}
+  - component: {fileID: 764449975}
   - component: {fileID: 764449976}
   m_Layer: 0
   m_Name: Player
@@ -290,7 +290,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38a04b1e34f0d13499df7a41144428db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  rawInputSource: {fileID: 764449974}
+  rawInputSource: {fileID: 0}
   inputBindings:
     _jump:
       _primaryKeyboardKey: 1
@@ -301,42 +301,53 @@ MonoBehaviour:
       _secondaryKeyboardKey: 0
       _gamepadButton: 11
   movementSettings:
-    moveMaxSpeed: 6
-    groundAcceleration: 50
-    groundDeceleration: 60
-    airAcceleration: 25
-    airDeceleration: 20
-    jumpVelocity: 10
-    gravityScale: 1
+    moveMaxSpeed: 8.2
+    groundAcceleration: 78
+    groundTurnAcceleration: 108
+    groundDeceleration: 92
+    airAcceleration: 28
+    airTurnAcceleration: 40
+    airDeceleration: 12
+    jumpVelocity: 14
+    gravityScale: 3
     useVariableJump: 1
+    maxJumpHoldTime: 0.12
+    riseGravityMultiplier: 1
     jumpCutMultiplier: 0.5
     useCoyoteTime: 1
     coyoteTime: 0.1
     useJumpBuffer: 1
     jumpBufferTime: 0.1
-    fallGravityMultiplier: 1
+    fallGravityMultiplier: 1.75
     maxFallSpeed: 20
+    useFastFall: 1
+    fastFallGravityMultiplier: 2.6
+    fastFallMaxSpeed: 28
     groundCheckDistance: 0.1
     groundLayerMask:
       serializedVersion: 2
-      m_Bits: 8
+      m_Bits: 4294967295
     useWallSlide: 1
     wallCheckDistance: 0.15
     wallCheckRadius: 0.2
     wallSlideMaxSpeed: 3
     useWallKick: 1
-    wallJumpHorizontalVelocity: 7
-    wallJumpVerticalVelocity: 9
-    wallJumpControlLockTime: 0.1
-    wallInputThreshold: 0.1
+    wallJumpHorizontalVelocity: 8
+    wallJumpVerticalVelocity: 10.5
+    wallJumpControlLockTime: 0.09
+    wallReattachLockTime: 0.12
+    wallInputThreshold: 0.12
     useStep: 1
-    stepSpeed: 12
-    stepDuration: 0.12
-    stepCooldown: 0.35
+    stepSpeed: 18
+    stepDuration: 0.2
+    stepGravityMultiplier: 0
+    restoreStepStartVerticalVelocity: 0
+    stepCooldown: 0.58
     allowAirStep: 1
+    allowTurnDuringStep: 1
     useStepBuffer: 1
-    stepBufferTime: 0.1
-    stepInvulnerable: 1
+    stepBufferTime: 0.06
+    stepInvulnerable: 0
 --- !u!114 &764449976
 MonoBehaviour:
   m_ObjectHideFlags: 0
