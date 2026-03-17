@@ -110,7 +110,11 @@ public sealed partial class PlayerController
         stepTimer = movementSettings.stepDuration;
         stepCooldownTimer = movementSettings.stepCooldown;
         stepStartVerticalVelocity = rb.linearVelocity.y;
+        Vector2 stepStartVelocity = rb.linearVelocity;
+        stepStartVelocity.y = 0f;
+        rb.linearVelocity = stepStartVelocity;
         stepDirection = facing;
+        isWallSliding = false;
 
         // ステップ入力とバッファを消費する。
         stepRequested = false;
