@@ -133,6 +133,13 @@ public sealed partial class PlayerController : MonoBehaviour
         // 前ステ開始条件を満たす場合は開始する。
         TryStartStep();
 
+        // 前ステップ中は専用速度を最優先し、通常の縦処理を通さない。
+        if (isStepping)
+        {
+            ApplyStepVelocity();
+            return;
+        }
+
         // 横移動、ジャンプ、可変ジャンプ、壁滑り、追加重力を順に適用する。
         ApplyHorizontalMovement(deltaTime);
         ApplyJump();

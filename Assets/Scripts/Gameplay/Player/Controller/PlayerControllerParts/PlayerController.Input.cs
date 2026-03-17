@@ -4,6 +4,12 @@ public sealed partial class PlayerController
 {
     private void UpdateFacingFromMoveInput()
     {
+        // 前ステ中の方向転換を無効化している間は向きを固定する。
+        if (isStepping && !movementSettings.allowTurnDuringStep)
+        {
+            return;
+        }
+
         // 移動入力の X 成分を -1 から 1 の範囲に収める。
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
 

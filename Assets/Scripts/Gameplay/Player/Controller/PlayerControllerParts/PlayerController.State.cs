@@ -37,7 +37,8 @@ public sealed partial class PlayerController
 
     // 最後に向いていた左右方向。(-1:left / +1:right)
     private int facing = 1;
-
+    // 前ステ開始時に固定する進行方向。(-1:left / +1:right)
+    private int stepDirection = 1;
     // Update で検出したジャンプ押下を FixedUpdate まで保持する。
     // これにより物理フレームとのズレで押下を取りこぼしにくくする。
     private bool jumpRequested;
