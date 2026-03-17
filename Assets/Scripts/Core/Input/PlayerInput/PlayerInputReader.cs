@@ -14,9 +14,12 @@ namespace Game.Input
         // sqrMagnitude で比較するので、かなり小さい値を使っている。
         private const float MoveInputEpsilon = 0.0001f;
 
-        // 上方向 / 下方向の「意図あり」とみなす縦入力のしきい値。
         // 0.5f 以上なら UpHeld、-0.5f 以下なら DownHeld と判定する。
         private const float VerticalIntentThreshold = 0.5f;
+
+        // 左右入力の「意図あり」とみなす横入力のしきい値。
+        // -0.5f 以下なら LeftHeld、0.5f 以上なら RightHeld と判定する。
+        private const float HorizontalIntentThreshold = 0.5f;
 
         // Unity Input などから取得した生入力の供給元。
         // このクラスは生入力の取得処理そのものではなく、
@@ -35,6 +38,20 @@ namespace Game.Input
         // 「押された瞬間」ではなく「その方向へ入れ続けているか」を表す。
         public bool UpHeld { get; private set; }
         public bool DownHeld { get; private set; }
+
+        // Move.x から導出した左右意図。
+        public bool LeftHeld { get; private set; }
+        public bool RightHeld { get; private set; }
+
+        // 方向入力の押下エッジ。
+        public bool LeftPressed { get; private set; }
+        public bool RightPressed { get; private set; }
+        public bool DownPressed { get; private set; }
+
+        // 方向入力の押下エッジ算出に使う前フレーム状態。
+        private bool _previousLeftHeld;
+        private bool _previousRightHeld;
+        private bool _previousDownHeld;
 
         // ジャンプ入力のフレーム状態。
         public bool JumpPressed { get; private set; }
@@ -62,7 +79,27 @@ namespace Game.Input
             // 縦入力の意図を Move.y から導出する。
             // ここでは押下エッジではなく、しきい値を超えて保持されているかだけを見る。
             UpHeld = Move.y >= VerticalIntentThreshold;
-            DownHeld = Move.y <= -VerticalIntentThreshold;
+
+            // 横入力の意図を Move.x から導出する。
+            bool leftHeld = Move.x <= -HorizontalIntentThreshold;
+            bool rightHeld = Move.x >= HorizontalIntentThreshold;
+
+            // 下入力は従来通り Move.y から導出する。
+            bool downHeld = Move.y <= -VerticalIntentThreshold;
+
+            // 方向入力の立ち上がり(Pressed)を判定する。
+            LeftPressed = leftHeld && !_previousLeftHeld;
+            RightPressed = rightHeld && !_previousRightHeld;
+            DownPressed = downHeld && !_previousDownHeld;
+
+            LeftHeld = leftHeld;
+            RightHeld = rightHeld;
+            DownHeld = downHeld;
+
+            // 次フレームの edge 判定に向けて現在状態を保持する。
+            _previousLeftHeld = leftHeld;
+            _previousRightHeld = rightHeld;
+            _previousDownHeld = downHeld;
 
             // Jump アクションの統合状態を解決する。
             RawButtonFrameState jumpState = ResolveActionState(_bindings.Jump);
