@@ -5,17 +5,19 @@ using UnityEngine;
 public class SlideGimmick : MonoBehaviour
 {
     [Header("Target Switch")]
-    // 監視対象のスイッチ
+
+    [Header("監視対象のスイッチ")]
     [SerializeField] private SwitchGimmick targetSwitch;
 
     [Header("Slide Settings")]
-    // スライドするローカル方向
+
+    [Header("スライドするローカル方向")]
     [SerializeField] private Vector3 slideLocalDirection = Vector3.right;
-    
-    // スライドする距離
+
+    [Header("スライドする距離")]
     [SerializeField, Min(0f)] private float slideDistance = 3.0f;
-    
-    // スライドする速度 (m/s)
+
+    [Header("スライドする速度 (m/s)")]
     [SerializeField, Min(0.1f)] private float slideSpeed = 2.0f;
 
     private Vector3 initialLocalPosition;

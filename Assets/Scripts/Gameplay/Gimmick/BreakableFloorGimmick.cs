@@ -13,33 +13,33 @@ public class BreakableFloorGimmick : MonoBehaviour
     }
 
     [Header("Floor Settings")]
-    [Tooltip("振動する見た目のオブジェクト（判定と分けるため、子オブジェクトを指定推奨）")]
+    [Header("振動する見た目のオブジェクト（判定と分けるため、子オブジェクトを指定）")]
     [SerializeField] private Transform visualTransform;
 
-    [Tooltip("乗ってから床が壊れるまでの時間（秒）")]
+    [Header("乗ってから床が壊れるまでの時間（秒）")]
     [SerializeField, Min(0f)] private float timeToBreak = 2.0f;
 
-    [Tooltip("壊れた後、再復活するまでの時間（秒）")]
+    [Header("壊れた後、再復活するまでの時間（秒）")]
     [SerializeField, Min(0f)] private float respawnInterval = 3.0f;
 
     [Header("Vibration Settings")]
-    [Tooltip("振動の強さ（揺れ幅）")]
+    [Header("振動の強さ（揺れ幅）")]
     [SerializeField, Min(0f)] private float vibrationIntensity = 0.05f;
 
-    [Tooltip("振動の速さ")]
+    [Header("振動の速さ")]
     [SerializeField, Min(0.1f)] private float vibrationSpeed = 30.0f;
 
     private Collider floorCollider;
     private Renderer[] visualRenderers;
     private FloorState currentState = FloorState.Idle;
-    
+
     private Vector3 initialVisualLocalPos;
     private Coroutine sequenceCoroutine;
 
     private void Awake()
     {
         floorCollider = GetComponent<Collider>();
-        
+
         // visualTransformが未指定の場合、最初の子オブジェクトを使用するか、自身を使用する
         if (visualTransform == null)
         {
@@ -92,11 +92,11 @@ public class BreakableFloorGimmick : MonoBehaviour
         while (elapsed < timeToBreak)
         {
             elapsed += Time.deltaTime;
-            
+
             // サイン波などを使ってランダムまたは規則的に揺らす
             float offsetX = Mathf.Sin(Time.time * vibrationSpeed) * vibrationIntensity;
             float offsetZ = Mathf.Cos(Time.time * vibrationSpeed * 1.2f) * vibrationIntensity;
-            
+
             visualTransform.localPosition = initialVisualLocalPos + new Vector3(offsetX, 0f, offsetZ);
 
             yield return null;
@@ -119,7 +119,7 @@ public class BreakableFloorGimmick : MonoBehaviour
     {
         currentState = FloorState.Broken;
         floorCollider.enabled = false;
-        
+
         foreach (var r in visualRenderers)
         {
             r.enabled = false;
@@ -130,7 +130,7 @@ public class BreakableFloorGimmick : MonoBehaviour
     {
         currentState = FloorState.Idle;
         floorCollider.enabled = true;
-        
+
         foreach (var r in visualRenderers)
         {
             r.enabled = true;

@@ -8,20 +8,19 @@ public sealed class SpringPad : MonoBehaviour
 {
     [Header("Bounce Settings")]
 
-    // 跳ね返し速度（m/s）。
-    // 値が大きいほどプレイヤーが遠くまで飛ぶ。
+    [Header("跳ね返し速度（m/s）値が大きいほどプレイヤーが遠くまで飛ぶ。")]
     [SerializeField, Min(0.1f)] private float bounceSpeed = 15f;
 
-    // true : 跳ね返し軸の既存速度を上書きする。
-    //        バネ床なら Y 速度だけ差し替え、X 速度は残る。
-    // false: 既存速度に跳ね返しベクトルを加算する。
-    //        勢いが合算されるため、速度が大きくなりやすい。
+    [Header("true : 跳ね返し軸の既存速度を上書きする。")]
+    // バネ床なら Y 速度だけ差し替え、X 速度は残る。
+    [Header("false: 既存速度に跳ね返しベクトルを加算する。")]
+    // 勢いが合算されるため、速度が大きくなりやすい。
     [SerializeField] private bool overrideVelocity = true;
 
-    // 連続バウンス防止用クールダウン（秒）。
+    [Header("連続バウンス防止用クールダウン（秒）。")]
     [SerializeField, Min(0f)] private float bounceCooldown = 0.2f;
 
-    // 最後にバウンスした時刻。
+    [Header("最後にバウンスした時刻。")]
     private float lastBounceTime = -1f;
 
     // ──────────────────────────────────────────────

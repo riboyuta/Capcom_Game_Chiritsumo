@@ -13,20 +13,20 @@ public class SwitchGimmick : MonoBehaviour
 
     [Header("Switch Settings")]
     [SerializeField] private SwitchType switchType = SwitchType.Continuous;
-    
-    // スイッチが押し込まれるローカル方向 (床なら (0, -1, 0) など)
+
+    [Header("スイッチが押し込まれるローカル方向 (床なら (0, -1, 0) など)")]
     [SerializeField] private Vector3 pushLocalDirection = Vector3.down;
-    
-    // 押し込まれる最大深さ
+
+    [Header("押し込まれる最大深さ")]
     [SerializeField, Min(0f)] private float pressDepth = 0.2f;
-    
-    // 押し込まれる速度 (m/s)
+
+    [Header("押し込まれる速度 (m/s)")]
     [SerializeField, Min(0.1f)] private float pressSpeed = 1.0f;
-    
-    // 元に戻る速度 (m/s)
+
+    [Header("元に戻る速度 (m/s)")]
     [SerializeField, Min(0.1f)] private float releaseSpeed = 1.0f;
 
-    // スイッチが完全に押し込まれているか判定する閾値 (割合)
+    [Header("スイッチが完全に押し込まれているか判定する閾値 (割合)")]
     [SerializeField, Range(0f, 1f)] private float activateThreshold = 0.9f;
 
     private Vector3 initialLocalPosition;
