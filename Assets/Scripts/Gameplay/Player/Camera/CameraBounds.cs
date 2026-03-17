@@ -6,6 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public sealed class CameraBounds : MonoBehaviour
 {
+    [Header("指定コライダー")]
     // カメラ移動範囲を表す BoxCollider 参照。
     [SerializeField] private BoxCollider boxCollider;
 
