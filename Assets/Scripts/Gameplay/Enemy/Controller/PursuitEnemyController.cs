@@ -151,9 +151,9 @@ public sealed class PursuitEnemyController : MonoBehaviour
 
         // 移動速度を計算して適用
         float move_speed = CalculateMoveSpeed(distance_x);
-        Vector3 velocity = m_rigidbody.velocity;
+        Vector3 velocity = m_rigidbody.linearVelocity;
         velocity.x = move_speed;
-        m_rigidbody.velocity = velocity;
+        m_rigidbody.linearVelocity = velocity;
     }
 
     /// <summary>
@@ -191,9 +191,9 @@ public sealed class PursuitEnemyController : MonoBehaviour
     /// </summary>
     public void StopMove()
     {
-        Vector3 velocity = m_rigidbody.velocity;
+        Vector3 velocity = m_rigidbody.linearVelocity;
         velocity.x = 0.0f;
-        m_rigidbody.velocity = velocity;
+        m_rigidbody.linearVelocity = velocity;
     }
 
     /// <summary>
