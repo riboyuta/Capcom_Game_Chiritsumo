@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 4287525798844820685}
   - component: {fileID: -8776238204720498434}
   m_Layer: 0
-  m_Name: Block_02
+  m_Name: Block_07
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -68,7 +68,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f66a34e3d484f474aa73fccf1a88d830, type: 2}
+  - {fileID: 2100000, guid: e255c0e906f609e429cc12017228cf53, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -126,4 +126,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cbefe0605652694094dc606600ca1df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TileType
-  type: 1
+  type: 6
