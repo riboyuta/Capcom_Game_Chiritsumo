@@ -4,7 +4,7 @@ using UnityEngine;
 /// プレイヤーを追跡する敵のコントローラー
 /// 追跡と攻撃の2つの状態を持ち、状況に応じて自動で切り替わる
 /// </summary>
-[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Rigidbody))]
 public sealed class PursuitEnemyController : MonoBehaviour
 {
     // 敵の行動状態を表す列挙型
@@ -36,14 +36,14 @@ public sealed class PursuitEnemyController : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool m_show_debug_log = false;                 // デバッグログの表示フラグ
 
-    private Rigidbody2D m_rigidbody_2d;                                     // Rigidbody2Dコンポーネント
+    private Rigidbody m_rigidbody;                                          // Rigidbodyコンポーネント
     private EnemyContext m_context;                                         // 敵の情報をまとめたコンテキスト
 
     private EnemyState m_state = EnemyState.Chase;                          // 現在の行動状態
 
     // プロパティ：外部からアクセス可能な読み取り専用情報
     public Transform PlayerTransform => m_player_transform;        // プレイヤーのTransform
-    public Rigidbody2D EnemyRigidbody2D => m_rigidbody_2d;         // 敵のRigidbody2D
+    public Rigidbody EnemyRigidbody => m_rigidbody;                // 敵のRigidbody
     public Animator EnemyAnimator => m_animator;                   // 敵のAnimator
     public EnemyState State => m_state;                            // 現在の状態
 
@@ -52,7 +52,14 @@ public sealed class PursuitEnemyController : MonoBehaviour
     /// </summary>
     private void Awake()
     {
-        m_rigidbody_2d = GetComponent<Rigidbody2D>();
+        m_rigidbody = GetComponent<Rigidbody>();
+
+        // 疑似3D横スク用の拘束をRigidbody側で設定
+        // Z軸の位置と回転を固定し、2D的な動きに制限
+        m_rigidbody.constraints = RigidbodyConstraints.FreezePositionZ
+            | RigidbodyConstraints.FreezeRotationX
+            | RigidbodyConstraints.FreezeRotationY
+            | RigidbodyConstraints.FreezeRotationZ;
 
         // 攻撃コントローラーが設定されていない場合は自動取得
         if (m_attack_controller == null)
@@ -123,7 +130,7 @@ public sealed class PursuitEnemyController : MonoBehaviour
     {
         m_context.enemy_transform = transform;
         m_context.player_transform = m_player_transform;
-        m_context.enemy_rigidbody_2d = m_rigidbody_2d;
+        m_context.enemy_rigidbody = m_rigidbody;
         m_context.enemy_animator = m_animator;
         m_context.enemy_controller = this;
     }
@@ -144,7 +151,9 @@ public sealed class PursuitEnemyController : MonoBehaviour
 
         // 移動速度を計算して適用
         float move_speed = CalculateMoveSpeed(distance_x);
-        m_rigidbody_2d.linearVelocity = new Vector2(move_speed, m_rigidbody_2d.linearVelocity.y);
+        Vector3 velocity = m_rigidbody.velocity;
+        velocity.x = move_speed;
+        m_rigidbody.velocity = velocity;
     }
 
     /// <summary>
@@ -182,7 +191,9 @@ public sealed class PursuitEnemyController : MonoBehaviour
     /// </summary>
     public void StopMove()
     {
-        m_rigidbody_2d.linearVelocity = new Vector2(0.0f, m_rigidbody_2d.linearVelocity.y);
+        Vector3 velocity = m_rigidbody.velocity;
+        velocity.x = 0.0f;
+        m_rigidbody.velocity = velocity;
     }
 
     /// <summary>
@@ -241,7 +252,7 @@ public sealed class PursuitEnemyController : MonoBehaviour
     /// 物理衝突検出（Collisionモード）
     /// 通常のCollider同士の衡突時に呼ばれる
     /// </summary>
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnCollisionEnter(Collision collision)
     {
         if (!m_enable_body_contact)
         {
@@ -255,7 +266,7 @@ public sealed class PursuitEnemyController : MonoBehaviour
     /// トリガー衝突検出（Triggerモード）
     /// トリガー設定されたColliderとの接触時に呼ばれる
     /// </summary>
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter(Collider other)
     {
         if (!m_enable_body_contact)
         {
@@ -269,7 +280,7 @@ public sealed class PursuitEnemyController : MonoBehaviour
     /// 敵の体当たり判定処理
     /// プレイヤーと接触した際に、指定されたメッセージを送信する（例：即死処理）
     /// </summary>
-    private void HandleBodyContact(Collider2D other)
+    private void HandleBodyContact(Collider other)
     {
         // 対象タグでない場合は処理しない
         if (!other.CompareTag(m_player_tag))
@@ -329,7 +340,7 @@ public sealed class EnemyContext
 {
     public Transform enemy_transform;                   // 敵のTransform
     public Transform player_transform;                  // プレイヤーのTransform
-    public Rigidbody2D enemy_rigidbody_2d;              // 敵のRigidbody2D
+    public Rigidbody enemy_rigidbody;                   // 敵のRigidbody
     public Animator enemy_animator;                     // 敵のAnimator
     public PursuitEnemyController enemy_controller;     // 敵のコントローラー
 }

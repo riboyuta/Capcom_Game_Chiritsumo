@@ -56,7 +56,7 @@ public sealed class EnemyHitBox : MonoBehaviour
     /// Unity の物理エンジンによるトリガー衝突検出
     /// ヒットボックスが有効な状態で対象レイヤーのオブジェクトと接触した際に呼ばれる
     /// </summary>
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter(Collider other)
     {
         // ヒットボックスが無効な場合は処理しない
         if (!m_is_active)
@@ -77,7 +77,7 @@ public sealed class EnemyHitBox : MonoBehaviour
         }
 
         // ヒット方向を計算（敵→プレイヤー方向）
-        Vector2 hit_direction = (other.transform.position - transform.position).normalized;
+        Vector3 hit_direction = (other.transform.position - transform.position).normalized;
         bool did_hit = false;
 
         // ヒット効果のタイプに応じて処理を分岐
@@ -152,7 +152,7 @@ public sealed class EnemyHitBox : MonoBehaviour
     /// </summary>
     private void OnDrawGizmosSelected()
     {
-        Collider2D col = GetComponent<Collider2D>();
+        Collider col = GetComponent<Collider>();
         if (col == null)
         {
             return;
@@ -161,15 +161,11 @@ public sealed class EnemyHitBox : MonoBehaviour
         // アクティブ状態に応じて色を変更（赤=有効、灰色=無効）
         Gizmos.color = m_is_active ? Color.red : Color.gray;
 
-        // BoxCollider2Dの場合、そのサイズに合わせてワイヤーボックスを描画
-        if (col is BoxCollider2D box)
+        // BoxColliderの場合、そのサイズに合わせてワイヤーボックスを描画
+        if (col is BoxCollider box)
         {
-            Vector3 center = transform.TransformPoint(box.offset);
-            Vector3 size = new Vector3(
-                box.size.x * transform.lossyScale.x,
-                box.size.y * transform.lossyScale.y,
-                0.0f
-            );
+            Vector3 center = transform.TransformPoint(box.center);
+            Vector3 size = Vector3.Scale(box.size, transform.lossyScale);
 
             Gizmos.DrawWireCube(center, size);
         }
@@ -188,7 +184,7 @@ public interface IDamageable
     /// <param name="damage">受けるダメージ量</param>
     /// <param name="hit_direction">ヒットした方向（ノックバック方向の計算に使用）</param>
     /// <param name="knockback_force">ノックバックの力（0の場合はノックバックなし）</param>
-    void TakeDamage(int damage, Vector2 hit_direction, float knockback_force);
+    void TakeDamage(int damage, Vector3 hit_direction, float knockback_force);
 }
 
 /// <summary>

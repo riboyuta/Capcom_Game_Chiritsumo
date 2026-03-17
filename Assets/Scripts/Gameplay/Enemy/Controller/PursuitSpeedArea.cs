@@ -5,7 +5,7 @@ using UnityEngine;
 /// このエリア内に敵が入ると、速度倍率が適用され、出ると元に戻る
 /// 例：沼地や氷の上などで敵の移動速度を遅くしたり速くしたりする
 /// </summary>
-[RequireComponent(typeof(Collider2D))]
+[RequireComponent(typeof(Collider))]
 public sealed class PursuitSpeedArea : MonoBehaviour
 {
     [Header("Speed")]
@@ -16,11 +16,11 @@ public sealed class PursuitSpeedArea : MonoBehaviour
 
     /// <summary>
     /// Unityエディタでコンポーネント追加時に自動で呼ばれる
-    /// Collider2Dを自動的にトリガーモードに設定
+    /// Colliderを自動的にトリガーモードに設定
     /// </summary>
     private void Reset()
     {
-        Collider2D col = GetComponent<Collider2D>();
+        Collider col = GetComponent<Collider>();
         if (col != null)
         {
             col.isTrigger = true;
@@ -31,7 +31,7 @@ public sealed class PursuitSpeedArea : MonoBehaviour
     /// エリアに何かが侵入した時に呼ばれる
     /// PursuitEnemyControllerを持つオブジェクトの場合、速度倍率を適用
     /// </summary>
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter(Collider other)
     {
         // まず直接PursuitEnemyControllerを取得
         PursuitEnemyController controller = other.GetComponent<PursuitEnemyController>();
@@ -53,7 +53,7 @@ public sealed class PursuitSpeedArea : MonoBehaviour
     /// エリアから何かが退出した時に呼ばれる
     /// PursuitEnemyControllerを持つオブジェクトの場合、速度倍率をリセット（通常速度に戻す）
     /// </summary>
-    private void OnTriggerExit2D(Collider2D other)
+    private void OnTriggerExit(Collider other)
     {
         // まず直接PursuitEnemyControllerを取得
         PursuitEnemyController controller = other.GetComponent<PursuitEnemyController>();
@@ -82,8 +82,8 @@ public sealed class PursuitSpeedArea : MonoBehaviour
             return;
         }
 
-        Collider2D col = GetComponent<Collider2D>();
-        if (col is not BoxCollider2D box)
+        Collider col = GetComponent<Collider>();
+        if (col is not BoxCollider box)
         {
             return;
         }
@@ -91,12 +91,8 @@ public sealed class PursuitSpeedArea : MonoBehaviour
         // エリア範囲を緑色のワイヤーボックスで描画
         Gizmos.color = Color.green;
 
-        Vector3 center = transform.TransformPoint(box.offset);  // エリアの中心位置
-        Vector3 size = new Vector3(
-            box.size.x * transform.lossyScale.x,
-            box.size.y * transform.lossyScale.y,
-            0.0f
-        );
+        Vector3 center = transform.TransformPoint(box.center);  // エリアの中心位置
+        Vector3 size = Vector3.Scale(box.size, transform.lossyScale);
 
         Gizmos.DrawWireCube(center, size);
     }
