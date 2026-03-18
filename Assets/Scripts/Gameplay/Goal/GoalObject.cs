@@ -30,9 +30,9 @@ public sealed class GoalObject : MonoBehaviour
         Debug.Log("[GoalObject] Player reached the goal.");
 
         // FadeManager が存在する場合はフェードアウト後に遷移する。
-        if (FadeManager.Instance != null)
+        if (FadeController.Instance != null)
         {
-            FadeManager.Instance.FadeOut(fadeOutDuration, () =>
+            FadeController.Instance.FadeOut(fadeOutDuration, () =>
             {
                 SceneFlow.LoadResult();
             });

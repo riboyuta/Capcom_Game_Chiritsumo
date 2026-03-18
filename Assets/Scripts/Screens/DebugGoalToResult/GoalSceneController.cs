@@ -1,10 +1,8 @@
 using UnityEngine;
 
-/// <summary>
 /// ゴールシーン用コントローラー。
 /// DebugGoalToResult シーンおよび将来的なゴール処理を持つシーンで使用する。
 /// デバッグ入力（NextScenePressed）で ResultScene へ即遷移する機能も持つ。
-/// </summary>
 public sealed class GoalSceneController : MonoBehaviour
 {
     // 入力連打で二重遷移防止。
@@ -18,9 +16,9 @@ public sealed class GoalSceneController : MonoBehaviour
         Debug.Log("[GoalSceneController] Goal scene started.");
 
         // シーン開始時にフェードインする。
-        if (FadeManager.Instance != null)
+        if (FadeController.Instance != null)
         {
-            FadeManager.Instance.FadeIn(fadeInDuration);
+            FadeController.Instance.FadeIn(fadeInDuration);
         }
     }
 
@@ -39,9 +37,7 @@ public sealed class GoalSceneController : MonoBehaviour
         }
     }
 
-    /// <summary>
     /// ResultScene へ遷移する。
-    /// </summary>
     public void TransitionToResult()
     {
         if (isTransitioning)
