@@ -1,9 +1,7 @@
 using UnityEngine;
 
-/// <summary>
-/// PlayerController の掴まれ処理部分（partial）
-/// 掴まれ状態の管理と処理を担当
-/// </summary>
+// PlayerController の掴まれ処理部分（partial）
+// 掴まれ状態の管理と処理を担当
 public sealed partial class PlayerController : IGrabReceiver
 {
     [Header("Grab")]
@@ -19,18 +17,14 @@ public sealed partial class PlayerController : IGrabReceiver
     // プロパティ：外部からアクセス可能な読み取り専用情報
     public bool IsGrabbed => m_is_grabbed;                          // 掴まれているか
 
-    /// <summary>
-    /// 掴みシステムの初期化（メインのAwakeから呼ぶ）
-    /// </summary>
+    // 掴みシステムの初期化（メインのAwakeから呼ぶ）
     private void InitializeGrab()
     {
         m_is_grabbed = false;
         m_grab_timer = 0.0f;
     }
 
-    /// <summary>
-    /// 掴みシステムの更新（メインのUpdateから呼ぶ）
-    /// </summary>
+    // 掴みシステムの更新（メインのUpdateから呼ぶ）
     private void UpdateGrab(float deltaTime)
     {
         // 掴まれ状態の更新
@@ -48,9 +42,7 @@ public sealed partial class PlayerController : IGrabReceiver
     // IGrabReceiverインターフェースの実装
     // ========================================
 
-    /// <summary>
-    /// 掴まれた時の処理
-    /// </summary>
+    // 掴まれた時の処理
     public void OnGrabbed(float duration)
     {
         // 掴まれることができない、既に掴まれている、または無敵状態の場合は無視
@@ -69,9 +61,7 @@ public sealed partial class PlayerController : IGrabReceiver
         OnGrabStart();
     }
 
-    /// <summary>
-    /// 掴みから解放される
-    /// </summary>
+    // 掴みから解放される
     private void ReleaseGrab()
     {
         if (!m_is_grabbed)
@@ -92,9 +82,7 @@ public sealed partial class PlayerController : IGrabReceiver
     // 内部処理・イベント
     // ========================================
 
-    /// <summary>
-    /// 掴まれた時の処理
-    /// </summary>
+    // 掴まれた時の処理
     private void OnGrabStart()
     {
         // 移動を制限するため、速度をリセットする。
@@ -108,9 +96,7 @@ public sealed partial class PlayerController : IGrabReceiver
         // 例：掴まれアニメーション再生、エフェクト再生など
     }
 
-    /// <summary>
-    /// 掴みから解放された時の処理
-    /// </summary>
+    // 掴みから解放された時の処理
     private void OnGrabEnd()
     {
         // TODO: 解放時の演出
@@ -121,9 +107,7 @@ public sealed partial class PlayerController : IGrabReceiver
     // ユーティリティ
     // ========================================
 
-    /// <summary>
-    /// 掴みを強制解除（外部から呼び出し可能）
-    /// </summary>
+    // 掴みを強制解除（外部から呼び出し可能）
     public void ForceReleaseGrab()
     {
         if (m_is_grabbed)
@@ -133,9 +117,7 @@ public sealed partial class PlayerController : IGrabReceiver
         }
     }
 
-    /// <summary>
-    /// デバッグログ出力
-    /// </summary>
+    // デバッグログ出力
     private void LogGrab(string message)
     {
         if (!m_show_grab_debug_log)

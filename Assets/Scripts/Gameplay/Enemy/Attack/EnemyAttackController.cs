@@ -1,9 +1,7 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-/// <summary>
-/// 敵の攻撃を管理するコントローラー
-/// 複数の攻撃パターンから優先度に基づいて最適な攻撃を選択し、実行する
-/// </summary>
+// 敵の攻撃を管理するコントローラー
+// 複数の攻撃パターンから優先度に基づいて最適な攻撃を選択し、実行する
 public sealed class EnemyAttackController : MonoBehaviour
 {
     [SerializeField] private EnemyAttackBase[] m_attacks;          // この敵が持つすべての攻撃パターン
@@ -15,19 +13,15 @@ public sealed class EnemyAttackController : MonoBehaviour
     public bool IsAttacking => m_current_attack != null;                                                      // 攻撃実行中かどうか
     public string CurrentAttackName => m_current_attack != null ? m_current_attack.AttackName : "None";      // 現在の攻撃名
 
-    /// <summary>
-    /// Unity エディタでコンポーネント追加時に自動で呼ばれる
-    /// 同じGameObjectにアタッチされている攻撃コンポーネントを自動収集
-    /// </summary>
+    // Unity エディタでコンポーネント追加時に自動で呼ばれる
+    // 同じGameObjectにアタッチされている攻撃コンポーネントを自動収集
     private void Reset()
     {
         m_attacks = GetComponents<EnemyAttackBase>();
     }
 
-    /// <summary>
-    /// 攻撃の開始を試みる
-    /// </summary>
-    /// <returns>攻撃を開始できた場合はtrue</returns>
+    // 攻撃の開始を試みる
+    // Returns: 攻撃を開始できた場合はtrue
     public bool TryStartAttack(EnemyContext context)
     {
         // 既に攻撃実行中の場合は開始できない
@@ -51,9 +45,7 @@ public sealed class EnemyAttackController : MonoBehaviour
         return true;
     }
 
-    /// <summary>
-    /// 現在実行中の攻撃を更新する（毎フレーム呼ばれる）
-    /// </summary>
+    // 現在実行中の攻撃を更新する（毎フレーム呼ばれる）
     public void TickCurrentAttack(EnemyContext context)
     {
         if (m_current_attack == null)
@@ -73,9 +65,7 @@ public sealed class EnemyAttackController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 現在実行中の攻撃をキャンセルする（強制中断）
-    /// </summary>
+    // 現在実行中の攻撃をキャンセルする（強制中断）
     public void CancelCurrentAttack(EnemyContext context)
     {
         if (m_current_attack == null)
@@ -88,9 +78,7 @@ public sealed class EnemyAttackController : MonoBehaviour
         m_current_attack = null;
     }
 
-    /// <summary>
-    /// 現在の状況で実行可能な攻撃の中から、最も優先度の高いものを選択
-    /// </summary>
+    // 現在の状況で実行可能な攻撃の中から、最も優先度の高いものを選択
     private EnemyAttackBase FindBestAttack(EnemyContext context)
     {
         if (m_attacks == null || m_attacks.Length == 0)
@@ -126,9 +114,7 @@ public sealed class EnemyAttackController : MonoBehaviour
         return best_attack;
     }
 
-    /// <summary>
-    /// デバッグログを出力（m_show_debug_logがtrueの場合のみ）
-    /// </summary>
+    // デバッグログを出力（m_show_debug_logがtrueの場合のみ）
     private void LogDebug(string message)
     {
         if (!m_show_debug_log)

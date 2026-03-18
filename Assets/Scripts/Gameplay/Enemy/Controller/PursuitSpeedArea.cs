@@ -1,10 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-/// <summary>
-/// 敵の移動速度を変更するエリア
-/// このエリア内に敵が入ると、速度倍率が適用され、出ると元に戻る
-/// 例：沼地や氷の上などで敵の移動速度を遅くしたり速くしたりする
-/// </summary>
+// 敵の移動速度を変更するエリア
+// このエリア内に敵が入ると、速度倍率が適用され、出ると元に戻る
+// 例：沼地や氷の上などで敵の移動速度を遅くしたり速くしたりする
 [RequireComponent(typeof(Collider))]
 public sealed class PursuitSpeedArea : MonoBehaviour
 {
@@ -14,10 +12,8 @@ public sealed class PursuitSpeedArea : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool m_draw_gizmos = true;             // エリア範囲のギズモを描画するか
 
-    /// <summary>
-    /// Unityエディタでコンポーネント追加時に自動で呼ばれる
-    /// Colliderを自動的にトリガーモードに設定
-    /// </summary>
+    // Unityエディタでコンポーネント追加時に自動で呼ばれる
+    // Colliderを自動的にトリガーモードに設定
     private void Reset()
     {
         Collider col = GetComponent<Collider>();
@@ -27,10 +23,8 @@ public sealed class PursuitSpeedArea : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// エリアに何かが侵入した時に呼ばれる
-    /// PursuitEnemyControllerを持つオブジェクトの場合、速度倍率を適用
-    /// </summary>
+    // エリアに何かが侵入した時に呼ばれる
+    // PursuitEnemyControllerを持つオブジェクトの場合、速度倍率を適用
     private void OnTriggerEnter(Collider other)
     {
         // まず直接PursuitEnemyControllerを取得
@@ -49,10 +43,8 @@ public sealed class PursuitSpeedArea : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// エリアから何かが退出した時に呼ばれる
-    /// PursuitEnemyControllerを持つオブジェクトの場合、速度倍率をリセット（通常速度に戻す）
-    /// </summary>
+    // エリアから何かが退出した時に呼ばれる
+    // PursuitEnemyControllerを持つオブジェクトの場合、速度倍率をリセット（通常速度に戻す）
     private void OnTriggerExit(Collider other)
     {
         // まず直接PursuitEnemyControllerを取得
@@ -71,10 +63,8 @@ public sealed class PursuitSpeedArea : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Unityエディタでオブジェクト選択時にギズモを描画（デバッグ用）
-    /// エリアの範囲を緑色のワイヤーボックスで視覚的に表示
-    /// </summary>
+    // Unityエディタでオブジェクト選択時にギズモを描画（デバッグ用）
+    // エリアの範囲を緑色のワイヤーボックスで視覚的に表示
     private void OnDrawGizmosSelected()
     {
         if (!m_draw_gizmos)

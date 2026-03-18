@@ -1,9 +1,7 @@
 using UnityEngine;
 
-/// <summary>
-/// PlayerController の体力・ダメージ処理部分（partial）
-/// HP管理、ダメージ処理、無敵時間、死亡処理、ノックバック処理を担当
-/// </summary>
+// PlayerController の体力・ダメージ処理部分（partial）
+// HP管理、ダメージ処理、無敵時間、死亡処理、ノックバック処理を担当
 public sealed partial class PlayerController : IDamageable
 {
     [Header("Health")]
@@ -37,9 +35,7 @@ public sealed partial class PlayerController : IDamageable
     public bool IsInvincible => m_invincible || m_invincibility_timer > 0.0f || m_is_grabbed;
     public bool IsKnockback => m_is_knockback;
 
-    /// <summary>
-    /// 体力システムの初期化（メインのAwakeから呼ぶ）
-    /// </summary>
+    // 体力システムの初期化（メインのAwakeから呼ぶ）
     private void InitializeHealth()
     {
         m_current_health = m_max_health;
@@ -51,9 +47,7 @@ public sealed partial class PlayerController : IDamageable
         m_is_knockback = false;
     }
 
-    /// <summary>
-    /// 体力システムの更新（メインのUpdateから呼ぶ）
-    /// </summary>
+    // 体力システムの更新（メインのUpdateから呼ぶ）
     private void UpdateHealth(float deltaTime)
     {
         // 無敵時間の更新
@@ -87,9 +81,7 @@ public sealed partial class PlayerController : IDamageable
     // IDamageableインターフェースの実装
     // ========================================
 
-    /// <summary>
-    /// ダメージを受ける処理
-    /// </summary>
+    // ダメージを受ける処理
     public void TakeDamage(int damage, Vector3 hit_direction, float knockback_force)
     {
         if (IsInvincible)
@@ -132,9 +124,7 @@ public sealed partial class PlayerController : IDamageable
     // 敵の体当たり用（SendMessageで呼ばれる）
     // ========================================
 
-    /// <summary>
-    /// 即死処理（敵の体当たりなど）
-    /// </summary>
+    // 即死処理（敵の体当たりなど）
     public void Kill()
     {
         if (IsInvincible)
@@ -152,9 +142,7 @@ public sealed partial class PlayerController : IDamageable
     // ノックバック内部処理
     // ========================================
 
-    /// <summary>
-    /// ノックバック開始
-    /// </summary>
+    // ノックバック開始
     private void StartKnockback(Vector3 hit_direction, float knockback_force)
     {
         Vector3 direction = hit_direction.normalized;
@@ -176,9 +164,7 @@ public sealed partial class PlayerController : IDamageable
         m_knockback_velocity = m_knockback_initial_velocity;
     }
 
-    /// <summary>
-    /// ノックバック終了
-    /// </summary>
+    // ノックバック終了
     private void EndKnockback()
     {
         m_is_knockback = false;
@@ -196,9 +182,7 @@ public sealed partial class PlayerController : IDamageable
         LogHealth("Knockback ended");
     }
 
-    /// <summary>
-    /// ノックバック速度を適用（FixedUpdateから呼ばれる）
-    /// </summary>
+    // ノックバック速度を適用（FixedUpdateから呼ばれる）
     private void ApplyKnockbackVelocity()
     {
         if (rb == null || !m_is_knockback)
@@ -223,17 +207,13 @@ public sealed partial class PlayerController : IDamageable
     // 内部処理・イベント
     // ========================================
 
-    /// <summary>
-    /// ダメージを受けた時の演出処理
-    /// </summary>
+    // ダメージを受けた時の演出処理
     private void OnDamaged(int damage, Vector3 hit_direction, float knockback_force)
     {
         // TODO: ダメージエフェクト、サウンド、アニメーションなどを再生
     }
 
-    /// <summary>
-    /// 死亡処理
-    /// </summary>
+    // 死亡処理
     private void OnDeath()
     {
         LogHealth("Player died!");
@@ -257,9 +237,7 @@ public sealed partial class PlayerController : IDamageable
     // ユーティリティ
     // ========================================
 
-    /// <summary>
-    /// 体力を回復する（アイテムなど）
-    /// </summary>
+    // 体力を回復する（アイテムなど）
     public void Heal(int amount)
     {
         int previous_health = m_current_health;
@@ -272,9 +250,7 @@ public sealed partial class PlayerController : IDamageable
         }
     }
 
-    /// <summary>
-    /// デバッグログ出力
-    /// </summary>
+    // デバッグログ出力
     private void LogHealth(string message)
     {
         if (!m_show_health_debug_log)

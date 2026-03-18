@@ -1,9 +1,7 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-/// <summary>
-/// プレイヤーを追跡する敵のコントローラー
-/// 追跡と攻撃の2つの状態を持ち、状況に応じて自動で切り替わる
-/// </summary>
+// プレイヤーを追跡する敵のコントローラー
+// 追跡と攻撃の2つの状態を持ち、状況に応じて自動で切り替わる
 [RequireComponent(typeof(Rigidbody))]
 public sealed class PursuitEnemyController : MonoBehaviour
 {
@@ -47,9 +45,7 @@ public sealed class PursuitEnemyController : MonoBehaviour
     public Animator EnemyAnimator => m_animator;                   // 敵のAnimator
     public EnemyState State => m_state;                            // 現在の状態
 
-    /// <summary>
-    /// 初期化処理
-    /// </summary>
+    // 初期化処理
     private void Awake()
     {
         m_rigidbody = GetComponent<Rigidbody>();
@@ -71,10 +67,8 @@ public sealed class PursuitEnemyController : MonoBehaviour
         RefreshContext();
     }
 
-    /// <summary>
-    /// メインループ（毎フレーム呼ばれる）
-    /// 攻撃の実行と開始判定を行う
-    /// </summary>
+    // メインループ（毎フレーム呼ばれる）
+    // 攻撃の実行と開始判定を行う
     private void Update()
     {
         if (m_player_transform == null)
@@ -108,10 +102,8 @@ public sealed class PursuitEnemyController : MonoBehaviour
         m_state = EnemyState.Chase;
     }
 
-    /// <summary>
-    /// 物理演算用の更新処理（固定フレームレートで呼ばれる）
-    /// プレイヤーの追跡処理を実行
-    /// </summary>
+    // 物理演算用の更新処理（固定フレームレートで呼ばれる）
+    // プレイヤーの追跡処理を実行
     private void FixedUpdate()
     {
         if (m_player_transform == null)
@@ -122,10 +114,8 @@ public sealed class PursuitEnemyController : MonoBehaviour
         ChasePlayer();
     }
 
-    /// <summary>
-    /// コンテキストを最新の状態に更新
-    /// 攻撃処理で使用する敵の情報を集約
-    /// </summary>
+    // コンテキストを最新の状態に更新
+    // 攻撃処理で使用する敵の情報を集約
     private void RefreshContext()
     {
         m_context.enemy_transform = transform;
@@ -135,9 +125,7 @@ public sealed class PursuitEnemyController : MonoBehaviour
         m_context.enemy_controller = this;
     }
 
-    /// <summary>
-    /// プレイヤーを追跡する処理
-    /// </summary>
+    // プレイヤーを追跡する処理
     private void ChasePlayer()
     {
         float distance_x = GetPlayerDistanceX();
@@ -156,10 +144,8 @@ public sealed class PursuitEnemyController : MonoBehaviour
         m_rigidbody.linearVelocity = velocity;
     }
 
-    /// <summary>
-    /// 移動速度を計算する
-    /// 基本速度に各種倍率を適用し、最大速度でクランプする
-    /// </summary>
+    // 移動速度を計算する
+    // 基本速度に各種倍率を適用し、最大速度でクランプする
     private float CalculateMoveSpeed(float distance_x)
     {
         float speed = m_base_speed;
@@ -171,10 +157,8 @@ public sealed class PursuitEnemyController : MonoBehaviour
         return speed;
     }
 
-    /// <summary>
-    /// 追いつき倍率を計算する
-    /// プレイヤーが遠くに離れすぎた場合に速度ブーストを適用
-    /// </summary>
+    // 追いつき倍率を計算する
+    // プレイヤーが遠くに離れすぎた場合に速度ブーストを適用
     private float CalculateCatchupMultiplier(float distance_x)
     {
         // 追いつき距離以上離れている場合は倍率を適用
@@ -186,9 +170,7 @@ public sealed class PursuitEnemyController : MonoBehaviour
         return 1.0f;
     }
 
-    /// <summary>
-    /// 移動を停止する（Y軸の速度は維持）
-    /// </summary>
+    // 移動を停止する（Y軸の速度は維持）
     public void StopMove()
     {
         Vector3 velocity = m_rigidbody.linearVelocity;
@@ -196,10 +178,8 @@ public sealed class PursuitEnemyController : MonoBehaviour
         m_rigidbody.linearVelocity = velocity;
     }
 
-    /// <summary>
-    /// プレイヤーとのX軸方向の距離を取得
-    /// 正の値 = プレイヤーが右側、負の値 = プレイヤーが左側
-    /// </summary>
+    // プレイヤーとのX軸方向の距離を取得
+    // 正の値 = プレイヤーが右側、負の値 = プレイヤーが左側
     public float GetPlayerDistanceX()
     {
         if (m_player_transform == null)
@@ -210,9 +190,7 @@ public sealed class PursuitEnemyController : MonoBehaviour
         return m_player_transform.position.x - transform.position.x;
     }
 
-    /// <summary>
-    /// プレイヤーとのY軸方向の距離を取得（絶対値）
-    /// </summary>
+    // プレイヤーとのY軸方向の距離を取得（絶対値）
     public float GetPlayerDistanceY()
     {
         if (m_player_transform == null)
@@ -223,35 +201,27 @@ public sealed class PursuitEnemyController : MonoBehaviour
         return Mathf.Abs(m_player_transform.position.y - transform.position.y);
     }
 
-    /// <summary>
-    /// プレイヤーのTransformを設定する（外部から呼び出し可能）
-    /// </summary>
+    // プレイヤーのTransformを設定する（外部から呼び出し可能）
     public void SetPlayerTransform(Transform player_transform)
     {
         m_player_transform = player_transform;
     }
 
-    /// <summary>
-    /// エリアによる速度倍率を設定する
-    /// 特定のエリアで敵の移動速度を変更する際に使用
-    /// </summary>
+    // エリアによる速度倍率を設定する
+    // 特定のエリアで敵の移動速度を変更する際に使用
     public void SetAreaSpeedMultiplier(float multiplier)
     {
         m_area_speed_multiplier = multiplier;
     }
 
-    /// <summary>
-    /// エリア速度倍率をリセット（通常速度に戻す）
-    /// </summary>
+    // エリア速度倍率をリセット（通常速度に戻す）
     public void ResetAreaSpeedMultiplier()
     {
         m_area_speed_multiplier = 1.0f;
     }
 
-    /// <summary>
-    /// 物理衝突検出（Collisionモード）
-    /// 通常のCollider同士の衡突時に呼ばれる
-    /// </summary>
+    // 物理衝突検出（Collisionモード）
+    // 通常のCollider同士の衡突時に呼ばれる
     private void OnCollisionEnter(Collision collision)
     {
         if (!m_enable_body_contact)
@@ -262,10 +232,8 @@ public sealed class PursuitEnemyController : MonoBehaviour
         HandleBodyContact(collision.collider);
     }
 
-    /// <summary>
-    /// トリガー衝突検出（Triggerモード）
-    /// トリガー設定されたColliderとの接触時に呼ばれる
-    /// </summary>
+    // トリガー衝突検出（Triggerモード）
+    // トリガー設定されたColliderとの接触時に呼ばれる
     private void OnTriggerEnter(Collider other)
     {
         if (!m_enable_body_contact)
@@ -276,10 +244,8 @@ public sealed class PursuitEnemyController : MonoBehaviour
         HandleBodyContact(other);
     }
 
-    /// <summary>
-    /// 敵の体当たり判定処理
-    /// プレイヤーと接触した際に、指定されたメッセージを送信する（例：即死処理）
-    /// </summary>
+    // 敵の体当たり判定処理
+    // プレイヤーと接触した際に、指定されたメッセージを送信する（例：即死処理）
     private void HandleBodyContact(Collider other)
     {
         // 対象タグでない場合は処理しない
@@ -297,9 +263,7 @@ public sealed class PursuitEnemyController : MonoBehaviour
         LogDebug($"Body Contact : {other.name}");
     }
 
-    /// <summary>
-    /// デバッグログを出力（m_show_debug_logがtrueの場合のみ）
-    /// </summary>
+    // デバッグログを出力（m_show_debug_logがtrueの場合のみ）
     private void LogDebug(string message)
     {
         if (!m_show_debug_log)
@@ -310,10 +274,8 @@ public sealed class PursuitEnemyController : MonoBehaviour
         Debug.Log($"[PursuitEnemyController] {name} : {message}");
     }
 
-    /// <summary>
-    /// Unityエディタでオブジェクト選択時にギズモを描画（デバッグ用）
-    /// 黄色 = 停止距離、水色 = 追いつき距離
-    /// </summary>
+    // Unityエディタでオブジェクト選択時にギズモを描画（デバッグ用）
+    // 黄色 = 停止距離、水色 = 追いつき距離
     private void OnDrawGizmosSelected()
     {
         // 停止距離を黄色で表示
@@ -332,10 +294,8 @@ public sealed class PursuitEnemyController : MonoBehaviour
     }
 }
 
-/// <summary>
-/// 敵の情報をまとめたコンテキストクラス
-/// 攻撃処理で必要な敵とプレイヤーの情報を一箇所にまとめて渡すために使用
-/// </summary>
+// 敵の情報をまとめたコンテキストクラス
+// 攻撃処理で必要な敵とプレイヤーの情報を一箇所にまとめて渡すために使用
 public sealed class EnemyContext
 {
     public Transform enemy_transform;                   // 敵のTransform

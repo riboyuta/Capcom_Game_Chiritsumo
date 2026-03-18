@@ -1,9 +1,7 @@
-using UnityEngine;
-
-/// <summary>
-/// 敵の攻撃判定を管理するヒットボックス
-/// トリガーコリジョンを使用してプレイヤーとの接触を検出し、ダメージやノックバックなどの効果を適用
-/// </summary>
+﻿using UnityEngine;
+ 
+// 敵の攻撃判定を管理するヒットボックス
+// トリガーコリジョンを使用してプレイヤーとの接触を検出し、ダメージやノックバックなどの効果を適用
 public sealed class EnemyHitBox : MonoBehaviour
 {
     // ヒット時に適用する効果のタイプ
@@ -31,10 +29,8 @@ public sealed class EnemyHitBox : MonoBehaviour
     // プロパティ：外部からアクセス可能な読み取り専用情報
     public bool IsActive => m_is_active;                                        // ヒットボックスがアクティブか
 
-    /// <summary>
-    /// ヒットボックスを有効化する
-    /// 攻撃開始時に呼び出され、衝突判定を開始する
-    /// </summary>
+    // ヒットボックスを有効化する
+    // 攻撃開始時に呼び出され、衝突判定を開始する
     public void ActivateHitBox()
     {
         m_is_active = true;
@@ -42,20 +38,16 @@ public sealed class EnemyHitBox : MonoBehaviour
         LogDebug("Activate");
     }
 
-    /// <summary>
-    /// ヒットボックスを無効化する
-    /// 攻撃終了時やキャンセル時に呼び出され、衝突判定を停止する
-    /// </summary>
+    // ヒットボックスを無効化する
+    // 攻撃終了時やキャンセル時に呼び出され、衝突判定を停止する
     public void DeactivateHitBox()
     {
         m_is_active = false;
         LogDebug("Deactivate");
     }
 
-    /// <summary>
-    /// Unity の物理エンジンによるトリガー衝突検出
-    /// ヒットボックスが有効な状態で対象レイヤーのオブジェクトと接触した際に呼ばれる
-    /// </summary>
+    // Unity の物理エンジンによるトリガー衝突検出
+    // ヒットボックスが有効な状態で対象レイヤーのオブジェクトと接触した際に呼ばれる
     private void OnTriggerEnter(Collider other)
     {
         // ヒットボックスが無効な場合は処理しない
@@ -125,17 +117,13 @@ public sealed class EnemyHitBox : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 指定されたオブジェクトが対象タグを持っているかチェック
-    /// </summary>
+    // 指定されたオブジェクトが対象タグを持っているかチェック
     private bool IsTargetTag(GameObject obj)
     {
         return obj.CompareTag(m_player_tag);
     }
 
-    /// <summary>
-    /// デバッグログを出力（m_show_debug_logがtrueの場合のみ）
-    /// </summary>
+    // デバッグログを出力（m_show_debug_logがtrueの場合のみ）
     private void LogDebug(string message)
     {
         if (!m_show_debug_log)
@@ -146,10 +134,8 @@ public sealed class EnemyHitBox : MonoBehaviour
         Debug.Log($"[EnemyHitBox] {name} : {message}");
     }
 
-    /// <summary>
-    /// Unityエディタでオブジェクト選択時にギズモを描画（デバッグ用）
-    /// ヒットボックスの範囲を視覚的に表示（アクティブ時は赤、非アクティブ時は灰色）
-    /// </summary>
+    // Unityエディタでオブジェクト選択時にギズモを描画（デバッグ用）
+    // ヒットボックスの範囲を視覚的に表示（アクティブ時は赤、非アクティブ時は灰色）
     private void OnDrawGizmosSelected()
     {
         Collider col = GetComponent<Collider>();
@@ -172,30 +158,22 @@ public sealed class EnemyHitBox : MonoBehaviour
     }
 }
 
-/// <summary>
-/// ダメージを受け取ることができるオブジェクト用のインターフェース
-/// プレイヤーなどダメージを受ける対象がこのインターフェースを実装する
-/// </summary>
+// ダメージを受け取ることができるオブジェクト用のインターフェース
+// プレイヤーなどダメージを受ける対象がこのインターフェースを実装する
 public interface IDamageable
 {
-    /// <summary>
-    /// ダメージを受ける処理
-    /// </summary>
-    /// <param name="damage">受けるダメージ量</param>
-    /// <param name="hit_direction">ヒットした方向（ノックバック方向の計算に使用）</param>
-    /// <param name="knockback_force">ノックバックの力（0の場合はノックバックなし）</param>
+    // ダメージを受ける処理
+    // 受けるダメージ量 (damage)
+    // ヒットした方向（ノックバック方向の計算に使用） (hit_direction)
+    // ノックバックの力（0の場合はノックバックなし） (knockback_force)
     void TakeDamage(int damage, Vector3 hit_direction, float knockback_force);
 }
 
-/// <summary>
-/// 掴み攻撃を受け取ることができるオブジェクト用のインターフェース
-/// プレイヤーなど掴まれる対象がこのインターフェースを実装する
-/// </summary>
+// 掴み攻撃を受け取ることができるオブジェクト用のインターフェース
+// プレイヤーなど掴まれる対象がこのインターフェースを実装する
 public interface IGrabReceiver
 {
-    /// <summary>
-    /// 掴まれた時の処理
-    /// </summary>
-    /// <param name="duration">掴まれている時間（秒）</param>
+    // 掴まれた時の処理
+    // 掴まれている時間（秒） (duration)
     void OnGrabbed(float duration);
 }

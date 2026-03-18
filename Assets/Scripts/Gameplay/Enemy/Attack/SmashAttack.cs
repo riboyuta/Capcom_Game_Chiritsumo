@@ -1,10 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-/// <summary>
-/// スマッシュ攻撃の実装
-/// 予備動作→攻撃実行→硬直の3段階で構成される近接攻撃
-/// ビジュアル表現付き：伸縮と回転でハンマーのようなモーションを再現
-/// </summary>
+// スマッシュ攻撃の実装
+// 予備動作→攻撃実行→硬直の3段階で構成される近接攻撃
+// ビジュアル表現付き：伸縮と回転でハンマーのようなモーションを再現
 public sealed class SmashAttack : EnemyAttackBase
 {
     [Header("Range")]
@@ -45,10 +43,8 @@ public sealed class SmashAttack : EnemyAttackBase
     private float m_timer = 0.0f;                                   // 攻撃の各フェーズを計測するタイマー
     private int m_attack_direction_sign = 1;                        // 攻撃方向の符号（1=右、-1=左）
 
-    /// <summary>
-    /// 攻撃ビジュアルの初期化処理
-    /// 初期ポーズ（収納・前方向き）を設定
-    /// </summary>
+    // 攻撃ビジュアルの初期化処理
+    // 初期ポーズ（収納・前方向き）を設定
     protected override void OnInitializeAttackVisual()
     {
         ApplyPose(m_retracted_length, m_forward_angle);
@@ -59,9 +55,7 @@ public sealed class SmashAttack : EnemyAttackBase
         }
     }
 
-    /// <summary>
-    /// 攻撃ビジュアルの表示/非表示を切り替える
-    /// </summary>
+    // 攻撃ビジュアルの表示/非表示を切り替える
     protected override void SetAttackVisualVisible(bool visible)
     {
         if (m_smash_visual_root != null)
@@ -70,10 +64,8 @@ public sealed class SmashAttack : EnemyAttackBase
         }
     }
 
-    /// <summary>
-    /// 攻撃開始条件をチェック
-    /// プレイヤーが攻撃範囲内にいるかどうかを判定
-    /// </summary>
+    // 攻撃開始条件をチェック
+    // プレイヤーが攻撃範囲内にいるかどうかを判定
     protected override bool CheckCanStart(EnemyContext context)
     {
         // コンテキストと必要な参照が有効かチェック
@@ -95,10 +87,8 @@ public sealed class SmashAttack : EnemyAttackBase
         return distance_x <= m_range_x && distance_y <= m_range_y;
     }
 
-    /// <summary>
-    /// 攻撃開始時の処理
-    /// タイマーをリセットし、予備動作状態に遷移、攻撃方向を計算
-    /// </summary>
+    // 攻撃開始時の処理
+    // タイマーをリセットし、予備動作状態に遷移、攻撃方向を計算
     protected override void OnStartAttack(EnemyContext context)
     {
         m_timer = 0.0f;
@@ -131,11 +121,9 @@ public sealed class SmashAttack : EnemyAttackBase
         }
     }
 
-    /// <summary>
-    /// 攻撃の更新処理（毎フレーム呼ばれる）
-    /// 状態に応じてタイマーを進め、WindUp→Active→Recoverと遷移
-    /// 各状態でビジュアルポーズも更新
-    /// </summary>
+    // 攻撃の更新処理（毎フレーム呼ばれる）
+    // 状態に応じてタイマーを進め、WindUp→Active→Recoverと遷移
+    // 各状態でビジュアルポーズも更新
     protected override void OnTickAttack(EnemyContext context)
     {
         m_timer += Time.deltaTime;
@@ -178,10 +166,8 @@ public sealed class SmashAttack : EnemyAttackBase
         }
     }
 
-    /// <summary>
-    /// 攻撃が終了したかどうかを判定
-    /// 硬直時間が経過したら終了とみなす
-    /// </summary>
+    // 攻撃が終了したかどうかを判定
+    // 硬直時間が経過したら終了とみなす
     protected override bool CheckIsFinished()
     {
         // 硬直状態でない場合はまだ終了していない
@@ -194,10 +180,8 @@ public sealed class SmashAttack : EnemyAttackBase
         return m_timer >= m_recover_time;
     }
 
-    /// <summary>
-    /// 攻撃終了時の処理（正常終了）
-    /// ヒットボックスを確実に無効化し、初期ポーズに戻す
-    /// </summary>
+    // 攻撃終了時の処理（正常終了）
+    // ヒットボックスを確実に無効化し、初期ポーズに戻す
     protected override void OnFinishAttack(EnemyContext context)
     {
         if (m_hit_box != null)
@@ -208,10 +192,8 @@ public sealed class SmashAttack : EnemyAttackBase
         ApplyPose(m_retracted_length, m_forward_angle);
     }
 
-    /// <summary>
-    /// 攻撃キャンセル時の処理（強制中断）
-    /// ヒットボックスを確実に無効化し、初期ポーズに戻す
-    /// </summary>
+    // 攻撃キャンセル時の処理（強制中断）
+    // ヒットボックスを確実に無効化し、初期ポーズに戻す
     protected override void OnCancelAttack(EnemyContext context)
     {
         if (m_hit_box != null)
@@ -222,10 +204,8 @@ public sealed class SmashAttack : EnemyAttackBase
         ApplyPose(m_retracted_length, m_forward_angle);
     }
 
-    /// <summary>
-    /// 予備動作フェーズのポーズを更新
-    /// 2段階構成：1)伸ばすフェーズ 2)上に振りかぶるフェーズ
-    /// </summary>
+    // 予備動作フェーズのポーズを更新
+    // 2段階構成：1)伸ばすフェーズ 2)上に振りかぶるフェーズ
     private void UpdateWindUpPose()
     {
         if (m_windup_time <= 0.0f)
@@ -258,10 +238,8 @@ public sealed class SmashAttack : EnemyAttackBase
         }
     }
 
-    /// <summary>
-    /// 攻撃実行フェーズのポーズを更新
-    /// 振りかぶり状態から叩きつけ状態へ高速で振り下ろす
-    /// </summary>
+    // 攻撃実行フェーズのポーズを更新
+    // 振りかぶり状態から叩きつけ状態へ高速で振り下ろす
     private void UpdateActivePose()
     {
         if (m_active_time <= 0.0f)
@@ -277,10 +255,8 @@ public sealed class SmashAttack : EnemyAttackBase
         ApplyPose(m_extended_length, angle);
     }
 
-    /// <summary>
-    /// 硬直フェーズのポーズを更新
-    /// 叩きつけ状態から初期ポーズ（収納・前方向き）に戻る
-    /// </summary>
+    // 硬直フェーズのポーズを更新
+    // 叩きつけ状態から初期ポーズ（収納・前方向き）に戻る
     private void UpdateRecoverPose()
     {
         if (m_recover_time <= 0.0f)
@@ -297,9 +273,7 @@ public sealed class SmashAttack : EnemyAttackBase
         ApplyPose(length, angle);
     }
 
-    /// <summary>
-    /// ポーズを適用する（長さと角度を同時に設定）
-    /// </summary>
+    // ポーズを適用する（長さと角度を同時に設定）
     private void ApplyPose(float length, float angle)
     {
         SetSmashLength(length);
@@ -307,9 +281,7 @@ public sealed class SmashAttack : EnemyAttackBase
         UpdateHitBoxRoot(length);
     }
 
-    /// <summary>
-    /// スマッシュの長さを設定（ScaleのX値を変更）
-    /// </summary>
+    // スマッシュの長さを設定（ScaleのX値を変更）
     private void SetSmashLength(float length)
     {
         if (m_smash_visual == null)
@@ -322,9 +294,7 @@ public sealed class SmashAttack : EnemyAttackBase
         m_smash_visual.localScale = scale;
     }
 
-    /// <summary>
-    /// スマッシュの角度を設定（ピボットを回転）
-    /// </summary>
+    // スマッシュの角度を設定（ピボットを回転）
     private void SetSmashAngle(float angle)
     {
         if (m_smash_pivot == null)
@@ -337,9 +307,7 @@ public sealed class SmashAttack : EnemyAttackBase
         m_smash_pivot.localRotation = Quaternion.Euler(0.0f, 0.0f, signed_angle);
     }
 
-    /// <summary>
-    /// ヒットボックスの位置を更新（スマッシュの長さに合わせて移動）
-    /// </summary>
+    // ヒットボックスの位置を更新（スマッシュの長さに合わせて移動）
     private void UpdateHitBoxRoot(float length)
     {
         if (m_hit_box_root == null)
@@ -352,29 +320,23 @@ public sealed class SmashAttack : EnemyAttackBase
         m_hit_box_root.localPosition = local_pos;
     }
 
-    /// <summary>
-    /// イージング関数：Ease In Cubic（加速）
-    /// アニメーションの開始が遅く、後半で加速
-    /// </summary>
+    // イージング関数：Ease In Cubic（加速）
+    // アニメーションの開始が遅く、後半で加速
     private static float EaseInCubic(float x)
     {
         return x * x * x;
     }
 
-    /// <summary>
-    /// イージング関数：Ease Out Cubic（減速）
-    /// アニメーションの開始が速く、後半で減速
-    /// </summary>
+    // イージング関数：Ease Out Cubic（減速）
+    // アニメーションの開始が速く、後半で減速
     private static float EaseOutCubic(float x)
     {
         float inv = 1.0f - x;
         return 1.0f - inv * inv * inv;
     }
 
-    /// <summary>
-    /// イージング関数：Ease In-Out Cubic（加減速）
-    /// アニメーションの開始と終わりが滞らか、中間が速い
-    /// </summary>
+    // イージング関数：Ease In-Out Cubic（加減速）
+    // アニメーションの開始と終わりが滞らか、中間が速い
     private static float EaseInOutCubic(float x)
     {
         return (x < 0.5f)
@@ -382,10 +344,8 @@ public sealed class SmashAttack : EnemyAttackBase
             : 1.0f - Mathf.Pow(-2.0f * x + 2.0f, 3.0f) * 0.5f;
     }
 
-    /// <summary>
-    /// Unityエディタでオブジェクト選択時にギズモを描画（デバッグ用）
-    /// 攻撃範囲を赤いワイヤーボックスで視覚的に表示
-    /// </summary>
+    // Unityエディタでオブジェクト選択時にギズモを描画（デバッグ用）
+    // 攻撃範囲を赤いワイヤーボックスで視覚的に表示
     private void OnDrawGizmosSelected()
     {
         if (!m_draw_range_gizmo)
