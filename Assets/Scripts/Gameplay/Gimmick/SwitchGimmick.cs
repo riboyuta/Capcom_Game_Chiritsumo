@@ -11,22 +11,28 @@ public class SwitchGimmick : MonoBehaviour
         Continuous  // 離れると元に戻る
     }
 
-    [Header("Switch Settings")]
+    [Header("スイッチ設定: タイプ")]
+    [Tooltip("スイッチの挙動タイプ。OneShot は一度押すと戻らず、Continuous は離すと元に戻ります。")]
     [SerializeField] private SwitchType switchType = SwitchType.Continuous;
 
-    [Header("スイッチが押し込まれるローカル方向 (床なら (0, -1, 0) など)")]
+    [Header("スイッチ設定: 押し込み方向（ローカル）")]
+    [Tooltip("スイッチが押し込まれるローカル方向。床タイプなら (0, -1, 0) などを指定してください。")]
     [SerializeField] private Vector3 pushLocalDirection = Vector3.down;
 
-    [Header("押し込まれる最大深さ")]
+    [Header("スイッチ設定: 最大押し込み深さ")]
+    [Tooltip("スイッチが押し込まれる最大深さ（メートル）。この深さと閾値を使って押されたかどうかを判定します。")]
     [SerializeField, Min(0f)] private float pressDepth = 0.2f;
 
-    [Header("押し込まれる速度 (m/s)")]
+    [Header("スイッチ設定: 押し込み速度（m/s）")]
+    [Tooltip("押し込まれる速度（m/s）。値が大きいほど速く押し込まれます。")]
     [SerializeField, Min(0.1f)] private float pressSpeed = 1.0f;
 
-    [Header("元に戻る速度 (m/s)")]
+    [Header("スイッチ設定: 戻る速度（m/s）")]
+    [Tooltip("スイッチが離れたときに元に戻る速度（m/s）。Continuous タイプ時に影響します。")]
     [SerializeField, Min(0.1f)] private float releaseSpeed = 1.0f;
 
-    [Header("スイッチが完全に押し込まれているか判定する閾値 (割合)")]
+    [Header("スイッチ設定: 活性化閾値（割合）")]
+    [Tooltip("押し込み深さに対する有効化閾値（0〜1）。この割合以上押し込まれると IsPressed が true になります。")]
     [SerializeField, Range(0f, 1f)] private float activateThreshold = 0.9f;
 
     private Vector3 initialLocalPosition;
@@ -55,7 +61,7 @@ public class SwitchGimmick : MonoBehaviour
     {
         // 物理挙動を持つオブジェクトのみ反応する
         if (targetRb == null) return;
-        
+
         isPushedThisFrame = true;
     }
 
@@ -65,7 +71,7 @@ public class SwitchGimmick : MonoBehaviour
         // 状態更新もFixedUpdateで行うかUpdateで行うか分かれますが、
         // isPushedThisFrame のリセットタイミングを考慮し、
         // Update と FixedUpdate の両方で処理できるようにします。
-        
+
         // ※ここではUpdateでTransform更新を行っています
     }
 

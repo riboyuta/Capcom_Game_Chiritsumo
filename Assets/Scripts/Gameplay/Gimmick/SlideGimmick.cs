@@ -4,20 +4,20 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class SlideGimmick : MonoBehaviour
 {
-    [Header("Target Switch")]
-
-    [Header("監視対象のスイッチ")]
+    [Header("ターゲットスイッチ")]
+    [Tooltip("監視対象の SwitchGimmick。割り当てたスイッチが押されている間、本ギミックが動作します。シーン内のスイッチオブジェクトをセットしてください。")]
     [SerializeField] private SwitchGimmick targetSwitch;
 
-    [Header("Slide Settings")]
-
-    [Header("スライドするローカル方向")]
+    [Header("スライド方向（ローカル）")]
+    [Tooltip("オブジェクトのローカル空間でのスライド方向。正規化されスライド距離と掛け合わされ、目標位置が決まります。")]
     [SerializeField] private Vector3 slideLocalDirection = Vector3.right;
 
-    [Header("スライドする距離")]
+    [Header("スライド距離（メートル）")]
+    [Tooltip("スイッチが押されたときに移動する距離（m）。大きくするとより遠くまでスライドします。")]
     [SerializeField, Min(0f)] private float slideDistance = 3.0f;
 
-    [Header("スライドする速度 (m/s)")]
+    [Header("スライド速度（m/s）")]
+    [Tooltip("目標位置へ向かって移動する速度（m/s）。値を大きくすると短時間で到達します。")]
     [SerializeField, Min(0.1f)] private float slideSpeed = 2.0f;
 
     private Vector3 initialLocalPosition;
@@ -40,8 +40,8 @@ public class SlideGimmick : MonoBehaviour
 
         // 目標位置へ向かって一定の速度で移動
         transform.localPosition = Vector3.MoveTowards(
-            transform.localPosition, 
-            targetLocalPosition, 
+            transform.localPosition,
+            targetLocalPosition,
             slideSpeed * Time.deltaTime
         );
     }

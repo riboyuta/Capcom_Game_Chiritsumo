@@ -12,21 +12,24 @@ public class BreakableFloorGimmick : MonoBehaviour
         Broken
     }
 
-    [Header("Floor Settings")]
-    [Header("振動する見た目のオブジェクト（判定と分けるため、子オブジェクトを指定）")]
+    [Header("見た目（ビジュアル）")]
+    [Tooltip("振動や消滅表示を行う見た目の Transform。判定と見た目を分離するため子オブジェクトを指定して下さい。未指定時は自身を使用します。")]
     [SerializeField] private Transform visualTransform;
 
-    [Header("乗ってから床が壊れるまでの時間（秒）")]
+    [Header("壊れるまでの時間（秒）")]
+    [Tooltip("プレイヤーなどが乗ってから床が破壊されるまでの時間（秒）。短くすると早く壊れます。")]
     [SerializeField, Min(0f)] private float timeToBreak = 2.0f;
 
-    [Header("壊れた後、再復活するまでの時間（秒）")]
+    [Header("再出現までの時間（秒）")]
+    [Tooltip("壊れた後、床が再表示／判定を復活させるまでの待機時間（秒）。ゲーム進行に合わせて調整してください。")]
     [SerializeField, Min(0f)] private float respawnInterval = 3.0f;
 
-    [Header("Vibration Settings")]
-    [Header("振動の強さ（揺れ幅）")]
+    [Header("振動: 強度")]
+    [Tooltip("振動時の揺れ幅（メートル）。大きいほど見た目の振れが大きくなりますが、当たり判定と視覚のズレに注意してください。")]
     [SerializeField, Min(0f)] private float vibrationIntensity = 0.05f;
 
-    [Header("振動の速さ")]
+    [Header("振動: 速さ")]
+    [Tooltip("振動の周波数。値を大きくすると速い振動になります。見た目の雰囲気に合わせて調整してください。")]
     [SerializeField, Min(0.1f)] private float vibrationSpeed = 30.0f;
 
     private Collider floorCollider;

@@ -6,21 +6,19 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public sealed class SpringPad : MonoBehaviour
 {
-    [Header("Bounce Settings")]
-
-    [Header("跳ね返し速度（m/s）値が大きいほどプレイヤーが遠くまで飛ぶ。")]
+    [Header("跳ね返し: 速度")]
+    [Tooltip("跳ね返すときに与える速度（m/s）。値が大きいほど高く／遠くへ飛びます。")]
     [SerializeField, Min(0.1f)] private float bounceSpeed = 15f;
 
-    [Header("true : 跳ね返し軸の既存速度を上書きする。")]
-    // バネ床なら Y 速度だけ差し替え、X 速度は残る。
-    [Header("false: 既存速度に跳ね返しベクトルを加算する。")]
-    // 勢いが合算されるため、速度が大きくなりやすい。
+    [Header("跳ね返し: 速度上書きフラグ")]
+    [Tooltip("true の場合、跳ね返し軸方向の既存速度を上書きします。false の場合は既存速度に跳ね返しベクトルを加算します。用途に応じて選択してください。")]
     [SerializeField] private bool overrideVelocity = true;
 
-    [Header("連続バウンス防止用クールダウン（秒）。")]
+    [Header("跳ね返し: クールダウン（秒）")]
+    [Tooltip("同一オブジェクトが短時間で連続して跳ねられるのを防ぐクールダウン時間（秒）。値を大きくすると連続バウンスを減らせます。")]
     [SerializeField, Min(0f)] private float bounceCooldown = 0.2f;
 
-    [Header("最後にバウンスした時刻。")]
+    [Header("最後にバウンスした時刻")]
     private float lastBounceTime = -1f;
 
     // ──────────────────────────────────────────────
@@ -65,10 +63,6 @@ public sealed class SpringPad : MonoBehaviour
     private void ApplyBounce(Rigidbody targetRb)
     {
         // このオブジェクトのローカル上方向を跳ね返し方向とする。
-        // 例:
-        //   回転なし        → (0, 1, 0) → 上方向に跳ねる
-        //   Z軸 +90度回転  → (1, 0, 0) → 右方向に跳ねる
-        //   Z軸 -90度回転  → (-1, 0, 0) → 左方向に跳ねる
         Vector3 bounceDir = transform.up.normalized;
 
         // 現在の速度を取得する。
@@ -76,24 +70,12 @@ public sealed class SpringPad : MonoBehaviour
 
         if (overrideVelocity)
         {
-            // 跳ね返し軸方向の速度成分を除去してから、
-            // bounceSpeed 分を設定する。
-            // これにより直交する軸の速度は保持される。
-            //
-            // 例（床バネ・上方向）:
-            //   velocity = (3, -5, 0)
-            //   bounceDir = (0, 1, 0)
-            //   dot = -5
-            //   velocity -= (0, -5, 0)  → (3, 0, 0)
-            //   velocity += (0, 15, 0)  → (3, 15, 0)
-            //   → 横速度 3 は維持、縦速度が 15 に上書きされる。
             float dot = Vector3.Dot(velocity, bounceDir);
             velocity -= dot * bounceDir;
             velocity += bounceDir * bounceSpeed;
         }
         else
         {
-            // 既存速度にそのまま加算する。
             velocity += bounceDir * bounceSpeed;
         }
 
