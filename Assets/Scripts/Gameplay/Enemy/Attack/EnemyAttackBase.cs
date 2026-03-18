@@ -14,22 +14,26 @@ public abstract class EnemyAttackBase : MonoBehaviour
     }
 
     [Header("Base Attack Settings")]
-    [SerializeField] protected string m_attack_name = "Attack";  // 攻撃の名前
-    [SerializeField] protected int m_priority = 0;                 // 攻撃の優先度（高いほど優先される）
-    [SerializeField] protected float m_cooldown = 1.0f;            // 攻撃のクールダウン時間（秒）
+    [Header("攻撃の名前")]
+    [SerializeField] protected string attack_name = "Attack";  // 攻撃の名前
+    [Header("攻撃の優先度")]
+    [SerializeField] protected int priority = 0;                 // 攻撃の優先度（高いほど優先される）
+    [Header("攻撃のクールダウン")]
+    [SerializeField] protected float cooldown = 1.0f;            // 攻撃のクールダウン時間（秒）
 
     [Header("Debug")]
-    [SerializeField] protected bool m_show_debug_log = false;      // デバッグログの表示フラグ
+    [Header("デバッグログの表示フ")]
+    [SerializeField] protected bool show_debug_log = false;      // デバッグログの表示フラグ
 
-    protected bool m_is_running = false;                           // 攻撃実行中かどうか
-    protected float m_last_attack_time = -999.0f;                  // 最後に攻撃を実行した時刻
-    protected AttackState m_attack_state = AttackState.Idle;       // 現在の攻撃状態
+    protected bool is_running = false;                           // 攻撃実行中かどうか
+    protected float last_attack_time = -999.0f;                  // 最後に攻撃を実行した時刻
+    protected AttackState attack_state = AttackState.Idle;       // 現在の攻撃状態
 
     // プロパティ：外部からアクセス可能な読み取り専用情報
-    public string AttackName => m_attack_name;       // 攻撃名
-    public int Priority => m_priority;               // 優先度
-    public bool IsRunning => m_is_running;           // 実行中フラグ
-    public AttackState State => m_attack_state;      // 現在の状態
+    public string AttackName => attack_name;       // 攻撃名
+    public int Priority => priority;               // 優先度
+    public bool IsRunning => is_running;           // 実行中フラグ
+    public AttackState State => attack_state;      // 現在の状態
 
     // 初期化処理
     // 攻撃ビジュアルを非表示にして初期化
@@ -43,13 +47,13 @@ public abstract class EnemyAttackBase : MonoBehaviour
     public bool CanStart(EnemyContext context)
     {
         // 既に実行中の場合は開始できない
-        if (m_is_running)
+        if (is_running)
         {
             return false;
         }
 
         // クールダウン中は開始できない
-        if (Time.time < m_last_attack_time + m_cooldown)
+        if (Time.time < last_attack_time + cooldown)
         {
             return false;
         }
@@ -61,8 +65,8 @@ public abstract class EnemyAttackBase : MonoBehaviour
     // 攻撃を開始する
     public void StartAttack(EnemyContext context)
     {
-        m_is_running = true;
-        m_attack_state = AttackState.WindUp;  // 予備動作状態へ
+        is_running = true;
+        attack_state = AttackState.WindUp;  // 予備動作状態へ
 
         SetAttackVisualVisible(true);         // ビジュアルを表示
         OnStartAttack(context);
@@ -73,7 +77,7 @@ public abstract class EnemyAttackBase : MonoBehaviour
     // 攻撃の更新処理（毎フレーム呼ばれる）
     public void TickAttack(EnemyContext context)
     {
-        if (!m_is_running)
+        if (!is_running)
         {
             return;
         }
@@ -84,7 +88,7 @@ public abstract class EnemyAttackBase : MonoBehaviour
     // 攻撃が終了したかどうかを判定
     public bool IsFinished()
     {
-        if (!m_is_running)
+        if (!is_running)
         {
             return true;
         }
@@ -95,14 +99,14 @@ public abstract class EnemyAttackBase : MonoBehaviour
     // 攻撃を終了する（正常終了）
     public void FinishAttack(EnemyContext context)
     {
-        if (!m_is_running)
+        if (!is_running)
         {
             return;
         }
 
-        m_is_running = false;
-        m_last_attack_time = Time.time;  // 次のクールダウン計算用に記録
-        m_attack_state = AttackState.Idle;
+        is_running = false;
+        last_attack_time = Time.time;  // 次のクールダウン計算用に記録
+        attack_state = AttackState.Idle;
 
         OnFinishAttack(context);
         SetAttackVisualVisible(false);   // ビジュアルを非表示
@@ -113,9 +117,9 @@ public abstract class EnemyAttackBase : MonoBehaviour
     // 攻撃をキャンセルする（強制中断）
     public virtual void CancelAttack(EnemyContext context)
     {
-        m_is_running = false;
-        m_last_attack_time = Time.time;
-        m_attack_state = AttackState.Idle;
+        is_running = false;
+        last_attack_time = Time.time;
+        attack_state = AttackState.Idle;
 
         OnCancelAttack(context);
         SetAttackVisualVisible(false);   // ビジュアルを非表示
@@ -126,18 +130,18 @@ public abstract class EnemyAttackBase : MonoBehaviour
     // 攻撃状態を変更する（派生クラスから呼び出す）
     protected void SetAttackState(AttackState next_state)
     {
-        m_attack_state = next_state;
+        attack_state = next_state;
     }
 
     // デバッグログを出力（m_show_debug_logがtrueの場合のみ）
         protected void LogDebug(string message)
     {
-        if (!m_show_debug_log)
+        if (!show_debug_log)
         {
             return;
         }
 
-        Debug.Log($"[EnemyAttackBase] {name} ({m_attack_name}) : {message}");
+        Debug.Log($"[EnemyAttackBase] {name} ({attack_name}) : {message}");
     }
 
     // 攻撃ビジュアルの初期化処理
