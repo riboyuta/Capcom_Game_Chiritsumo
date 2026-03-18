@@ -12,6 +12,10 @@ public sealed class PursuitEnemyController : MonoBehaviour
         Attack     // 攻撃実行中
     }
 
+    [Header("Activation")]
+    [Header("初期状態で有効化")]
+    [SerializeField] private bool isActiveOnStart = true;  // 開始時に有効か
+
     [Header("References")]
     [Header("プレイヤーのTransform参照")]
     [SerializeField] private Transform playerTransform;                  // プレイヤーのTransform参照
@@ -48,6 +52,7 @@ public sealed class PursuitEnemyController : MonoBehaviour
     private EnemyContext context;                                         // 敵の情報をまとめたコンテキスト
 
     private EnemyState state = EnemyState.Chase;                          // 現在の行動状態
+    private bool isActive = true;                                         // 敵が有効化されているか
 
     // プロパティ：外部からアクセス可能な読み取り専用情報
     public Transform PlayerTransform => playerTransform;        // プレイヤーのTransform
@@ -75,12 +80,21 @@ public sealed class PursuitEnemyController : MonoBehaviour
 
         context = new EnemyContext();
         RefreshContext();
+
+        // 初期有効化状態を設定
+        isActive = isActiveOnStart;
     }
 
     // メインループ（毎フレーム呼ばれる）
     // 攻撃の実行と開始判定を行う
     private void Update()
     {
+        // 無効化されている場合は処理しない
+        if (!isActive)
+        {
+            return;
+        }
+
         if (playerTransform == null)
         {
             return;
@@ -116,6 +130,12 @@ public sealed class PursuitEnemyController : MonoBehaviour
     // プレイヤーの追跡処理を実行
     private void FixedUpdate()
     {
+        // 無効化されている場合は処理しない
+        if (!isActive)
+        {
+            return;
+        }
+
         if (playerTransform == null)
         {
             return;
@@ -228,6 +248,21 @@ public sealed class PursuitEnemyController : MonoBehaviour
     public void ResetAreaSpeedMultiplier()
     {
         areaSpeedMultiplier = 1.0f;
+    }
+
+    // 敵を有効化する（外部から呼び出し可能）
+    public void Activate()
+    {
+        isActive = true;
+        LogDebug("Enemy activated!");
+    }
+
+    // 敵を無効化する（外部から呼び出し可能）
+    public void Deactivate()
+    {
+        isActive = false;
+        StopMove();
+        LogDebug("Enemy deactivated!");
     }
 
     // 物理衝突検出（Collisionモード）
