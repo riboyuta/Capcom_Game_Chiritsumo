@@ -14,34 +14,32 @@ public sealed class EnemyHitBox : MonoBehaviour
 
     [Header("HitBox Settings")]
     [Header("ヒット対象")]
-    [SerializeField] private string player_tag = "Player";                    // ヒット対象となるタグ
+    [SerializeField] private string playerTag = "Player";                    // ヒット対象となるタグ
     [Header("ヒット効果タイプ")]
-    [SerializeField] private HitEffectType hit_effect_type = HitEffectType.Damage;  // ヒット効果のタイプ
+    [SerializeField] private HitEffectType hitEffectType = HitEffectType.Damage;  // ヒット効果のタイプ
     [Header("与ダメージ量")]
     [SerializeField] private int damage = 1;                                  // 与えるダメージ量
     [Header("ノックバックの力")]
-    [SerializeField] private float knockback_force = 5.0f;                    // ノックバックの力
+    [SerializeField] private float knockbackForce = 5.0f;                    // ノックバックの力
     [Header("掴み攻撃持続時間")]
-    [SerializeField] private float grab_duration = 1.0f;                      // 掴み攻撃の持続時間（秒）
+    [SerializeField] private float grabDuration = 1.0f;                      // 掴み攻撃の持続時間（秒）
     [Header("1回の有効化で1回だけヒットするか")]
-    [SerializeField] private bool hit_once_per_activation = true;             // 1回の有効化で1回だけヒットするか
-
+    [SerializeField] private bool hitOncePerActivation = true;             // 1回の有効化で1回だけヒットするか
     [Header("Debug")]
     [Header("デバッグログ表示")]
-    [SerializeField] private bool show_debug_log = false;                     // デバッグログの表示フラグ
+    [SerializeField] private bool showDebugLog = false;                     // デバッグログの表示フラグ
 
-    private bool is_active = false;                                           // ヒットボックスが有効かどうか
-    private bool has_hit = false;                                             // 今回の有効化でヒット済みかどうか
+    private bool isActive = false;                                           // ヒットボックスが有効かどうか
+    private bool hasHit = false;                                             // 今回の有効化でヒット済みかどうか
 
     // プロパティ：外部からアクセス可能な読み取り専用情報
-    public bool IsActive => is_active;                                        // ヒットボックスがアクティブか
-
+    public bool IsActive => isActive;                                        // ヒットボックスがアクティブか
     // ヒットボックスを有効化する
     // 攻撃開始時に呼び出され、衝突判定を開始する
     public void ActivateHitBox()
     {
-        is_active = true;
-        has_hit = false;  // ヒット済みフラグをリセット
+        isActive = true;
+        hasHit = false;  // ヒット済みフラグをリセット
         LogDebug("Activate");
     }
 
@@ -49,7 +47,7 @@ public sealed class EnemyHitBox : MonoBehaviour
     // 攻撃終了時やキャンセル時に呼び出され、衝突判定を停止する
     public void DeactivateHitBox()
     {
-        is_active = false;
+        isActive = false;
         LogDebug("Deactivate");
     }
 
@@ -58,13 +56,13 @@ public sealed class EnemyHitBox : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         // ヒットボックスが無効な場合は処理しない
-        if (!is_active)
+        if (!isActive)
         {
             return;
         }
 
         // 1回の有効化で1回だけヒットする設定の場合、既にヒット済みなら処理しない
-        if (hit_once_per_activation && has_hit)
+        if (hitOncePerActivation && hasHit)
         {
             return;
         }
@@ -80,7 +78,7 @@ public sealed class EnemyHitBox : MonoBehaviour
         bool did_hit = false;
 
         // ヒット効果のタイプに応じて処理を分岐
-        switch (hit_effect_type)
+        switch (hitEffectType)
         {
             case HitEffectType.Damage:  // ダメージのみ（ノックバックなし）
                 {
@@ -98,7 +96,7 @@ public sealed class EnemyHitBox : MonoBehaviour
                     IGrabReceiver grab_receiver = other.GetComponentInParent<IGrabReceiver>();
                     if (grab_receiver != null)
                     {
-                        grab_receiver.OnGrabbed(grab_duration);
+                        grab_receiver.OnGrabbed(grabDuration);
                         did_hit = true;
                     }
                     break;
@@ -109,7 +107,7 @@ public sealed class EnemyHitBox : MonoBehaviour
                     IDamageable damageable = other.GetComponentInParent<IDamageable>();
                     if (damageable != null)
                     {
-                        damageable.TakeDamage(damage, hit_direction, knockback_force);
+                        damageable.TakeDamage(damage, hit_direction, knockbackForce);
                         did_hit = true;
                     }
                     break;
@@ -119,7 +117,7 @@ public sealed class EnemyHitBox : MonoBehaviour
         // ヒットした場合、ヒット済みフラグを立てる
         if (did_hit)
         {
-            has_hit = true;
+            hasHit = true;
             LogDebug($"Hit : {other.name}");
         }
     }
@@ -127,13 +125,13 @@ public sealed class EnemyHitBox : MonoBehaviour
     // 指定されたオブジェクトが対象タグを持っているかチェック
     private bool IsTargetTag(GameObject obj)
     {
-        return obj.CompareTag(player_tag);
+        return obj.CompareTag(playerTag);
     }
 
     // デバッグログを出力（m_show_debug_logがtrueの場合のみ）
     private void LogDebug(string message)
     {
-        if (!show_debug_log)
+        if (!showDebugLog)
         {
             return;
         }
@@ -152,7 +150,7 @@ public sealed class EnemyHitBox : MonoBehaviour
         }
 
         // アクティブ状態に応じて色を変更（赤=有効、灰色=無効）
-        Gizmos.color = is_active ? Color.red : Color.gray;
+        Gizmos.color = isActive ? Color.red : Color.gray;
 
         // BoxColliderの場合、そのサイズに合わせてワイヤーボックスを描画
         if (col is BoxCollider box)

@@ -7,13 +7,13 @@ public sealed class EnemyAttackController : MonoBehaviour
     [Header("この敵が持つすべての攻撃パターン")]
     [SerializeField] private EnemyAttackBase[] attacks;          // この敵が持つすべての攻撃パターン
     [Header("デバッグログの表示")]
-    [SerializeField] private bool show_debug_log = false;        // デバッグログの表示フラグ
+    [SerializeField] private bool showDebugLog = false;        // デバッグログの表示フラグ
 
-    private EnemyAttackBase current_attack;                      // 現在実行中の攻撃
+    private EnemyAttackBase currentAttack;                      // 現在実行中の攻撃
 
     // プロパティ：外部からアクセス可能な読み取り専用情報
-    public bool IsAttacking => current_attack != null;                                                      // 攻撃実行中かどうか
-    public string CurrentAttackName => current_attack != null ? current_attack.AttackName : "None";      // 現在の攻撃名
+    public bool IsAttacking => currentAttack != null;                                                      // 攻撃実行中かどうか
+    public string CurrentAttackName => currentAttack != null ? currentAttack.AttackName : "None";      // 現在の攻撃名
 
     // Unity エディタでコンポーネント追加時に自動で呼ばれる
     // 同じGameObjectにアタッチされている攻撃コンポーネントを自動収集
@@ -27,7 +27,7 @@ public sealed class EnemyAttackController : MonoBehaviour
     public bool TryStartAttack(EnemyContext context)
     {
         // 既に攻撃実行中の場合は開始できない
-        if (current_attack != null)
+        if (currentAttack != null)
         {
             return false;
         }
@@ -40,44 +40,44 @@ public sealed class EnemyAttackController : MonoBehaviour
         }
 
         // 攻撃を開始
-        current_attack = next_attack;
-        current_attack.StartAttack(context);
+        currentAttack = next_attack;
+        currentAttack.StartAttack(context);
 
-        LogDebug($"Start {current_attack.AttackName}");
+        LogDebug($"Start {currentAttack.AttackName}");
         return true;
     }
 
     // 現在実行中の攻撃を更新する（毎フレーム呼ばれる）
     public void TickCurrentAttack(EnemyContext context)
     {
-        if (current_attack == null)
+        if (currentAttack == null)
         {
             return;
         }
 
         // 攻撃の更新処理を実行
-        current_attack.TickAttack(context);
+        currentAttack.TickAttack(context);
 
         // 攻撃が終了したかチェック
-        if (current_attack.IsFinished())
+        if (currentAttack.IsFinished())
         {
-            LogDebug($"Finish {current_attack.AttackName}");
-            current_attack.FinishAttack(context);
-            current_attack = null;  // 攻撃終了後はnullに戻す
+            LogDebug($"Finish {currentAttack.AttackName}");
+            currentAttack.FinishAttack(context);
+            currentAttack = null;  // 攻撃終了後はnullに戻す
         }
     }
 
     // 現在実行中の攻撃をキャンセルする（強制中断）
     public void CancelCurrentAttack(EnemyContext context)
     {
-        if (current_attack == null)
+        if (currentAttack == null)
         {
             return;
         }
 
-        LogDebug($"Cancel {current_attack.AttackName}");
-        current_attack.CancelAttack(context);
-        current_attack = null;
+        LogDebug($"Cancel {currentAttack.AttackName}");
+        currentAttack.CancelAttack(context);
+        currentAttack = null;
     }
 
     // 現在の状況で実行可能な攻撃の中から、最も優先度の高いものを選択
@@ -119,7 +119,7 @@ public sealed class EnemyAttackController : MonoBehaviour
     // デバッグログを出力（m_show_debug_logがtrueの場合のみ）
     private void LogDebug(string message)
     {
-        if (!show_debug_log)
+        if (!showDebugLog)
         {
             return;
         }
