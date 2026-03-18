@@ -15,10 +15,10 @@ public sealed class PlayerVibrationController : MonoBehaviour
     {
         WallSlide = 0,
         Step = 1,
-        StrongLanding = 2,
-        WallKick = 3,
+        NormalLanding = 2,
+        StrongLanding = 3,
+        WallKick = 4,
     }
-
     // 単発振動用の設定データ。
     // 壁キック、強着地、ステップなど「一定時間だけ鳴らす」振動に使う。
     [Serializable]
@@ -66,28 +66,60 @@ public sealed class PlayerVibrationController : MonoBehaviour
         public float pulseInterval = 0.10f;
     }
 
-    [Header("壁キック設定")]
-    [Tooltip("壁キック発生時に再生する単発振動の設定です。強め・短めにすると気持ちよさが出しやすいです。")]
+    [Header("振動イベント有効化: 地上前ステ")]
+    [Tooltip("有効時、地上での前ステップ開始時に単発振動を再生します。移動系の振動比較や一時的な無効化に使います。")]
     [SerializeField]
-    private OneShotRumbleSettings wallKick = new OneShotRumbleSettings
-    {
-        lowFrequency = 0.24f,
-        highFrequency = 0.82f,
-        duration = 0.09f
-    };
+    private bool enableGroundStep = true;
 
-    [Header("強い着地設定")]
-    [Tooltip("強い着地時に再生する単発振動の設定です。低周波を強めると重い着地感を表現しやすくなります。")]
+    [Header("振動イベント有効化: 空中前ステ")]
+    [Tooltip("有効時、空中での前ステップ開始時に単発振動を再生します。地上前ステとの違いを確認したいときに使います。")]
     [SerializeField]
-    private OneShotRumbleSettings strongLanding = new OneShotRumbleSettings
-    {
-        lowFrequency = 0.72f,
-        highFrequency = 0.18f,
-        duration = 0.11f
-    };
+    private bool enableAirStep = true;
 
-    [Header("地上前ステ設定")]
-    [Tooltip("地上での前ステップ時に再生する単発振動の設定です。素早い移動感を出しつつ、重すぎない強さに調整する用途です。")]
+    [Header("振動イベント有効化: 壁キック")]
+    [Tooltip("有効時、壁キック発生時に単発振動を再生します。壁アクション系の気持ちよさ確認や比較調整に使います。")]
+    [SerializeField]
+    private bool enableWallKick = true;
+
+    [Header("振動イベント有効化: 壁滑り")]
+    [Tooltip("有効時、壁滑り中に微振動を断続的に再生します。壁接触感の有無を切り替えて比較したいときに使います。")]
+    [SerializeField]
+    private bool enableWallSlide = true;
+
+    [Header("振動イベント有効化: 通常着地")]
+    [Tooltip("有効時、通常着地時に単発振動を再生します。基本となる着地感の有無を調整するときに使います。")]
+    [SerializeField]
+    private bool enableNormalLanding = true;
+
+    [Header("振動イベント有効化: 強着地")]
+    [Tooltip("有効時、強着地判定を満たした着地で強着地用の単発振動を再生します。通常着地との差分確認に使います。")]
+    [SerializeField]
+    private bool enableStrongLanding = true;
+
+
+    [Header("強着地判定: 空中時間チェック有効")]
+    [Tooltip("有効時、強着地判定に最小空中時間の条件を使用します。短い段差着地を強着地扱いしたくない場合に使います。")]
+    [SerializeField]
+    private bool useStrongLandingMinAirTime = true;
+
+    [Header("強着地判定: 最小空中時間")]
+    [Tooltip("強着地として扱うために必要な最小空中時間(秒)です。値を上げるほど、長く空中にいた着地だけが強着地になります。")]
+    [SerializeField, Min(0f)]
+    private float strongLandingMinAirTime = 0.20f;
+
+    [Header("強着地判定: 落差チェック有効")]
+    [Tooltip("有効時、強着地判定に最高点から着地点までの落差条件を使用します。見た目より低い落下を強着地扱いしたくない場合に使います。")]
+    [SerializeField]
+    private bool useStrongLandingMinFallHeight = true;
+
+    [Header("強着地判定: 最小落差")]
+    [Tooltip("強着地として扱う最高点から着地点までの最小落差です。値を上げるほど、高い位置からの落下だけが強着地になります。")]
+    [SerializeField, Min(0f)]
+    private float strongLandingMinFallHeight = 6.00f;
+
+
+    [Header("単発振動設定: 地上前ステ")]
+    [Tooltip("地上での前ステップ時に再生する単発振動の設定です。素早い移動感を出しつつ、重くなりすぎない触感に調整する用途です。")]
     [SerializeField]
     private OneShotRumbleSettings groundStep = new OneShotRumbleSettings
     {
@@ -96,8 +128,8 @@ public sealed class PlayerVibrationController : MonoBehaviour
         duration = 0.06f
     };
 
-    [Header("空中前ステ設定")]
-    [Tooltip("空中での前ステップ時に再生する単発振動の設定です。地上前ステより軽く鋭い印象にしたい場合に使います。")]
+    [Header("単発振動設定: 空中前ステ")]
+    [Tooltip("空中での前ステップ時に再生する単発振動の設定です。地上前ステより軽く鋭い印象を出したい場合に調整します。")]
     [SerializeField]
     private OneShotRumbleSettings airStep = new OneShotRumbleSettings
     {
@@ -106,18 +138,49 @@ public sealed class PlayerVibrationController : MonoBehaviour
         duration = 0.05f
     };
 
-    [Header("壁滑り微振動設定")]
-    [Tooltip("壁滑り中に断続的に再生する微振動の設定です。鳴らしっぱなしではなく、短いパルスで接触感を出すために使います。")]
+    [Header("単発振動設定: 壁キック")]
+    [Tooltip("壁キック発生時に再生する単発振動の設定です。強めかつ短めにすると、跳ね返る気持ちよさを出しやすくなります。")]
+    [SerializeField]
+    private OneShotRumbleSettings wallKick = new OneShotRumbleSettings
+    {
+        lowFrequency = 0.24f,
+        highFrequency = 0.82f,
+        duration = 0.09f
+    };
+
+    [Header("微振動設定: 壁滑り")]
+    [Tooltip("壁滑り中に断続的に再生する微振動の設定です。鳴らしっぱなしではなく、短いパルスで接触感を表現するために使います。")]
     [SerializeField]
     private WallSlideRumbleSettings wallSlide = new WallSlideRumbleSettings();
 
-    [Header("デバッグ表示設定")]
-    [Tooltip("有効にすると、Inspector 上で現在の振動状態や使用中ゲームパッドの追跡用情報を確認しやすくなります。")]
+    [Header("単発振動設定: 通常着地")]
+    [Tooltip("通常着地時に再生する単発振動の設定です。基準となる弱めの着地感として調整します。")]
+    [SerializeField]
+    private OneShotRumbleSettings normalLanding = new OneShotRumbleSettings
+    {
+        lowFrequency = 0.22f,
+        highFrequency = 0.10f,
+        duration = 0.06f
+    };
+
+    [Header("単発振動設定: 強着地")]
+    [Tooltip("強着地時に再生する単発振動の設定です。低周波を強めると重い衝撃感を出しやすく、通常着地との差別化に使えます。")]
+    [SerializeField]
+    private OneShotRumbleSettings strongLanding = new OneShotRumbleSettings
+    {
+        lowFrequency = 0.72f,
+        highFrequency = 0.18f,
+        duration = 0.11f
+    };
+
+
+    [Header("デバッグ表示: 有効化")]
+    [Tooltip("有効にすると、Inspector 上で現在の振動状態やゲームパッド追跡用の情報を確認しやすくなります。通常は調整時のみ有効化します。")]
     [SerializeField]
     private bool showDebugState = false;
 
     [Header("Runtime(Debug): 壁滑り要求状態")]
-    [Tooltip("現在、壁滑り微振動の再生要求が有効かどうかを示す実行時デバッグ値です。通常は実行中の確認専用です。")]
+    [Tooltip("現在、壁滑り微振動の再生要求が有効かどうかを示す実行時デバッグ値です。通常は挙動確認専用です。")]
     [SerializeField]
     private bool wallSlideActive;
 
@@ -132,13 +195,14 @@ public sealed class PlayerVibrationController : MonoBehaviour
     private float wallSlideTimer;
 
     [Header("Runtime(Debug): 単発振動タイマー")]
-    [Tooltip("現在再生中の単発振動があと何秒続くかを示す実行時デバッグ値です。0 以下で単発振動なしです。")]
+    [Tooltip("現在再生中の単発振動があと何秒続くかを示す実行時デバッグ値です。0 以下のときは単発振動を再生していません。")]
     [SerializeField]
     private float oneShotTimer;
 
     [Header("Runtime(Debug): 現在の振動名")]
-    [Tooltip("現在どの振動状態を再生中かを識別するための名前です。挙動確認やデバッグログ確認時に使います。")]
+    [Tooltip("現在どの振動状態を再生中かを識別するための名前です。挙動確認やログ照合時の目印として使います。")]
     [SerializeField]
+    
     private string activeRumbleName = "None";
 
     // 現在再生中の単発振動の優先度。
@@ -181,24 +245,55 @@ public sealed class PlayerVibrationController : MonoBehaviour
     // 壁キック振動を再生する。
     public void PlayWallKick()
     {
+        if (!enableWallKick)
+        {
+            return;
+        }
+
         PlayOneShot(wallKick, RumblePriority.WallKick, "WallKick");
     }
 
-    // 強着地振動を再生する。
-    public void PlayStrongLanding()
+    // 着地振動を再生する。
+    // 主判定は fallHeight で、airborneTime は誤爆防止の保険として使う。
+    public void PlayLanding(float airborneTime, float fallHeight)
     {
-        PlayOneShot(strongLanding, RumblePriority.StrongLanding, "StrongLanding");
+        bool passesAirTime = !useStrongLandingMinAirTime || airborneTime >= strongLandingMinAirTime;
+        bool passesFallHeight = !useStrongLandingMinFallHeight || fallHeight >= strongLandingMinFallHeight;
+        bool shouldPlayStrongLanding = enableStrongLanding && passesAirTime && passesFallHeight;
+
+        if (shouldPlayStrongLanding)
+        {
+            PlayOneShot(strongLanding, RumblePriority.StrongLanding, "StrongLanding");
+            return;
+        }
+
+        if (!enableNormalLanding)
+        {
+            return;
+        }
+
+        PlayOneShot(normalLanding, RumblePriority.NormalLanding, "NormalLanding");
     }
 
     // 地上前ステ振動を再生する。
     public void PlayGroundStep()
     {
+        if (!enableGroundStep)
+        {
+            return;
+        }
+
         PlayOneShot(groundStep, RumblePriority.Step, "GroundStep");
     }
 
     // 空中前ステ振動を再生する。
     public void PlayAirStep()
     {
+        if (!enableAirStep)
+        {
+            return;
+        }
+
         PlayOneShot(airStep, RumblePriority.Step, "AirStep");
     }
 
@@ -206,6 +301,11 @@ public sealed class PlayerVibrationController : MonoBehaviour
     // 実際の振動開始は UpdateWallSlidePulse 側で行う。
     public void StartWallSlideRumble()
     {
+        if (!enableWallSlide)
+        {
+            return;
+        }
+
         wallSlideActive = true;
         wallSlidePulsePlaying = false;
         wallSlideTimer = 0f;

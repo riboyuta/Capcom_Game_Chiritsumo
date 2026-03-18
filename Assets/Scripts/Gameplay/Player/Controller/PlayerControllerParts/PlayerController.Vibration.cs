@@ -9,22 +9,19 @@ public sealed partial class PlayerController
     // 実際のモーター制御は PlayerVibrationController 側に任せる。
     [SerializeField] private PlayerVibrationController vibrationController;
 
-    [Header("振動: 強着地判定")]
-    [Tooltip("強着地振動を発生させる最小落下速度のしきい値です。着地直前の Y 速度がこの値以上に下向きなら強着地として扱います。")]
-    // 強着地と見なすための最小落下速度。
-    // previousVerticalVelocity が -10 以下なら「十分強く落下してきた」と判定する。
-    [SerializeField, Min(0f)] private float strongLandingMinFallSpeed = 10f;
-
     // 前フレームの状態保持。
     // 「今フレームで変化したか」を判定するために使う。
     private bool wasGrounded;
     private bool wasStepping;
     private bool wasWallSliding;
 
-    // 前フレーム終了時点の Y 速度。
-    // 着地した瞬間に「落ちてきた勢い」がどれくらいだったかを見るために使う。
-    private float previousVerticalVelocity;
+    // 空中に出てからの経過時間(秒)。
+    // 着地時に PlayerVibrationController 側へ渡す。
+    private float airborneTimer;
 
+    // 空中中に記録した「足元 Y の最高値」。
+    // 着地時に最高点からの落差を算出するために使う。
+    private float highestAirborneFootY;
     // 既存 Awake の最後で呼ぶ。
     // 振動関連の比較用状態を初期化する。
     private void InitializeVibrationState()
@@ -39,7 +36,8 @@ public sealed partial class PlayerController
         wasGrounded = isGrounded;
         wasStepping = isStepping;
         wasWallSliding = isWallSliding;
-        previousVerticalVelocity = rb.linearVelocity.y;
+        airborneTimer = 0f;
+        highestAirborneFootY = GetCurrentFootY();
     }
 
     // 既存 FixedUpdate の最後の方で呼ぶ。
@@ -55,6 +53,7 @@ public sealed partial class PlayerController
         // 状態変化に応じて各種振動イベントを判定する。
         UpdateWallSlideVibration();
         UpdateStepVibration();
+        UpdateAirborneMetrics();
         UpdateLandingVibration();
 
         // 最後に今回の状態を保存し、次フレームとの比較に使う。
@@ -103,6 +102,32 @@ public sealed partial class PlayerController
     }
 
     // 強着地のみ振動させる。
+    // 空中時間と空中中の最高足元Yを更新する。
+    private void UpdateAirborneMetrics()
+    {
+        // 接地中は計測しない。
+        if (isGrounded)
+        {
+            return;
+        }
+
+        float currentFootY = GetCurrentFootY();
+
+        // 地上→空中へ遷移した瞬間に初期化する。
+        if (wasGrounded)
+        {
+            airborneTimer = 0f;
+            highestAirborneFootY = currentFootY;
+        }
+
+        airborneTimer += Time.fixedDeltaTime;
+        if (currentFootY > highestAirborneFootY)
+        {
+            highestAirborneFootY = currentFootY;
+        }
+    }
+
+    // 着地振動を再生する。
     private void UpdateLandingVibration()
     {
         // 「今フレームで着地した瞬間」だけ判定したい。
@@ -113,14 +138,10 @@ public sealed partial class PlayerController
             return;
         }
 
-        // 着地直前の落下速度がしきい値以上なら強着地と見なす。
-        // Y 下方向は負値なので、-strongLandingMinFallSpeed 以下を見る。
-        if (previousVerticalVelocity <= -strongLandingMinFallSpeed)
-        {
-            vibrationController.PlayStrongLanding();
-        }
+        float landingFootY = GetCurrentFootY();
+        float fallHeightFromApex = Mathf.Max(0f, highestAirborneFootY - landingFootY);
+        vibrationController.PlayLanding(airborneTimer, fallHeightFromApex);
     }
-
     // 壁キック成功地点から直接呼ぶ用。
     private void PlayWallKickVibration()
     {
@@ -142,8 +163,16 @@ public sealed partial class PlayerController
         wasGrounded = isGrounded;
         wasStepping = isStepping;
         wasWallSliding = isWallSliding;
+    }
 
-        // 次フレームで着地判定に使えるよう、現在の Y 速度を保存する。
-        previousVerticalVelocity = rb.linearVelocity.y;
+    // 現在フレーム時点の足元Yを取得する。
+    private float GetCurrentFootY()
+    {
+        if (capsuleCollider == null)
+        {
+            return transform.position.y;
+        }
+
+        return capsuleCollider.bounds.min.y;
     }
 }

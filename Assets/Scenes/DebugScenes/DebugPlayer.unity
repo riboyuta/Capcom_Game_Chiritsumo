@@ -421,7 +421,6 @@ MonoBehaviour:
   decayKnockbackOverTime: 1
   showHealthDebugLog: 0
   vibrationController: {fileID: 764449976}
-  strongLandingMinFallSpeed: 10
 --- !u!114 &764449976
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -434,14 +433,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3b278cf41c69ca4b8fb6af61826afc6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVibrationController
-  wallKick:
-    lowFrequency: 0.24
-    highFrequency: 0.82
-    duration: 0.09
-  strongLanding:
-    lowFrequency: 0.72
-    highFrequency: 0.18
-    duration: 0.11
+  enableGroundStep: 1
+  enableAirStep: 1
+  enableWallKick: 1
+  enableWallSlide: 1
+  enableNormalLanding: 1
+  enableStrongLanding: 1
+  useStrongLandingMinAirTime: 1
+  strongLandingMinAirTime: 0.2
+  useStrongLandingMinFallHeight: 1
+  strongLandingMinFallHeight: 6
   groundStep:
     lowFrequency: 0.2
     highFrequency: 0.3
@@ -450,11 +451,23 @@ MonoBehaviour:
     lowFrequency: 0.1
     highFrequency: 0.4
     duration: 0.05
+  wallKick:
+    lowFrequency: 0.24
+    highFrequency: 0.82
+    duration: 0.09
   wallSlide:
     lowFrequency: 0.015
     highFrequency: 0.05
     pulseDuration: 0.03
     pulseInterval: 0.1
+  normalLanding:
+    lowFrequency: 0.22
+    highFrequency: 0.1
+    duration: 0.06
+  strongLanding:
+    lowFrequency: 0.72
+    highFrequency: 0.18
+    duration: 0.11
   showDebugState: 0
   wallSlideActive: 0
   wallSlidePulsePlaying: 0
