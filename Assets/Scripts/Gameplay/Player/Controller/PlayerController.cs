@@ -73,6 +73,10 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // 入力リーダーを生成する。
         playerInputReader = new PlayerInputReader(rawInputSource, inputBindings);
+
+        // Health と Grab システムを初期化する。
+        InitializeHealth();
+        InitializeGrab();
     }
 
     private void Update()
@@ -98,6 +102,11 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // 横入力がしきい値を超えたときのみ向きを更新する。
         UpdateFacingFromMoveInput();
+
+        // Health と Grab システムを更新する。
+        float deltaTime = Time.deltaTime;
+        UpdateHealth(deltaTime);
+        UpdateGrab(deltaTime);
     }
 
     private void FixedUpdate()
@@ -109,6 +118,20 @@ public sealed partial class PlayerController : MonoBehaviour
         }
 
         float deltaTime = Time.fixedDeltaTime;
+
+        // 掴まれている場合は移動処理をスキップする。
+        if (isGrabbed)
+        {
+            rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
+            return;
+        }
+
+        // ノックバック中は専用速度を適用し、通常の移動処理をスキップする。
+        if (isKnockback)
+        {
+            ApplyKnockbackVelocity();
+            return;
+        }
 
         // 物理フレームで接地状態を更新する。
         isGrounded = CheckGrounded();

@@ -1,10 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-/// <summary>
-/// プレイヤーを追跡する敵のコントローラー
-/// 追跡と攻撃の2つの状態を持ち、状況に応じて自動で切り替わる
-/// </summary>
-[RequireComponent(typeof(Rigidbody2D))]
+// プレイヤーを追跡する敵のコントローラー
+// 追跡と攻撃の2つの状態を持ち、状況に応じて自動で切り替わる
+[RequireComponent(typeof(Rigidbody))]
 public sealed class PursuitEnemyController : MonoBehaviour
 {
     // 敵の行動状態を表す列挙型
@@ -15,62 +13,75 @@ public sealed class PursuitEnemyController : MonoBehaviour
     }
 
     [Header("References")]
-    [SerializeField] private Transform m_player_transform;                  // プレイヤーのTransform参照
-    [SerializeField] private EnemyAttackController m_attack_controller;     // 攻撃コントローラーの参照
-    [SerializeField] private Animator m_animator;                           // アニメーターの参照
+    [Header("プレイヤーのTransform参照")]
+    [SerializeField] private Transform playerTransform;                  // プレイヤーのTransform参照
+    [Header("攻撃コントローラーの参照")]
+    [SerializeField] private EnemyAttackController attackController;     // 攻撃コントローラーの参照
+    [Header("アニメーターの参照")]
+    [SerializeField] private Animator animator;                           // アニメーターの参照
 
     [Header("Move")]
-    [SerializeField] private float m_base_speed = 10.0f;                    // 基本移動速度
-    [SerializeField] private float m_stop_distance_x = 0.0f;                // この距離以下になったら停止（X軸）
-    [SerializeField] private float m_catchup_distance = 50.0f;              // この距離以上離れると追いつき速度ブースト発動
-    [SerializeField] private float m_catchup_multiplier = 1.75f;            // 追いつき時の速度倍率
-    [SerializeField] private float m_max_speed = 20.0f;                     // 最大移動速度
-
-    private float m_area_speed_multiplier = 1.0f;                           // エリアによる速度倍率（外部から設定可能）
+    [Header("基本移動速度")]
+    [SerializeField] private float baseSpeed = 10.0f;                    // 基本移動速度
+    [Header("この距離以下になったら停止（X軸）")]
+    [SerializeField] private float stopDistanceX = 0.0f;                // この距離以下になったら停止（X軸）
+    [Header("この距離以上離れると追いつき速度ブースト発動")]
+    [SerializeField] private float catchupDistance = 50.0f;              // この距離以上離れると追いつき速度ブースト発動
+    [Header("ブースト時の速度倍率")]
+    [SerializeField] private float catchupMultiplier = 1.75f;            // 追いつき時の速度倍率
+    [Header("最大移動速度")]
+    [SerializeField] private float maxSpeed = 20.0f;                     // 最大移動速度
+    private float areaSpeedMultiplier = 1.0f;                           // エリアによる速度倍率（外部から設定可能）
 
     [Header("Body Contact")]
-    [SerializeField] private bool m_enable_body_contact = true;             // 敵の体当たり判定を有効にするか
-    [SerializeField] private string m_player_tag = "Player";               // 体当たり判定の対象となるタグ
-    [SerializeField] private string m_contact_message = "Kill";            // 体当たり時に送信するメッセージ名
-
+    [Header("敵の接触判定を有効")]
+    [SerializeField] private bool enableBodyContact = true;             // 敵の接触判定を有効にするか
+    [Header("接触判定の対象")]
+    [SerializeField] private string playerTag = "Player";               // 接触判定の対象となるタグ
+    [Header("接触時に送信するメッセージ名")]
+    [SerializeField] private string contactMessage = "Kill";            // 接触時に送信するメッセージ名
     [Header("Debug")]
-    [SerializeField] private bool m_show_debug_log = false;                 // デバッグログの表示フラグ
+    [Header("デバッグログの表示")]
+    [SerializeField] private bool showDebugLog = false;                 // デバッグログの表示フラグ
 
-    private Rigidbody2D m_rigidbody_2d;                                     // Rigidbody2Dコンポーネント
-    private EnemyContext m_context;                                         // 敵の情報をまとめたコンテキスト
+    private new Rigidbody rigidbody;                                          // Rigidbodyコンポーネント
+    private EnemyContext context;                                         // 敵の情報をまとめたコンテキスト
 
-    private EnemyState m_state = EnemyState.Chase;                          // 現在の行動状態
+    private EnemyState state = EnemyState.Chase;                          // 現在の行動状態
 
     // プロパティ：外部からアクセス可能な読み取り専用情報
-    public Transform PlayerTransform => m_player_transform;        // プレイヤーのTransform
-    public Rigidbody2D EnemyRigidbody2D => m_rigidbody_2d;         // 敵のRigidbody2D
-    public Animator EnemyAnimator => m_animator;                   // 敵のAnimator
-    public EnemyState State => m_state;                            // 現在の状態
+    public Transform PlayerTransform => playerTransform;        // プレイヤーのTransform
+    public Rigidbody EnemyRigidbody => rigidbody;                // 敵のRigidbody
+    public Animator EnemyAnimator => animator;                   // 敵のAnimator
+    public EnemyState State => state;                            // 現在の状態
 
-    /// <summary>
-    /// 初期化処理
-    /// </summary>
+    // 初期化処理
     private void Awake()
     {
-        m_rigidbody_2d = GetComponent<Rigidbody2D>();
+        rigidbody = GetComponent<Rigidbody>();
+
+        // 疑似3D横スク用の拘束をRigidbody側で設定
+        // Z軸の位置と回転を固定し、2D的な動きに制限
+        rigidbody.constraints = RigidbodyConstraints.FreezePositionZ
+            | RigidbodyConstraints.FreezeRotationX
+            | RigidbodyConstraints.FreezeRotationY
+            | RigidbodyConstraints.FreezeRotationZ;
 
         // 攻撃コントローラーが設定されていない場合は自動取得
-        if (m_attack_controller == null)
+        if (attackController == null)
         {
-            m_attack_controller = GetComponent<EnemyAttackController>();
+            attackController = GetComponent<EnemyAttackController>();
         }
 
-        m_context = new EnemyContext();
+        context = new EnemyContext();
         RefreshContext();
     }
 
-    /// <summary>
-    /// メインループ（毎フレーム呼ばれる）
-    /// 攻撃の実行と開始判定を行う
-    /// </summary>
+    // メインループ（毎フレーム呼ばれる）
+    // 攻撃の実行と開始判定を行う
     private void Update()
     {
-        if (m_player_transform == null)
+        if (playerTransform == null)
         {
             return;
         }
@@ -78,36 +89,34 @@ public sealed class PursuitEnemyController : MonoBehaviour
         RefreshContext();
 
         // 攻撃実行中の場合は攻撃を更新
-        if (m_attack_controller != null && m_attack_controller.IsAttacking)
+        if (attackController != null && attackController.IsAttacking)
         {
-            m_state = EnemyState.Attack;
-            m_attack_controller.TickCurrentAttack(m_context);
+            state = EnemyState.Attack;
+            attackController.TickCurrentAttack(context);
             return;
         }
 
         // 攻撃可能な場合は攻撃を開始
-        if (m_attack_controller != null)
+        if (attackController != null)
         {
-            bool started_attack = m_attack_controller.TryStartAttack(m_context);
+            bool started_attack = attackController.TryStartAttack(context);
             if (started_attack)
             {
-                m_state = EnemyState.Attack;
+                state = EnemyState.Attack;
                 LogDebug("Start Attack");
                 return;
             }
         }
 
         // 攻撃していない場合は追跡状態
-        m_state = EnemyState.Chase;
+        state = EnemyState.Chase;
     }
 
-    /// <summary>
-    /// 物理演算用の更新処理（固定フレームレートで呼ばれる）
-    /// プレイヤーの追跡処理を実行
-    /// </summary>
+    // 物理演算用の更新処理（固定フレームレートで呼ばれる）
+    // プレイヤーの追跡処理を実行
     private void FixedUpdate()
     {
-        if (m_player_transform == null)
+        if (playerTransform == null)
         {
             return;
         }
@@ -115,28 +124,24 @@ public sealed class PursuitEnemyController : MonoBehaviour
         ChasePlayer();
     }
 
-    /// <summary>
-    /// コンテキストを最新の状態に更新
-    /// 攻撃処理で使用する敵の情報を集約
-    /// </summary>
+    // コンテキストを最新の状態に更新
+    // 攻撃処理で使用する敵の情報を集約
     private void RefreshContext()
     {
-        m_context.enemy_transform = transform;
-        m_context.player_transform = m_player_transform;
-        m_context.enemy_rigidbody_2d = m_rigidbody_2d;
-        m_context.enemy_animator = m_animator;
-        m_context.enemy_controller = this;
+        context.enemy_transform = transform;
+        context.player_transform = playerTransform;
+        context.enemy_rigidbody = rigidbody;
+        context.enemy_animator = animator;
+        context.enemy_controller = this;
     }
 
-    /// <summary>
-    /// プレイヤーを追跡する処理
-    /// </summary>
+    // プレイヤーを追跡する処理
     private void ChasePlayer()
     {
         float distance_x = GetPlayerDistanceX();
 
         // 停止距離以下の場合は移動を停止
-        if (distance_x <= m_stop_distance_x)
+        if (distance_x <= stopDistanceX)
         {
             StopMove();
             return;
@@ -144,106 +149,92 @@ public sealed class PursuitEnemyController : MonoBehaviour
 
         // 移動速度を計算して適用
         float move_speed = CalculateMoveSpeed(distance_x);
-        m_rigidbody_2d.linearVelocity = new Vector2(move_speed, m_rigidbody_2d.linearVelocity.y);
+        Vector3 velocity = rigidbody.linearVelocity;
+        velocity.x = move_speed;
+        rigidbody.linearVelocity = velocity;
     }
 
-    /// <summary>
-    /// 移動速度を計算する
-    /// 基本速度に各種倍率を適用し、最大速度でクランプする
-    /// </summary>
+    // 移動速度を計算する
+    // 基本速度に各種倍率を適用し、最大速度でクランプする
     private float CalculateMoveSpeed(float distance_x)
     {
-        float speed = m_base_speed;
+        float speed = baseSpeed;
 
         speed *= CalculateCatchupMultiplier(distance_x);  // 追いつき倍率を適用
-        speed *= m_area_speed_multiplier;                 // エリア速度倍率を適用
+        speed *= areaSpeedMultiplier;                 // エリア速度倍率を適用
 
-        speed = Mathf.Min(speed, m_max_speed);            // 最大速度でクランプ
+        speed = Mathf.Min(speed, maxSpeed);            // 最大速度でクランプ
         return speed;
     }
 
-    /// <summary>
-    /// 追いつき倍率を計算する
-    /// プレイヤーが遠くに離れすぎた場合に速度ブーストを適用
-    /// </summary>
+    // 追いつき倍率を計算する
+    // プレイヤーが遠くに離れすぎた場合に速度ブーストを適用
     private float CalculateCatchupMultiplier(float distance_x)
     {
         // 追いつき距離以上離れている場合は倍率を適用
-        if (distance_x >= m_catchup_distance)
+        if (distance_x >= catchupDistance)
         {
-            return m_catchup_multiplier;
+            return catchupMultiplier;
         }
 
         return 1.0f;
     }
 
-    /// <summary>
-    /// 移動を停止する（Y軸の速度は維持）
-    /// </summary>
+    // 移動を停止する（Y軸の速度は維持）
     public void StopMove()
     {
-        m_rigidbody_2d.linearVelocity = new Vector2(0.0f, m_rigidbody_2d.linearVelocity.y);
+        Vector3 velocity = rigidbody.linearVelocity;
+        velocity.x = 0.0f;
+        rigidbody.linearVelocity = velocity;
     }
 
-    /// <summary>
-    /// プレイヤーとのX軸方向の距離を取得
-    /// 正の値 = プレイヤーが右側、負の値 = プレイヤーが左側
-    /// </summary>
+    // プレイヤーとのX軸方向の距離を取得
+    // 正の値 = プレイヤーが右側、負の値 = プレイヤーが左側
     public float GetPlayerDistanceX()
     {
-        if (m_player_transform == null)
+        if (playerTransform == null)
         {
             return float.MaxValue;
         }
 
-        return m_player_transform.position.x - transform.position.x;
+        return playerTransform.position.x - transform.position.x;
     }
 
-    /// <summary>
-    /// プレイヤーとのY軸方向の距離を取得（絶対値）
-    /// </summary>
+    // プレイヤーとのY軸方向の距離を取得（絶対値）
     public float GetPlayerDistanceY()
     {
-        if (m_player_transform == null)
+        if (playerTransform == null)
         {
             return float.MaxValue;
         }
 
-        return Mathf.Abs(m_player_transform.position.y - transform.position.y);
+        return Mathf.Abs(playerTransform.position.y - transform.position.y);
     }
 
-    /// <summary>
-    /// プレイヤーのTransformを設定する（外部から呼び出し可能）
-    /// </summary>
-    public void SetPlayerTransform(Transform player_transform)
+    // プレイヤーのTransformを設定する（外部から呼び出し可能）
+    public void SetPlayerTransform(Transform playerTransform)
     {
-        m_player_transform = player_transform;
+        this.playerTransform = playerTransform;
     }
 
-    /// <summary>
-    /// エリアによる速度倍率を設定する
-    /// 特定のエリアで敵の移動速度を変更する際に使用
-    /// </summary>
+    // エリアによる速度倍率を設定する
+    // 特定のエリアで敵の移動速度を変更する際に使用
     public void SetAreaSpeedMultiplier(float multiplier)
     {
-        m_area_speed_multiplier = multiplier;
+        areaSpeedMultiplier = multiplier;
     }
 
-    /// <summary>
-    /// エリア速度倍率をリセット（通常速度に戻す）
-    /// </summary>
+    // エリア速度倍率をリセット（通常速度に戻す）
     public void ResetAreaSpeedMultiplier()
     {
-        m_area_speed_multiplier = 1.0f;
+        areaSpeedMultiplier = 1.0f;
     }
 
-    /// <summary>
-    /// 物理衝突検出（Collisionモード）
-    /// 通常のCollider同士の衡突時に呼ばれる
-    /// </summary>
-    private void OnCollisionEnter2D(Collision2D collision)
+    // 物理衝突検出（Collisionモード）
+    // 通常のCollider同士の衡突時に呼ばれる
+    private void OnCollisionEnter(Collision collision)
     {
-        if (!m_enable_body_contact)
+        if (!enableBodyContact)
         {
             return;
         }
@@ -251,13 +242,11 @@ public sealed class PursuitEnemyController : MonoBehaviour
         HandleBodyContact(collision.collider);
     }
 
-    /// <summary>
-    /// トリガー衝突検出（Triggerモード）
-    /// トリガー設定されたColliderとの接触時に呼ばれる
-    /// </summary>
-    private void OnTriggerEnter2D(Collider2D other)
+    // トリガー衝突検出（Triggerモード）
+    // トリガー設定されたColliderとの接触時に呼ばれる
+    private void OnTriggerEnter(Collider other)
     {
-        if (!m_enable_body_contact)
+        if (!enableBodyContact)
         {
             return;
         }
@@ -265,33 +254,29 @@ public sealed class PursuitEnemyController : MonoBehaviour
         HandleBodyContact(other);
     }
 
-    /// <summary>
-    /// 敵の体当たり判定処理
-    /// プレイヤーと接触した際に、指定されたメッセージを送信する（例：即死処理）
-    /// </summary>
-    private void HandleBodyContact(Collider2D other)
+    // 敵の体当たり判定処理
+    // プレイヤーと接触した際に、指定されたメッセージを送信する（例：即死処理）
+    private void HandleBodyContact(Collider other)
     {
         // 対象タグでない場合は処理しない
-        if (!other.CompareTag(m_player_tag))
+        if (!other.CompareTag(playerTag))
         {
             return;
         }
 
         // ルートオブジェクトにメッセージを送信（例："Kill"メッセージでプレイヤーを死亡させる）
         other.transform.root.SendMessage(
-            m_contact_message,
+            contactMessage,
             SendMessageOptions.DontRequireReceiver
         );
 
         LogDebug($"Body Contact : {other.name}");
     }
 
-    /// <summary>
-    /// デバッグログを出力（m_show_debug_logがtrueの場合のみ）
-    /// </summary>
+    // デバッグログを出力（m_show_debug_logがtrueの場合のみ）
     private void LogDebug(string message)
     {
-        if (!m_show_debug_log)
+        if (!showDebugLog)
         {
             return;
         }
@@ -299,37 +284,33 @@ public sealed class PursuitEnemyController : MonoBehaviour
         Debug.Log($"[PursuitEnemyController] {name} : {message}");
     }
 
-    /// <summary>
-    /// Unityエディタでオブジェクト選択時にギズモを描画（デバッグ用）
-    /// 黄色 = 停止距離、水色 = 追いつき距離
-    /// </summary>
+    // Unityエディタでオブジェクト選択時にギズモを描画（デバッグ用）
+    // 黄色 = 停止距離、水色 = 追いつき距離
     private void OnDrawGizmosSelected()
     {
         // 停止距離を黄色で表示
         Gizmos.color = Color.yellow;
         Gizmos.DrawLine(
             transform.position,
-            transform.position + Vector3.right * m_stop_distance_x
+            transform.position + Vector3.right * stopDistanceX
         );
 
         // 追いつき距離を水色で表示
         Gizmos.color = Color.cyan;
         Gizmos.DrawLine(
             transform.position,
-            transform.position + Vector3.right * m_catchup_distance
+            transform.position + Vector3.right * catchupDistance
         );
     }
 }
 
-/// <summary>
-/// 敵の情報をまとめたコンテキストクラス
-/// 攻撃処理で必要な敵とプレイヤーの情報を一箇所にまとめて渡すために使用
-/// </summary>
+// 敵の情報をまとめたコンテキストクラス
+// 攻撃処理で必要な敵とプレイヤーの情報を一箇所にまとめて渡すために使用
 public sealed class EnemyContext
 {
     public Transform enemy_transform;                   // 敵のTransform
     public Transform player_transform;                  // プレイヤーのTransform
-    public Rigidbody2D enemy_rigidbody_2d;              // 敵のRigidbody2D
+    public Rigidbody enemy_rigidbody;                   // 敵のRigidbody
     public Animator enemy_animator;                     // 敵のAnimator
     public PursuitEnemyController enemy_controller;     // 敵のコントローラー
 }
