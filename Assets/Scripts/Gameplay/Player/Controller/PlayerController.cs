@@ -77,6 +77,9 @@ public sealed partial class PlayerController : MonoBehaviour
         // Health と Grab システムを初期化する。
         InitializeHealth();
         InitializeGrab();
+
+        // 振動関連の比較用状態を初期化する。
+        InitializeVibrationState();
     }
 
     private void Update()
@@ -160,6 +163,7 @@ public sealed partial class PlayerController : MonoBehaviour
         if (isStepping)
         {
             ApplyStepVelocity();
+            UpdateVibrationEvents();
             return;
         }
 
@@ -170,5 +174,6 @@ public sealed partial class PlayerController : MonoBehaviour
         TryStartFastFall();
         ApplyWallSlide();
         ApplyCustomGravity();
+        UpdateVibrationEvents();
     }
 }

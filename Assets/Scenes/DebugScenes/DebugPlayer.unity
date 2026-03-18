@@ -150,6 +150,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 764449973}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &210320362
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 210320363}
+  m_Layer: 0
+  m_Name: max
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &210320363
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 210320362}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 22.3, y: 19.9, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 850307573}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &764449968
 GameObject:
   m_ObjectHideFlags: 0
@@ -334,7 +365,7 @@ MonoBehaviour:
       _gamepadButton: 11
   movementSettings:
     moveMaxSpeed: 8.2
-    groundAcceleration: 78
+    groundAcceleration: 78.3
     groundTurnAcceleration: 108
     groundDeceleration: 92
     airAcceleration: 28
@@ -380,6 +411,17 @@ MonoBehaviour:
     useStepBuffer: 1
     stepBufferTime: 0.06
     stepInvulnerable: 0
+  canBeGrabbed: 1
+  showGrabDebugLog: 0
+  maxHealth: 3
+  invincible: 0
+  invincibilityDuration: 1
+  knockbackResistance: 1
+  knockbackDuration: 0.25
+  decayKnockbackOverTime: 1
+  showHealthDebugLog: 0
+  vibrationController: {fileID: 764449976}
+  strongLandingMinFallSpeed: 10
 --- !u!114 &764449976
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -389,10 +431,36 @@ MonoBehaviour:
   m_GameObject: {fileID: 764449968}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ed9d46179d515b4b8d8d95b6d75c16c, type: 3}
+  m_Script: {fileID: 11500000, guid: b3b278cf41c69ca4b8fb6af61826afc6, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerDebugView
-  playerController: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerVibrationController
+  wallKick:
+    lowFrequency: 0.24
+    highFrequency: 0.82
+    duration: 0.09
+  strongLanding:
+    lowFrequency: 0.72
+    highFrequency: 0.18
+    duration: 0.11
+  groundStep:
+    lowFrequency: 0.2
+    highFrequency: 0.3
+    duration: 0.06
+  airStep:
+    lowFrequency: 0.1
+    highFrequency: 0.4
+    duration: 0.05
+  wallSlide:
+    lowFrequency: 0.015
+    highFrequency: 0.05
+    pulseDuration: 0.03
+    pulseInterval: 0.1
+  showDebugState: 0
+  wallSlideActive: 0
+  wallSlidePulsePlaying: 0
+  wallSlideTimer: 0
+  oneShotTimer: 0
+  activeRumbleName: None
 --- !u!1 &850307571
 GameObject:
   m_ObjectHideFlags: 0
@@ -405,7 +473,7 @@ GameObject:
   - component: {fileID: 850307572}
   - component: {fileID: 850307574}
   m_Layer: 0
-  m_Name: CameraBounds
+  m_Name: WorldBounds
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -430,8 +498,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 35.41771, y: 20.518536, z: 0}
-  m_Center: {x: 3.9310684, y: 9.114288, z: 1.5}
+  m_Size: {x: 37.4, y: 19.9, z: 0}
+  m_Center: {x: 3.5999994, y: 9.95, z: 0}
 --- !u!4 &850307573
 Transform:
   m_ObjectHideFlags: 0
@@ -444,7 +512,9 @@ Transform:
   m_LocalPosition: {x: 1, y: 1, z: 1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1410207503}
+  - {fileID: 210320363}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &850307574
@@ -459,6 +529,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a477fbf9ca94fbc418171f170aec0e7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraBounds
+  minPoint: {fileID: 1410207503}
+  maxPoint: {fileID: 210320363}
   boxCollider: {fileID: 850307572}
 --- !u!1 &1066270906
 GameObject:
@@ -724,7 +796,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCameraController
   targetCamera: {fileID: 1265851340}
   targetAnchor: {fileID: 764449973}
-  cameraBounds: {fileID: 850307574}
+  worldBounds: {fileID: 850307574}
   autoFindPlayerAnchor: 1
   playerTag: Player
   anchorChildName: CameraTargetAnchor
@@ -733,6 +805,37 @@ MonoBehaviour:
   smoothTimeY: 0.12
   drawDebugGizmos: 1
   logViewportPosition: 1
+--- !u!1 &1410207502
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1410207503}
+  m_Layer: 0
+  m_Name: min
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1410207503
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1410207502}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -15.1, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 850307573}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1677113466
 GameObject:
   m_ObjectHideFlags: 0

@@ -4,6 +4,9 @@ using UnityEngine.InputSystem;
 
 // 同じ GameObject に複数付けて、振動制御が競合しないようにする。
 [DisallowMultipleComponent]
+
+// PlayerController と同一 GameObject 上での利用を前提にする。
+[RequireComponent(typeof(PlayerController))]
 public sealed class PlayerVibrationController : MonoBehaviour
 {
     // 振動の優先度。
@@ -45,22 +48,22 @@ public sealed class PlayerVibrationController : MonoBehaviour
         [Header("壁滑り微振動: 低周波")]
         [Tooltip("壁滑り中の低周波モーター(左寄り)の強さです。基本はかなり弱めにして、重すぎないザラつき感を作ります。")]
         [Range(0f, 1f)]
-        public float lowFrequency = 0.03f;
+        public float lowFrequency = 0.015f;
 
         [Header("壁滑り微振動: 高周波")]
         [Tooltip("壁滑り中の高周波モーター(右寄り)の強さです。擦れている細かい感触を出したいときに調整します。低周波より少し高めにすると壁との接触感が出しやすいです。")]
         [Range(0f, 1f)]
-        public float highFrequency = 0.06f;
+        public float highFrequency = 0.05f;
 
         [Header("壁滑り微振動: パルス再生時間")]
         [Tooltip("1回の壁滑りパルスを鳴らす時間(秒)です。短いほど細かい断続振動になり、長いほど連続感が強くなります。")]
         [Min(0f)]
-        public float pulseDuration = 0.05f;
+        public float pulseDuration = 0.03f;
 
         [Header("壁滑り微振動: パルス間隔")]
         [Tooltip("壁滑りパルスを止めている時間(秒)です。短いほど連続的に感じ、長いほど控えめで軽い触感になります。")]
         [Min(0f)]
-        public float pulseInterval = 0.12f;
+        public float pulseInterval = 0.10f;
     }
 
     [Header("壁キック設定")]
@@ -68,9 +71,9 @@ public sealed class PlayerVibrationController : MonoBehaviour
     [SerializeField]
     private OneShotRumbleSettings wallKick = new OneShotRumbleSettings
     {
-        lowFrequency = 0.35f,
-        highFrequency = 0.80f,
-        duration = 0.12f
+        lowFrequency = 0.24f,
+        highFrequency = 0.82f,
+        duration = 0.09f
     };
 
     [Header("強い着地設定")]
@@ -78,9 +81,9 @@ public sealed class PlayerVibrationController : MonoBehaviour
     [SerializeField]
     private OneShotRumbleSettings strongLanding = new OneShotRumbleSettings
     {
-        lowFrequency = 0.55f,
-        highFrequency = 0.30f,
-        duration = 0.10f
+        lowFrequency = 0.72f,
+        highFrequency = 0.18f,
+        duration = 0.11f
     };
 
     [Header("地上前ステ設定")]
@@ -88,9 +91,9 @@ public sealed class PlayerVibrationController : MonoBehaviour
     [SerializeField]
     private OneShotRumbleSettings groundStep = new OneShotRumbleSettings
     {
-        lowFrequency = 0.28f,
-        highFrequency = 0.16f,
-        duration = 0.08f
+        lowFrequency = 0.20f,
+        highFrequency = 0.30f,
+        duration = 0.06f
     };
 
     [Header("空中前ステ設定")]
@@ -98,9 +101,9 @@ public sealed class PlayerVibrationController : MonoBehaviour
     [SerializeField]
     private OneShotRumbleSettings airStep = new OneShotRumbleSettings
     {
-        lowFrequency = 0.14f,
-        highFrequency = 0.36f,
-        duration = 0.07f
+        lowFrequency = 0.10f,
+        highFrequency = 0.40f,
+        duration = 0.05f
     };
 
     [Header("壁滑り微振動設定")]
