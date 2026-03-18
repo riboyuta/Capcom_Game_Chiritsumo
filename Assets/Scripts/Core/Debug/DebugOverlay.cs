@@ -35,10 +35,10 @@ public sealed class DebugOverlay : MonoBehaviour
         }
 
 
-        if (BootSceneController.Instance.DebugInput.ToggleDebugViewPressed)
-        {
-            isVisible = !isVisible;
-        }
+        //if (BootSceneController.Instance.DebugInput.ToggleDebugViewPressed)
+        //{
+        //    isVisible = !isVisible;
+        //}
 
     }
 
