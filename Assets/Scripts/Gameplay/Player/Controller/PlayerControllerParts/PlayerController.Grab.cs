@@ -5,33 +5,32 @@
 public sealed partial class PlayerController : IGrabReceiver
 {
     [Header("Grab")]
-    [SerializeField] private bool can_be_grabbed = true;          // 掴み攻撃を受けるか
+    [SerializeField] private bool canBeGrabbed = true;          // 掴み攻撃を受けるか
 
     [Header("Grab Debug")]
-    [SerializeField] private bool show_grab_debug_log = false;    // デバッグログ表示
+    [SerializeField] private bool showGrabDebugLog = false;    // デバッグログ表示
 
     // 掴まれ状態
-    private bool is_grabbed = false;                              // 掴まれているか
-    private float grab_timer = 0.0f;                              // 掴まれている残り時間
-
+    private bool isGrabbed = false;                              // 掴まれているか
+    private float grabTimer = 0.0f;                              // 掴まれている残り時間
     // プロパティ：外部からアクセス可能な読み取り専用情報
-    public bool IsGrabbed => is_grabbed;                          // 掴まれているか
+    public bool IsGrabbed => isGrabbed;                          // 掴まれているか
 
     // 掴みシステムの初期化（メインのAwakeから呼ぶ）
     private void InitializeGrab()
     {
-        is_grabbed = false;
-        grab_timer = 0.0f;
+        isGrabbed  = false;
+        grabTimer = 0.0f;
     }
 
     // 掴みシステムの更新（メインのUpdateから呼ぶ）
     private void UpdateGrab(float deltaTime)
     {
         // 掴まれ状態の更新
-        if (is_grabbed)
+        if (isGrabbed)
         {
-            grab_timer -= deltaTime;
-            if (grab_timer <= 0.0f)
+            grabTimer -= deltaTime;
+            if (grabTimer <= 0.0f)
             {
                 ReleaseGrab();
             }
@@ -46,14 +45,14 @@ public sealed partial class PlayerController : IGrabReceiver
     public void OnGrabbed(float duration)
     {
         // 掴まれることができない、既に掴まれている、または無敵状態の場合は無視
-        if (!can_be_grabbed || is_grabbed || IsInvincible)
+        if (!canBeGrabbed || isGrabbed || IsInvincible)
         {
             LogGrab("Grab ignored (cannot be grabbed or invincible)");
             return;
         }
 
-        is_grabbed = true;
-        grab_timer = duration;
+        isGrabbed = true;
+        grabTimer = duration;
 
         LogGrab($"Grabbed for {duration} seconds");
 
@@ -64,13 +63,13 @@ public sealed partial class PlayerController : IGrabReceiver
     // 掴みから解放される
     private void ReleaseGrab()
     {
-        if (!is_grabbed)
+        if (!isGrabbed)
         {
             return;
         }
 
-        is_grabbed = false;
-        grab_timer = 0.0f;
+        isGrabbed = false;
+        grabTimer = 0.0f;
 
         LogGrab("Released from grab");
 
@@ -110,7 +109,7 @@ public sealed partial class PlayerController : IGrabReceiver
     // 掴みを強制解除（外部から呼び出し可能）
     public void ForceReleaseGrab()
     {
-        if (is_grabbed)
+        if (isGrabbed)
         {
             ReleaseGrab();
             LogGrab("Grab force released");
@@ -120,7 +119,7 @@ public sealed partial class PlayerController : IGrabReceiver
     // デバッグログ出力
     private void LogGrab(string message)
     {
-        if (!show_grab_debug_log)
+        if (!showGrabDebugLog)
         {
             return;
         }

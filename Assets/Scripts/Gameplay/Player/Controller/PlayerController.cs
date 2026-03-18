@@ -120,14 +120,14 @@ public sealed partial class PlayerController : MonoBehaviour
         float deltaTime = Time.fixedDeltaTime;
 
         // 掴まれている場合は移動処理をスキップする。
-        if (is_grabbed)
+        if (isGrabbed)
         {
             rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
             return;
         }
 
         // ノックバック中は専用速度を適用し、通常の移動処理をスキップする。
-        if (is_knockback)
+        if (isKnockback)
         {
             ApplyKnockbackVelocity();
             return;
