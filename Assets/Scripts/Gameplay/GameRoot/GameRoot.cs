@@ -75,11 +75,11 @@ public sealed class GameRoot : MonoBehaviour
 
     private void UpdatePlaying()
     {
-        if (BootSceneController.Instance.DebugInput.NextScenePressed)
-        {
-            EnterResult();
-            return;
-        }
+        //if (BootSceneController.Instance.DebugInput.NextScenePressed)
+        //{
+        //    EnterResult();
+        //    return;
+        //}
         playTimer -= Time.deltaTime;
 
         if (playTimer > 0f)

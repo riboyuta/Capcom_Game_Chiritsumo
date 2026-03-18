@@ -17,13 +17,24 @@ public class MapEditor : MonoBehaviour
 
     public float gridSize = 1.0f;
 
+    bool showSaveConfirm = false;
+    bool showLoadConfirm = false;
+
     void Update()
     {
+        if (showSaveConfirm || showLoadConfirm)  { return; } //セーブorロード選択中はエディット操作できない
 
         //数字キーで使うタイルを変える
         if (Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0)) currentTile = 0;
         if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) currentTile = 1;
         if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2)) currentTile = 2;
+        if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)) currentTile = 3;
+        if (Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4)) currentTile = 4;
+        if (Input.GetKeyDown(KeyCode.Alpha5) || Input.GetKeyDown(KeyCode.Keypad5)) currentTile = 5;
+        if (Input.GetKeyDown(KeyCode.Alpha6) || Input.GetKeyDown(KeyCode.Keypad6)) currentTile = 6;
+        if (Input.GetKeyDown(KeyCode.Alpha7) || Input.GetKeyDown(KeyCode.Keypad7)) currentTile = 7;
+        if (Input.GetKeyDown(KeyCode.Alpha8) || Input.GetKeyDown(KeyCode.Keypad8)) currentTile = 8;
+        if (Input.GetKeyDown(KeyCode.Alpha9) || Input.GetKeyDown(KeyCode.Keypad9)) currentTile = 9;
 
 
         if (Input.GetMouseButton(0))
@@ -38,12 +49,14 @@ public class MapEditor : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.S))
         {
-            SaveMap();
+            //SaveMap();
+            showSaveConfirm = true;
         }
 
         if (Input.GetKeyDown(KeyCode.L))
         {
-            LoadMap();
+            //LoadMap();
+            showLoadConfirm = true;
         }
 
     }
@@ -209,5 +222,64 @@ public class MapEditor : MonoBehaviour
 
         Debug.Log("Map Loaded");
     }
+
+
+
+
+    //===========================-------
+    //　　　　　   GUI
+    //===========================-------
+    void OnGUI()
+    {
+        GUIStyle style = new GUIStyle(GUI.skin.box);
+        style.fontSize = 160;
+        style.alignment = TextAnchor.UpperCenter;
+
+        GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+        buttonStyle.fontSize = 80;
+
+        float w = Screen.width;
+        float h = Screen.height;
+
+        float boxWidth = 1600;
+        float boxHeight = 800;
+
+        float boxX = (w - boxWidth) / 2;
+        float boxY = (h - boxHeight) / 2;
+
+        if (showSaveConfirm)
+        {
+            GUI.Box(new Rect(boxX, boxY, boxWidth, boxHeight), "Save Map?", style);
+
+            if (GUI.Button(new Rect(boxX + 350, boxY + 450, 300, 120), "Yes", buttonStyle))
+            {
+                SaveMap();
+                showSaveConfirm = false;
+            }
+
+            if (GUI.Button(new Rect(boxX + 950, boxY + 450, 300, 120), "No", buttonStyle))
+            {
+                showSaveConfirm = false;
+            }
+        }
+
+        if (showLoadConfirm)
+        {
+            GUI.Box(new Rect(boxX, boxY, boxWidth, boxHeight), "Load Map?", style);
+
+            if (GUI.Button(new Rect(boxX + 350, boxY + 450, 300, 120), "Yes", buttonStyle))
+            {
+                LoadMap();
+                showLoadConfirm = false;
+            }
+
+            if (GUI.Button(new Rect(boxX + 950, boxY + 450, 300, 120), "No", buttonStyle))
+            {
+                showLoadConfirm = false;
+            }
+        }
+    }
+
 }
+
 
