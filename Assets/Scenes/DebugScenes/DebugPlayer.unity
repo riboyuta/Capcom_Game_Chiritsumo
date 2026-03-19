@@ -413,16 +413,218 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerView
   playerController: {fileID: 1259927090}
   spriteRenderer: {fileID: 721219267}
+  viewRoot: {fileID: 721219266}
   walkThreshold: 0.05
   riseThreshold: 0.05
+  idleClipData:
+    clip:
+      enabled: 1
+      sprites:
+      - {fileID: 290368967, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+      startFrame: 0
+      endFrame: 0
+      fps: 12
+      playbackMode: 2
+      minimumDuration: 0
+      extraFlipX: 0
+      extraFlipY: 0
+      scaleMultiplier: 1
+      localOffset: {x: 0, y: 0, z: 0}
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  walkLoopClipData:
+    clip:
+      enabled: 1
+      sprites:
+      - {fileID: 290368967, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+      - {fileID: 1716179379, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+      - {fileID: 1465907502, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+      - {fileID: -727687240, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+      - {fileID: 472008612, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+      - {fileID: -49800599, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+      - {fileID: 248648912, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+      - {fileID: 382070223, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+      startFrame: 0
+      endFrame: 7
+      fps: 12
+      playbackMode: 0
+      minimumDuration: 0
+      extraFlipX: 0
+      extraFlipY: 0
+      scaleMultiplier: 1
+      localOffset: {x: 0, y: 0, z: 0}
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  landClipData:
+    clip:
+      enabled: 1
+      sprites:
+      - {fileID: -1046398307, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+      startFrame: 0
+      endFrame: 0
+      fps: 3
+      playbackMode: 2
+      minimumDuration: 0
+      extraFlipX: 0
+      extraFlipY: 0
+      scaleMultiplier: 1
+      localOffset: {x: 0, y: 0, z: 0}
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  jumpStartClipData:
+    clip:
+      enabled: 1
+      sprites:
+      - {fileID: -1812844035, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+      - {fileID: -28800686, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+      - {fileID: -109164536, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+      - {fileID: 641278213, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+      startFrame: 0
+      endFrame: 0
+      fps: 3
+      playbackMode: 2
+      minimumDuration: 0
+      extraFlipX: 0
+      extraFlipY: 0
+      scaleMultiplier: 1
+      localOffset: {x: 0, y: 0, z: 0}
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  jumpRiseClipData:
+    clip:
+      enabled: 0
+      sprites:
+      - {fileID: 641278213, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+      startFrame: 0
+      endFrame: 0
+      fps: 12
+      playbackMode: 2
+      minimumDuration: 0
+      extraFlipX: 0
+      extraFlipY: 0
+      scaleMultiplier: 1
+      localOffset: {x: 0, y: 0, z: 0}
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  jumpToFallClipData:
+    clip:
+      enabled: 1
+      sprites:
+      - {fileID: 1303732482, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+      - {fileID: -1045589456, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+      - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+      startFrame: 0
+      endFrame: 0
+      fps: 3
+      playbackMode: 2
+      minimumDuration: 0
+      extraFlipX: 0
+      extraFlipY: 0
+      scaleMultiplier: 1
+      localOffset: {x: 0, y: 0, z: 0}
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  fallClipData:
+    clip:
+      enabled: 0
+      sprites:
+      - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+      startFrame: 0
+      endFrame: 0
+      fps: 3
+      playbackMode: 2
+      minimumDuration: 0
+      extraFlipX: 0
+      extraFlipY: 0
+      scaleMultiplier: 1
+      localOffset: {x: 0, y: 0, z: 0}
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  wallSlideClipData:
+    clip:
+      enabled: 1
+      sprites:
+      - {fileID: -1045589456, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+      startFrame: 0
+      endFrame: 0
+      fps: 12
+      playbackMode: 0
+      minimumDuration: 0
+      extraFlipX: 0
+      extraFlipY: 0
+      scaleMultiplier: 1
+      localOffset: {x: 0, y: 0, z: 0}
+    extraFlipX: 1
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  wallJumpClipData:
+    clip:
+      enabled: 1
+      sprites:
+      - {fileID: 1303732482, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+      - {fileID: -1045589456, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+      - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+      startFrame: 0
+      endFrame: 0
+      fps: 12
+      playbackMode: 2
+      minimumDuration: 0
+      extraFlipX: 0
+      extraFlipY: 0
+      scaleMultiplier: 1
+      localOffset: {x: 0, y: 0, z: 0}
+    extraFlipX: 1
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  stepClipData:
+    clip:
+      enabled: 1
+      sprites:
+      - {fileID: 641278213, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+      startFrame: 0
+      endFrame: 0
+      fps: 12
+      playbackMode: 2
+      minimumDuration: 0
+      extraFlipX: 0
+      extraFlipY: 0
+      scaleMultiplier: 1
+      localOffset: {x: 0, y: 0, z: 0}
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
   idleClip:
+    enabled: 1
     sprites:
     - {fileID: 290368967, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
     startFrame: 0
     endFrame: 0
     fps: 12
     playbackMode: 2
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
   walkLoopClip:
+    enabled: 1
     sprites:
     - {fileID: 290368967, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
     - {fileID: 1716179379, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
@@ -436,14 +638,26 @@ MonoBehaviour:
     endFrame: 7
     fps: 12
     playbackMode: 0
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
   landClip:
+    enabled: 1
     sprites:
     - {fileID: -1046398307, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
     startFrame: 0
     endFrame: 0
     fps: 120
-    playbackMode: 1
+    playbackMode: 2
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
   jumpStartClip:
+    enabled: 1
     sprites:
     - {fileID: -1812844035, guid: 160d2f2539805774aa741bb865af696e, type: 3}
     - {fileID: -28800686, guid: 160d2f2539805774aa741bb865af696e, type: 3}
@@ -452,14 +666,26 @@ MonoBehaviour:
     endFrame: 0
     fps: 12
     playbackMode: 1
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
   jumpRiseClip:
+    enabled: 1
     sprites:
     - {fileID: 641278213, guid: 160d2f2539805774aa741bb865af696e, type: 3}
     startFrame: 0
     endFrame: 0
     fps: 12
     playbackMode: 2
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
   jumpToFallClip:
+    enabled: 1
     sprites:
     - {fileID: 1303732482, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
     - {fileID: -1045589456, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
@@ -468,21 +694,39 @@ MonoBehaviour:
     endFrame: 0
     fps: 12
     playbackMode: 1
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
   fallClip:
+    enabled: 1
     sprites:
     - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
     startFrame: 0
     endFrame: 0
     fps: 12
     playbackMode: 2
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
   wallSlideClip:
+    enabled: 1
     sprites:
     - {fileID: -1045589456, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
     startFrame: 0
     endFrame: 0
     fps: 12
     playbackMode: 0
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
   wallJumpClip:
+    enabled: 1
     sprites:
     - {fileID: 1303732482, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
     - {fileID: -1045589456, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
@@ -491,13 +735,24 @@ MonoBehaviour:
     endFrame: 0
     fps: 12
     playbackMode: 2
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
   stepClip:
+    enabled: 1
     sprites:
     - {fileID: 641278213, guid: 160d2f2539805774aa741bb865af696e, type: 3}
     startFrame: 0
     endFrame: 0
     fps: 12
     playbackMode: 2
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
   currentAnimState: 
   currentClip: 
   currentFrame: 0

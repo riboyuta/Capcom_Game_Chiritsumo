@@ -18,6 +18,10 @@ public enum SpriteSequencePlaybackMode
 [System.Serializable]
 public sealed class SpriteSequenceClip
 {
+    [Header("有効化")]
+    [Tooltip("OFF の場合、このクリップは PlayerView の状態解決対象から除外されます。")]
+    public bool enabled = true;
+
     [Header("スプライト列")]
     [Tooltip("再生に使用するスプライト配列です。startFrame から endFrame の範囲が実際の再生対象になります。")]
     // 再生元となるスプライト列。
@@ -45,6 +49,28 @@ public sealed class SpriteSequenceClip
     [Tooltip("終端到達後の挙動を指定します。Loop は先頭へ戻って継続、OneShot / HoldLastFrame は最終フレームで停止します。")]
     // 終端到達後の再生モード。
     public SpriteSequencePlaybackMode playbackMode = SpriteSequencePlaybackMode.Loop;
+
+    [Header("最低維持時間(秒)")]
+    [Tooltip("この状態に入ったあと、最低限維持する秒数です。0 の場合は即時切り替え可能です。")]
+    [Min(0f)]
+    public float minimumDuration = 0f;
+
+    [Header("追加反転(X)")]
+    [Tooltip("通常向きに対して追加で X 反転するかを指定します。")]
+    public bool extraFlipX = false;
+
+    [Header("追加反転(Y)")]
+    [Tooltip("クリップ固有の Y 反転を指定します。")]
+    public bool extraFlipY = false;
+
+    [Header("スケール倍率")]
+    [Tooltip("ViewRoot の baseScale に乗算する倍率です。")]
+    [Min(0f)]
+    public float scaleMultiplier = 1f;
+
+    [Header("ローカルオフセット")]
+    [Tooltip("ViewRoot の baseLocalOffset に加算するオフセットです。")]
+    public Vector3 localOffset = Vector3.zero;
 }
 
 // PlayerView 専用の最小スプライト連番再生クラス。
