@@ -3,28 +3,6 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class PlayerView : MonoBehaviour
 {
-    [System.Serializable]
-    private sealed class SpriteClipData
-    {
-        [Tooltip("この状態で再生するスプライト連番クリップです。")]
-        public SpriteSequenceClip clip;
-
-        [Tooltip("通常の向き反転に加算する、クリップ固有の X 反転です。")]
-        public bool extraFlipX;
-
-        [Tooltip("クリップ固有の Y 反転です。")]
-        public bool extraFlipY;
-
-        [Tooltip("ViewRoot の基準スケールへ乗算する倍率です。")]
-        [Min(0f)]
-        public float scaleMultiplier = 1f;
-
-        [Tooltip("ViewRoot の基準ローカル座標へ加算する補正です。")]
-        public Vector3 localOffset;
-    }
-
-    // PlayerView 内で扱う見た目用のアニメーション状態。
-    // PlayerController.VisualState から、この列挙へ変換して Clip を選ぶ。
     private enum AnimState
     {
         Idle,
@@ -40,367 +18,367 @@ public sealed class PlayerView : MonoBehaviour
     }
 
     [Header("参照: PlayerController")]
-    [Tooltip("見た目更新の元になる PlayerController 参照です。未設定時は親階層から自動探索します。")]
-    // 見た目状態の参照元。
-    // 未設定なら Awake で親階層から取得する。
     [SerializeField] private PlayerController playerController;
 
     [Header("参照: SpriteRenderer")]
-    [Tooltip("実際にスプライトを表示する SpriteRenderer です。未設定時は同一 GameObject から自動取得します。")]
-    // スプライト表示先。
-    // SpriteSequencePlayer がこの Renderer に対して Sprite を差し替える。
     [SerializeField] private SpriteRenderer spriteRenderer;
 
     [Header("参照: ViewRoot")]
-    [Tooltip("見た目補正を適用する Transform です。未設定時はこの GameObject の Transform を使います。")]
     [SerializeField] private Transform viewRoot;
 
-    [Header("判定しきい値: 歩行判定")]
-    [Tooltip("接地中に WalkLoop へ切り替える最小横速度です。絶対値がこの値以上なら歩行扱いになります。")]
-    // 接地中に歩きアニメへ入る最小横速度。
+    [Header("閾値")]
     [SerializeField] private float walkThreshold = 0.05f;
-
-    [Header("判定しきい値: 上昇判定")]
-    [Tooltip("空中で JumpRise と判定する最小上向き速度です。Y速度がこの値より大きい間を上昇扱いにします。")]
-    // 上昇中とみなす最小 Y 速度。
     [SerializeField] private float riseThreshold = 0.05f;
 
-    [Header("地上アニメ: 待機")]
-    [Tooltip("接地中かつ低速時に再生する待機アニメーションです。")]
-    // 地上待機用 Clip。
-    [SerializeField] private SpriteClipData idleClipData;
+    [Header("ベース見た目設定")]
+    [SerializeField] private Vector3 baseLocalOffset = Vector3.zero;
+    [SerializeField] private Vector3 baseScale = Vector3.one;
 
-    [Header("地上アニメ: 歩行ループ")]
-    [Tooltip("接地中かつ横移動中に再生する歩行ループアニメーションです。")]
-    // 地上歩行用 Clip。
-    [SerializeField] private SpriteClipData walkLoopClipData;
+    [Header("地上: Idle")]
+    [SerializeField] private SpriteSequenceClip idleClip = new SpriteSequenceClip
+    {
+        playbackMode = SpriteSequencePlaybackMode.HoldLastFrame,
+        minimumDuration = 0f
+    };
 
-    [Header("地上アニメ: 着地")]
-    [Tooltip("justLanded が立ったフレームで優先再生する着地アニメーションです。")]
-    // 着地瞬間用 Clip。
-    [SerializeField] private SpriteClipData landClipData;
+    [Header("地上: WalkLoop")]
+    [SerializeField] private SpriteSequenceClip walkLoopClip = new SpriteSequenceClip
+    {
+        fps = 16f,
+        playbackMode = SpriteSequencePlaybackMode.Loop,
+        minimumDuration = 0f
+    };
 
-    [Header("空中アニメ: ジャンプ開始")]
-    [Tooltip("justJumped が立ったフレームで優先再生するジャンプ開始アニメーションです。")]
-    // ジャンプ開始瞬間用 Clip。
-    [SerializeField] private SpriteClipData jumpStartClipData;
+    [Header("地上: Land")]
+    [SerializeField] private SpriteSequenceClip landClip = new SpriteSequenceClip
+    {
+        fps = 10f,
+        playbackMode = SpriteSequencePlaybackMode.OneShot,
+        minimumDuration = 0.08f
+    };
 
-    [Header("空中アニメ: 上昇")]
-    [Tooltip("非接地かつ Y速度が riseThreshold を超えている間に再生する上昇アニメーションです。")]
-    // 空中上昇用 Clip。
-    [SerializeField] private SpriteClipData jumpRiseClipData;
+    [Header("空中: JumpStart")]
+    [SerializeField] private SpriteSequenceClip jumpStartClip = new SpriteSequenceClip
+    {
+        fps = 24f,
+        playbackMode = SpriteSequencePlaybackMode.OneShot,
+        minimumDuration = 0.10f
+    };
 
-    [Header("空中アニメ: 頂点通過")]
-    [Tooltip("justCrossedApex が立ったフレームで優先再生する、上昇から落下への切り替えアニメーションです。")]
-    // ジャンプ頂点通過瞬間用 Clip。
-    [SerializeField] private SpriteClipData jumpToFallClipData;
+    [Header("空中: JumpRise")]
+    [SerializeField] private SpriteSequenceClip jumpRiseClip = new SpriteSequenceClip
+    {
+        fps = 0f,
+        playbackMode = SpriteSequencePlaybackMode.HoldLastFrame,
+        minimumDuration = 0f
+    };
 
-    [Header("空中アニメ: 落下")]
-    [Tooltip("非接地かつ上昇条件に当てはまらない間に再生する落下アニメーションです。")]
-    // 空中落下用 Clip。
-    [SerializeField] private SpriteClipData fallClipData;
+    [Header("空中: JumpToFall")]
+    [SerializeField] private SpriteSequenceClip jumpToFallClip = new SpriteSequenceClip
+    {
+        fps = 24f,
+        playbackMode = SpriteSequencePlaybackMode.OneShot,
+        minimumDuration = 0.08f
+    };
 
-    [Header("壁アニメ: 壁滑り")]
-    [Tooltip("壁滑り中に再生するアニメーションです。")]
-    // 壁滑り用 Clip。
-    [SerializeField] private SpriteClipData wallSlideClipData;
+    [Header("空中: Fall")]
+    [SerializeField] private SpriteSequenceClip fallClip = new SpriteSequenceClip
+    {
+        fps = 0f,
+        playbackMode = SpriteSequencePlaybackMode.HoldLastFrame,
+        minimumDuration = 0f
+    };
 
-    [Header("壁アニメ: 壁ジャンプ")]
-    [Tooltip("justWallJumped が立ったフレームで優先再生する壁ジャンプアニメーションです。")]
-    // 壁ジャンプ瞬間用 Clip。
-    [SerializeField] private SpriteClipData wallJumpClipData;
+    [Header("壁: WallSlide")]
+    [SerializeField] private SpriteSequenceClip wallSlideClip = new SpriteSequenceClip
+    {
+        fps = 0f,
+        playbackMode = SpriteSequencePlaybackMode.HoldLastFrame,
+        minimumDuration = 0f
+    };
 
-    [Header("特殊アニメ: ステップ")]
-    [Tooltip("前ステップ中に最優先で再生するアニメーションです。")]
-    // ステップ用 Clip。
-    [SerializeField] private SpriteClipData stepClipData;
+    [Header("壁: WallJump")]
+    [SerializeField] private SpriteSequenceClip wallJumpClip = new SpriteSequenceClip
+    {
+        fps = 24f,
+        playbackMode = SpriteSequencePlaybackMode.OneShot,
+        minimumDuration = 0.10f
+    };
 
-    // 旧バージョン互換: 既存シーンの Clip 参照を SpriteClipData へ移すための退避領域。
-    [SerializeField, HideInInspector] private SpriteSequenceClip idleClip;
-    [SerializeField, HideInInspector] private SpriteSequenceClip walkLoopClip;
-    [SerializeField, HideInInspector] private SpriteSequenceClip landClip;
-    [SerializeField, HideInInspector] private SpriteSequenceClip jumpStartClip;
-    [SerializeField, HideInInspector] private SpriteSequenceClip jumpRiseClip;
-    [SerializeField, HideInInspector] private SpriteSequenceClip jumpToFallClip;
-    [SerializeField, HideInInspector] private SpriteSequenceClip fallClip;
-    [SerializeField, HideInInspector] private SpriteSequenceClip wallSlideClip;
-    [SerializeField, HideInInspector] private SpriteSequenceClip wallJumpClip;
-    [SerializeField, HideInInspector] private SpriteSequenceClip stepClip;
+    [Header("特殊: Step")]
+    [SerializeField] private SpriteSequenceClip stepClip = new SpriteSequenceClip
+    {
+        fps = 0f,
+        playbackMode = SpriteSequencePlaybackMode.HoldLastFrame,
+        minimumDuration = 0f
+    };
 
-    [Header("デバッグ(Runtime): 現在アニメ状態")]
-    [Tooltip("現在選択されている AnimState 名です。実行時の確認用です。")]
-    // 現在の状態名。
-    [SerializeField] private string currentAnimState;
+    [Header("デバッグ(Runtime)")]
+    [SerializeField] private AnimState currentAnimState;
+    [SerializeField] private AnimState desiredAnimState;
+    [SerializeField] private float currentStateElapsed;
+    [SerializeField] private float currentStateLockRemaining;
+    [SerializeField] private string currentClipName = "None";
+    [SerializeField] private int currentFrameIndex;
 
-    [Header("デバッグ(Runtime): 現在クリップ名")]
-    [Tooltip("現在再生中の Clip に対応する名前です。実行時の確認用です。")]
-    // 現在再生中 Clip の表示名。
-    [SerializeField] private string currentClip;
-
-    [Header("デバッグ(Runtime): 現在フレーム")]
-    [Tooltip("現在再生中 Clip のフレーム番号です。実行時の確認用です。")]
-    // 現在再生中フレーム。
-    [SerializeField] private int currentFrame;
-
-    // 実際の連番再生を担当する最小プレイヤー。
     private readonly SpriteSequencePlayer sequencePlayer = new SpriteSequencePlayer();
 
-    // 現在アクティブな見た目状態。
-    private AnimState activeState = AnimState.Idle;
-
-    // 一度でも状態を確定したかどうか。
-    // 初回は強制的に Play を流すために使う。
-    private bool hasActiveState;
-
-    // デバッグ表示用の現在 Clip 名。
-    private string activeClipName = "None";
-
-    // ViewRoot の初期ローカルスケール。
-    private Vector3 baseScale = Vector3.one;
-
-    // ViewRoot の初期ローカル座標。
-    private Vector3 baseOffset = Vector3.zero;
+    private SpriteSequenceClip currentClip;
+    private bool hasState;
+    private bool wasGrounded = true;
+    private bool airborneFromJump;
 
     private void Awake()
     {
-        MigrateLegacyClipReferences();
-
-        // PlayerController が未設定なら親階層から補完する。
         if (playerController == null)
         {
             playerController = GetComponentInParent<PlayerController>();
         }
 
-        // SpriteRenderer が未設定なら同一 GameObject から補完する。
         if (spriteRenderer == null)
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
         }
 
-        // ViewRoot が未設定なら自身の Transform を使う。
         if (viewRoot == null)
         {
             viewRoot = transform;
         }
 
-        // View は Controller を参照できないと成立しない。
-        if (playerController == null)
+        if (playerController == null || spriteRenderer == null || viewRoot == null)
         {
-            Debug.LogError("PlayerView requires PlayerController in parent hierarchy.", this);
+            Debug.LogError("PlayerView references are missing.", this);
             enabled = false;
             return;
         }
 
-        // 実際の描画先が無いとアニメ表示できない。
-        if (spriteRenderer == null)
-        {
-            Debug.LogError("PlayerView requires SpriteRenderer on the same GameObject.", this);
-            enabled = false;
-            return;
-        }
-
-        if (viewRoot == null)
-        {
-            Debug.LogError("PlayerView requires ViewRoot Transform.", this);
-            enabled = false;
-            return;
-        }
-
-        // 連番再生先 Renderer を設定する。
         sequencePlayer.SetRenderer(spriteRenderer);
 
-        // 基準見た目補正を保存する。
-        baseScale = viewRoot.localScale;
-        baseOffset = viewRoot.localPosition;
-    }
-
-    private void OnValidate()
-    {
-        MigrateLegacyClipReferences();
+        if (baseScale == Vector3.zero)
+        {
+            baseScale = viewRoot.localScale;
+        }
     }
 
     private void Update()
     {
-        if (playerController == null)
+        PlayerController.VisualState state = playerController.CurrentVisualState;
+        UpdateAirborneContext(state);
+
+        desiredAnimState = ResolveDesiredState(state);
+        TickStateTransition(state, desiredAnimState, Time.deltaTime);
+
+        sequencePlayer.Tick(Time.deltaTime);
+        currentFrameIndex = sequencePlayer.CurrentFrame;
+
+        ApplyVisualCorrection(state);
+    }
+
+    private void UpdateAirborneContext(PlayerController.VisualState state)
+    {
+        if (state.justJumped)
+        {
+            airborneFromJump = true;
+        }
+
+        if (!wasGrounded && state.isGrounded)
+        {
+            airborneFromJump = false;
+        }
+
+        if (wasGrounded && !state.isGrounded && !state.justJumped)
+        {
+            airborneFromJump = false;
+        }
+
+        wasGrounded = state.isGrounded;
+    }
+
+    private void TickStateTransition(PlayerController.VisualState state, AnimState desired, float deltaTime)
+    {
+        if (!hasState)
+        {
+            ForceEnterState(desired);
+            return;
+        }
+
+        currentStateElapsed += Mathf.Max(0f, deltaTime);
+        currentStateLockRemaining = Mathf.Max(0f, (currentClip != null ? currentClip.minimumDuration : 0f) - currentStateElapsed);
+
+        if (desired == currentAnimState)
         {
             return;
         }
 
-        // Controller 側で確定済みの見た目スナップショットを読む。
-        PlayerController.VisualState state = playerController.CurrentVisualState;
-
-        // アニメ状態を更新する。
-        UpdateAnimationState(state);
-        UpdateFacingAndViewCorrection(state);
-
-        // 現在 Clip の再生を進める。
-        sequencePlayer.Tick(Time.deltaTime);
-
-        // Runtime デバッグ表示を更新する。
-        UpdateDebugFields();
-    }
-
-    private void UpdateFacingAndViewCorrection(PlayerController.VisualState state)
-    {
-        SpriteClipData activeClipData = GetClipData(activeState);
-
-        // facing が負なら左向き。クリップ固有反転は XOR で加算する。
-        bool facingFlipX = state.facing < 0;
-        bool extraFlipX = activeClipData != null && activeClipData.extraFlipX;
-        bool extraFlipY = activeClipData != null && activeClipData.extraFlipY;
-        spriteRenderer.flipX = facingFlipX ^ extraFlipX;
-        spriteRenderer.flipY = extraFlipY;
-
-        // 見た目補正は ViewRoot に適用する（PlayerRoot は変更しない）。
-        float scaleMultiplier = activeClipData != null ? activeClipData.scaleMultiplier : 1f;
-        Vector3 localOffset = activeClipData != null ? activeClipData.localOffset : Vector3.zero;
-        viewRoot.localScale = baseScale * scaleMultiplier;
-        viewRoot.localPosition = baseOffset + localOffset;
-    }
-
-    private void UpdateAnimationState(PlayerController.VisualState state)
-    {
-        AnimState nextState = ResolveState(state);
-
-        // 初回、または状態変化時だけ Clip を再生し直す。
-        if (!hasActiveState || nextState != activeState)
+        if (currentStateLockRemaining > 0f && !CanInterruptDuringLock(currentAnimState, desired))
         {
-            activeState = nextState;
-            hasActiveState = true;
-            sequencePlayer.Play(GetClip(nextState));
-            activeClipName = nextState.ToString();
+            return;
         }
+
+        ForceEnterState(desired);
     }
 
-    // 現在の見た目状態を AnimState へ変換する。
-    // 優先順位は上から順に判定する。
-    private AnimState ResolveState(PlayerController.VisualState state)
+    private void ForceEnterState(AnimState next)
     {
-        // ステップ中は最優先。
-        if (state.isStepping)
+        hasState = true;
+        currentAnimState = next;
+        currentStateElapsed = 0f;
+
+        currentClip = GetClip(next);
+        currentStateLockRemaining = currentClip != null ? currentClip.minimumDuration : 0f;
+        currentClipName = currentClip != null ? next.ToString() : "None";
+
+        sequencePlayer.Play(currentClip);
+        currentFrameIndex = sequencePlayer.CurrentFrame;
+    }
+
+    private bool CanInterruptDuringLock(AnimState current, AnimState desired)
+    {
+        if (desired == AnimState.Step)
+        {
+            return true;
+        }
+
+        if (desired == AnimState.WallJump && current == AnimState.JumpStart)
+        {
+            return true;
+        }
+
+        if (desired == AnimState.WallSlide && IsAirNormalState(current))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsAirNormalState(AnimState state)
+    {
+        return state == AnimState.JumpStart || state == AnimState.JumpRise || state == AnimState.JumpToFall || state == AnimState.Fall;
+    }
+
+    private AnimState ResolveDesiredState(PlayerController.VisualState state)
+    {
+        if (state.isStepping && IsClipEnabled(stepClip))
         {
             return AnimState.Step;
         }
 
-        // 壁ジャンプ瞬間は壁滑りより優先。
-        if (state.justWallJumped)
+        if (state.justWallJumped && IsClipEnabled(wallJumpClip))
         {
             return AnimState.WallJump;
         }
 
-        // 壁滑り中。
-        if (state.isWallSliding)
+        if (state.isWallSliding && IsClipEnabled(wallSlideClip))
         {
             return AnimState.WallSlide;
         }
 
-        // 通常ジャンプ開始瞬間。
-        if (state.justJumped)
+        if (state.justJumped && !state.justWallJumped && IsClipEnabled(jumpStartClip))
         {
             return AnimState.JumpStart;
         }
 
-        // 着地瞬間。
-        if (state.justLanded)
+        if (state.justLanded && IsClipEnabled(landClip))
         {
             return AnimState.Land;
         }
 
-        // 頂点通過瞬間。
-        if (state.justCrossedApex)
+        if (state.justCrossedApex && IsClipEnabled(jumpToFallClip))
         {
             return AnimState.JumpToFall;
         }
 
-        // 非接地かつ十分な上向き速度があるなら上昇。
         if (!state.isGrounded && state.velocityY > riseThreshold)
         {
-            return AnimState.JumpRise;
+            if (IsClipEnabled(jumpRiseClip))
+            {
+                return AnimState.JumpRise;
+            }
+
+            if (airborneFromJump && IsClipEnabled(jumpStartClip))
+            {
+                return AnimState.JumpStart;
+            }
+
+            return hasState ? currentAnimState : AnimState.Idle;
         }
 
-        // 非接地なら残りは落下。
-        if (!state.isGrounded)
+        if (!state.isGrounded && !state.isWallSliding && !state.isStepping)
         {
-            return AnimState.Fall;
+            if (IsClipEnabled(fallClip))
+            {
+                return AnimState.Fall;
+            }
+
+            if (airborneFromJump && IsClipEnabled(jumpToFallClip))
+            {
+                return AnimState.JumpToFall;
+            }
+
+            return hasState ? currentAnimState : AnimState.Idle;
         }
 
-        // 接地中で横速度がしきい値以上なら歩行。
-        if (state.isGrounded && Mathf.Abs(state.velocityX) >= walkThreshold)
+        if (state.isGrounded && Mathf.Abs(state.velocityX) >= walkThreshold && IsClipEnabled(walkLoopClip))
         {
             return AnimState.WalkLoop;
         }
 
-        // それ以外は待機。
-        return AnimState.Idle;
+        if (IsClipEnabled(idleClip))
+        {
+            return AnimState.Idle;
+        }
+
+        return hasState ? currentAnimState : AnimState.Idle;
     }
 
-    // AnimState から対応する Clip を引く。
-    private SpriteSequenceClip GetClip(AnimState state)
+    private void ApplyVisualCorrection(PlayerController.VisualState state)
     {
-        SpriteClipData clipData = GetClipData(state);
-        return clipData != null ? clipData.clip : null;
+        bool facingFlipX = state.facing < 0;
+        bool extraFlipX = currentClip != null && currentClip.extraFlipX;
+        bool extraFlipY = currentClip != null && currentClip.extraFlipY;
+
+        spriteRenderer.flipX = facingFlipX ^ extraFlipX;
+        spriteRenderer.flipY = extraFlipY;
+
+        float scaleMultiplier = currentClip != null ? currentClip.scaleMultiplier : 1f;
+        Vector3 localOffset = currentClip != null ? currentClip.localOffset : Vector3.zero;
+
+        viewRoot.localScale = baseScale * scaleMultiplier;
+        viewRoot.localPosition = baseLocalOffset + localOffset;
     }
 
-    private SpriteClipData GetClipData(AnimState state)
+    private SpriteSequenceClip GetClip(AnimState state)
     {
         switch (state)
         {
             case AnimState.Idle:
-                return idleClipData;
+                return idleClip;
             case AnimState.WalkLoop:
-                return walkLoopClipData;
+                return walkLoopClip;
             case AnimState.Land:
-                return landClipData;
+                return landClip;
             case AnimState.JumpStart:
-                return jumpStartClipData;
+                return jumpStartClip;
             case AnimState.JumpRise:
-                return jumpRiseClipData;
+                return jumpRiseClip;
             case AnimState.JumpToFall:
-                return jumpToFallClipData;
+                return jumpToFallClip;
             case AnimState.Fall:
-                return fallClipData;
+                return fallClip;
             case AnimState.WallSlide:
-                return wallSlideClipData;
+                return wallSlideClip;
             case AnimState.WallJump:
-                return wallJumpClipData;
+                return wallJumpClip;
             case AnimState.Step:
-                return stepClipData;
+                return stepClip;
             default:
-                return idleClipData;
+                return idleClip;
         }
     }
 
-    private void UpdateDebugFields()
+    private static bool IsClipEnabled(SpriteSequenceClip clip)
     {
-        currentAnimState = activeState.ToString();
-        currentClip = sequencePlayer.CurrentClip != null ? activeClipName : "None";
-        currentFrame = sequencePlayer.CurrentFrame;
-    }
-
-    private void MigrateLegacyClipReferences()
-    {
-        MigrateLegacyClipReference(ref idleClipData, idleClip);
-        MigrateLegacyClipReference(ref walkLoopClipData, walkLoopClip);
-        MigrateLegacyClipReference(ref landClipData, landClip);
-        MigrateLegacyClipReference(ref jumpStartClipData, jumpStartClip);
-        MigrateLegacyClipReference(ref jumpRiseClipData, jumpRiseClip);
-        MigrateLegacyClipReference(ref jumpToFallClipData, jumpToFallClip);
-        MigrateLegacyClipReference(ref fallClipData, fallClip);
-        MigrateLegacyClipReference(ref wallSlideClipData, wallSlideClip);
-        MigrateLegacyClipReference(ref wallJumpClipData, wallJumpClip);
-        MigrateLegacyClipReference(ref stepClipData, stepClip);
-    }
-
-    private static void MigrateLegacyClipReference(ref SpriteClipData clipData, SpriteSequenceClip legacyClip)
-    {
-        if (clipData == null)
-        {
-            clipData = new SpriteClipData();
-        }
-
-        if (clipData.clip == null && legacyClip != null)
-        {
-            clipData.clip = legacyClip;
-        }
+        return clip != null && clip.enabled;
     }
 }
