@@ -191,9 +191,9 @@ public sealed partial class PlayerController : MonoBehaviour
         {
             ApplyStepVelocity();
             UpdateVibrationEvents();
+            FinalizeVisualState(previousVelocityY);
             return;
         }
-
         // 通常移動フロー。
         // 横移動、ジャンプ、可変ジャンプ、急降下、壁滑り、追加重力を順に適用する。
         ApplyHorizontalMovement(deltaTime);
@@ -205,5 +205,6 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // 状態変化が確定したあとで振動イベントを通知する。
         UpdateVibrationEvents();
+        FinalizeVisualState(previousVelocityY);
     }
 }
