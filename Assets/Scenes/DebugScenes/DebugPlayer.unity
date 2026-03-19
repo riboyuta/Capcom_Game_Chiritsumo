@@ -652,12 +652,12 @@ MonoBehaviour:
   boundsMin: {fileID: 300510471}
   boundsMax: {fileID: 1697826127}
   overrideOrthographicSize: 1
-  orthographicSize: 4
+  orthographicSize: 5
   overrideFollowSmoothing: 1
-  smoothTimeX: 1
-  smoothTimeY: 1
+  smoothTimeX: 0.2
+  smoothTimeY: 0.2
   overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.1
+  orthographicSizeSmoothTime: 0.2
   playerTag: Player
   drawDebugGizmos: 1
 --- !u!1 &833248163
@@ -1099,9 +1099,9 @@ MonoBehaviour:
   playerTag: Player
   anchorChildName: CameraTargetAnchor
   cameraOffset: {x: 0, y: 0, z: -10}
-  smoothTimeX: 2
-  smoothTimeY: 2
-  orthographicSizeSmoothTime: 2
+  smoothTimeX: 0.2
+  smoothTimeY: 0.2
+  orthographicSizeSmoothTime: 0.2
   drawDebugGizmos: 1
   logViewportPosition: 1
 --- !u!1 &1410207502
@@ -1187,12 +1187,12 @@ MonoBehaviour:
   boundsMin: {fileID: 53723197}
   boundsMax: {fileID: 178987007}
   overrideOrthographicSize: 1
-  orthographicSize: 12
-  overrideFollowSmoothing: 0
-  smoothTimeX: 2
-  smoothTimeY: 2
+  orthographicSize: 5
+  overrideFollowSmoothing: 1
+  smoothTimeX: 0.2
+  smoothTimeY: 0.2
   overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 2
+  orthographicSizeSmoothTime: 0.2
   playerTag: Player
   drawDebugGizmos: 1
 --- !u!1 &1677113466
