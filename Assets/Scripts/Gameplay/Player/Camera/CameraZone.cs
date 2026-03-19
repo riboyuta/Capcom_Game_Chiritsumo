@@ -24,8 +24,26 @@ public sealed class CameraZone : MonoBehaviour
     [Tooltip("有効にすると、この Zone に入った間だけ PlayerCameraController の orthographicSize を上書きします。")]
     [SerializeField] private bool overrideOrthographicSize = false;
 
-    [Tooltip("overrideOrthographicSize が有効なときに使用する orthographicSize です。")]
-    [SerializeField] private float orthographicSize = 7f;
+    [Header("Orthographic Size 設定値")]
+    [Tooltip("overrideOrthographicSize が有効なときに、この Zone に入っている間だけ適用する orthographicSize です。値が大きいほど広い範囲が映り、値が小さいほど対象を大きく映します。")]
+    [SerializeField, Min(0.01f)] private float orthographicSize = 7f;
+
+    [Header("Follow Smoothing 上書き")]
+    [Tooltip("有効にすると、この Zone に入った間だけ PlayerCameraController の追従 smoothTimeX / smoothTimeY を上書きします。")]
+    [SerializeField] private bool overrideFollowSmoothing = false;
+
+    [Tooltip("overrideFollowSmoothing が有効なときに使用する X 軸追従スムーズ時間です。0 で即時追従扱いになります。")]
+    [SerializeField] private float smoothTimeX = 0.08f;
+
+    [Tooltip("overrideFollowSmoothing が有効なときに使用する Y 軸追従スムーズ時間です。0 で即時追従扱いになります。")]
+    [SerializeField] private float smoothTimeY = 0.12f;
+
+    [Header("Orthographic Size 補間時間 上書き")]
+    [Tooltip("有効にすると、この Zone に入った間だけ PlayerCameraController の orthographicSize 補間時間を上書きします。")]
+    [SerializeField] private bool overrideOrthographicSizeSmoothTime = false;
+
+    [Tooltip("overrideOrthographicSizeSmoothTime が有効なときに使用する補間時間です。0 で即時切り替えになります。")]
+    [SerializeField] private float orthographicSizeSmoothTime = 0.10f;
 
     [Header("プレイヤー判定タグ")]
     [Tooltip("この Zone の侵入対象として扱うタグです。通常は Player を指定します。")]
@@ -201,7 +219,26 @@ public sealed class CameraZone : MonoBehaviour
         {
             cameraController.ClearActiveOrthographicSizeOverride();
         }
+
+        if (overrideFollowSmoothing)
+        {
+            cameraController.SetActiveFollowSmoothingOverride(smoothTimeX, smoothTimeY);
+        }
+        else
+        {
+            cameraController.ClearActiveFollowSmoothingOverride();
+        }
+
+        if (overrideOrthographicSizeSmoothTime)
+        {
+            cameraController.SetActiveOrthographicSizeSmoothTimeOverride(orthographicSizeSmoothTime);
+        }
+        else
+        {
+            cameraController.ClearActiveOrthographicSizeSmoothTimeOverride();
+        }
     }
+    
 
     private void DeactivateZone()
     {
@@ -213,6 +250,8 @@ public sealed class CameraZone : MonoBehaviour
 
         cameraController.ClearActiveBoundsOverride();
         cameraController.ClearActiveOrthographicSizeOverride();
+        cameraController.ClearActiveFollowSmoothingOverride();
+        cameraController.ClearActiveOrthographicSizeSmoothTimeOverride();
     }
 
     private Bounds BuildWorldBounds()

@@ -91,6 +91,22 @@ public sealed class PlayerCameraController : MonoBehaviour
     private float activeOrthographicSizeOverride;
     private float orthographicSizeVelocity;
 
+    // 通常時に戻るための World 基準 追従スムーズ時間。
+    private float worldSmoothTimeX;
+    private float worldSmoothTimeY;
+
+    // Zone からの追従スムーズ時間 一時上書き。
+    private bool hasActiveFollowSmoothingOverride;
+    private float activeSmoothTimeXOverride;
+    private float activeSmoothTimeYOverride;
+
+    // 通常時に戻るための World 基準 Orthographic Size 補間時間。
+    private float worldOrthographicSizeSmoothTime;
+
+    // Zone からの Orthographic Size 補間時間 一時上書き。
+    private bool hasActiveOrthographicSizeSmoothTimeOverride;
+    private float activeOrthographicSizeSmoothTimeOverride;
+
     // 実際に使用するワールド座標系境界。
     // override が有効ならそちらを優先し、無ければ worldBounds を使う。
     private Bounds EffectiveWorldBounds
@@ -121,6 +137,20 @@ public sealed class PlayerCameraController : MonoBehaviour
         }
     }
 
+    // 実際に使用する X/Y 追従スムーズ時間。
+    private float EffectiveSmoothTimeX => hasActiveFollowSmoothingOverride
+        ? activeSmoothTimeXOverride
+        : worldSmoothTimeX;
+
+    private float EffectiveSmoothTimeY => hasActiveFollowSmoothingOverride
+        ? activeSmoothTimeYOverride
+        : worldSmoothTimeY;
+
+    // 実際に使用する Orthographic Size 補間時間。
+    private float EffectiveOrthographicSizeSmoothTime => hasActiveOrthographicSizeSmoothTimeOverride
+        ? activeOrthographicSizeSmoothTimeOverride
+        : worldOrthographicSizeSmoothTime;
+
     // SmoothDamp 用の内部速度。
     // ref で渡してフレーム間で保持する必要がある。
     private float velocityX;
@@ -141,7 +171,14 @@ public sealed class PlayerCameraController : MonoBehaviour
     public bool HasActiveOrthographicSizeOverride => hasActiveOrthographicSizeOverride;
     public float ActiveOrthographicSizeOverride => activeOrthographicSizeOverride;
     public float EffectiveSize => EffectiveOrthographicSize;
-
+    public bool HasActiveFollowSmoothingOverride => hasActiveFollowSmoothingOverride;
+    public float ActiveSmoothTimeXOverride => activeSmoothTimeXOverride;
+    public float ActiveSmoothTimeYOverride => activeSmoothTimeYOverride;
+    public float EffectiveFollowSmoothTimeX => EffectiveSmoothTimeX;
+    public float EffectiveFollowSmoothTimeY => EffectiveSmoothTimeY;
+    public bool HasActiveOrthographicSizeSmoothTimeOverride => hasActiveOrthographicSizeSmoothTimeOverride;
+    public float ActiveOrthographicSizeSmoothTimeOverride => activeOrthographicSizeSmoothTimeOverride;
+    public float EffectiveSizeSmoothTime => EffectiveOrthographicSizeSmoothTime;
     private void Reset()
     {
         // コンポーネント追加時や Reset 時に、同一 GameObject の Camera を自動設定する。
@@ -159,6 +196,10 @@ public sealed class PlayerCameraController : MonoBehaviour
         {
             worldOrthographicSize = Mathf.Max(0.01f, targetCamera.orthographicSize);
         }
+
+        worldSmoothTimeX = Mathf.Max(0f, smoothTimeX);
+        worldSmoothTimeY = Mathf.Max(0f, smoothTimeY);
+        worldOrthographicSizeSmoothTime = Mathf.Max(0f, orthographicSizeSmoothTime);
 
         // 必要に応じて追従対象アンカーを自動解決する。
         ResolveTargetAnchor();
@@ -185,13 +226,13 @@ public sealed class PlayerCameraController : MonoBehaviour
             current: transform.position.x,
             target: clampedPosition.x,
             currentVelocity: ref velocityX,
-            smoothTime: smoothTimeX);
+            smoothTime: EffectiveSmoothTimeX);
 
         float finalY = Mathf.SmoothDamp(
             current: transform.position.y,
             target: clampedPosition.y,
             currentVelocity: ref velocityY,
-            smoothTime: smoothTimeY);
+            smoothTime: EffectiveSmoothTimeY);
 
         // Z は Clamp 後位置をそのまま採用する。
         transform.position = new Vector3(finalX, finalY, clampedPosition.z);
@@ -325,6 +366,28 @@ public sealed class PlayerCameraController : MonoBehaviour
         hasActiveOrthographicSizeOverride = false;
     }
 
+    public void SetActiveFollowSmoothingOverride(float newSmoothTimeX, float newSmoothTimeY)
+    {
+        activeSmoothTimeXOverride = Mathf.Max(0f, newSmoothTimeX);
+        activeSmoothTimeYOverride = Mathf.Max(0f, newSmoothTimeY);
+        hasActiveFollowSmoothingOverride = true;
+    }
+
+    public void ClearActiveFollowSmoothingOverride()
+    {
+        hasActiveFollowSmoothingOverride = false;
+    }
+
+    public void SetActiveOrthographicSizeSmoothTimeOverride(float newSmoothTime)
+    {
+        activeOrthographicSizeSmoothTimeOverride = Mathf.Max(0f, newSmoothTime);
+        hasActiveOrthographicSizeSmoothTimeOverride = true;
+    }
+
+    public void ClearActiveOrthographicSizeSmoothTimeOverride()
+    {
+        hasActiveOrthographicSizeSmoothTimeOverride = false;
+    }
     public Bounds GetEffectiveBounds()
     {
         return EffectiveWorldBounds;
@@ -333,8 +396,9 @@ public sealed class PlayerCameraController : MonoBehaviour
     private void ApplyOrthographicSize()
     {
         float targetSize = Mathf.Max(0.01f, EffectiveOrthographicSize);
+        float smoothTime = Mathf.Max(0f, EffectiveOrthographicSizeSmoothTime);
 
-        if (orthographicSizeSmoothTime <= 0f)
+        if (smoothTime <= 0f)
         {
             targetCamera.orthographicSize = targetSize;
             orthographicSizeVelocity = 0f;
@@ -345,7 +409,7 @@ public sealed class PlayerCameraController : MonoBehaviour
             current: targetCamera.orthographicSize,
             target: targetSize,
             currentVelocity: ref orthographicSizeVelocity,
-            smoothTime: orthographicSizeSmoothTime);
+            smoothTime: smoothTime);
     }
 
 #if UNITY_EDITOR
