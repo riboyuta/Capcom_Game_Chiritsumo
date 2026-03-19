@@ -133,13 +133,17 @@ public sealed partial class PlayerController : MonoBehaviour
             return;
         }
 
+        ResetVisualOneShotFlags();
+
         float deltaTime = Time.fixedDeltaTime;
+        float previousVelocityY = rb != null ? rb.linearVelocity.y : 0f;
 
         // 掴まれている場合は移動処理をスキップする。
         // 横移動を止め、縦速度だけは物理結果を維持する。
         if (isGrabbed)
         {
             rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
+            FinalizeVisualState(previousVelocityY);
             return;
         }
 
@@ -147,6 +151,7 @@ public sealed partial class PlayerController : MonoBehaviour
         if (isKnockback)
         {
             ApplyKnockbackVelocity();
+            FinalizeVisualState(previousVelocityY);
             return;
         }
 
