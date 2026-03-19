@@ -71,13 +71,28 @@ public sealed class PlayerCameraController : MonoBehaviour
     // ログが大量に出るので常時 ON にはしない方がよい。
     [SerializeField] private bool logViewportPosition = false;
 
-    // 一時的に上書きされる現在有効な境界。
-    // null のときは worldBounds を使う。
-    private CameraBounds activeBounds;
+    // Zone から一時的に上書きされる現在有効な境界。
+    // true のときだけ activeBoundsOverride を使う。
+    private bool hasActiveBoundsOverride;
 
-    // 実際に使用する境界。
-    // activeBounds があればそちらを優先し、無ければ worldBounds を使う。
-    private CameraBounds EffectiveBounds => activeBounds != null ? activeBounds : worldBounds;
+    // Zone から直接渡されるワールド座標系 Bounds。
+    // hasActiveBoundsOverride == true の間だけ有効。
+    private Bounds activeBoundsOverride;
+
+    // 実際に使用するワールド座標系境界。
+    // override が有効ならそちらを優先し、無ければ worldBounds を使う。
+    private Bounds EffectiveWorldBounds
+    {
+        get
+        {
+            if (hasActiveBoundsOverride)
+            {
+                return activeBoundsOverride;
+            }
+
+            return worldBounds.WorldBounds;
+        }
+    }
 
     // SmoothDamp 用の内部速度。
     // ref で渡してフレーム間で保持する必要がある。
@@ -92,8 +107,10 @@ public sealed class PlayerCameraController : MonoBehaviour
     // デバッグや外部参照用の読み取り専用公開プロパティ。
     public Vector3 DesiredPosition => desiredPosition;
     public Vector3 ClampedPosition => clampedPosition;
-    public CameraBounds ActiveBounds => activeBounds;
+    public bool HasActiveBoundsOverride => hasActiveBoundsOverride;
+    public Bounds ActiveBoundsOverride => activeBoundsOverride;
     public CameraBounds WorldBounds => worldBounds;
+    public Bounds EffectiveBounds => EffectiveWorldBounds;
 
     private void Reset()
     {
@@ -229,9 +246,8 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     private Vector3 GetClampedPosition(Vector3 desired)
     {
-        // 現在使うべき境界を取得する。
-        CameraBounds effectiveBounds = EffectiveBounds;
-        Bounds bounds = effectiveBounds.WorldBounds;
+        // 現在使うべきワールド境界を取得する。
+        Bounds bounds = EffectiveWorldBounds;
 
         // Orthographic カメラの画面半サイズを求める。
         float halfHeight = targetCamera.orthographicSize;
@@ -252,23 +268,20 @@ public sealed class PlayerCameraController : MonoBehaviour
         return new Vector3(clampedX, clampedY, desired.z);
     }
 
-    public void SetActiveBounds(CameraBounds newBounds)
+    public void SetActiveBoundsOverride(Bounds newBounds)
     {
-        // 一時的な優先境界を設定する。
-        // 例: 部屋ごとの個別カメラ領域に入ったとき。
-        activeBounds = newBounds;
+        activeBoundsOverride = newBounds;
+        hasActiveBoundsOverride = true;
     }
 
-    public void ClearActiveBounds()
+    public void ClearActiveBoundsOverride()
     {
-        // 一時境界を解除し、worldBounds に戻す。
-        activeBounds = null;
+        hasActiveBoundsOverride = false;
     }
 
-    public CameraBounds GetEffectiveBounds()
+    public Bounds GetEffectiveBounds()
     {
-        // 現在実際に使われる境界を返す。
-        return EffectiveBounds;
+        return EffectiveWorldBounds;
     }
 
 #if UNITY_EDITOR

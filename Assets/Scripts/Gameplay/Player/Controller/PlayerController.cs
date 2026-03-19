@@ -138,6 +138,8 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // 物理フレームで接地状態を更新する。
         isGrounded = CheckGrounded();
+        // ApplyJump による isGrounded 上書き前に、着地イベントを保存する。
+        CaptureLandingSnapshot();
         if (isGrounded)
         {
             isFastFalling = false;

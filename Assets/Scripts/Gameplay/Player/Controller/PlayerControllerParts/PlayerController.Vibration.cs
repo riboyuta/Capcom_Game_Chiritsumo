@@ -22,6 +22,13 @@ public sealed partial class PlayerController
     // 空中中に記録した「足元 Y の最高値」。
     // 着地時に最高点からの落差を算出するために使う。
     private float highestAirborneFootY;
+
+    // 接地→ジャンプが同一 FixedUpdate で起きても、
+    // 着地イベントを失わないためのスナップショット。
+    private bool landingOccurredThisFrame;
+    private float landingAirborneTime;
+    private float landingFallHeight;
+
     // 既存 Awake の最後で呼ぶ。
     // 振動関連の比較用状態を初期化する。
     private void InitializeVibrationState()
@@ -38,6 +45,9 @@ public sealed partial class PlayerController
         wasWallSliding = isWallSliding;
         airborneTimer = 0f;
         highestAirborneFootY = GetCurrentFootY();
+        landingOccurredThisFrame = false;
+        landingAirborneTime = 0f;
+        landingFallHeight = 0f;
     }
 
     // 既存 FixedUpdate の最後の方で呼ぶ。
@@ -127,22 +137,32 @@ public sealed partial class PlayerController
         }
     }
 
-    // 着地振動を再生する。
-    private void UpdateLandingVibration()
+    // 接地判定直後(ApplyJump 前)の着地情報を保存する。
+    // 同フレームで isGrounded が false に戻っても、着地イベントを維持できる。
+    private void CaptureLandingSnapshot()
     {
-        // 「今フレームで着地した瞬間」だけ判定したい。
-        // すでに前フレームから接地中なら着地イベントではない。
-        // 今フレームで未接地なら着地していない。
-        if (wasGrounded || !isGrounded)
+        landingOccurredThisFrame = !wasGrounded && isGrounded;
+        if (!landingOccurredThisFrame)
         {
             return;
         }
 
         float landingFootY = GetCurrentFootY();
-        float fallHeightFromApex = Mathf.Max(0f, highestAirborneFootY - landingFootY);
-        vibrationController.PlayLanding(airborneTimer, fallHeightFromApex);
+        landingAirborneTime = airborneTimer;
+        landingFallHeight = Mathf.Max(0f, highestAirborneFootY - landingFootY);
     }
-    // 壁キック成功地点から直接呼ぶ用。
+
+    // 着地振動を再生する。
+    private void UpdateLandingVibration()
+    {
+        // 接地最終状態ではなく、ApplyJump 前に保存したスナップショットで判定する。
+        if (!landingOccurredThisFrame)
+        {
+            return;
+        }
+
+        vibrationController.PlayLanding(landingAirborneTime, landingFallHeight);
+    }    // 壁キック成功地点から直接呼ぶ用。
     private void PlayWallKickVibration()
     {
         // 振動コンポーネントが無ければ何もしない。
