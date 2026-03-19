@@ -131,6 +131,10 @@ public sealed partial class PlayerController
         coyoteTimer = 0f;
         jumpHoldTimer = movementSettings.maxJumpHoldTime;
         isGrounded = false;
+
+        //振動
+        PlayWallKickVibration();
+
         return true;
     }
 

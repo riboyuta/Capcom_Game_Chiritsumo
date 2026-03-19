@@ -1,120 +1,243 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
-// 同一 GameObject に複数付与されるのを防ぐ。
+// 同じ GameObject に複数付けて、カメラ制御が競合しないようにする。
 [DisallowMultipleComponent]
 // このコンポーネントは Camera を必須とする。
 [RequireComponent(typeof(Camera))]
 public sealed class PlayerCameraController : MonoBehaviour
 {
     [Header("追従に使用するカメラ")]
-    // 追従処理に使う Camera 参照。
+    [Tooltip("追従処理と画面サイズ計算に使う Camera 参照です。通常はこの GameObject 自身の Camera を設定します。Orthographic 前提の実装です。")]
+    // カメラ追従の計算に使う Camera。
+    // null の場合は Awake / Reset で同一 GameObject から取得を試みる。
     [SerializeField] private Camera targetCamera;
 
     [Header("追従対象アンカー")]
-    // カメラが追従する基準位置。通常はプレイヤーの子 Anchor を想定する。
+    [Tooltip("カメラが追従する基準位置です。通常はプレイヤー直下の CameraTargetAnchor などを設定します。未設定時は自動探索設定に応じて補完を試みます。")]
+    // カメラが追いかける対象位置。
+    // プレイヤー本体ではなく、専用アンカーを置くと視点調整しやすい。
     [SerializeField] private Transform targetAnchor;
 
-    [Header("カメラ移動範囲")]
-    // カメラが移動可能なワールド範囲。
-    [SerializeField] private CameraBounds cameraBounds;
+    [Header("ワールド全体のfallback境界")]
+    [Tooltip("常に使える基本のカメラ移動境界です。エリア別の一時境界が未設定のときはこの境界を使ってカメラ位置を制限します。")]
+    [FormerlySerializedAs("cameraBounds")]
+    // 通常時に使うカメラ移動可能範囲。
+    // activeBounds が無いときのフォールバックとして使う。
+    [SerializeField] private CameraBounds worldBounds;
 
     [Header("アンカー自動探索を使うか")]
-    // targetAnchor 未設定時にプレイヤーから自動探索するか。
+    [Tooltip("有効にすると、targetAnchor 未設定時に playerTag と anchorChildName を使って追従対象を自動探索します。手動設定を優先したい場合は無効にします。")]
+    // true のとき、targetAnchor が未設定なら自動でプレイヤーを探す。
     [SerializeField] private bool autoFindPlayerAnchor = true;
 
     [Header("プレイヤー探索用タグ")]
-    // プレイヤー探索に使うタグ名。
+    [Tooltip("アンカー自動探索時にプレイヤーを見つけるためのタグ名です。GameObject.FindWithTag で検索されるため、実際のタグ設定と一致させてください。")]
+    // 自動探索時にプレイヤーを見つけるためのタグ名。
     [SerializeField] private string playerTag = "Player";
 
     [Header("アンカー子オブジェクト名")]
-    // プレイヤー配下から探すアンカー名。
+    [Tooltip("プレイヤー配下から探す追従用アンカーの子オブジェクト名です。見つからない場合はプレイヤー本体 Transform を追従対象として使います。")]
+    // プレイヤー配下から探す追従アンカーの名前。
+    // 見つからなければプレイヤー本体 Transform を使う。
     [SerializeField] private string anchorChildName = "CameraTargetAnchor";
 
     [Header("カメラオフセット")]
-    // ターゲット位置に対するカメラの相対オフセット。
+    [Tooltip("追従対象アンカーに加算するカメラ位置オフセットです。2D では通常 Z を負値にしてカメラを手前へ置きます。")]
+    // 追従対象に対して、どれだけずらした位置にカメラを置くか。
+    // 2D では一般的に Z = -10 付近を使う。
     [SerializeField] private Vector3 cameraOffset = new Vector3(0f, 0f, -10f);
 
     [Header("X軸追従スムーズ時間")]
-    // X 軸方向の追従スムージング時間。
+    [Tooltip("X 軸方向の追従をどれくらい滑らかにするかの時間です。小さいほど素早く追従し、大きいほど遅れて追従します。")]
+    // X 方向の追従の滑らかさ。
+    // 小さいと即追従、大きいと遅れて追従する。
     [SerializeField] private float smoothTimeX = 0.08f;
 
     [Header("Y軸追従スムーズ時間")]
-    // Y 軸方向の追従スムージング時間。
+    [Tooltip("Y 軸方向の追従をどれくらい滑らかにするかの時間です。ジャンプや落下の見え方に影響します。小さいほど即追従、大きいほどゆったり追従します。")]
+    // Y 方向の追従の滑らかさ。
+    // ジャンプや落下時のカメラ感触に強く影響する。
     [SerializeField] private float smoothTimeY = 0.12f;
 
+    [Header("Orthographic Size 補間時間")]
+    [Tooltip("Zone による orthographicSize 上書きが切り替わる際の補間時間です。0 のときは即時反映します。")]
+    [SerializeField] private float orthographicSizeSmoothTime = 0.10f;
+
     [Header("デバッグGizmoを描画するか")]
-    // Scene 上に追従関連の Gizmo を描画するか。
+    [Tooltip("有効にすると、Scene ビュー上に目標位置・Clamp 後位置・追従対象位置の Gizmo を描画します。カメラ挙動確認用です。")]
+    // Scene ビュー上にデバッグ用 Gizmo を描画するか。
     [SerializeField] private bool drawDebugGizmos = true;
 
     [Header("Viewport位置をログ出力するか")]
-    // ターゲットが Viewport のどこに居るかをログ出力するか。
+    [Tooltip("有効にすると、追従対象アンカーの Viewport 座標を毎フレームログ出力します。画面内の見え方確認用ですが、ログ量は増えます。")]
+    // true のとき、追従対象の Viewport 座標を毎フレーム出力する。
+    // ログが大量に出るので常時 ON にはしない方がよい。
     [SerializeField] private bool logViewportPosition = false;
 
-    // SmoothDamp が内部で使用する X 軸速度。
+    // Zone から一時的に上書きされる現在有効な境界。
+    // true のときだけ activeBoundsOverride を使う。
+    private bool hasActiveBoundsOverride;
+
+    // Zone から直接渡されるワールド座標系 Bounds。
+    // hasActiveBoundsOverride == true の間だけ有効。
+    private Bounds activeBoundsOverride;
+
+    // 通常時に戻るための World 基準 Orthographic Size。
+    private float worldOrthographicSize;
+
+    // Zone からの Orthographic Size 一時上書き。
+    private bool hasActiveOrthographicSizeOverride;
+    private float activeOrthographicSizeOverride;
+    private float orthographicSizeVelocity;
+
+    // 通常時に戻るための World 基準 追従スムーズ時間。
+    private float worldSmoothTimeX;
+    private float worldSmoothTimeY;
+
+    // Zone からの追従スムーズ時間 一時上書き。
+    private bool hasActiveFollowSmoothingOverride;
+    private float activeSmoothTimeXOverride;
+    private float activeSmoothTimeYOverride;
+
+    // 通常時に戻るための World 基準 Orthographic Size 補間時間。
+    private float worldOrthographicSizeSmoothTime;
+
+    // Zone からの Orthographic Size 補間時間 一時上書き。
+    private bool hasActiveOrthographicSizeSmoothTimeOverride;
+    private float activeOrthographicSizeSmoothTimeOverride;
+
+    // 実際に使用するワールド座標系境界。
+    // override が有効ならそちらを優先し、無ければ worldBounds を使う。
+    private Bounds EffectiveWorldBounds
+    {
+        get
+        {
+            if (hasActiveBoundsOverride)
+            {
+                return activeBoundsOverride;
+            }
+
+            return worldBounds.WorldBounds;
+        }
+    }
+
+    // 実際に使用する Orthographic Size。
+    // override が有効ならそちらを優先し、無ければ world の通常値を使う。
+    private float EffectiveOrthographicSize
+    {
+        get
+        {
+            if (hasActiveOrthographicSizeOverride)
+            {
+                return activeOrthographicSizeOverride;
+            }
+
+            return worldOrthographicSize;
+        }
+    }
+
+    // 実際に使用する X/Y 追従スムーズ時間。
+    private float EffectiveSmoothTimeX => hasActiveFollowSmoothingOverride
+        ? activeSmoothTimeXOverride
+        : worldSmoothTimeX;
+
+    private float EffectiveSmoothTimeY => hasActiveFollowSmoothingOverride
+        ? activeSmoothTimeYOverride
+        : worldSmoothTimeY;
+
+    // 実際に使用する Orthographic Size 補間時間。
+    private float EffectiveOrthographicSizeSmoothTime => hasActiveOrthographicSizeSmoothTimeOverride
+        ? activeOrthographicSizeSmoothTimeOverride
+        : worldOrthographicSizeSmoothTime;
+
+    // SmoothDamp 用の内部速度。
+    // ref で渡してフレーム間で保持する必要がある。
     private float velocityX;
-    // SmoothDamp が内部で使用する Y 軸速度。
     private float velocityY;
 
-    // ターゲット追従後、まだ境界制限前の理想カメラ位置。
+    // Clamp 前の「行きたい位置」。
     private Vector3 desiredPosition;
-    // 境界制限を適用した最終目標位置。
+    // 境界適用後の「実際に目指す位置」。
     private Vector3 clampedPosition;
 
-    // デバッグ・参照用：制限前の理想位置を公開する。
+    // デバッグや外部参照用の読み取り専用公開プロパティ。
     public Vector3 DesiredPosition => desiredPosition;
-    // デバッグ・参照用：制限後の位置を公開する。
     public Vector3 ClampedPosition => clampedPosition;
-
+    public bool HasActiveBoundsOverride => hasActiveBoundsOverride;
+    public Bounds ActiveBoundsOverride => activeBoundsOverride;
+    public CameraBounds WorldBounds => worldBounds;
+    public Bounds EffectiveBounds => EffectiveWorldBounds;
+    public bool HasActiveOrthographicSizeOverride => hasActiveOrthographicSizeOverride;
+    public float ActiveOrthographicSizeOverride => activeOrthographicSizeOverride;
+    public float EffectiveSize => EffectiveOrthographicSize;
+    public bool HasActiveFollowSmoothingOverride => hasActiveFollowSmoothingOverride;
+    public float ActiveSmoothTimeXOverride => activeSmoothTimeXOverride;
+    public float ActiveSmoothTimeYOverride => activeSmoothTimeYOverride;
+    public float EffectiveFollowSmoothTimeX => EffectiveSmoothTimeX;
+    public float EffectiveFollowSmoothTimeY => EffectiveSmoothTimeY;
+    public bool HasActiveOrthographicSizeSmoothTimeOverride => hasActiveOrthographicSizeSmoothTimeOverride;
+    public float ActiveOrthographicSizeSmoothTimeOverride => activeOrthographicSizeSmoothTimeOverride;
+    public float EffectiveSizeSmoothTime => EffectiveOrthographicSizeSmoothTime;
     private void Reset()
     {
-        // 同一 GameObject 上の Camera を自動取得する。
+        // コンポーネント追加時や Reset 時に、同一 GameObject の Camera を自動設定する。
         targetCamera = GetComponent<Camera>();
     }
 
     private void Awake()
     {
-        // 実行時に Camera 参照が未設定なら自動取得する。
         if (targetCamera == null)
         {
             targetCamera = GetComponent<Camera>();
         }
 
-        // 必要であれば追従対象アンカーを解決する。
+        if (targetCamera != null)
+        {
+            worldOrthographicSize = Mathf.Max(0.01f, targetCamera.orthographicSize);
+        }
+
+        worldSmoothTimeX = Mathf.Max(0f, smoothTimeX);
+        worldSmoothTimeY = Mathf.Max(0f, smoothTimeY);
+        worldOrthographicSizeSmoothTime = Mathf.Max(0f, orthographicSizeSmoothTime);
+
+        // 必要に応じて追従対象アンカーを自動解決する。
         ResolveTargetAnchor();
     }
 
     private void LateUpdate()
     {
-        // 実行に必要な参照が揃っていなければ更新しない。
         if (!ValidateRuntimeReferences())
         {
             return;
         }
 
-        // アンカー位置にオフセットを足した理想カメラ位置を求める。
+        ApplyOrthographicSize();
+
+        // 追従対象位置 + オフセット で理想位置を作る。
         desiredPosition = targetAnchor.position + cameraOffset;
 
-        // CameraBounds 内に収まるよう理想位置を制限する。
+        // 理想位置をカメラ境界内に収めた最終候補位置を作る。
         clampedPosition = GetClampedPosition(desiredPosition);
 
-        // X 軸をスムーズに追従させる。
+        // X と Y を別々の SmoothDamp で補間する。
+        // これにより、軸ごとの追従感を個別に調整できる。
         float finalX = Mathf.SmoothDamp(
             current: transform.position.x,
             target: clampedPosition.x,
             currentVelocity: ref velocityX,
-            smoothTime: smoothTimeX);
+            smoothTime: EffectiveSmoothTimeX);
 
-        // Y 軸をスムーズに追従させる。
         float finalY = Mathf.SmoothDamp(
             current: transform.position.y,
             target: clampedPosition.y,
             currentVelocity: ref velocityY,
-            smoothTime: smoothTimeY);
+            smoothTime: EffectiveSmoothTimeY);
 
-        // Z はクランプ後の値をそのまま採用し、2D カメラ距離を維持する。
+        // Z は Clamp 後位置をそのまま採用する。
         transform.position = new Vector3(finalX, finalY, clampedPosition.z);
 
-        // 必要に応じてターゲット位置の Viewport 座標を確認する。
+        // 必要なら、追従対象が画面内のどこに居るかを Viewport 座標で確認する。
         if (logViewportPosition)
         {
             Vector3 viewport = targetCamera.WorldToViewportPoint(targetAnchor.position);
@@ -133,12 +256,12 @@ public sealed class PlayerCameraController : MonoBehaviour
             return false;
         }
 
-        // TargetAnchor が無ければ自動探索を試みる。
+        // Anchor が無ければ自動探索を試みる。
         if (targetAnchor == null)
         {
             ResolveTargetAnchor();
 
-            // それでも見つからなければ更新不可。
+            // それでも見つからなければ更新不能。
             if (targetAnchor == null)
             {
                 Debug.LogWarning("PlayerCameraController: Target anchor is missing.", this);
@@ -146,14 +269,14 @@ public sealed class PlayerCameraController : MonoBehaviour
             }
         }
 
-        // CameraBounds が無ければ境界制限できない。
-        if (cameraBounds == null)
+        // フォールバック境界が無いと Clamp 計算ができない。
+        if (worldBounds == null)
         {
-            Debug.LogWarning("PlayerCameraController: CameraBounds reference is missing.", this);
+            Debug.LogWarning("PlayerCameraController: World bounds reference is missing.", this);
             return false;
         }
 
-        // この実装は Orthographic Camera 前提。
+        // この実装は Orthographic カメラ前提。
         if (!targetCamera.orthographic)
         {
             Debug.LogWarning("PlayerCameraController: This version assumes an Orthographic camera.", this);
@@ -175,12 +298,12 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         try
         {
-            // 指定タグを持つプレイヤーを探す。
+            // 指定タグのプレイヤーを探す。
             player = GameObject.FindWithTag(playerTag);
         }
         catch (UnityException)
         {
-            // タグ未登録などで例外が出る場合は探索を中断する。
+            // タグ未定義などで例外が出るケースを吸収する。
             return;
         }
 
@@ -190,64 +313,127 @@ public sealed class PlayerCameraController : MonoBehaviour
             return;
         }
 
-        // プレイヤー配下から指定名のアンカーを探す。
+        // プレイヤー配下に指定名のアンカーがあるか探す。
         Transform foundAnchor = player.transform.Find(anchorChildName);
 
-        // 見つかったらその Transform、無ければプレイヤー本体を追従対象にする。
+        // アンカーがあればそれを使い、無ければプレイヤー本体を追従対象にする。
         targetAnchor = foundAnchor != null ? foundAnchor : player.transform;
     }
 
     private Vector3 GetClampedPosition(Vector3 desired)
     {
-        // カメラ移動可能範囲を取得する。
-        Bounds bounds = cameraBounds.WorldBounds;
+        // 現在使うべきワールド境界を取得する。
+        Bounds bounds = EffectiveWorldBounds;
 
-        // Orthographic Camera の半分の表示サイズを求める。
+        // Orthographic カメラの画面半サイズを求める。
         float halfHeight = targetCamera.orthographicSize;
         float halfWidth = halfHeight * targetCamera.aspect;
 
-        // カメラ表示領域が Bounds からはみ出さないように有効範囲を計算する。
+        // カメラ中心が取りうる最小・最大位置を計算する。
+        // 画面端が境界をはみ出さないよう、半画面サイズ分を内側に寄せる。
         float minX = bounds.min.x + halfWidth;
         float maxX = bounds.max.x - halfWidth;
         float minY = bounds.min.y + halfHeight;
         float maxY = bounds.max.y - halfHeight;
 
-        // 表示領域の方が Bounds より大きい場合は中心固定にする。
+        // 境界が画面より狭い場合は Clamp 不能になるので、中心固定にする。
         float clampedX = (minX > maxX) ? bounds.center.x : Mathf.Clamp(desired.x, minX, maxX);
         float clampedY = (minY > maxY) ? bounds.center.y : Mathf.Clamp(desired.y, minY, maxY);
 
-        // Z は入力値を維持したまま返す。
+        // Z は desired 側の値をそのまま使う。
         return new Vector3(clampedX, clampedY, desired.z);
     }
 
-    public void SetBounds(CameraBounds newBounds)
+    public void SetActiveBoundsOverride(Bounds newBounds)
     {
-        // 外部から CameraBounds を差し替えるための API。
-        cameraBounds = newBounds;
+        activeBoundsOverride = newBounds;
+        hasActiveBoundsOverride = true;
+    }
+
+    public void ClearActiveBoundsOverride()
+    {
+        hasActiveBoundsOverride = false;
+    }
+
+    public void SetActiveOrthographicSizeOverride(float newSize)
+    {
+        activeOrthographicSizeOverride = Mathf.Max(0.01f, newSize);
+        hasActiveOrthographicSizeOverride = true;
+    }
+
+    public void ClearActiveOrthographicSizeOverride()
+    {
+        hasActiveOrthographicSizeOverride = false;
+    }
+
+    public void SetActiveFollowSmoothingOverride(float newSmoothTimeX, float newSmoothTimeY)
+    {
+        activeSmoothTimeXOverride = Mathf.Max(0f, newSmoothTimeX);
+        activeSmoothTimeYOverride = Mathf.Max(0f, newSmoothTimeY);
+        hasActiveFollowSmoothingOverride = true;
+    }
+
+    public void ClearActiveFollowSmoothingOverride()
+    {
+        hasActiveFollowSmoothingOverride = false;
+    }
+
+    public void SetActiveOrthographicSizeSmoothTimeOverride(float newSmoothTime)
+    {
+        activeOrthographicSizeSmoothTimeOverride = Mathf.Max(0f, newSmoothTime);
+        hasActiveOrthographicSizeSmoothTimeOverride = true;
+    }
+
+    public void ClearActiveOrthographicSizeSmoothTimeOverride()
+    {
+        hasActiveOrthographicSizeSmoothTimeOverride = false;
+    }
+    public Bounds GetEffectiveBounds()
+    {
+        return EffectiveWorldBounds;
+    }
+
+    private void ApplyOrthographicSize()
+    {
+        float targetSize = Mathf.Max(0.01f, EffectiveOrthographicSize);
+        float smoothTime = Mathf.Max(0f, EffectiveOrthographicSizeSmoothTime);
+
+        if (smoothTime <= 0f)
+        {
+            targetCamera.orthographicSize = targetSize;
+            orthographicSizeVelocity = 0f;
+            return;
+        }
+
+        targetCamera.orthographicSize = Mathf.SmoothDamp(
+            current: targetCamera.orthographicSize,
+            target: targetSize,
+            currentVelocity: ref orthographicSizeVelocity,
+            smoothTime: smoothTime);
     }
 
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        // デバッグ描画が無効なら何もしない。
+        // Gizmo 無効なら何も描かない。
         if (!drawDebugGizmos)
         {
             return;
         }
 
-        // 理想位置を黄色で表示する。
+        // 理想位置(desiredPosition)を黄色で表示。
         Gizmos.color = Color.yellow;
         Gizmos.DrawSphere(desiredPosition, 0.15f);
 
-        // 境界制限後の位置を緑で表示する。
+        // Clamp 後位置(clampedPosition)を緑で表示。
         Gizmos.color = Color.green;
         Gizmos.DrawSphere(clampedPosition, 0.18f);
 
-        // 理想位置から制限後位置までの差を線で表示する。
+        // 理想位置から Clamp 後位置までの差を線で表示。
         Gizmos.color = Color.white;
         Gizmos.DrawLine(desiredPosition, clampedPosition);
 
-        // 追従対象アンカー自体の位置も表示する。
+        // 追従対象アンカー位置をマゼンタで表示。
         if (targetAnchor != null)
         {
             Gizmos.color = Color.magenta;
