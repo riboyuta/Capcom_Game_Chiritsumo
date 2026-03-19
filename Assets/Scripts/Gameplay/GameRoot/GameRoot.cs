@@ -9,8 +9,12 @@ public sealed class GameRoot : MonoBehaviour
         Result
     }
 
-    [Header("Flow Settings")]
+    [Header("進行フロー: Ready時間")]
+    [Tooltip("Ready 状態を維持する時間(秒)です。開始演出や待機時間の長さを調整します。")]
     [SerializeField, Min(0f)] private float readyDuration = 1.0f;
+
+    [Header("進行フロー: Play時間")]
+    [Tooltip("Play 状態を維持する時間(秒)です。実際にプレイ可能な制限時間を調整します。")]
     [SerializeField, Min(0f)] private float playDuration = 10.0f;
 
     private State currentState;

@@ -35,18 +35,23 @@ namespace Game.Input
     }
 
     // 1ボタン分のフレーム状態を表す値オブジェクト。
+    // 「今押しているか」「このフレームで押したか」「このフレームで離したか」をまとめて保持する。
     [Serializable]
     public readonly struct RawButtonFrameState
     {
-        // このフレームで押され続けているか。
+        // このフレーム時点で押され続けているか。
+        // 長押し判定や継続入力の参照に使う。
         public bool Held { get; }
 
         // このフレームで押された瞬間か。
+        // 立ち上がりエッジ判定に使う。
         public bool PressedThisFrame { get; }
 
         // このフレームで離された瞬間か。
+        // ボタン解放トリガーの判定に使う。
         public bool ReleasedThisFrame { get; }
 
+        // 各フレーム状態をまとめて初期化する。
         public RawButtonFrameState(bool held, bool pressedThisFrame, bool releasedThisFrame)
         {
             Held = held;
@@ -63,18 +68,22 @@ namespace Game.Input
     //
     // 非責務:
     // - Jump / Step / Submit などの意味入力解決
-    // - プレイヤー操作やUI操作そのもの
+    // - プレイヤー操作や UI 操作そのもの
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-1000)]
     public sealed class RawInputSource : MonoBehaviour
     {
-        [Header("Stick Deadzone")]
-
+        [Header("デッドゾーン: 左スティック")]
+        [Tooltip("左スティックの入力で、中心付近の微小ノイズを無視する半径です。小さすぎると勝手に動きやすくなり、大きすぎると軽い倒し入力が反応しにくくなります。")]
         // 左スティックの放置ノイズを無視する半径。
+        // 移動入力などに使う想定で、中心付近の微小なブレを打ち消す。
         [SerializeField, Range(0.0f, 0.95f)]
         private float _leftStickDeadzone = 0.20f;
 
+        [Header("デッドゾーン: 右スティック")]
+        [Tooltip("右スティックの入力で、中心付近の微小ノイズを無視する半径です。カメラ操作や視点入力に使う場合の誤反応防止に使います。")]
         // 右スティックの放置ノイズを無視する半径。
+        // カメラ操作や照準入力など、右スティック用途の安定化に使う。
         [SerializeField, Range(0.0f, 0.95f)]
         private float _rightStickDeadzone = 0.20f;
 
