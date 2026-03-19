@@ -2,12 +2,10 @@ using UnityEngine;
 
 public sealed partial class PlayerController
 {
-    [Header("振動: コントローラー参照")]
-    [Tooltip("プレイヤー操作に応じたコントローラー振動を再生するコンポーネント参照です。未設定時は Awake 初期化時に同一 GameObject から取得を試みます。")]
     // 実際の振動再生を担当するコンポーネント。
     // この partial は「いつ振動イベントを送るか」を決める役割で、
     // 実際のモーター制御は PlayerVibrationController 側に任せる。
-    [SerializeField] private PlayerVibrationController vibrationController;
+    private PlayerVibrationController vibrationController;
 
     // 前フレームの状態保持。
     // 「今フレームで変化したか」を判定するために使う。
@@ -33,12 +31,6 @@ public sealed partial class PlayerController
     // 振動関連の比較用状態を初期化する。
     private void InitializeVibrationState()
     {
-        // Inspector 未設定なら同一 GameObject から取得する。
-        if (vibrationController == null)
-        {
-            vibrationController = GetComponent<PlayerVibrationController>();
-        }
-
         // 初期比較用として、現在状態をそのまま保存しておく。
         wasGrounded = isGrounded;
         wasStepping = isStepping;
@@ -175,6 +167,11 @@ public sealed partial class PlayerController
         // 壁キックの単発振動を再生する。
         vibrationController.StopWallSlideRumble();
         vibrationController.PlayWallKick();
+    }
+
+    internal void SetVibrationController(PlayerVibrationController controller)
+    {
+        vibrationController = controller;
     }
 
     // フレーム末尾で、次回比較用の状態を保存する。

@@ -9,6 +9,11 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerController))]
 public sealed class PlayerVibrationController : MonoBehaviour
 {
+    [Header("振動: コントローラー参照")]
+    [Tooltip("プレイヤー操作に応じたコントローラー振動を送る PlayerController 参照です。未設定時は Awake 初期化時に同一 GameObject から取得を試みます。")]
+    [SerializeField]
+    private PlayerController playerController;
+
     // 振動の優先度。
     // 数字が大きいほど強い優先度として扱う。
     private enum RumblePriority
@@ -214,6 +219,16 @@ public sealed class PlayerVibrationController : MonoBehaviour
 
     private void Awake()
     {
+        if (playerController == null)
+        {
+            playerController = GetComponent<PlayerController>();
+        }
+
+        if (playerController != null)
+        {
+            playerController.SetVibrationController(this);
+        }
+
         // 初期状態では単発振動なし扱いにする。
         activeOneShotPriority = RumblePriority.WallSlide;
     }
