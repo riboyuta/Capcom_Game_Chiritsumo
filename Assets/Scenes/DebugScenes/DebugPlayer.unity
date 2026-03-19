@@ -144,7 +144,7 @@ Transform:
   m_GameObject: {fileID: 53723196}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -32.41, y: 0, z: 0}
+  m_LocalPosition: {x: -18.15, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -206,7 +206,7 @@ Transform:
   m_GameObject: {fileID: 178987006}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -20.07, y: 14.6, z: 0}
+  m_LocalPosition: {x: 16.92, y: 22.04, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -546,7 +546,6 @@ MonoBehaviour:
   knockbackDuration: 0.25
   decayKnockbackOverTime: 1
   showHealthDebugLog: 0
-  vibrationController: {fileID: 764449976}
 --- !u!114 &764449976
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -559,6 +558,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3b278cf41c69ca4b8fb6af61826afc6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVibrationController
+  playerController: {fileID: 0}
   enableGroundStep: 1
   enableAirStep: 1
   enableWallKick: 1
@@ -652,7 +652,12 @@ MonoBehaviour:
   boundsMin: {fileID: 300510471}
   boundsMax: {fileID: 1697826127}
   overrideOrthographicSize: 1
-  orthographicSize: 3
+  orthographicSize: 4
+  overrideFollowSmoothing: 1
+  smoothTimeX: 1
+  smoothTimeY: 1
+  overrideOrthographicSizeSmoothTime: 1
+  orthographicSizeSmoothTime: 0.1
   playerTag: Player
   drawDebugGizmos: 1
 --- !u!1 &833248163
@@ -1094,9 +1099,9 @@ MonoBehaviour:
   playerTag: Player
   anchorChildName: CameraTargetAnchor
   cameraOffset: {x: 0, y: 0, z: -10}
-  smoothTimeX: 0.08
-  smoothTimeY: 0.12
-  orthographicSizeSmoothTime: 0.1
+  smoothTimeX: 2
+  smoothTimeY: 2
+  orthographicSizeSmoothTime: 2
   drawDebugGizmos: 1
   logViewportPosition: 1
 --- !u!1 &1410207502
@@ -1181,8 +1186,13 @@ MonoBehaviour:
   zoneVolume: {fileID: 2014762861}
   boundsMin: {fileID: 53723197}
   boundsMax: {fileID: 178987007}
-  overrideOrthographicSize: 0
-  orthographicSize: 3
+  overrideOrthographicSize: 1
+  orthographicSize: 12
+  overrideFollowSmoothing: 0
+  smoothTimeX: 2
+  smoothTimeY: 2
+  overrideOrthographicSizeSmoothTime: 1
+  orthographicSizeSmoothTime: 2
   playerTag: Player
   drawDebugGizmos: 1
 --- !u!1 &1677113466
