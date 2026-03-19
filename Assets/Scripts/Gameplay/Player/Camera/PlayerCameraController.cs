@@ -60,6 +60,10 @@ public sealed class PlayerCameraController : MonoBehaviour
     // ジャンプや落下時のカメラ感触に強く影響する。
     [SerializeField] private float smoothTimeY = 0.12f;
 
+    [Header("Orthographic Size 補間時間")]
+    [Tooltip("Zone による orthographicSize 上書きが切り替わる際の補間時間です。0 のときは即時反映します。")]
+    [SerializeField] private float orthographicSizeSmoothTime = 0.10f;
+
     [Header("デバッグGizmoを描画するか")]
     [Tooltip("有効にすると、Scene ビュー上に目標位置・Clamp 後位置・追従対象位置の Gizmo を描画します。カメラ挙動確認用です。")]
     // Scene ビュー上にデバッグ用 Gizmo を描画するか。
@@ -79,6 +83,14 @@ public sealed class PlayerCameraController : MonoBehaviour
     // hasActiveBoundsOverride == true の間だけ有効。
     private Bounds activeBoundsOverride;
 
+    // 通常時に戻るための World 基準 Orthographic Size。
+    private float worldOrthographicSize;
+
+    // Zone からの Orthographic Size 一時上書き。
+    private bool hasActiveOrthographicSizeOverride;
+    private float activeOrthographicSizeOverride;
+    private float orthographicSizeVelocity;
+
     // 実際に使用するワールド座標系境界。
     // override が有効ならそちらを優先し、無ければ worldBounds を使う。
     private Bounds EffectiveWorldBounds
@@ -91,6 +103,21 @@ public sealed class PlayerCameraController : MonoBehaviour
             }
 
             return worldBounds.WorldBounds;
+        }
+    }
+
+    // 実際に使用する Orthographic Size。
+    // override が有効ならそちらを優先し、無ければ world の通常値を使う。
+    private float EffectiveOrthographicSize
+    {
+        get
+        {
+            if (hasActiveOrthographicSizeOverride)
+            {
+                return activeOrthographicSizeOverride;
+            }
+
+            return worldOrthographicSize;
         }
     }
 
@@ -111,6 +138,9 @@ public sealed class PlayerCameraController : MonoBehaviour
     public Bounds ActiveBoundsOverride => activeBoundsOverride;
     public CameraBounds WorldBounds => worldBounds;
     public Bounds EffectiveBounds => EffectiveWorldBounds;
+    public bool HasActiveOrthographicSizeOverride => hasActiveOrthographicSizeOverride;
+    public float ActiveOrthographicSizeOverride => activeOrthographicSizeOverride;
+    public float EffectiveSize => EffectiveOrthographicSize;
 
     private void Reset()
     {
@@ -120,10 +150,14 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     private void Awake()
     {
-        // Inspector 未設定なら、自身の Camera を取得して補完する。
         if (targetCamera == null)
         {
             targetCamera = GetComponent<Camera>();
+        }
+
+        if (targetCamera != null)
+        {
+            worldOrthographicSize = Mathf.Max(0.01f, targetCamera.orthographicSize);
         }
 
         // 必要に応じて追従対象アンカーを自動解決する。
@@ -132,11 +166,12 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     private void LateUpdate()
     {
-        // 実行に必要な参照が揃っていなければ更新しない。
         if (!ValidateRuntimeReferences())
         {
             return;
         }
+
+        ApplyOrthographicSize();
 
         // 追従対象位置 + オフセット で理想位置を作る。
         desiredPosition = targetAnchor.position + cameraOffset;
@@ -279,9 +314,38 @@ public sealed class PlayerCameraController : MonoBehaviour
         hasActiveBoundsOverride = false;
     }
 
+    public void SetActiveOrthographicSizeOverride(float newSize)
+    {
+        activeOrthographicSizeOverride = Mathf.Max(0.01f, newSize);
+        hasActiveOrthographicSizeOverride = true;
+    }
+
+    public void ClearActiveOrthographicSizeOverride()
+    {
+        hasActiveOrthographicSizeOverride = false;
+    }
+
     public Bounds GetEffectiveBounds()
     {
         return EffectiveWorldBounds;
+    }
+
+    private void ApplyOrthographicSize()
+    {
+        float targetSize = Mathf.Max(0.01f, EffectiveOrthographicSize);
+
+        if (orthographicSizeSmoothTime <= 0f)
+        {
+            targetCamera.orthographicSize = targetSize;
+            orthographicSizeVelocity = 0f;
+            return;
+        }
+
+        targetCamera.orthographicSize = Mathf.SmoothDamp(
+            current: targetCamera.orthographicSize,
+            target: targetSize,
+            currentVelocity: ref orthographicSizeVelocity,
+            smoothTime: orthographicSizeSmoothTime);
     }
 
 #if UNITY_EDITOR

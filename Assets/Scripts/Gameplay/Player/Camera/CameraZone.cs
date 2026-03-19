@@ -20,6 +20,13 @@ public sealed class CameraZone : MonoBehaviour
     [Tooltip("この Zone で使うカメラ境界の最大点です。X/Y の大きい側として扱います。通常は子オブジェクト Bounds_Max を指定します。")]
     [SerializeField] private Transform boundsMax;
 
+    [Header("Orthographic Size 上書き")]
+    [Tooltip("有効にすると、この Zone に入った間だけ PlayerCameraController の orthographicSize を上書きします。")]
+    [SerializeField] private bool overrideOrthographicSize = false;
+
+    [Tooltip("overrideOrthographicSize が有効なときに使用する orthographicSize です。")]
+    [SerializeField] private float orthographicSize = 7f;
+
     [Header("プレイヤー判定タグ")]
     [Tooltip("この Zone の侵入対象として扱うタグです。通常は Player を指定します。")]
     [SerializeField] private string playerTag = "Player";
@@ -69,20 +76,28 @@ public sealed class CameraZone : MonoBehaviour
             }
         }
 
-        // Bounds_Min 未設定なら子名から補完。
+        // Bounds_Min / min 未設定なら子名から補完。
         if (boundsMin == null)
         {
             Transform min = transform.Find("Bounds_Min");
+            if (min == null)
+            {
+                min = transform.Find("min");
+            }
             if (min != null)
             {
                 boundsMin = min;
             }
         }
 
-        // Bounds_Max 未設定なら子名から補完。
+        // Bounds_Max / max 未設定なら子名から補完。
         if (boundsMax == null)
         {
             Transform max = transform.Find("Bounds_Max");
+            if (max == null)
+            {
+                max = transform.Find("max");
+            }
             if (max != null)
             {
                 boundsMax = max;
@@ -177,6 +192,15 @@ public sealed class CameraZone : MonoBehaviour
         }
 
         cameraController.SetActiveBoundsOverride(BuildWorldBounds());
+
+        if (overrideOrthographicSize)
+        {
+            cameraController.SetActiveOrthographicSizeOverride(orthographicSize);
+        }
+        else
+        {
+            cameraController.ClearActiveOrthographicSizeOverride();
+        }
     }
 
     private void DeactivateZone()
@@ -188,6 +212,7 @@ public sealed class CameraZone : MonoBehaviour
         }
 
         cameraController.ClearActiveBoundsOverride();
+        cameraController.ClearActiveOrthographicSizeOverride();
     }
 
     private Bounds BuildWorldBounds()

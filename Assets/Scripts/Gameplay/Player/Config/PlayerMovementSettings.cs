@@ -183,4 +183,6 @@ public sealed class PlayerMovementSettings
     [Header("前ステ中無敵")]
     [Tooltip("有効にすると、前ステップ中を無敵扱いにする想定のフラグです。実際に無敵処理へ反映するかは呼び出し側実装に依存します。")]
     public bool stepInvulnerable = false;
+
+
 }
