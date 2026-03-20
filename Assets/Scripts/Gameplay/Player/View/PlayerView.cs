@@ -246,7 +246,7 @@ public sealed class PlayerView : MonoBehaviour
             baseScale = viewRoot.localScale;
         }
     }
-
+    
     private void Update()
     {
         // Controller 側で確定済みの見た目スナップショットを読む。

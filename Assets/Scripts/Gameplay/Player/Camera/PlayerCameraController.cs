@@ -8,6 +8,10 @@ using UnityEngine.Serialization;
 [RequireComponent(typeof(Camera))]
 public sealed class PlayerCameraController : MonoBehaviour
 {
+    // -----------------------------
+    // Inspector 設定値
+    // -----------------------------
+
     [Header("追従に使用するカメラ")]
     [Tooltip("追従処理と画面サイズ計算に使う Camera 参照です。通常はこの GameObject 自身の Camera を設定します。Orthographic 前提の実装です。")]
     // カメラ追従の計算に使う Camera。
@@ -16,11 +20,9 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     [Header("追従対象アンカー")]
     [Tooltip("カメラが追従する基準位置です。通常はプレイヤー直下の CameraTargetAnchor などを設定します。未設定時は自動探索設定に応じて補完を試みます。")]
-    // カメラが追いかける対象位置。
-    // プレイヤー本体ではなく、専用アンカーを置くと視点調整しやすい。
+    // 通常追従で使う対象位置。
     [SerializeField] private Transform targetAnchor;
-    [Tooltip("一時的に通常追従を上書きする追従対象です。SetTemporaryTarget からのみ設定されます。")]
-    [SerializeField] private Transform temporaryTargetAnchor;
+
     [Header("ワールド全体のfallback境界")]
     [Tooltip("常に使える基本のカメラ移動境界です。エリア別の一時境界が未設定のときはこの境界を使ってカメラ位置を制限します。")]
     [FormerlySerializedAs("cameraBounds")]
@@ -77,6 +79,10 @@ public sealed class PlayerCameraController : MonoBehaviour
     // ログが大量に出るので常時 ON にはしない方がよい。
     [SerializeField] private bool logViewportPosition = false;
 
+    // -----------------------------
+    // ランタイム状態
+    // -----------------------------
+
     // Zone から一時的に上書きされる現在有効な境界。
     // true のときだけ activeBoundsOverride を使う。
     private bool hasActiveBoundsOverride;
@@ -115,35 +121,37 @@ public sealed class PlayerCameraController : MonoBehaviour
     private readonly Dictionary<CameraZone, int> zoneEnterOrders = new Dictionary<CameraZone, int>();
     private int zoneEnterSequence;
 
+    // SmoothDamp 用の内部速度。
+    // ref で渡してフレーム間で保持する必要がある。
+    private float velocityX;
+    private float velocityY;
+
+    // 一時追従ターゲットのランタイム状態。
+    // Inspector では設定せず、SetTemporaryTarget / ClearTemporaryTarget でのみ変更する。
+    private Transform temporaryTargetAnchor;
+    // 一時追従ターゲットの有効期限( Time.time 基準 )。
+    private float temporaryTargetExpireTime = -1f;
+
+    // Clamp 前の「行きたい位置」。
+    private Vector3 desiredPosition;
+    // 境界適用後の「実際に目指す位置」。
+    private Vector3 clampedPosition;
+
+    // -----------------------------
+    // 読み取り専用公開プロパティ
+    // -----------------------------
+
     // 実際に使用するワールド座標系境界。
     // override が有効ならそちらを優先し、無ければ worldBounds を使う。
-    private Bounds EffectiveWorldBounds
-    {
-        get
-        {
-            if (hasActiveBoundsOverride)
-            {
-                return activeBoundsOverride;
-            }
-
-            return worldBounds.WorldBounds;
-        }
-    }
+    private Bounds EffectiveWorldBounds => hasActiveBoundsOverride
+        ? activeBoundsOverride
+        : worldBounds.WorldBounds;
 
     // 実際に使用する Orthographic Size。
     // override が有効ならそちらを優先し、無ければ world の通常値を使う。
-    private float EffectiveOrthographicSize
-    {
-        get
-        {
-            if (hasActiveOrthographicSizeOverride)
-            {
-                return activeOrthographicSizeOverride;
-            }
-
-            return worldOrthographicSize;
-        }
-    }
+    private float EffectiveOrthographicSize => hasActiveOrthographicSizeOverride
+        ? activeOrthographicSizeOverride
+        : worldOrthographicSize;
 
     // 実際に使用する X/Y 追従スムーズ時間。
     private float EffectiveSmoothTimeX => hasActiveFollowSmoothingOverride
@@ -158,18 +166,6 @@ public sealed class PlayerCameraController : MonoBehaviour
     private float EffectiveOrthographicSizeSmoothTime => hasActiveOrthographicSizeSmoothTimeOverride
         ? activeOrthographicSizeSmoothTimeOverride
         : worldOrthographicSizeSmoothTime;
-
-    // SmoothDamp 用の内部速度。
-    // ref で渡してフレーム間で保持する必要がある。
-    private float velocityX;
-    private float velocityY;
-
-    // 一時追従ターゲットの有効期限( Time.time 基準 )。
-    private float temporaryTargetExpireTime = -1f;
-    // Clamp 前の「行きたい位置」。
-    private Vector3 desiredPosition;
-    // 境界適用後の「実際に目指す位置」。
-    private Vector3 clampedPosition;
 
     // デバッグや外部参照用の読み取り専用公開プロパティ。
     public Vector3 DesiredPosition => desiredPosition;
@@ -189,9 +185,15 @@ public sealed class PlayerCameraController : MonoBehaviour
     public bool HasActiveOrthographicSizeSmoothTimeOverride => hasActiveOrthographicSizeSmoothTimeOverride;
     public float ActiveOrthographicSizeSmoothTimeOverride => activeOrthographicSizeSmoothTimeOverride;
     public float EffectiveSizeSmoothTime => EffectiveOrthographicSizeSmoothTime;
-    public bool HasTemporaryTarget => temporaryTargetAnchor != null && temporaryTargetExpireTime > Time.time;
+    public bool HasTemporaryTarget => temporaryTargetAnchor != null && !IsTemporaryTargetExpired();
     public Transform TemporaryTargetAnchor => temporaryTargetAnchor;
-    public float TemporaryTargetExpireTime => temporaryTargetExpireTime; private void Reset()
+    public float TemporaryTargetExpireTime => temporaryTargetExpireTime;
+
+    // -----------------------------
+    // Unity lifecycle
+    // -----------------------------
+
+    private void Reset()
     {
         // コンポーネント追加時や Reset 時に、同一 GameObject の Camera を自動設定する。
         targetCamera = GetComponent<Camera>();
@@ -264,6 +266,10 @@ public sealed class PlayerCameraController : MonoBehaviour
                 this);
         }
     }
+
+    // -----------------------------
+    // 初期化・参照解決
+    // -----------------------------
 
     private bool ValidateRuntimeReferences()
     {
@@ -338,35 +344,9 @@ public sealed class PlayerCameraController : MonoBehaviour
         targetAnchor = foundAnchor != null ? foundAnchor : player.transform;
     }
 
-    private Vector3 GetClampedPosition(Vector3 desired)
-    {
-        // 現在使うべきワールド境界を取得する。
-        Bounds bounds = EffectiveWorldBounds;
-
-        // Orthographic カメラの画面半サイズを求める。
-        float halfHeight = targetCamera.orthographicSize;
-        float halfWidth = halfHeight * targetCamera.aspect;
-
-        // カメラ中心が取りうる最小・最大位置を計算する。
-        // 画面端が境界をはみ出さないよう、半画面サイズ分を内側に寄せる。
-        float minX = bounds.min.x + halfWidth;
-        float maxX = bounds.max.x - halfWidth;
-        float minY = bounds.min.y + halfHeight;
-        float maxY = bounds.max.y - halfHeight;
-
-        // 境界が画面より狭い場合は Clamp 不能になるので、中心固定にする。
-        float clampedX = (minX > maxX) ? bounds.center.x : Mathf.Clamp(desired.x, minX, maxX);
-        float clampedY = (minY > maxY) ? bounds.center.y : Mathf.Clamp(desired.y, minY, maxY);
-
-        // Z は desired 側の値をそのまま使う。
-        return new Vector3(clampedX, clampedY, desired.z);
-    }
-
-    public void SetActiveBoundsOverride(Bounds newBounds)
-    {
-        activeBoundsOverride = newBounds;
-        hasActiveBoundsOverride = true;
-    }
+    // -----------------------------
+    // temporary target 管理
+    // -----------------------------
 
     public void SetTemporaryTarget(Transform target, float duration)
     {
@@ -385,44 +365,29 @@ public sealed class PlayerCameraController : MonoBehaviour
         temporaryTargetExpireTime = -1f;
     }
 
-    public void ClearActiveBoundsOverride()
+    public Transform GetEffectiveTargetAnchor()
     {
-        hasActiveBoundsOverride = false;
+        if (temporaryTargetAnchor != null && !IsTemporaryTargetExpired())
+        {
+            return temporaryTargetAnchor;
+        }
+
+        if (temporaryTargetAnchor != null && IsTemporaryTargetExpired())
+        {
+            ClearTemporaryTarget();
+        }
+
+        return targetAnchor;
     }
 
-    public void SetActiveOrthographicSizeOverride(float newSize)
+    private bool IsTemporaryTargetExpired()
     {
-        activeOrthographicSizeOverride = Mathf.Max(0.01f, newSize);
-        hasActiveOrthographicSizeOverride = true;
+        return temporaryTargetExpireTime <= Time.time;
     }
 
-    public void ClearActiveOrthographicSizeOverride()
-    {
-        hasActiveOrthographicSizeOverride = false;
-    }
-
-    public void SetActiveFollowSmoothingOverride(float newSmoothTimeX, float newSmoothTimeY)
-    {
-        activeSmoothTimeXOverride = Mathf.Max(0f, newSmoothTimeX);
-        activeSmoothTimeYOverride = Mathf.Max(0f, newSmoothTimeY);
-        hasActiveFollowSmoothingOverride = true;
-    }
-
-    public void ClearActiveFollowSmoothingOverride()
-    {
-        hasActiveFollowSmoothingOverride = false;
-    }
-
-    public void SetActiveOrthographicSizeSmoothTimeOverride(float newSmoothTime)
-    {
-        activeOrthographicSizeSmoothTimeOverride = Mathf.Max(0f, newSmoothTime);
-        hasActiveOrthographicSizeSmoothTimeOverride = true;
-    }
-
-    public void ClearActiveOrthographicSizeSmoothTimeOverride()
-    {
-        hasActiveOrthographicSizeSmoothTimeOverride = false;
-    }
+    // -----------------------------
+    // zone 管理・再評価
+    // -----------------------------
 
     public void ApplyZone(CameraZone zone)
     {
@@ -569,24 +534,83 @@ public sealed class PlayerCameraController : MonoBehaviour
         ClearActiveOrthographicSizeSmoothTimeOverride();
     }
 
+    // Zone 反映時の内部 override 操作 API。
+    public void SetActiveBoundsOverride(Bounds newBounds)
+    {
+        activeBoundsOverride = newBounds;
+        hasActiveBoundsOverride = true;
+    }
+
+    public void ClearActiveBoundsOverride()
+    {
+        hasActiveBoundsOverride = false;
+    }
+
+    public void SetActiveOrthographicSizeOverride(float newSize)
+    {
+        activeOrthographicSizeOverride = Mathf.Max(0.01f, newSize);
+        hasActiveOrthographicSizeOverride = true;
+    }
+
+    public void ClearActiveOrthographicSizeOverride()
+    {
+        hasActiveOrthographicSizeOverride = false;
+    }
+
+    public void SetActiveFollowSmoothingOverride(float newSmoothTimeX, float newSmoothTimeY)
+    {
+        activeSmoothTimeXOverride = Mathf.Max(0f, newSmoothTimeX);
+        activeSmoothTimeYOverride = Mathf.Max(0f, newSmoothTimeY);
+        hasActiveFollowSmoothingOverride = true;
+    }
+
+    public void ClearActiveFollowSmoothingOverride()
+    {
+        hasActiveFollowSmoothingOverride = false;
+    }
+
+    public void SetActiveOrthographicSizeSmoothTimeOverride(float newSmoothTime)
+    {
+        activeOrthographicSizeSmoothTimeOverride = Mathf.Max(0f, newSmoothTime);
+        hasActiveOrthographicSizeSmoothTimeOverride = true;
+    }
+
+    public void ClearActiveOrthographicSizeSmoothTimeOverride()
+    {
+        hasActiveOrthographicSizeSmoothTimeOverride = false;
+    }
+
     public Bounds GetEffectiveBounds()
     {
         return EffectiveWorldBounds;
     }
 
-    public Transform GetEffectiveTargetAnchor()
+    // -----------------------------
+    // camera 実行
+    // -----------------------------
+
+    private Vector3 GetClampedPosition(Vector3 desired)
     {
-        if (temporaryTargetAnchor != null && temporaryTargetExpireTime > Time.time)
-        {
-            return temporaryTargetAnchor;
-        }
+        // 現在使うべきワールド境界を取得する。
+        Bounds bounds = EffectiveWorldBounds;
 
-        if (temporaryTargetAnchor != null && temporaryTargetExpireTime <= Time.time)
-        {
-            ClearTemporaryTarget();
-        }
+        // Orthographic カメラの画面半サイズを求める。
+        float halfHeight = targetCamera.orthographicSize;
+        float halfWidth = halfHeight * targetCamera.aspect;
 
-        return targetAnchor;
+        // カメラ中心が取りうる最小・最大位置を計算する。
+        // 画面端が境界をはみ出さないよう、半画面サイズ分を内側に寄せる。
+        float minX = bounds.min.x + halfWidth;
+        float maxX = bounds.max.x - halfWidth;
+        float minY = bounds.min.y + halfHeight;
+        float maxY = bounds.max.y - halfHeight;
+
+        // 境界が画面より狭い場合は Clamp 不能になるので、中心固定にする。
+        float clampedX = (minX > maxX) ? bounds.center.x : Mathf.Clamp(desired.x, minX, maxX);
+        float clampedY = (minY > maxY) ? bounds.center.y : Mathf.Clamp(desired.y, minY, maxY);
+
+        // Z は desired 側の値をそのまま使う。
+        return new Vector3(clampedX, clampedY, desired.z);
     }
 
     private void ApplyOrthographicSize()
@@ -606,6 +630,10 @@ public sealed class PlayerCameraController : MonoBehaviour
             currentVelocity: ref orthographicSizeVelocity,
             smoothTime: smoothTime);
     }
+
+    // -----------------------------
+    // debug / gizmo
+    // -----------------------------
 
 #if UNITY_EDITOR
     private void OnDrawGizmos()
@@ -628,13 +656,14 @@ public sealed class PlayerCameraController : MonoBehaviour
         Gizmos.color = Color.white;
         Gizmos.DrawLine(desiredPosition, clampedPosition);
 
-        // 追従対象アンカー位置をマゼンタで表示。
+        // 通常追従アンカー位置をマゼンタで表示。
         if (targetAnchor != null)
         {
             Gizmos.color = Color.magenta;
             Gizmos.DrawSphere(targetAnchor.position, 0.12f);
         }
 
+        // 一時追従アンカー位置をシアンで表示。
         if (temporaryTargetAnchor != null)
         {
             Gizmos.color = Color.cyan;
