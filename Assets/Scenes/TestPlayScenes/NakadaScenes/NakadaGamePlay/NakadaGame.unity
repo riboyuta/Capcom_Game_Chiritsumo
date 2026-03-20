@@ -150,6 +150,68 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1403057768}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &225593416
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 225593417}
+  m_Layer: 0
+  m_Name: min
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &225593417
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 225593416}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -8, y: -3, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 766075350}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &444021205
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 444021206}
+  m_Layer: 0
+  m_Name: max
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &444021206
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 444021205}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 280, y: 50, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 766075350}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &529022722
 GameObject:
   m_ObjectHideFlags: 0
@@ -307,8 +369,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a477fbf9ca94fbc418171f170aec0e7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraBounds
-  minPoint: {fileID: 0}
-  maxPoint: {fileID: 0}
+  minPoint: {fileID: 225593417}
+  maxPoint: {fileID: 444021206}
   boxCollider: {fileID: 766075349}
 --- !u!65 &766075349
 BoxCollider:
@@ -329,8 +391,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 232.0959, y: 17.807848, z: 0}
-  m_Center: {x: 106.67588, y: 4.9, z: 1.5}
+  m_Size: {x: 288, y: 33, z: 0}
+  m_Center: {x: 136, y: 13.5, z: 0}
 --- !u!4 &766075350
 Transform:
   m_ObjectHideFlags: 0
@@ -343,7 +405,9 @@ Transform:
   m_LocalPosition: {x: 1, y: 1, z: 1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 225593417}
+  - {fileID: 444021206}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &861842947
@@ -385,7 +449,7 @@ MonoBehaviour:
   - {fileID: 7338064284890883238, guid: c6370f08d0d374844a56b0841beb1610, type: 3}
   - {fileID: 5409637655077809295, guid: e9f5a7157b6006b41bc199f7352c639d, type: 3}
   - {fileID: 3699133495810676906, guid: 00f69c8dc354a9044993c6947a803638, type: 3}
-  stageNumber: 1
+  stageNumber: 2
   gridSize: 1
 --- !u!4 &861842949
 Transform:
@@ -554,13 +618,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCameraController
   targetCamera: {fileID: 1254620147}
   targetAnchor: {fileID: 1403057768}
-  cameraBounds: {fileID: 766075348}
+  worldBounds: {fileID: 766075348}
   autoFindPlayerAnchor: 1
   playerTag: Player
   anchorChildName: CameraTargetAnchor
   cameraOffset: {x: 0, y: 0, z: -10}
   smoothTimeX: 0.08
   smoothTimeY: 0.12
+  orthographicSizeSmoothTime: 0.1
   drawDebugGizmos: 1
   logViewportPosition: 0
 --- !u!1 &1403057760
@@ -665,7 +730,7 @@ MonoBehaviour:
     restoreStepStartVerticalVelocity: 0
     stepCooldown: 0.58
     allowAirStep: 1
-    allowTurnDuringStep: 1
+    allowTurnDuringStep: 0
     useStepBuffer: 1
     stepBufferTime: 0.06
     stepInvulnerable: 0
@@ -808,7 +873,7 @@ Transform:
   m_GameObject: {fileID: 1403057760}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
+  m_LocalPosition: {x: -2, y: 5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
