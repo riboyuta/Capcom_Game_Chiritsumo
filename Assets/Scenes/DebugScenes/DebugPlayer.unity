@@ -567,7 +567,7 @@ Transform:
   m_GameObject: {fileID: 812693674}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 6.13, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -593,7 +593,7 @@ MonoBehaviour:
   boundsMin: {fileID: 300510471}
   boundsMax: {fileID: 1697826127}
   overrideOrthographicSize: 1
-  orthographicSize: 3
+  orthographicSize: 10
   overrideFollowSmoothing: 1
   smoothTimeX: 0.2
   smoothTimeY: 0.2
@@ -1051,11 +1051,11 @@ MonoBehaviour:
     useStep: 1
     stepSpeed: 18
     stepDuration: 0.13
-    stepGravityMultiplier: 0.05
+    stepGravityMultiplier: 0
     restoreStepStartVerticalVelocity: 1
     stepCooldown: 0.58
     allowAirStep: 1
-    allowTurnDuringStep: 1
+    allowTurnDuringStep: 0
     useStepBuffer: 1
     stepBufferTime: 0.06
     stepInvulnerable: 0
@@ -1368,7 +1368,7 @@ Transform:
   m_GameObject: {fileID: 1638090167}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.27, y: 0, z: 0}
+  m_LocalPosition: {x: -2.87, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1394,7 +1394,7 @@ MonoBehaviour:
   boundsMin: {fileID: 53723197}
   boundsMax: {fileID: 178987007}
   overrideOrthographicSize: 1
-  orthographicSize: 5
+  orthographicSize: 3
   overrideFollowSmoothing: 1
   smoothTimeX: 0.2
   smoothTimeY: 0.2
