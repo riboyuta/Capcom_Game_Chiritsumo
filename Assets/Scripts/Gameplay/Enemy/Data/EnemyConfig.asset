@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec1900e8ef4a1e64e95c4f7a9d3325ba, type: 3}
   m_Name: EnemyConfig
   m_EditorClassIdentifier: Assembly-CSharp::EnemyConfig
-  m_pressureSpeed: 1.5
-  m_attackInterval: 2
-  m_windupDuration: 0.5
-  m_recoveryDuration: 0.7
-  m_deathZoneOffset: -1
-  m_grabDuration: 2
-  m_grabActiveStartTime: 0.15
-  m_grabActiveEndTime: 1
-  m_smashDuration: 1
-  m_smashActiveStartTime: 0.32
-  m_smashActiveEndTime: 0.76
-  m_smashWindupOffset: {x: 2, y: 3, z: 0}
+  pressureSpeed: 1.5
+  attackInterval: 3
+  windupDuration: 0.5
+  recoveryDuration: 0.5
+  deathZoneOffset: 0
+  grabDuration: 2
+  grabActiveStartTime: 0.58
+  grabActiveEndTime: 1.15
+  smashDuration: 1.5
+  smashActiveStartTime: 0.5
+  smashActiveEndTime: 0.7
+  smashWindupOffset: {x: 4, y: 6, z: 0}
