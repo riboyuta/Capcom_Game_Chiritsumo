@@ -144,7 +144,7 @@ Transform:
   m_GameObject: {fileID: 53723196}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -18.15, y: 0, z: 0}
+  m_LocalPosition: {x: 1.1, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -426,9 +426,9 @@ MonoBehaviour:
     - {fileID: -1046398307, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
     startFrame: 0
     endFrame: 0
-    fps: 12
-    playbackMode: 2
-    minimumDuration: 0
+    fps: 3
+    playbackMode: 1
+    minimumDuration: 0.09
     extraFlipX: 0
     extraFlipY: 0
     scaleMultiplier: 1
@@ -439,17 +439,18 @@ MonoBehaviour:
     - {fileID: -1812844035, guid: 160d2f2539805774aa741bb865af696e, type: 3}
     - {fileID: -28800686, guid: 160d2f2539805774aa741bb865af696e, type: 3}
     - {fileID: -109164536, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+    - {fileID: 641278213, guid: 160d2f2539805774aa741bb865af696e, type: 3}
     startFrame: 0
-    endFrame: 2
-    fps: 12
-    playbackMode: 1
-    minimumDuration: 0
+    endFrame: 3
+    fps: 20
+    playbackMode: 2
+    minimumDuration: 0.1
     extraFlipX: 0
     extraFlipY: 0
     scaleMultiplier: 1
     localOffset: {x: 0, y: 0, z: 0}
   jumpRiseClip:
-    enabled: 1
+    enabled: 0
     sprites:
     - {fileID: 641278213, guid: 160d2f2539805774aa741bb865af696e, type: 3}
     startFrame: 0
@@ -469,15 +470,15 @@ MonoBehaviour:
     - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
     startFrame: 0
     endFrame: 2
-    fps: 12
-    playbackMode: 1
-    minimumDuration: 0
+    fps: 10
+    playbackMode: 2
+    minimumDuration: 0.1
     extraFlipX: 0
     extraFlipY: 0
     scaleMultiplier: 1
     localOffset: {x: 0, y: 0, z: 0}
   fallClip:
-    enabled: 1
+    enabled: 0
     sprites:
     - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
     startFrame: 0
@@ -498,7 +499,7 @@ MonoBehaviour:
     fps: 12
     playbackMode: 0
     minimumDuration: 0
-    extraFlipX: 0
+    extraFlipX: 1
     extraFlipY: 0
     scaleMultiplier: 1
     localOffset: {x: 0, y: 0, z: 0}
@@ -513,17 +514,20 @@ MonoBehaviour:
     fps: 12
     playbackMode: 2
     minimumDuration: 0
-    extraFlipX: 1
+    extraFlipX: 0
     extraFlipY: 0
     scaleMultiplier: 1
     localOffset: {x: 0, y: 0, z: 0}
   stepClip:
     enabled: 1
     sprites:
-    - {fileID: -109164536, guid: 160d2f2539805774aa741bb865af696e, type: 3}
-    - {fileID: 641278213, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+    - {fileID: 1303732482, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+    - {fileID: -1045589456, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+    - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+    - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+    - {fileID: -1046398307, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
     startFrame: 0
-    endFrame: 1
+    endFrame: 4
     fps: 12
     playbackMode: 2
     minimumDuration: 0
@@ -533,9 +537,9 @@ MonoBehaviour:
     localOffset: {x: 0, y: 0, z: 0}
   currentAnimState: 0
   desiredAnimState: 0
-  currentStateElapsed: 0
+  currentStateElapsed: 4.490629
   currentStateLockRemaining: 0
-  currentClipName: None
+  currentClipName: Idle
   currentFrameIndex: 0
 --- !u!1 &812693674
 GameObject:
@@ -553,7 +557,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &812693675
 Transform:
   m_ObjectHideFlags: 0
@@ -589,7 +593,7 @@ MonoBehaviour:
   boundsMin: {fileID: 300510471}
   boundsMax: {fileID: 1697826127}
   overrideOrthographicSize: 1
-  orthographicSize: 5
+  orthographicSize: 3
   overrideFollowSmoothing: 1
   smoothTimeX: 0.2
   smoothTimeY: 0.2
@@ -896,8 +900,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 5.4594355, y: 14.274993, z: 1}
-  m_Center: {x: 10.353987, y: 7.1724963, z: 0}
+  m_Size: {x: 8.92481, y: 14.274993, z: 1}
+  m_Center: {x: 12.086675, y: 7.1724963, z: 0}
 --- !u!114 &1194230844
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1208,7 +1212,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 7
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1354,7 +1358,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1638090168
 Transform:
   m_ObjectHideFlags: 0
@@ -1732,8 +1736,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.91, y: 14.274993, z: 1}
-  m_Center: {x: 10.353987, y: 7.1724963, z: 0}
+  m_Size: {x: 8.606251, y: 14.274993, z: 1}
+  m_Center: {x: 9.51708, y: 7.1724963, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
