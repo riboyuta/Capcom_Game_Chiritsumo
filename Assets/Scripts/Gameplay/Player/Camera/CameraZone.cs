@@ -16,6 +16,10 @@ public sealed class CameraZone : MonoBehaviour
     [Tooltip("この Zone で使う CameraBounds です。通常は子オブジェクト CameraBounds を指定します。")]
     [SerializeField] private CameraBounds zoneBounds;
 
+    [Header("Zone 優先度")]
+    [Tooltip("Zone が重なったときの優先度です。値が大きい Zone ほど優先されます。同値の場合は後から入った Zone が優先されます。")]
+    [SerializeField] private int priority = 0;
+
     [Header("Orthographic Size 上書き")]
     [Tooltip("有効にすると、この Zone に入った間だけ PlayerCameraController の orthographicSize を上書きします。")]
     [SerializeField] private bool overrideOrthographicSize = false;
@@ -60,6 +64,7 @@ public sealed class CameraZone : MonoBehaviour
     public float SmoothTimeYOverride => smoothTimeY;
     public bool HasOrthographicSizeSmoothTimeOverride => overrideOrthographicSizeSmoothTime;
     public float OrthographicSizeSmoothTimeOverride => orthographicSizeSmoothTime;
+    public int Priority => priority;
     public Bounds WorldBounds => zoneBounds != null ? zoneBounds.WorldBounds : new Bounds(transform.position, Vector3.zero);
     private void Reset()
     {

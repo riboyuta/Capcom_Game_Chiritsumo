@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -106,6 +107,12 @@ public sealed class PlayerCameraController : MonoBehaviour
     // Zone からの Orthographic Size 補間時間 一時上書き。
     private bool hasActiveOrthographicSizeSmoothTimeOverride;
     private float activeOrthographicSizeSmoothTimeOverride;
+
+    // 現在有効な Zone 群。
+    private readonly List<CameraZone> activeZones = new List<CameraZone>();
+    // Zone ごとの「最後に入った順」を記録する。
+    private readonly Dictionary<CameraZone, int> zoneEnterOrders = new Dictionary<CameraZone, int>();
+    private int zoneEnterSequence;
 
     // 実際に使用するワールド座標系境界。
     // override が有効ならそちらを優先し、無ければ worldBounds を使う。
@@ -403,7 +410,100 @@ public sealed class PlayerCameraController : MonoBehaviour
             return;
         }
 
-        SetActiveBoundsOverride(zoneBounds.WorldBounds);
+        if (!activeZones.Contains(zone))
+        {
+            activeZones.Add(zone);
+        }
+
+        zoneEnterSequence++;
+        zoneEnterOrders[zone] = zoneEnterSequence;
+
+        ReevaluateActiveZone();
+    }
+
+    public void ClearZone(CameraZone zone)
+    {
+        if (zone == null)
+        {
+            return;
+        }
+
+        activeZones.Remove(zone);
+        zoneEnterOrders.Remove(zone);
+
+        ReevaluateActiveZone();
+    }
+
+    private void ReevaluateActiveZone()
+    {
+        CameraZone resolvedZone = ResolveBestZone();
+        ApplyResolvedZone(resolvedZone);
+    }
+
+    private CameraZone ResolveBestZone()
+    {
+        for (int i = activeZones.Count - 1; i >= 0; i--)
+        {
+            CameraZone activeZone = activeZones[i];
+            if (activeZone != null && activeZone.ZoneBounds != null)
+            {
+                continue;
+            }
+
+            activeZones.RemoveAt(i);
+            zoneEnterOrders.Remove(activeZone);
+        }
+
+        CameraZone bestZone = null;
+
+        for (int i = 0; i < activeZones.Count; i++)
+        {
+            CameraZone candidate = activeZones[i];
+            if (candidate == null)
+            {
+                continue;
+            }
+
+            if (bestZone == null || IsHigherPriority(candidate, bestZone))
+            {
+                bestZone = candidate;
+            }
+        }
+
+        return bestZone;
+    }
+
+    private bool IsHigherPriority(CameraZone candidate, CameraZone currentBest)
+    {
+        if (candidate.Priority != currentBest.Priority)
+        {
+            return candidate.Priority > currentBest.Priority;
+        }
+
+        int candidateOrder = GetZoneEnterOrder(candidate);
+        int currentBestOrder = GetZoneEnterOrder(currentBest);
+        return candidateOrder > currentBestOrder;
+    }
+
+    private int GetZoneEnterOrder(CameraZone zone)
+    {
+        return zoneEnterOrders.TryGetValue(zone, out int order) ? order : int.MinValue;
+    }
+
+    private void ApplyResolvedZone(CameraZone zone)
+    {
+        if (zone == null)
+        {
+            ApplyWorldFallback();
+            return;
+        }
+
+        ApplyZoneOverrides(zone);
+    }
+
+    private void ApplyZoneOverrides(CameraZone zone)
+    {
+        SetActiveBoundsOverride(zone.ZoneBounds.WorldBounds);
 
         if (zone.HasOrthographicSizeOverride)
         {
@@ -433,23 +533,18 @@ public sealed class PlayerCameraController : MonoBehaviour
         }
     }
 
-    public void ClearZone(CameraZone zone)
+    private void ApplyWorldFallback()
     {
-        if (zone == null)
-        {
-            return;
-        }
-
         ClearActiveBoundsOverride();
         ClearActiveOrthographicSizeOverride();
         ClearActiveFollowSmoothingOverride();
         ClearActiveOrthographicSizeSmoothTimeOverride();
     }
+
     public Bounds GetEffectiveBounds()
     {
         return EffectiveWorldBounds;
     }
-
     private void ApplyOrthographicSize()
     {
         float targetSize = Mathf.Max(0.01f, EffectiveOrthographicSize);
