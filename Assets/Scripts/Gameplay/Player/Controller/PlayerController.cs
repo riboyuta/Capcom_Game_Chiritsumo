@@ -74,39 +74,40 @@ public sealed partial class PlayerController : MonoBehaviour
         // 入力リーダーを生成する。
         playerInputReader = new PlayerInputReader(rawInputSource, inputBindings);
 
-        // Health と Grab システムを初期化する。
+        // システムを初期化する。
         InitializeHealth();
-        InitializeGrab();
     }
 
     private void Update()
     {
-        // 初期化失敗時の防御。
         if (playerInputReader == null)
         {
             return;
         }
 
-        // 入力取得は Update で行う。
+        float dt = Time.deltaTime;
+        UpdateHealth(dt);
+
+        if (IsActionLocked)
+        {
+            jumpRequested = false;
+            stepRequested = false;
+            return;
+        }
+
         playerInputReader.Update();
 
-        // 押下エッジを物理フレームまで保持する。
         if (playerInputReader.JumpPressed)
         {
             jumpRequested = true;
         }
+
         if (playerInputReader.StepPressed)
         {
             stepRequested = true;
         }
 
-        // 横入力がしきい値を超えたときのみ向きを更新する。
         UpdateFacingFromMoveInput();
-
-        // Health と Grab システムを更新する。
-        float deltaTime = Time.deltaTime;
-        UpdateHealth(deltaTime);
-        UpdateGrab(deltaTime);
     }
 
     private void FixedUpdate()
@@ -119,10 +120,8 @@ public sealed partial class PlayerController : MonoBehaviour
 
         float deltaTime = Time.fixedDeltaTime;
 
-        // 掴まれている場合は移動処理をスキップする。
-        if (isGrabbed)
+        if (IsActionLocked)
         {
-            rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
             return;
         }
 

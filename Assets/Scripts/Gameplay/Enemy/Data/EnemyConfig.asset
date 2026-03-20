@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec1900e8ef4a1e64e95c4f7a9d3325ba, type: 3}
+  m_Name: EnemyConfig
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyConfig
+  m_pressureSpeed: 1.5
+  m_attackInterval: 2
+  m_windupDuration: 0.5
+  m_recoveryDuration: 0.7
+  m_deathZoneOffset: -1
+  m_grabDuration: 2
+  m_grabActiveStartTime: 0.15
+  m_grabActiveEndTime: 1
+  m_smashDuration: 1
+  m_smashActiveStartTime: 0.32
+  m_smashActiveEndTime: 0.76
+  m_smashWindupOffset: {x: 2, y: 3, z: 0}
