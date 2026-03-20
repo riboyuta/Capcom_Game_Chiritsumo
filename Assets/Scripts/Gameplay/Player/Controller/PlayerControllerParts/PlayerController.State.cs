@@ -50,8 +50,15 @@ public sealed partial class PlayerController
     // 着地/クールダウン解除直前の前ステ入力を保持するタイマー。
     private float stepBufferTimer;
 
+    // 見た目向け単発イベント(1物理フレームだけ true)。
+    private bool justLandedThisFrame;
+    private bool justJumpedThisFrame;
+    private bool justWallJumpedThisFrame;
+    private bool justCrossedApexThisFrame;
+
     // 床離れ直後でもジャンプ可能にする猶予タイマー。
     private float coyoteTimer;
+
 
     // 着地直前のジャンプ入力を保持するタイマー。
     private float jumpBufferTimer;

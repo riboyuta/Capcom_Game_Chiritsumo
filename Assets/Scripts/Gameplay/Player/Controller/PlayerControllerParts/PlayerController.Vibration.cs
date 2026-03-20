@@ -134,6 +134,7 @@ public sealed partial class PlayerController
     private void CaptureLandingSnapshot()
     {
         landingOccurredThisFrame = !wasGrounded && isGrounded;
+        justLandedThisFrame = landingOccurredThisFrame;
         if (!landingOccurredThisFrame)
         {
             return;
@@ -154,7 +155,9 @@ public sealed partial class PlayerController
         }
 
         vibrationController.PlayLanding(landingAirborneTime, landingFallHeight);
-    }    // 壁キック成功地点から直接呼ぶ用。
+    }
+
+    // 壁キック成功地点から直接呼ぶ用。
     private void PlayWallKickVibration()
     {
         // 振動コンポーネントが無ければ何もしない。

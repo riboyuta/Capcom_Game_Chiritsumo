@@ -90,6 +90,7 @@ public sealed partial class PlayerController
         coyoteTimer = 0f;
         jumpBufferTimer = 0f;
         jumpHoldTimer = movementSettings.maxJumpHoldTime;
+        justJumpedThisFrame = true;
     }
 
     private bool TryApplyWallKick()
@@ -131,7 +132,7 @@ public sealed partial class PlayerController
         coyoteTimer = 0f;
         jumpHoldTimer = movementSettings.maxJumpHoldTime;
         isGrounded = false;
-
+        justWallJumpedThisFrame = true;
         //振動
         PlayWallKickVibration();
 
