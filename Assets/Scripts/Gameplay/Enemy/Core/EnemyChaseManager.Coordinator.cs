@@ -10,32 +10,32 @@ public sealed partial class EnemyChaseManager
     private void TickAttackCoordinator(float deltaTime)
     {
         // 攻撃タイマーを進める
-        m_attackTimer += deltaTime;
+        attackTimer += deltaTime;
 
         // まだ攻撃間隔に達していない場合は何もしない
-        if (m_attackTimer < m_config.AttackInterval)
+        if (attackTimer < config.AttackInterval)
         {
             return;
         }
 
         // 攻撃間隔に達したのでタイマーをリセット（余剰時間は次回に持ち越す）
-        m_attackTimer -= m_config.AttackInterval;
+        attackTimer -= config.AttackInterval;
 
         // プレイヤーの現在位置を攻撃ターゲットとして取得
-        Vector3 targetWorldPosition = m_playerTransform != null
-            ? m_playerTransform.position
+        Vector3 targetWorldPosition = playerTransform != null
+            ? playerTransform.position
             : Vector3.zero;
 
         // 左手は Grab 攻撃固定（手が忙しくない場合のみ命令を出す）
-        if (m_leftHand != null && !m_leftHand.IsBusy)
+        if (leftHand != null && !leftHand.IsBusy)
         {
-            m_leftHand.TryStartGrabAttack(targetWorldPosition);
+            leftHand.TryStartGrabAttack(targetWorldPosition);
         }
 
         // 右手は Smash 攻撃固定（手が忙しくない場合のみ命令を出す）
-        if (m_rightHand != null && !m_rightHand.IsBusy)
+        if (rightHand != null && !rightHand.IsBusy)
         {
-            m_rightHand.TryStartSmashAttack(targetWorldPosition);
+            rightHand.TryStartSmashAttack(targetWorldPosition);
         }
     }
 }

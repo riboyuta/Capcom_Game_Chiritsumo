@@ -17,22 +17,38 @@ public sealed partial class PlayerController : IEnemyAttackReceiver
 
     [Header("Reaction")]
     // Damaged 状態が継続する時間（秒）
+    [Header("Damaged継続時間")]
+    [Tooltip("被弾状態が継続する時間です。この間は短い無敵時間が適用されます。")]
     [SerializeField] private float damagedStateDuration = 0.15f;
     // Grabbed 状態が継続する時間（秒）。この時間終了後に即死級ダメージまたは解放。
+    [Header("Grabbed継続時間")]
+    [Tooltip("敵に掴まれている状態が継続する時間です。この時間後に即死または解放されます。")]
     [SerializeField] private float grabbedStateDuration = 0.5f;
     // Smashed 状態が継続する時間（秒）
+    [Header("Smashed継続時間")]
+    [Tooltip("敵に叩きつけられた状態が継続する時間です。")]
     [SerializeField] private float smashedStateDuration = 0.35f;
     // Grab 攻撃を受けたら即座に死亡するか（false なら拘束演出後に判定）
+    [Header("Grab即死判定")]
+    [Tooltip("Grab攻撃を受けた瞬間に即死するかどうかを設定します。")]
     [SerializeField] private bool grabIsInstantDeath = true;
     // Smash 攻撃を受けたら即座に死亡するか（false ならダメージとノックバックのみ）
+    [Header("Smash即死判定")]
+    [Tooltip("Smash攻撃を受けた瞬間に即死するかどうかを設定します。")]
     [SerializeField] private bool smashIsInstantDeath = true;
     // リアクション系のデバッグログを表示するか
+    [Header("デバッグログ表示")]
+    [Tooltip("リアクション状態の変化をデバッグログに出力するかどうかを設定します。")]
     [SerializeField] private bool showReactionDebugLog = false;
 
     [Header("Grab演出")]
     // Grabbed 状態終了後に即死級ダメージを与えるか（false なら単に解放）
+    [Header("拘束後即死")]
+    [Tooltip("Grabbed状態の継続時間終了後に即死級ダメージを与えるかどうかを設定します。")]
     [SerializeField] private bool killAfterGrabbedDuration = true;
     // Grab 攻撃を受けた瞬間に手の位置へワープさせるか
+    [Header("即座にワープ")]
+    [Tooltip("Grab攻撃を受けた瞬間に敵の手の位置へワープさせるかどうかを設定します。")]
     [SerializeField] private bool snapToGrabAnchorImmediately = true;
 
     // 現在のリアクション状態

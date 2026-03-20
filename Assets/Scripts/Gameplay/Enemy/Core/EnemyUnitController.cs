@@ -14,41 +14,53 @@ public sealed partial class EnemyUnitController : MonoBehaviour
     }
 
     [Header("参照")]
+    [Header("Root Transform")]
     [Tooltip("通常時の位置同期先となる Transform です。全体圧に合わせて移動します。")]
     [SerializeField] private Transform root;
 
+    [Header("Palm Transform")]
     [Tooltip("攻撃時に先端として動かす Transform です。EnemyAttackController に渡して使用します。")]
     [SerializeField] private Transform palm;
 
+    [Header("攻撃コントローラー")]
     [Tooltip("Grab / Smash 攻撃の実行を担当する EnemyAttackController です。")]
     [SerializeField] private EnemyAttackController attackController;
 
+    [Header("本体ヒットボックス")]
     [Tooltip("将来の本体接触判定に使用する 3D Collider です。現段階では未使用です。")]
     [SerializeField] private Collider bodyHitbox;
 
+    [Header("Animator")]
     [Tooltip("状態に応じた見た目更新に使用する Animator です。不要なら未設定でも動作します。")]
     [SerializeField] private Animator animator;
 
     [Header("設定")]
+    [Header("設定データ")]
     [Tooltip("この手ユニットが参照する設定データです。状態時間や攻撃時間の取得に使用します。")]
     [SerializeField] private EnemyConfig config;
 
     [Header("腕セグメント描画")]
+    [Header("セグメント親オブジェクト")]
     [Tooltip("腕セグメントをぶら下げる親 Transform です。通常は Root の子を設定します。")]
     [SerializeField] private Transform armSegmentsRoot;
 
+    [Header("セグメントプレハブ")]
     [Tooltip("腕1節ぶんの見た目プレハブです。SpriteRenderer を持つオブジェクトを設定します。")]
     [SerializeField] private GameObject armSegmentPrefab;
 
+    [Header("セグメント1節の長さ")]
     [Tooltip("腕1節ぶんの基準長さです。Root と Palm の距離から必要本数を計算するために使います。")]
     [SerializeField] private float armSegmentLength = 0.5f;
 
+    [Header("セグメント最大数")]
     [Tooltip("生成・表示する腕セグメントの最大数です。極端な距離で増えすぎないように制限します。")]
     [SerializeField] private int maxArmSegmentCount = 16;
 
+    [Header("Root側オフセット")]
     [Tooltip("Root 側から何メートル空けてセグメント配置を始めるかを設定します。")]
     [SerializeField] private float rootSegmentOffset = 0.0f;
 
+    [Header("Palm側オフセット")]
     [Tooltip("Palm 側の手前で何メートル止めるかを設定します。手の見た目との重なり調整に使います。")]
     [SerializeField] private float palmSegmentOffset = 0.0f;
 

@@ -5,45 +5,46 @@ using UnityEngine;
 public sealed partial class EnemyChaseManager : MonoBehaviour
 {
     [Header("参照")]
+    [Header("プレイヤー参照")]
     [Tooltip("追跡対象となるプレイヤーの Transform です。攻撃ターゲット座標の取得に使用します。")]
-    [SerializeField] private Transform m_playerTransform;
+    [SerializeField] private Transform playerTransform;
 
-    [Header("参照")]
+    [Header("左手ユニット")]
     [Tooltip("左手ユニットの制御コンポーネントです。全体圧と攻撃命令を渡します。")]
-    [SerializeField] private EnemyUnitController m_leftHand;
+    [SerializeField] private EnemyUnitController leftHand;
 
-    [Header("参照")]
+    [Header("右手ユニット")]
     [Tooltip("右手ユニットの制御コンポーネントです。全体圧と攻撃命令を渡します。")]
-    [SerializeField] private EnemyUnitController m_rightHand;
+    [SerializeField] private EnemyUnitController rightHand;
 
-    [Header("参照")]
+    [Header("即死ゾーン")]
     [Tooltip("左から迫る即死ラインを担当する EnemyDeathZone コンポーネントです。")]
-    [SerializeField] private EnemyDeathZone m_deathZone;
+    [SerializeField] private EnemyDeathZone deathZone;
 
-    [Header("参照")]
+    [Header("設定データ")]
     [Tooltip("EnemyChase 全体の調整値を保持する ScriptableObject です。")]
-    [SerializeField] private EnemyConfig m_config;
+    [SerializeField] private EnemyConfig config;
 
     [Header("初期設定")]
+    [Header("初期圧位置")]
     [Tooltip("ゲーム開始時の圧基準 WorldX です。ここから PressureSpeed で右方向へ進みます。")]
-    [SerializeField] private float m_initialPressureX = -12.0f;
+    [SerializeField] private float initialPressureX = -12.0f;
 
     [Header("デバッグ")]
+    [Header("デバッグログ出力")]
     [Tooltip("有効にすると攻撃指示とフォールバックの情報を日本語ログで出力します。")]
-    [SerializeField] private bool m_showDebugLog;
+    [SerializeField] private bool showDebugLog;
 
     // 現在の全体圧の X 座標。毎フレーム PressureSpeed で右へ進む。
-    private float m_pressureX;
+    private float pressureX;
     // 次の攻撃までのカウントダウンタイマー
-    private float m_attackTimer;
-    // 次に攻撃するのが左手か右手かを交互に切り替えるフラグ
-    private bool m_nextAttackLeft = true;
+    private float attackTimer;
 
     // 初期化処理。圧位置を設定し、各手と DeathZone に同期する。
     private void Awake()
     {
         // 初期圧位置を保存し、開始直後に各手へ同期する。
-        m_pressureX = m_initialPressureX;
+        pressureX = initialPressureX;
         // 左右の手に圧位置を通知
         BroadcastPressure();
         // 即死ゾーンの位置を同期
@@ -55,7 +56,7 @@ public sealed partial class EnemyChaseManager : MonoBehaviour
     private void Update()
     {
         // Config がないと設定を取得できないので処理をスキップ
-        if (m_config == null)
+        if (config == null)
         {
             return;
         }
@@ -72,19 +73,19 @@ public sealed partial class EnemyChaseManager : MonoBehaviour
     private void SyncDeathZone()
     {
         // DeathZone が未設定なら何もしない
-        if (m_deathZone == null)
+        if (deathZone == null)
         {
             return;
         }
 
         // 圧位置から計算した座標を DeathZone に設定
-        m_deathZone.SetWorldX(CalculateDeathZoneX());
+        deathZone.SetWorldX(CalculateDeathZoneX());
     }
 
     // デバッグログが有効ならメッセージを出力するユーティリティメソッド。
     private void LogDebug(string message)
     {
-        if (!m_showDebugLog)
+        if (!showDebugLog)
         {
             return;
         }

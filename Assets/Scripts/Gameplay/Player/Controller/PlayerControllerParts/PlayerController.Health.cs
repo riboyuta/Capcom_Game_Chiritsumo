@@ -5,16 +5,23 @@
 public sealed partial class PlayerController : IDamageable
 {
     [Header("Health")]
+    [Header("最大体力")]
     [SerializeField] private int maxHealth = 3;                  // 最大体力
+    [Header("無敵モード")]
     [SerializeField] private bool invincible = false;             // 無敵モード（デバッグ用）
 
     [Header("Invincibility")]
+    [Header("無敵時間")]
     [SerializeField] private float invincibilityDuration = 1.0f; // ダメージ後の無敵時間（秒）
     [Header("Knockback")]
+    [Header("ノックバック耐性")]
     [SerializeField] private float knockbackResistance = 1.0f;   // ノックバック耐性（1.0=通常、0.5=半減）
+    [Header("ノックバック継続時間")]
     [SerializeField] private float knockbackDuration = 0.25f;    // ノックバック継続時間（秒）
+    [Header("時間経過で減衰")]
     [SerializeField] private bool decayKnockbackOverTime = true; // 時間経過でノックバックを弱めるか
     [Header("Health Debug")]
+    [Header("デバッグログ表示")]
     [SerializeField] private bool showHealthDebugLog = false;    // デバッグログ表示
 
     // 体力・ダメージ関連の状態

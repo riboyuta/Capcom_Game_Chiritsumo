@@ -13,28 +13,36 @@ public sealed class EnemyAttackController : MonoBehaviour
     }
 
     [Header("攻撃判定")]
+    [Header("攻撃ヒットボックス")]
     [Tooltip("攻撃中に有効化する 3D Collider です。Trigger を有効にして使用します。")]
     [SerializeField] private Collider m_attackHitbox;
 
+    [Header("ヒットボックス通知コンポーネント")]
     [Tooltip("攻撃判定用 Collider の Trigger 接触を通知する補助コンポーネントです。")]
     [SerializeField] private EnemyAttackHitboxNotifier m_hitboxNotifier;
 
     [Header("ダメージ設定")]
+    [Header("Grabダメージ")]
     [Tooltip("Grab 攻撃が命中した時に与えるダメージ量です。最大HPを超える値にすると即死級ダメージとして扱えます。")]
     [SerializeField] private int m_grabDamage = 999;
 
+    [Header("Smashダメージ")]
     [Tooltip("Smash 攻撃が命中した時に与えるダメージ量です。最大HPを超える値にすると即死級ダメージとして扱えます。")]
     [SerializeField] private int m_smashDamage = 999;
 
+    [Header("Grabノックバック強さ")]
     [Tooltip("Grab 攻撃が命中した時に与えるノックバック強さです。掴み系なら 0 にしても構いません。")]
     [SerializeField] private float m_grabKnockbackForce = 0.0f;
 
+    [Header("Smashノックバック強さ")]
     [Tooltip("Smash 攻撃が命中した時に与えるノックバック強さです。叩きつけ感を出したい場合は大きめに設定します。")]
     [SerializeField] private float m_smashKnockbackForce = 8.0f;
 
+    [Header("多段ヒット防止")]
     [Tooltip("同じ攻撃中に同じ対象へ複数回ダメージを入れないようにするかを設定します。通常は ON を推奨します。")]
     [SerializeField] private bool m_preventMultipleHitsPerAttack = true;
 
+    [Header("デバッグログ表示")]
     [Tooltip("攻撃ヒット時にデバッグログを出すかどうかを設定します。")]
     [SerializeField] private bool m_showAttackDebugLog = false;
 

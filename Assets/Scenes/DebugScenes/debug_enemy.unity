@@ -164,13 +164,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cdedebd9ba05b2e4c9634af235773fbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyChaseManager
-  m_playerTransform: {fileID: 763895661}
-  m_leftHand: {fileID: 534080966}
-  m_rightHand: {fileID: 2061873749}
-  m_deathZone: {fileID: 1549246325}
-  m_config: {fileID: 11400000, guid: 47bf9fc7684a5a34f9d5539aea7a3a5e, type: 2}
-  m_initialPressureX: -12
-  m_showDebugLog: 0
+  playerTransform: {fileID: 763895661}
+  leftHand: {fileID: 534080966}
+  rightHand: {fileID: 2061873749}
+  deathZone: {fileID: 1549246325}
+  config: {fileID: 11400000, guid: 47bf9fc7684a5a34f9d5539aea7a3a5e, type: 2}
+  initialPressureX: -12
+  showDebugLog: 0
 --- !u!54 &308407219
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -428,18 +428,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a6ecf4c86e8e384abd085e844111e35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyUnitController
-  m_root: {fileID: 1224028590}
-  m_palm: {fileID: 450710040}
-  m_attackController: {fileID: 534080965}
-  m_bodyHitbox: {fileID: 0}
-  m_animator: {fileID: 0}
-  m_config: {fileID: 11400000, guid: 47bf9fc7684a5a34f9d5539aea7a3a5e, type: 2}
-  m_armSegmentsRoot: {fileID: 1509236980}
-  m_armSegmentPrefab: {fileID: 0}
-  m_armSegmentLength: 0.5
-  m_maxArmSegmentCount: 16
-  m_rootSegmentOffset: 0
-  m_palmSegmentOffset: 0
+  root: {fileID: 1224028590}
+  palm: {fileID: 450710040}
+  attackController: {fileID: 534080965}
+  bodyHitbox: {fileID: 1301812280}
+  animator: {fileID: 0}
+  config: {fileID: 11400000, guid: 47bf9fc7684a5a34f9d5539aea7a3a5e, type: 2}
+  armSegmentsRoot: {fileID: 1224028590}
+  armSegmentPrefab: {fileID: 0}
+  armSegmentLength: 0.5
+  maxArmSegmentCount: 16
+  rootSegmentOffset: 0
+  palmSegmentOffset: 0
 --- !u!1 &763895653
 GameObject:
   m_ObjectHideFlags: 0
@@ -691,7 +691,7 @@ Transform:
   m_GameObject: {fileID: 763895653}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.92, y: -2.4699998, z: 8}
+  m_LocalPosition: {x: 6.02, y: -2.4699998, z: 8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1264,13 +1264,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 206b992d4d7ae0140b1e04a51a1e67dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyActivationTrigger
-  enemiesToActivate:
-  - {fileID: 0}
-  playerTag: Player
-  triggerOnce: 1
-  destroyAfterTrigger: 1
-  showDebugLog: 0
-  hasTriggered: 0
 --- !u!65 &1290957163
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1545,7 +1538,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 15, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1636688451}
@@ -1562,8 +1555,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62ecc6b3b92a2f94d8eae4f693964769, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDeathZone
-  m_targetTag: Player
-  m_showDebugLog: 1
+  targetTag: Player
+  showDebugLog: 0
 --- !u!65 &1549246326
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1777,8 +1770,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27db49c2b3ef421478d07e2037d68f33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PursuitSpeedArea
-  speedMultiplier: 0.7
-  drawGizmos: 1
 --- !u!4 &1844524689
 Transform:
   m_ObjectHideFlags: 0
@@ -1832,7 +1823,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2061873747
 Transform:
   m_ObjectHideFlags: 0
@@ -1881,18 +1872,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a6ecf4c86e8e384abd085e844111e35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyUnitController
-  m_root: {fileID: 447285876}
-  m_palm: {fileID: 347628885}
-  m_attackController: {fileID: 2061873748}
-  m_bodyHitbox: {fileID: 0}
-  m_animator: {fileID: 0}
-  m_config: {fileID: 11400000, guid: 47bf9fc7684a5a34f9d5539aea7a3a5e, type: 2}
-  m_armSegmentsRoot: {fileID: 0}
-  m_armSegmentPrefab: {fileID: 0}
-  m_armSegmentLength: 0.5
-  m_maxArmSegmentCount: 16
-  m_rootSegmentOffset: 0
-  m_palmSegmentOffset: 0
+  root: {fileID: 447285876}
+  palm: {fileID: 347628885}
+  attackController: {fileID: 2061873748}
+  bodyHitbox: {fileID: 374612955}
+  animator: {fileID: 0}
+  config: {fileID: 11400000, guid: 47bf9fc7684a5a34f9d5539aea7a3a5e, type: 2}
+  armSegmentsRoot: {fileID: 447285876}
+  armSegmentPrefab: {fileID: 0}
+  armSegmentLength: 0.5
+  maxArmSegmentCount: 16
+  rootSegmentOffset: 0
+  palmSegmentOffset: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

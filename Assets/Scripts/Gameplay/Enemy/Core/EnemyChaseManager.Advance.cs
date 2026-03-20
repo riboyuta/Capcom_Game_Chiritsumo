@@ -9,7 +9,7 @@ public sealed partial class EnemyChaseManager
     private void TickAdvance(float deltaTime)
     {
         // 設定された速度で圧位置を右へ進める
-        m_pressureX += m_config.PressureSpeed * deltaTime;
+        pressureX += config.PressureSpeed * deltaTime;
         // 更新した圧位置を左右の手に通知
         BroadcastPressure();
     }
@@ -20,15 +20,15 @@ public sealed partial class EnemyChaseManager
     private void BroadcastPressure()
     {
         // 左手が設定されていれば圧位置を通知
-        if (m_leftHand != null)
+        if (leftHand != null)
         {
-            m_leftHand.SetPressureX(m_pressureX);
+            leftHand.SetPressureX(pressureX);
         }
 
         // 右手が設定されていれば圧位置を通知
-        if (m_rightHand != null)
+        if (rightHand != null)
         {
-            m_rightHand.SetPressureX(m_pressureX);
+            rightHand.SetPressureX(pressureX);
         }
     }
 
@@ -37,6 +37,6 @@ public sealed partial class EnemyChaseManager
     // オフセットは Config で調整可能（正なら右側、負なら左側）。
     private float CalculateDeathZoneX()
     {
-        return m_pressureX + m_config.DeathZoneOffset;
+        return pressureX + config.DeathZoneOffset;
     }
 }
