@@ -47,18 +47,33 @@ public sealed class EnemyConfig : ScriptableObject
     [Tooltip("Smash 攻撃前に手をどれだけ後方へ引くかを設定します。ローカル座標で使用します。")]
     [SerializeField] private Vector3 m_smashWindupOffset = new Vector3(-0.5f, 0.75f, 0.0f);
 
+    // 以下のプロパティは、設定値を外部から安全に取得するためのもの。
+    // 値の妥当性を保証するため、最小値チェックなどを行う。
+
+    // 全体圧の速度（負の値を防ぐ）
     public float PressureSpeed => Mathf.Max(0.0f, m_pressureSpeed);
+    // 攻撃間隔（最小値 0.01 秒を保証）
     public float AttackInterval => Mathf.Max(0.01f, m_attackInterval);
+    // 溜め時間（最小値 0.01 秒を保証）
     public float WindupDuration => Mathf.Max(0.01f, m_windupDuration);
+    // 硬直時間（最小値 0.01 秒を保証）
     public float RecoveryDuration => Mathf.Max(0.01f, m_recoveryDuration);
+    // 即死ゾーンのオフセット
     public float DeathZoneOffset => m_deathZoneOffset;
 
+    // Grab 攻撃の総時間（最小値 0.01 秒を保証）
     public float GrabDuration => Mathf.Max(0.01f, m_grabDuration);
+    // Grab 攻撃の有効開始時刻（0 ～ Duration の範囲にクランプ）
     public float GrabActiveStartTime => Mathf.Clamp(m_grabActiveStartTime, 0.0f, GrabDuration);
+    // Grab 攻撃の有効終了時刻（開始時刻 ～ Duration の範囲にクランプ）
     public float GrabActiveEndTime => Mathf.Clamp(m_grabActiveEndTime, GrabActiveStartTime, GrabDuration);
 
+    // Smash 攻撃の総時間（最小値 0.01 秒を保証）
     public float SmashDuration => Mathf.Max(0.01f, m_smashDuration);
+    // Smash 攻撃の有効開始時刻（0 ～ Duration の範囲にクランプ）
     public float SmashActiveStartTime => Mathf.Clamp(m_smashActiveStartTime, 0.0f, SmashDuration);
+    // Smash 攻撃の有効終了時刻（開始時刻 ～ Duration の範囲にクランプ）
     public float SmashActiveEndTime => Mathf.Clamp(m_smashActiveEndTime, SmashActiveStartTime, SmashDuration);
+    // Smash 攻撃の溜めオフセット
     public Vector3 SmashWindupOffset => m_smashWindupOffset;
 }
