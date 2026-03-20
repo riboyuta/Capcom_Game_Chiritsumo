@@ -296,7 +296,7 @@ public class MapEditor : MonoBehaviour
     {
         tiles.Clear();
 
-        TileType[] allTiles = FindObjectsOfType<TileType>();
+        TileType[] allTiles = FindObjectsByType<TileType>(FindObjectsSortMode.None);
 
         foreach (var tile in allTiles)
         {
