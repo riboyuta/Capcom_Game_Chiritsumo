@@ -388,6 +388,63 @@ public sealed class PlayerCameraController : MonoBehaviour
     {
         hasActiveOrthographicSizeSmoothTimeOverride = false;
     }
+
+    public void ApplyZone(CameraZone zone)
+    {
+        if (zone == null)
+        {
+            return;
+        }
+
+        CameraBounds zoneBounds = zone.ZoneBounds;
+        if (zoneBounds == null)
+        {
+            Debug.LogWarning("PlayerCameraController: CameraZone has no CameraBounds.", zone);
+            return;
+        }
+
+        SetActiveBoundsOverride(zoneBounds.WorldBounds);
+
+        if (zone.HasOrthographicSizeOverride)
+        {
+            SetActiveOrthographicSizeOverride(zone.OrthographicSizeOverride);
+        }
+        else
+        {
+            ClearActiveOrthographicSizeOverride();
+        }
+
+        if (zone.HasFollowSmoothingOverride)
+        {
+            SetActiveFollowSmoothingOverride(zone.SmoothTimeXOverride, zone.SmoothTimeYOverride);
+        }
+        else
+        {
+            ClearActiveFollowSmoothingOverride();
+        }
+
+        if (zone.HasOrthographicSizeSmoothTimeOverride)
+        {
+            SetActiveOrthographicSizeSmoothTimeOverride(zone.OrthographicSizeSmoothTimeOverride);
+        }
+        else
+        {
+            ClearActiveOrthographicSizeSmoothTimeOverride();
+        }
+    }
+
+    public void ClearZone(CameraZone zone)
+    {
+        if (zone == null)
+        {
+            return;
+        }
+
+        ClearActiveBoundsOverride();
+        ClearActiveOrthographicSizeOverride();
+        ClearActiveFollowSmoothingOverride();
+        ClearActiveOrthographicSizeSmoothTimeOverride();
+    }
     public Bounds GetEffectiveBounds()
     {
         return EffectiveWorldBounds;

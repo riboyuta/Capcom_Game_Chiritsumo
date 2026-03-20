@@ -52,6 +52,14 @@ public sealed class CameraZone : MonoBehaviour
     // プレイヤーが複数 Collider を持つ場合でも安定して所属判定するための集合。
     private readonly HashSet<int> insidePlayerColliderIds = new HashSet<int>();
 
+    public CameraBounds ZoneBounds => zoneBounds;
+    public bool HasOrthographicSizeOverride => overrideOrthographicSize;
+    public float OrthographicSizeOverride => orthographicSize;
+    public bool HasFollowSmoothingOverride => overrideFollowSmoothing;
+    public float SmoothTimeXOverride => smoothTimeX;
+    public float SmoothTimeYOverride => smoothTimeY;
+    public bool HasOrthographicSizeSmoothTimeOverride => overrideOrthographicSizeSmoothTime;
+    public float OrthographicSizeSmoothTimeOverride => orthographicSizeSmoothTime;
     public Bounds WorldBounds => zoneBounds != null ? zoneBounds.WorldBounds : new Bounds(transform.position, Vector3.zero);
     private void Reset()
     {
@@ -186,34 +194,7 @@ public sealed class CameraZone : MonoBehaviour
             return;
         }
 
-        cameraController.SetActiveBoundsOverride(zoneBounds.WorldBounds);
-
-        if (overrideOrthographicSize)
-        {
-            cameraController.SetActiveOrthographicSizeOverride(orthographicSize);
-        }
-        else
-        {
-            cameraController.ClearActiveOrthographicSizeOverride();
-        }
-
-        if (overrideFollowSmoothing)
-        {
-            cameraController.SetActiveFollowSmoothingOverride(smoothTimeX, smoothTimeY);
-        }
-        else
-        {
-            cameraController.ClearActiveFollowSmoothingOverride();
-        }
-
-        if (overrideOrthographicSizeSmoothTime)
-        {
-            cameraController.SetActiveOrthographicSizeSmoothTimeOverride(orthographicSizeSmoothTime);
-        }
-        else
-        {
-            cameraController.ClearActiveOrthographicSizeSmoothTimeOverride();
-        }
+        cameraController.ApplyZone(this);
     }
     
 
@@ -225,10 +206,7 @@ public sealed class CameraZone : MonoBehaviour
             return;
         }
 
-        cameraController.ClearActiveBoundsOverride();
-        cameraController.ClearActiveOrthographicSizeOverride();
-        cameraController.ClearActiveFollowSmoothingOverride();
-        cameraController.ClearActiveOrthographicSizeSmoothTimeOverride();
+        cameraController.ClearZone(this);
     }
 
 
