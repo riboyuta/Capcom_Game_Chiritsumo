@@ -6,19 +6,25 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public sealed class CameraBounds : MonoBehaviour
 {
-    [Header("境界の左下ポイント（X小・Y小）")]
-    // カメラ移動境界の左下側を決める基準点。
-    // 2D横スクロール想定では「左下」に置くのが分かりやすい。
+    [Header("ワールドカメラ境界: 最小点")]
+    [Tooltip("ワールドカメラ全体で使う移動境界の最小点です。X が小さい側、Y が小さい側として扱います。通常は左下に配置します。Zone 専用境界には使いません。")]
+    // ワールドカメラ全体で使う境界の最小点。
+    // 2D 横スクロール想定では、左下に置くと分かりやすい。
+    // Zone ごとの個別境界には使わない。
     [SerializeField] private Transform minPoint;
 
-    [Header("境界の右上ポイント（X大・Y大）")]
-    // カメラ移動境界の右上側を決める基準点。
-    // 2D横スクロール想定では「右上」に置くのが分かりやすい。
+    [Header("ワールドカメラ境界: 最大点")]
+    [Tooltip("ワールドカメラ全体で使う移動境界の最大点です。X が大きい側、Y が大きい側として扱います。通常は右上に配置します。Zone 専用境界には使いません。")]
+    // ワールドカメラ全体で使う境界の最大点。
+    // 2D 横スクロール想定では、右上に置くと分かりやすい。
+    // Zone ごとの個別境界には使わない。
     [SerializeField] private Transform maxPoint;
 
-    [Header("境界計算に使う BoxCollider")]
-    // 実際にカメラ制限用の Bounds を作るための BoxCollider。
+    [Header("ワールドカメラ境界: 計算用BoxCollider")]
+    [Tooltip("ワールドカメラ全体の Bounds 計算に使う BoxCollider です。minPoint / maxPoint の位置から center と size を自動計算して反映します。Zone 専用境界には使いません。")]
+    // ワールドカメラ全体の Bounds を作るための BoxCollider。
     // minPoint / maxPoint の位置から center / size を自動計算して設定する。
+    // Zone ごとの個別境界には使わない。
     [SerializeField] private BoxCollider boxCollider;
 
     // 外部から参照する用のワールド座標系 Bounds。

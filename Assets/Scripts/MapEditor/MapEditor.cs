@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
+[ExecuteAlways]
 public class MapEditor : MonoBehaviour
 {
 
@@ -9,54 +10,82 @@ public class MapEditor : MonoBehaviour
     Dictionary<Vector3Int, GameObject> tiles =
         new Dictionary<Vector3Int, GameObject>();
 
-    public GameObject[] tilePrefab;
+    [Header("プレハブパレット")]
+    [Tooltip("キー毎に割り当てられているプレハブ")]
+    [SerializeField]　private GameObject[] tilePrefab;
 
     int currentTile = 1;
 
-    public int stageNumber = 1;
 
-    public float gridSize = 1.0f;
+    [Header("現在のステージ番号")]
+    [Tooltip("現在編集しているステージの番号")]
+    [SerializeField] private int stageNumber = 1;
 
+    float gridSize = 1.0f;
+
+   
     bool showSaveConfirm = false;
+
     bool showLoadConfirm = false;
+
+
+    void OnEnable()
+    {
+        RegisterExistingTiles();
+    }
 
     void Update()
     {
-        if (showSaveConfirm || showLoadConfirm)  { return; } //セーブorロード選択中はエディット操作できない
-
-        //数字キーで使うタイルを変える
-        if (Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0)) currentTile = 0;
-        if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) currentTile = 1;
-        if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2)) currentTile = 2;
-        if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)) currentTile = 3;
-        if (Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4)) currentTile = 4;
-        if (Input.GetKeyDown(KeyCode.Alpha5) || Input.GetKeyDown(KeyCode.Keypad5)) currentTile = 5;
-        if (Input.GetKeyDown(KeyCode.Alpha6) || Input.GetKeyDown(KeyCode.Keypad6)) currentTile = 6;
-        if (Input.GetKeyDown(KeyCode.Alpha7) || Input.GetKeyDown(KeyCode.Keypad7)) currentTile = 7;
-        if (Input.GetKeyDown(KeyCode.Alpha8) || Input.GetKeyDown(KeyCode.Keypad8)) currentTile = 8;
-        if (Input.GetKeyDown(KeyCode.Alpha9) || Input.GetKeyDown(KeyCode.Keypad9)) currentTile = 9;
+      
 
 
-        if (Input.GetMouseButton(0))
+        // プレイ中
+        if (Application.isPlaying)
         {
-            PlaceTile();
+            if (showSaveConfirm || showLoadConfirm) { return; } //セーブorロード選択中はエディット操作できない
+
+            //数字キーで使うタイルを変える
+            if (Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0)) currentTile = 0;
+            if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) currentTile = 1;
+            if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2)) currentTile = 2;
+            if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)) currentTile = 3;
+            if (Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4)) currentTile = 4;
+            if (Input.GetKeyDown(KeyCode.Alpha5) || Input.GetKeyDown(KeyCode.Keypad5)) currentTile = 5;
+            if (Input.GetKeyDown(KeyCode.Alpha6) || Input.GetKeyDown(KeyCode.Keypad6)) currentTile = 6;
+            if (Input.GetKeyDown(KeyCode.Alpha7) || Input.GetKeyDown(KeyCode.Keypad7)) currentTile = 7;
+            if (Input.GetKeyDown(KeyCode.Alpha8) || Input.GetKeyDown(KeyCode.Keypad8)) currentTile = 8;
+            if (Input.GetKeyDown(KeyCode.Alpha9) || Input.GetKeyDown(KeyCode.Keypad9)) currentTile = 9;
+
+
+            if (Input.GetMouseButton(0))
+            {
+                PlaceTile();
+            }
+
+            if (Input.GetMouseButton(1))
+            {
+                RemoveTile();
+            }
+
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                //SaveMap();
+                showSaveConfirm = true;
+            }
+
+
+
+            if (Input.GetKeyDown(KeyCode.L))
+            {
+                //LoadMap();
+                showLoadConfirm = true;
+            }
         }
-
-        if (Input.GetMouseButton(1))
+    
+        //実行外
+        else
         {
-            RemoveTile();
-        }
-
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            //SaveMap();
-            showSaveConfirm = true;
-        }
-
-        if (Input.GetKeyDown(KeyCode.L))
-        {
-            //LoadMap();
-            showLoadConfirm = true;
+            
         }
 
     }
@@ -118,6 +147,39 @@ public class MapEditor : MonoBehaviour
     }
 
 
+    void ClearTile()
+    {
+
+    }
+
+
+    //===========================-------
+    //　　　　　実行外関数
+    //===========================-------
+    [ContextMenu("Load Map (Editor)")]
+    void LoadMapOutPlaying()
+    {
+        LoadMap();
+        RegisterExistingTiles();
+    }
+
+
+    [ContextMenu("Clear Loaded Map (Editor)")]
+    void ClearLoadedMapOutPlaying()
+    {
+        foreach (var tile in tiles.Values)
+        {
+            if (tile != null)
+            {
+                DestroyImmediate(tile);
+            }
+        }
+
+        tiles.Clear();
+
+        Debug.Log("Loaded Map Cleared");
+    }
+
     //===========================-------
     //　　　　　保存システム
     //===========================-------
@@ -178,7 +240,10 @@ public class MapEditor : MonoBehaviour
         //現在読み込まれてるマップを全て消す
         foreach (var tile in tiles)
         {
-            Destroy(tile.Value);
+            if (Application.isPlaying)
+                Destroy(tile.Value);
+            else
+                DestroyImmediate(tile.Value);
         }
 
         tiles.Clear();
@@ -224,7 +289,31 @@ public class MapEditor : MonoBehaviour
     }
 
 
+    
 
+    //現在のブロックをレジストとして登録する
+    void RegisterExistingTiles()
+    {
+        tiles.Clear();
+
+        TileType[] allTiles = FindObjectsOfType<TileType>();
+
+        foreach (var tile in allTiles)
+        {
+            Vector3 pos = tile.transform.position;
+
+            Vector3Int gridPos = new Vector3Int(
+                Mathf.RoundToInt(pos.x / gridSize),
+                Mathf.RoundToInt(pos.y / gridSize),
+                Mathf.RoundToInt(pos.z / gridSize)
+            );
+
+            if (!tiles.ContainsKey(gridPos))
+            {
+                tiles.Add(gridPos, tile.gameObject);
+            }
+        }
+    }
 
     //===========================-------
     //　　　　　   GUI
@@ -277,6 +366,25 @@ public class MapEditor : MonoBehaviour
             {
                 showLoadConfirm = false;
             }
+        }
+    }
+
+    //===========================-------
+    //　　　　　   Gizmos
+    //===========================-------
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.green;
+
+        foreach (var tile in tiles)
+        {
+            Vector3 pos = new Vector3(
+                tile.Key.x * gridSize,
+                tile.Key.y * gridSize,
+                tile.Key.z * gridSize
+            );
+
+            Gizmos.DrawWireCube(pos, Vector3.one * gridSize);
         }
     }
 
