@@ -12,13 +12,9 @@ public sealed class CameraZone : MonoBehaviour
     [Tooltip("プレイヤーがこの Zone に属しているかを判定する Trigger 用 BoxCollider です。通常は子オブジェクト ZoneVolume を指定します。")]
     [SerializeField] private BoxCollider zoneVolume;
 
-    [Header("カメラ境界: 最小点")]
-    [Tooltip("この Zone で使うカメラ境界の最小点です。X/Y の小さい側として扱います。通常は子オブジェクト Bounds_Min を指定します。")]
-    [SerializeField] private Transform boundsMin;
-
-    [Header("カメラ境界: 最大点")]
-    [Tooltip("この Zone で使うカメラ境界の最大点です。X/Y の大きい側として扱います。通常は子オブジェクト Bounds_Max を指定します。")]
-    [SerializeField] private Transform boundsMax;
+    [Header("カメラ境界")]
+    [Tooltip("この Zone で使う CameraBounds です。通常は子オブジェクト CameraBounds を指定します。")]
+    [SerializeField] private CameraBounds zoneBounds;
 
     [Header("Orthographic Size 上書き")]
     [Tooltip("有効にすると、この Zone に入った間だけ PlayerCameraController の orthographicSize を上書きします。")]
@@ -50,14 +46,13 @@ public sealed class CameraZone : MonoBehaviour
     [SerializeField] private string playerTag = "Player";
 
     [Header("デバッグ表示")]
-    [Tooltip("有効にすると、ZoneVolume と Zone 境界を Scene 上に描画します。")]
+    [Tooltip("有効にすると、ZoneVolume を Scene 上に描画します。")]
     [SerializeField] private bool drawDebugGizmos = true;
 
     // プレイヤーが複数 Collider を持つ場合でも安定して所属判定するための集合。
     private readonly HashSet<int> insidePlayerColliderIds = new HashSet<int>();
 
-    public Bounds WorldBounds => BuildWorldBounds();
-
+    public Bounds WorldBounds => zoneBounds != null ? zoneBounds.WorldBounds : new Bounds(transform.position, Vector3.zero);
     private void Reset()
     {
         AutoResolveReferences();
@@ -94,31 +89,13 @@ public sealed class CameraZone : MonoBehaviour
             }
         }
 
-        // Bounds_Min / min 未設定なら子名から補完。
-        if (boundsMin == null)
+        // CameraBounds 未設定なら子名から補完。
+        if (zoneBounds == null)
         {
-            Transform min = transform.Find("Bounds_Min");
-            if (min == null)
+            Transform bounds = transform.Find("CameraBounds");
+            if (bounds != null)
             {
-                min = transform.Find("min");
-            }
-            if (min != null)
-            {
-                boundsMin = min;
-            }
-        }
-
-        // Bounds_Max / max 未設定なら子名から補完。
-        if (boundsMax == null)
-        {
-            Transform max = transform.Find("Bounds_Max");
-            if (max == null)
-            {
-                max = transform.Find("max");
-            }
-            if (max != null)
-            {
-                boundsMax = max;
+                zoneBounds = bounds.GetComponent<CameraBounds>();
             }
         }
     }
@@ -203,13 +180,13 @@ public sealed class CameraZone : MonoBehaviour
             return;
         }
 
-        if (boundsMin == null || boundsMax == null)
+        if (zoneBounds == null)
         {
-            Debug.LogWarning("CameraZone: Bounds_Min / Bounds_Max reference is missing.", this);
+            Debug.LogWarning("CameraZone: CameraBounds reference is missing.", this);
             return;
         }
 
-        cameraController.SetActiveBoundsOverride(BuildWorldBounds());
+        cameraController.SetActiveBoundsOverride(zoneBounds.WorldBounds);
 
         if (overrideOrthographicSize)
         {
@@ -254,21 +231,6 @@ public sealed class CameraZone : MonoBehaviour
         cameraController.ClearActiveOrthographicSizeSmoothTimeOverride();
     }
 
-    private Bounds BuildWorldBounds()
-    {
-        if (boundsMin == null || boundsMax == null)
-        {
-            return new Bounds(transform.position, Vector3.zero);
-        }
-
-        Vector3 min = Vector3.Min(boundsMin.position, boundsMax.position);
-        Vector3 max = Vector3.Max(boundsMin.position, boundsMax.position);
-
-        Vector3 center = (min + max) * 0.5f;
-        Vector3 size = max - min;
-
-        return new Bounds(center, size);
-    }
 
 #if UNITY_EDITOR
     private void OnDrawGizmos()
@@ -289,24 +251,6 @@ public sealed class CameraZone : MonoBehaviour
             Gizmos.DrawWireCube(zoneVolume.center, zoneVolume.size);
         }
 
-        // Bounds 描画
-        if (boundsMin != null && boundsMax != null)
-        {
-            Bounds bounds = BuildWorldBounds();
-
-            Gizmos.matrix = Matrix4x4.identity;
-            Gizmos.color = new Color(0f, 1f, 1f, 0.10f);
-            Gizmos.DrawCube(bounds.center, bounds.size);
-
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawWireCube(bounds.center, bounds.size);
-
-            Gizmos.color = Color.blue;
-            Gizmos.DrawSphere(boundsMin.position, 0.12f);
-
-            Gizmos.color = Color.red;
-            Gizmos.DrawSphere(boundsMax.position, 0.12f);
-        }
     }
 #endif
 
