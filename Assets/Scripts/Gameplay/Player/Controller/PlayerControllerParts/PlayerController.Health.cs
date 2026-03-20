@@ -5,31 +5,39 @@
 public sealed partial class PlayerController : IDamageable
 {
     [Header("Health")]
+    [Header("最大体力")]
     [SerializeField] private int maxHealth = 3;                  // 最大体力
+    [Header("無敵モード")]
     [SerializeField] private bool invincible = false;             // 無敵モード（デバッグ用）
 
     [Header("Invincibility")]
+    [Header("無敵時間")]
     [SerializeField] private float invincibilityDuration = 1.0f; // ダメージ後の無敵時間（秒）
     [Header("Knockback")]
+    [Header("ノックバック耐性")]
     [SerializeField] private float knockbackResistance = 1.0f;   // ノックバック耐性（1.0=通常、0.5=半減）
+    [Header("ノックバック継続時間")]
     [SerializeField] private float knockbackDuration = 0.25f;    // ノックバック継続時間（秒）
+    [Header("時間経過で減衰")]
     [SerializeField] private bool decayKnockbackOverTime = true; // 時間経過でノックバックを弱めるか
     [Header("Health Debug")]
-    [SerializeField] private bool showHealthDebugLog = false;  // デバッグログ表示
+    [Header("デバッグログ表示")]
+    [SerializeField] private bool showHealthDebugLog = false;    // デバッグログ表示
 
     // 体力・ダメージ関連の状態
     private int currentHealth;                                   // 現在の体力
     private float invincibilityTimer = 0.0f;                     // 無敵時間の残り時間
+
     // ノックバック関連
     private float knockbackTimer = 0.0f;                         // ノックバック残り時間
-    private Vector3 knockbackInitialVelocity = Vector3.zero;    // ノックバック開始時の速度
+    private Vector3 knockbackInitialVelocity = Vector3.zero;     // ノックバック開始時の速度
     private Vector3 knockbackVelocity = Vector3.zero;            // 現在のノックバック速度
     private bool isKnockback = false;                            // ノックバック中かどうか
 
     // プロパティ：外部からアクセス可能な読み取り専用情報
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
-    public bool IsInvincible => invincible || invincibilityTimer > 0.0f || isGrabbed;
+    public bool IsInvincible => invincible || invincibilityTimer > 0.0f || IsGrabbed;
     public bool IsKnockback => isKnockback;
 
     // 体力システムの初期化（メインのAwakeから呼ぶ）
@@ -42,6 +50,8 @@ public sealed partial class PlayerController : IDamageable
         knockbackInitialVelocity = Vector3.zero;
         knockbackVelocity = Vector3.zero;
         isKnockback = false;
+
+        InitializeReactionState();
     }
 
     // 体力システムの更新（メインのUpdateから呼ぶ）
@@ -72,6 +82,8 @@ public sealed partial class PlayerController : IDamageable
                 knockbackVelocity = knockbackInitialVelocity * normalized;
             }
         }
+
+        UpdateReactionState(deltaTime);
     }
 
     // ========================================
@@ -146,13 +158,6 @@ public sealed partial class PlayerController : IDamageable
 
         // 疑似3D横スクなのでZは固定
         direction.z = 0.0f;
-
-        //// 真上真下すぎる場合の最低限の横成分補正
-        //if (Mathf.Abs(direction.x) < 0.01f)
-        //{
-        //    direction.x = isFacingRight ? -1.0f : 1.0f;
-        //}
-
         direction = direction.normalized;
 
         isKnockback = true;
@@ -207,6 +212,11 @@ public sealed partial class PlayerController : IDamageable
     // ダメージを受けた時の演出処理
     private void OnDamaged(int damage, Vector3 hit_direction, float knockback_force)
     {
+        if (reactionState == PlayerReactionState.Normal)
+        {
+            ChangeReactionState(PlayerReactionState.Damaged);
+        }
+
         // TODO: ダメージエフェクト、サウンド、アニメーションなどを再生
     }
 
@@ -215,8 +225,10 @@ public sealed partial class PlayerController : IDamageable
     {
         LogHealth("Player died!");
 
+        ChangeReactionState(PlayerReactionState.Dead);
+
         // 掴まれ状態を解除する。
-        if (isGrabbed)
+        if (IsGrabbed)
         {
             ForceReleaseGrab();
         }
