@@ -85,8 +85,8 @@ public sealed partial class PlayerController : MonoBehaviour
         playerInputReader = new PlayerInputReader(rawInputSource, inputBindings);
 
         // Health と Grab システムを初期化する。
+        // Health 側で ReactionState 初期化も行う想定。
         InitializeHealth();
-        InitializeGrab();
 
         // 振動関連の比較用状態を初期化する。
         InitializeVibrationState();
@@ -120,9 +120,18 @@ public sealed partial class PlayerController : MonoBehaviour
         UpdateFacingFromMoveInput();
 
         // Health と Grab システムを更新する。
+        // Health 側で ReactionState 更新も行う想定。
         float deltaTime = Time.deltaTime;
         UpdateHealth(deltaTime);
-        UpdateGrab(deltaTime);
+
+        // 掴まれ、叩きつけ、死亡などの行動不能状態では
+        // 入力を保持せず、その場で打ち切る。
+        if (IsActionLocked)
+        {
+            jumpRequested = false;
+            stepRequested = false;
+            return;
+        }
     }
 
     private void FixedUpdate()
@@ -138,11 +147,15 @@ public sealed partial class PlayerController : MonoBehaviour
         float deltaTime = Time.fixedDeltaTime;
         float previousVelocityY = rb != null ? rb.linearVelocity.y : 0f;
 
-        // 掴まれている場合は移動処理をスキップする。
+        // 掴まれ、叩きつけ、死亡などの行動不能状態では通常移動を止める。
         // 横移動を止め、縦速度だけは物理結果を維持する。
-        if (isGrabbed)
+        if (IsActionLocked)
         {
-            rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
+            if (rb != null)
+            {
+                rb.linearVelocity = new Vector3(0.0f, rb.linearVelocity.y, 0.0f);
+            }
+
             FinalizeVisualState(previousVelocityY);
             return;
         }
@@ -194,6 +207,7 @@ public sealed partial class PlayerController : MonoBehaviour
             FinalizeVisualState(previousVelocityY);
             return;
         }
+
         // 通常移動フロー。
         // 横移動、ジャンプ、可変ジャンプ、急降下、壁滑り、追加重力を順に適用する。
         ApplyHorizontalMovement(deltaTime);
