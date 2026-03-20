@@ -19,7 +19,8 @@ public sealed class PlayerCameraController : MonoBehaviour
     // カメラが追いかける対象位置。
     // プレイヤー本体ではなく、専用アンカーを置くと視点調整しやすい。
     [SerializeField] private Transform targetAnchor;
-
+    [Tooltip("一時的に通常追従を上書きする追従対象です。SetTemporaryTarget からのみ設定されます。")]
+    [SerializeField] private Transform temporaryTargetAnchor;
     [Header("ワールド全体のfallback境界")]
     [Tooltip("常に使える基本のカメラ移動境界です。エリア別の一時境界が未設定のときはこの境界を使ってカメラ位置を制限します。")]
     [FormerlySerializedAs("cameraBounds")]
@@ -163,6 +164,8 @@ public sealed class PlayerCameraController : MonoBehaviour
     private float velocityX;
     private float velocityY;
 
+    // 一時追従ターゲットの有効期限( Time.time 基準 )。
+    private float temporaryTargetExpireTime = -1f;
     // Clamp 前の「行きたい位置」。
     private Vector3 desiredPosition;
     // 境界適用後の「実際に目指す位置」。
@@ -186,7 +189,9 @@ public sealed class PlayerCameraController : MonoBehaviour
     public bool HasActiveOrthographicSizeSmoothTimeOverride => hasActiveOrthographicSizeSmoothTimeOverride;
     public float ActiveOrthographicSizeSmoothTimeOverride => activeOrthographicSizeSmoothTimeOverride;
     public float EffectiveSizeSmoothTime => EffectiveOrthographicSizeSmoothTime;
-    private void Reset()
+    public bool HasTemporaryTarget => temporaryTargetAnchor != null && temporaryTargetExpireTime > Time.time;
+    public Transform TemporaryTargetAnchor => temporaryTargetAnchor;
+    public float TemporaryTargetExpireTime => temporaryTargetExpireTime; private void Reset()
     {
         // コンポーネント追加時や Reset 時に、同一 GameObject の Camera を自動設定する。
         targetCamera = GetComponent<Camera>();
@@ -221,8 +226,14 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         ApplyOrthographicSize();
 
+        Transform effectiveTarget = GetEffectiveTargetAnchor();
+        if (effectiveTarget == null)
+        {
+            return;
+        }
+
         // 追従対象位置 + オフセット で理想位置を作る。
-        desiredPosition = targetAnchor.position + cameraOffset;
+        desiredPosition = effectiveTarget.position + cameraOffset;
 
         // 理想位置をカメラ境界内に収めた最終候補位置を作る。
         clampedPosition = GetClampedPosition(desiredPosition);
@@ -247,7 +258,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         // 必要なら、追従対象が画面内のどこに居るかを Viewport 座標で確認する。
         if (logViewportPosition)
         {
-            Vector3 viewport = targetCamera.WorldToViewportPoint(targetAnchor.position);
+            Vector3 viewport = targetCamera.WorldToViewportPoint(effectiveTarget.position);
             Debug.Log(
                 $"CameraTarget Viewport : x={viewport.x:F2}, y={viewport.y:F2}",
                 this);
@@ -355,6 +366,23 @@ public sealed class PlayerCameraController : MonoBehaviour
     {
         activeBoundsOverride = newBounds;
         hasActiveBoundsOverride = true;
+    }
+
+    public void SetTemporaryTarget(Transform target, float duration)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        temporaryTargetAnchor = target;
+        temporaryTargetExpireTime = Time.time + Mathf.Max(0.01f, duration);
+    }
+
+    public void ClearTemporaryTarget()
+    {
+        temporaryTargetAnchor = null;
+        temporaryTargetExpireTime = -1f;
     }
 
     public void ClearActiveBoundsOverride()
@@ -545,11 +573,26 @@ public sealed class PlayerCameraController : MonoBehaviour
     {
         return EffectiveWorldBounds;
     }
+
+    public Transform GetEffectiveTargetAnchor()
+    {
+        if (temporaryTargetAnchor != null && temporaryTargetExpireTime > Time.time)
+        {
+            return temporaryTargetAnchor;
+        }
+
+        if (temporaryTargetAnchor != null && temporaryTargetExpireTime <= Time.time)
+        {
+            ClearTemporaryTarget();
+        }
+
+        return targetAnchor;
+    }
+
     private void ApplyOrthographicSize()
     {
         float targetSize = Mathf.Max(0.01f, EffectiveOrthographicSize);
         float smoothTime = Mathf.Max(0f, EffectiveOrthographicSizeSmoothTime);
-
         if (smoothTime <= 0f)
         {
             targetCamera.orthographicSize = targetSize;
@@ -590,6 +633,12 @@ public sealed class PlayerCameraController : MonoBehaviour
         {
             Gizmos.color = Color.magenta;
             Gizmos.DrawSphere(targetAnchor.position, 0.12f);
+        }
+
+        if (temporaryTargetAnchor != null)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawSphere(temporaryTargetAnchor.position, 0.12f);
         }
     }
 #endif
