@@ -235,7 +235,7 @@ MonoBehaviour:
   damagedStateDuration: 0.15
   grabbedStateDuration: 2.15
   smashedStateDuration: 0.35
-  grabIsInstantDeath: 0
+  grabIsInstantDeath: 1
   smashIsInstantDeath: 0
   showReactionDebugLog: 0
   killAfterGrabbedDuration: 1
@@ -1140,14 +1140,34 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6143397857318213917, guid: f728be28ad9f65a4dab3cd3c01bc672b, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6677555112013273991, guid: f728be28ad9f65a4dab3cd3c01bc672b, type: 3}
       propertyPath: attackTarget
       value: 
       objectReference: {fileID: 763895661}
+    - target: {fileID: 6677555112013273991, guid: f728be28ad9f65a4dab3cd3c01bc672b, type: 3}
+      propertyPath: attackDecisionTuning.attackCooldown
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 6677555112013273991, guid: f728be28ad9f65a4dab3cd3c01bc672b, type: 3}
+      propertyPath: attackDecisionTuning.decisionInterval
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8035826984865389309, guid: f728be28ad9f65a4dab3cd3c01bc672b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8035826984865389309, guid: f728be28ad9f65a4dab3cd3c01bc672b, type: 3}
       propertyPath: attackTarget
       value: 
       objectReference: {fileID: 763895661}
+    - target: {fileID: 8139914090721616149, guid: f728be28ad9f65a4dab3cd3c01bc672b, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9047818534163958373, guid: f728be28ad9f65a4dab3cd3c01bc672b, type: 3}
       propertyPath: m_Name
       value: EnemyRoot
