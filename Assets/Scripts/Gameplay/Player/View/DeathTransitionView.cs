@@ -35,18 +35,6 @@ public sealed class DeathTransitionView : MonoBehaviour
     [Tooltip("CanvasGroup が無い場合に alpha 制御へ使う黒 Image です。CanvasGroup 未使用構成の fallback として使います。未設定時は同一 GameObject から取得を試みますが、CanvasGroup がある場合はこちらは使われません。")]
     [SerializeField] private Image overlayImage;
 
-    [Header("フェード: 黒へ入る時間(秒)")]
-    [Tooltip("透明から黒へ入る時間です。PlayTransitionIn 実行中の補間速度に使います。大きくするとゆっくり暗転し、小さくすると素早く暗転します。0 の場合は即時で黒になります。")]
-    [SerializeField, Min(0f)] private float fadeInDuration = 0.2f;
-
-    [Header("フェード: 黒から抜ける時間(秒)")]
-    [Tooltip("黒から透明へ戻る時間です。PlayTransitionOut 実行中の補間速度に使います。大きくするとゆっくり復帰し、小さくすると素早く復帰します。0 の場合は即時で透明になります。")]
-    [SerializeField, Min(0f)] private float fadeOutDuration = 0.25f;
-
-    [Header("判定しきい値: 復帰隠蔽用の黒さ")]
-    [Tooltip("現在の黒さがこの値以上なら『復帰処理を画面上で隠せる』とみなす判定しきい値です。外部が GetBlackAmount と組み合わせて使う想定で、値を下げると早い段階で復帰処理に入れ、値を上げるとより十分に暗くなるまで待つようになります。")]
-    [SerializeField, Range(0f, 1f)] private float blackRespawnThreshold = 0.85f;
-
     // =====================================================================
     // 実行時状態
     // =====================================================================
@@ -68,9 +56,9 @@ public sealed class DeathTransitionView : MonoBehaviour
     // 公開参照口
     // =====================================================================
 
-    // 復帰処理を隠せる黒さのしきい値。
-    // 判定そのものは外部で行い、この View は値の保持だけを担当する。
-    public float BlackRespawnThreshold => blackRespawnThreshold;
+    // 現在実行中のフェード継続時間。
+    // PlayTransitionIn/Out で外部から与えられた duration を保持する。
+    private float activeDuration = 0.2f;
 
     // =====================================================================
     // 初期化
@@ -95,11 +83,11 @@ public sealed class DeathTransitionView : MonoBehaviour
         switch (state)
         {
             case TransitionState.FadingIn:
-                UpdateFadeToward(1f, fadeInDuration);
+                UpdateFadeToward(1f, activeDuration);
                 break;
 
             case TransitionState.FadingOut:
-                UpdateFadeToward(0f, fadeOutDuration);
+                UpdateFadeToward(0f, activeDuration);
                 break;
         }
     }
@@ -110,17 +98,19 @@ public sealed class DeathTransitionView : MonoBehaviour
 
     // 黒フェードインを開始する。
     // 参照未設定でも自己補完を試みてから開始する。
-    public void PlayTransitionIn()
+    public void PlayTransitionIn(float duration)
     {
         ResolveReferencesIfNeeded();
+        activeDuration = Mathf.Max(0f, duration);
         state = TransitionState.FadingIn;
     }
 
     // 黒フェードアウトを開始する。
     // 参照未設定でも自己補完を試みてから開始する。
-    public void PlayTransitionOut()
+    public void PlayTransitionOut(float duration)
     {
         ResolveReferencesIfNeeded();
+        activeDuration = Mathf.Max(0f, duration);
         state = TransitionState.FadingOut;
     }
 

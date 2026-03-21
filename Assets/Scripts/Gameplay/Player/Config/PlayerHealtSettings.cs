@@ -16,26 +16,6 @@ public sealed class PlayerHealthSettings
     [Tooltip("常時ダメージを無効化するデバッグ用フラグです。TakeDamage と Kill の受理判定に使います。有効にすると被ダメージ確認はしにくくなりますが、ステージ検証や挙動確認を安全に行えます。")]
     public bool invincible = false;
 
-    [Header("死亡後の復帰待機時間(秒)")]
-    [Tooltip("死亡シーケンス開始からチェックポイント復帰まで待機する秒数です。")]
-    [Min(0f)] public float respawnDelay = 1.0f;
-
-    [Header("敵攻撃死: 入口演出時間(秒)")]
-    [Tooltip("DeathCause.Damage 時に、黒トランジションへ入る前の入口演出を待つ秒数です。0 の場合は待機なしです。")]
-    [Min(0f)] public float damageDeathIntroDuration = 0.12f;
-
-    [Header("敵攻撃死: 倒れ角度(度)")]
-    [Tooltip("DeathCause.Damage 時に viewRoot を Z 回転でどこまで倒すかの目標角度です。")]
-    [Range(0f, 120f)] public float damageDeathTiltAngle = 80f;
-
-    [Header("敵攻撃死: ズームサイズオフセット")]
-    [Tooltip("DeathCause.Damage 時に現在の orthographicSize へ加算する値です。負値で少しズームインします。")]
-    public float damageDeathZoomSizeOffset = -0.35f;
-
-    [Header("敵攻撃死: ズーム補間時間(秒)")]
-    [Tooltip("DeathCause.Damage 時にズーム上書きへ切り替える際の補間時間です。0 で即時反映します。")]
-    [Min(0f)] public float damageDeathZoomSmoothTime = 0.08f;
-
     [Header("デバッグ: 即死要求")]
     [Tooltip("true にすると 1 回だけ死亡要求を出し、実行後に自動で false に戻します。")]
     public bool debugRequestDeath = false;

@@ -15,7 +15,7 @@ using UnityEngine;
 // 依存先:
 // - CheckpointSystem: 復帰地点の解決
 // - StageResetSystem: ステージ上オブジェクトの復帰
-// - DeathTransitionView: 黒フェードの表示制御
+// - PlayerDeathView: 倒れ演出と黒フェード窓口
 // - PlayerCameraController: 復帰時のカメラ状態リセット
 // - rb / reactionState / LogHealth(): 他 partial 側の状態と処理
 //
@@ -49,10 +49,6 @@ public sealed partial class PlayerController
     [Tooltip("死亡復帰時にステージ上の敵やギミックを初期状態へ戻すシステムです。CoRespawnSequence で復帰前のステージ巻き戻しに使います。未設定時は実行時に探索を試み、見つからない場合はプレイヤーだけが復帰します。")]
     [SerializeField] private StageResetSystem stageResetSystem;
 
-    [Header("参照: DeathTransitionView")]
-    [Tooltip("死亡時の黒トランジション表示を担当する View です。CoRespawnSequence で黒フェードの開始と終了に使います。未設定時は実行時に探索を試み、見つからない場合は復帰処理が画面に見える可能性があります。")]
-    [SerializeField] private DeathTransitionView deathTransitionView;
-
     [Header("参照: PlayerCameraController")]
     [Tooltip("復帰時に標準カメラ状態へ戻すためのカメラ制御コンポーネントです。ResetCameraToWorldDefaults で temporary target や各種上書きを解除するために使います。未設定時は実行時に探索を試みます。")]
     [SerializeField] private PlayerCameraController playerCameraController;
@@ -76,11 +72,11 @@ public sealed partial class PlayerController
     private Coroutine respawnSequenceCoroutine;
 
 
-    private float ConfiguredDamageDeathIntroDuration => healthSettings != null ? Mathf.Max(0f, healthSettings.damageDeathIntroDuration) : 0f;
-    private float ConfiguredDamageDeathTiltAngle => healthSettings != null ? Mathf.Clamp(healthSettings.damageDeathTiltAngle, 0f, 120f) : 80f;
-    private float ConfiguredDamageDeathZoomSizeOffset => healthSettings != null ? healthSettings.damageDeathZoomSizeOffset : -0.35f;
-    private float ConfiguredDamageDeathZoomSmoothTime => healthSettings != null ? Mathf.Max(0f, healthSettings.damageDeathZoomSmoothTime) : 0.08f;
-    // =====================================================================
+    private float ConfiguredDamageDeathIntroDuration => playerDeathView != null ? playerDeathView.DamageDeathIntroDuration : 0f;
+    private float ConfiguredDamageDeathTiltAngle => playerDeathView != null ? playerDeathView.DamageDeathTiltAngle : 80f;
+    private float ConfiguredDamageDeathZoomSizeOffset => playerDeathView != null ? playerDeathView.DamageDeathZoomSizeOffset : -0.35f;
+    private float ConfiguredDamageDeathZoomSmoothTime => playerDeathView != null ? playerDeathView.DamageDeathZoomSmoothTime : 0.08f;
+    private float ConfiguredBlackRespawnThreshold => playerDeathView != null ? playerDeathView.BlackRespawnThreshold : 0.85f;    // =====================================================================
     // 死亡開始入口
     // =====================================================================
 
@@ -150,29 +146,24 @@ public sealed partial class PlayerController
             yield return WaitForDamageDeathIntro();
         }
 
-        if (deathTransitionView == null)
-        {
-            deathTransitionView = FindFirstObjectByType<DeathTransitionView>();
-        }
-
-        if (deathTransitionView != null)
+        ResolvePlayerDeathViewIfNeeded();
+        if (playerDeathView != null)
         {
             LogRespawn("Death transition in started");
-            deathTransitionView.PlayTransitionIn();
+            playerDeathView.PlayTransitionIn();
 
             // 十分に黒くなるまで待ってから復帰処理へ進める。
             // これにより位置移動やステージ初期化を画面上で見せにくくする。
             yield return new WaitUntil(() =>
-                deathTransitionView == null ||
-                deathTransitionView.GetBlackAmount() >= deathTransitionView.BlackRespawnThreshold);
+                playerDeathView == null ||
+                playerDeathView.GetBlackAmount() >= ConfiguredBlackRespawnThreshold);
 
             LogRespawn("Death transition reached respawn threshold");
         }
         else
         {
-            LogRespawnWarning("DeathTransitionView missing (respawn will be visible)");
+            LogRespawnWarning("PlayerDeathView missing (transition/intro unavailable)");
         }
-
         if (stageResetSystem == null)
         {
             stageResetSystem = FindFirstObjectByType<StageResetSystem>();
@@ -224,16 +215,16 @@ public sealed partial class PlayerController
             ResetDamageDeathPresentation();
         }
 
-        if (deathTransitionView != null)
+        if (playerDeathView != null)
         {
             LogRespawn("Death transition out started");
-            deathTransitionView.PlayTransitionOut();
+            playerDeathView.PlayTransitionOut();
 
             yield return new WaitUntil(() =>
-                deathTransitionView == null ||
-                deathTransitionView.GetBlackAmount() <= 0.01f);
+                playerDeathView == null ||
+                playerDeathView.GetBlackAmount() <= 0.01f);
 
-            deathTransitionView.ResetTransitionImmediate();
+            playerDeathView.ResetTransitionImmediate();
             LogRespawn("Death transition reset");
         }
 
@@ -287,10 +278,7 @@ public sealed partial class PlayerController
 
     private void PlayDamageDeathIntro()
     {
-        if (playerDeathView == null)
-        {
-            playerDeathView = GetComponentInChildren<PlayerDeathView>();
-        }
+        ResolvePlayerDeathViewIfNeeded();
 
         if (playerDeathView == null)
         {
@@ -327,10 +315,7 @@ public sealed partial class PlayerController
 
     private void ResetDamageDeathPresentation()
     {
-        if (playerDeathView == null)
-        {
-            playerDeathView = GetComponentInChildren<PlayerDeathView>();
-        }
+        ResolvePlayerDeathViewIfNeeded();
 
         if (playerDeathView == null)
         {
@@ -338,6 +323,14 @@ public sealed partial class PlayerController
         }
 
         playerDeathView.ResetDeathPresentation();
+    }
+
+    private void ResolvePlayerDeathViewIfNeeded()
+    {
+        if (playerDeathView == null)
+        {
+            playerDeathView = GetComponentInChildren<PlayerDeathView>();
+        }
     }
     // =====================================================================
     // 復帰位置反映
