@@ -21,7 +21,8 @@ public sealed partial class PlayerController
     [Header("Death / Respawn")]
     [Tooltip("同一シーン内の復帰地点を解決するシステム。未設定時は実行時に探索を試みます。")]
     [SerializeField] private CheckpointSystem checkpointSystem;
-
+    [Tooltip("死亡復帰時にステージ上の敵/ギミックを初期状態へ戻すシステム。未設定時は実行時に探索を試みます。")]
+    [SerializeField] private StageResetSystem stageResetSystem;
     // 死亡シーケンス開始済みかどうか。
     // true の間は追加の死亡開始要求を無視し、二重発火を防ぐ。
     private bool isDeathSequencePlaying = false;
@@ -84,6 +85,20 @@ public sealed partial class PlayerController
     {
         LogRespawn("Respawn sequence started");
         yield return new WaitForSeconds(Mathf.Max(0.0f, healthSettings != null ? healthSettings.respawnDelay : 0.0f));
+
+        if (stageResetSystem == null)
+        {
+            stageResetSystem = FindFirstObjectByType<StageResetSystem>();
+        }
+
+        if (stageResetSystem != null)
+        {
+            stageResetSystem.ResetAllToRespawnState();
+        }
+        else
+        {
+            LogRespawnWarning("StageResetSystem missing (stage objects were not reset)");
+        }
 
         if (checkpointSystem == null)
         {
