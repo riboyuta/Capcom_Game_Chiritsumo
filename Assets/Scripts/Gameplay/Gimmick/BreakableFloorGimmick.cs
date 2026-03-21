@@ -3,7 +3,7 @@ using UnityEngine;
 
 // プレイヤーが乗ると振動し、一定時間後に壊れ（消滅し）、その後リスポーンする床ギミック
 [RequireComponent(typeof(Collider))]
-public class BreakableFloorGimmick : MonoBehaviour
+public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
 {
     private enum FloorState
     {
@@ -38,7 +38,7 @@ public class BreakableFloorGimmick : MonoBehaviour
 
     private Vector3 initialVisualLocalPos;
     private Coroutine sequenceCoroutine;
-
+    private bool hasCapturedInitialState;
     private void Awake()
     {
         floorCollider = GetComponent<Collider>();
@@ -57,12 +57,53 @@ public class BreakableFloorGimmick : MonoBehaviour
             }
         }
 
-        initialVisualLocalPos = visualTransform.localPosition;
 
         // 見た目のRendererを一括取得（オンオフ切り替え用）
         visualRenderers = visualTransform.GetComponentsInChildren<Renderer>();
     }
+    public void CaptureInitialState()
+    {
+        if (hasCapturedInitialState)
+        {
+            return;
+        }
 
+        if (visualTransform != null)
+        {
+            initialVisualLocalPos = visualTransform.localPosition;
+        }
+
+        hasCapturedInitialState = true;
+    }
+
+    public void ResetToRespawnState()
+    {
+        if (sequenceCoroutine != null)
+        {
+            StopCoroutine(sequenceCoroutine);
+            sequenceCoroutine = null;
+        }
+
+        currentState = FloorState.Idle;
+
+        if (floorCollider != null)
+        {
+            floorCollider.enabled = true;
+        }
+
+        if (visualTransform != null)
+        {
+            visualTransform.localPosition = initialVisualLocalPos;
+        }
+
+        for (int i = 0; i < visualRenderers.Length; i++)
+        {
+            if (visualRenderers[i] != null)
+            {
+                visualRenderers[i].enabled = true;
+            }
+        }
+    }
     private void OnCollisionEnter(Collision collision)
     {
         CheckAndTrigger(collision.collider);
@@ -116,6 +157,7 @@ public class BreakableFloorGimmick : MonoBehaviour
 
         // 4. 再出現
         RespawnFloor();
+        sequenceCoroutine = null;
     }
 
     private void BreakFloor()

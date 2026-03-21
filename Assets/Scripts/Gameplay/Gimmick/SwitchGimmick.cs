@@ -3,7 +3,7 @@ using UnityEngine;
 // プレイヤーやオブジェクトが乗る、または押し込むことで起動するスイッチギミック。
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider))]
-public class SwitchGimmick : MonoBehaviour
+public class SwitchGimmick : MonoBehaviour, IRespawnResettable
 {
     public enum SwitchType
     {
@@ -38,13 +38,31 @@ public class SwitchGimmick : MonoBehaviour
     private Vector3 initialLocalPosition;
     private float currentPressDistance = 0f;
     private bool isPushedThisFrame = false;
-
+    private bool hasCapturedInitialState;
     // 外部からスイッチがオンになっているか確認するためのプロパティ
     public bool IsPressed { get; private set; }
 
     private void Awake()
     {
         initialLocalPosition = transform.localPosition;
+    }
+    public void CaptureInitialState()
+    {
+        if (hasCapturedInitialState)
+        {
+            return;
+        }
+
+        initialLocalPosition = transform.localPosition;
+        hasCapturedInitialState = true;
+    }
+
+    public void ResetToRespawnState()
+    {
+        IsPressed = false;
+        currentPressDistance = 0f;
+        isPushedThisFrame = false;
+        transform.localPosition = initialLocalPosition;
     }
 
     private void OnTriggerStay(Collider other)
