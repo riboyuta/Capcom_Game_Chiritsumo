@@ -12,13 +12,13 @@ public sealed class CameraZone : MonoBehaviour
     [Tooltip("プレイヤーがこの Zone に属しているかを判定する Trigger 用 BoxCollider です。通常は子オブジェクト ZoneVolume を指定します。")]
     [SerializeField] private BoxCollider zoneVolume;
 
-    [Header("カメラ境界: 最小点")]
-    [Tooltip("この Zone で使うカメラ境界の最小点です。X/Y の小さい側として扱います。通常は子オブジェクト Bounds_Min を指定します。")]
-    [SerializeField] private Transform boundsMin;
+    [Header("カメラ境界")]
+    [Tooltip("この Zone で使う CameraBounds です。通常は子オブジェクト CameraBounds を指定します。")]
+    [SerializeField] private CameraBounds zoneBounds;
 
-    [Header("カメラ境界: 最大点")]
-    [Tooltip("この Zone で使うカメラ境界の最大点です。X/Y の大きい側として扱います。通常は子オブジェクト Bounds_Max を指定します。")]
-    [SerializeField] private Transform boundsMax;
+    [Header("Zone 優先度")]
+    [Tooltip("Zone が重なったときの優先度です。値が大きい Zone ほど優先されます。同値の場合は後から入った Zone が優先されます。")]
+    [SerializeField] private int priority = 0;
 
     [Header("Orthographic Size 上書き")]
     [Tooltip("有効にすると、この Zone に入った間だけ PlayerCameraController の orthographicSize を上書きします。")]
@@ -45,19 +45,41 @@ public sealed class CameraZone : MonoBehaviour
     [Tooltip("overrideOrthographicSizeSmoothTime が有効なときに使用する補間時間です。0 で即時切り替えになります。")]
     [SerializeField] private float orthographicSizeSmoothTime = 0.10f;
 
+    [Header("Activation Rules")]
+    [Tooltip("有効にすると、この Zone の効果は activeDuration 秒経過で自動解除されます。")]
+    [SerializeField] private bool enableTimeLimit = false;
+
+    [Tooltip("enableTimeLimit が有効なときに使う Zone 有効時間 (秒) です。")]
+    [SerializeField, Min(0.01f)] private float activeDuration = 1f;
+
+    [Tooltip("有効にすると、この Zone は最初に発動した 1 回のみ有効になります。")]
+    [SerializeField] private bool activateOnlyOnce = false;
+
+
     [Header("プレイヤー判定タグ")]
     [Tooltip("この Zone の侵入対象として扱うタグです。通常は Player を指定します。")]
     [SerializeField] private string playerTag = "Player";
 
     [Header("デバッグ表示")]
-    [Tooltip("有効にすると、ZoneVolume と Zone 境界を Scene 上に描画します。")]
+    [Tooltip("有効にすると、ZoneVolume を Scene 上に描画します。")]
     [SerializeField] private bool drawDebugGizmos = true;
 
     // プレイヤーが複数 Collider を持つ場合でも安定して所属判定するための集合。
     private readonly HashSet<int> insidePlayerColliderIds = new HashSet<int>();
+    private bool activationConsumed = false;
+    private bool isTimedActivationRunning = false;
+    private float activationExpireTime = 0f;
 
-    public Bounds WorldBounds => BuildWorldBounds();
-
+    public CameraBounds ZoneBounds => zoneBounds;
+    public bool HasOrthographicSizeOverride => overrideOrthographicSize;
+    public float OrthographicSizeOverride => orthographicSize;
+    public bool HasFollowSmoothingOverride => overrideFollowSmoothing;
+    public float SmoothTimeXOverride => smoothTimeX;
+    public float SmoothTimeYOverride => smoothTimeY;
+    public bool HasOrthographicSizeSmoothTimeOverride => overrideOrthographicSizeSmoothTime;
+    public float OrthographicSizeSmoothTimeOverride => orthographicSizeSmoothTime;
+    public int Priority => priority;
+    public Bounds WorldBounds => zoneBounds != null ? zoneBounds.WorldBounds : new Bounds(transform.position, Vector3.zero);
     private void Reset()
     {
         AutoResolveReferences();
@@ -68,6 +90,28 @@ public sealed class CameraZone : MonoBehaviour
     {
         AutoResolveReferences();
         EnsureZoneVolumeIsTrigger();
+    }
+    private void Update()
+    {
+        if (!isTimedActivationRunning)
+        {
+            return;
+        }
+
+        if (Time.time < activationExpireTime)
+        {
+            return;
+        }
+
+        isTimedActivationRunning = false;
+
+        if (cameraController == null)
+        {
+            Debug.LogWarning("CameraZone: PlayerCameraController reference is missing.", this);
+            return;
+        }
+
+        cameraController.ClearZone(this);
     }
 
     private void OnValidate()
@@ -94,31 +138,13 @@ public sealed class CameraZone : MonoBehaviour
             }
         }
 
-        // Bounds_Min / min 未設定なら子名から補完。
-        if (boundsMin == null)
+        // CameraBounds 未設定なら子名から補完。
+        if (zoneBounds == null)
         {
-            Transform min = transform.Find("Bounds_Min");
-            if (min == null)
+            Transform bounds = transform.Find("CameraBounds");
+            if (bounds != null)
             {
-                min = transform.Find("min");
-            }
-            if (min != null)
-            {
-                boundsMin = min;
-            }
-        }
-
-        // Bounds_Max / max 未設定なら子名から補完。
-        if (boundsMax == null)
-        {
-            Transform max = transform.Find("Bounds_Max");
-            if (max == null)
-            {
-                max = transform.Find("max");
-            }
-            if (max != null)
-            {
-                boundsMax = max;
+                zoneBounds = bounds.GetComponent<CameraBounds>();
             }
         }
     }
@@ -203,40 +229,27 @@ public sealed class CameraZone : MonoBehaviour
             return;
         }
 
-        if (boundsMin == null || boundsMax == null)
+        if (zoneBounds == null)
         {
-            Debug.LogWarning("CameraZone: Bounds_Min / Bounds_Max reference is missing.", this);
+            Debug.LogWarning("CameraZone: CameraBounds reference is missing.", this);
             return;
         }
 
-        cameraController.SetActiveBoundsOverride(BuildWorldBounds());
+        if (activateOnlyOnce && activationConsumed)
+        {
+            return;
+        }
+        cameraController.ApplyZone(this);
+        activationConsumed = true;
 
-        if (overrideOrthographicSize)
+        if (enableTimeLimit)
         {
-            cameraController.SetActiveOrthographicSizeOverride(orthographicSize);
-        }
-        else
-        {
-            cameraController.ClearActiveOrthographicSizeOverride();
-        }
-
-        if (overrideFollowSmoothing)
-        {
-            cameraController.SetActiveFollowSmoothingOverride(smoothTimeX, smoothTimeY);
-        }
-        else
-        {
-            cameraController.ClearActiveFollowSmoothingOverride();
+            activationExpireTime = Time.time + activeDuration;
+            isTimedActivationRunning = true;
+            return;
         }
 
-        if (overrideOrthographicSizeSmoothTime)
-        {
-            cameraController.SetActiveOrthographicSizeSmoothTimeOverride(orthographicSizeSmoothTime);
-        }
-        else
-        {
-            cameraController.ClearActiveOrthographicSizeSmoothTimeOverride();
-        }
+        isTimedActivationRunning = false;
     }
     
 
@@ -247,28 +260,10 @@ public sealed class CameraZone : MonoBehaviour
             Debug.LogWarning("CameraZone: PlayerCameraController reference is missing.", this);
             return;
         }
-
-        cameraController.ClearActiveBoundsOverride();
-        cameraController.ClearActiveOrthographicSizeOverride();
-        cameraController.ClearActiveFollowSmoothingOverride();
-        cameraController.ClearActiveOrthographicSizeSmoothTimeOverride();
+        isTimedActivationRunning = false;
+        cameraController.ClearZone(this);
     }
 
-    private Bounds BuildWorldBounds()
-    {
-        if (boundsMin == null || boundsMax == null)
-        {
-            return new Bounds(transform.position, Vector3.zero);
-        }
-
-        Vector3 min = Vector3.Min(boundsMin.position, boundsMax.position);
-        Vector3 max = Vector3.Max(boundsMin.position, boundsMax.position);
-
-        Vector3 center = (min + max) * 0.5f;
-        Vector3 size = max - min;
-
-        return new Bounds(center, size);
-    }
 
 #if UNITY_EDITOR
     private void OnDrawGizmos()
@@ -289,24 +284,6 @@ public sealed class CameraZone : MonoBehaviour
             Gizmos.DrawWireCube(zoneVolume.center, zoneVolume.size);
         }
 
-        // Bounds 描画
-        if (boundsMin != null && boundsMax != null)
-        {
-            Bounds bounds = BuildWorldBounds();
-
-            Gizmos.matrix = Matrix4x4.identity;
-            Gizmos.color = new Color(0f, 1f, 1f, 0.10f);
-            Gizmos.DrawCube(bounds.center, bounds.size);
-
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawWireCube(bounds.center, bounds.size);
-
-            Gizmos.color = Color.blue;
-            Gizmos.DrawSphere(boundsMin.position, 0.12f);
-
-            Gizmos.color = Color.red;
-            Gizmos.DrawSphere(boundsMax.position, 0.12f);
-        }
     }
 #endif
 

@@ -31,6 +31,10 @@ public sealed partial class PlayerController : MonoBehaviour
     // 速度・加速度・重力倍率・接地判定距離などを保持する。
     [SerializeField] private PlayerMovementSettings movementSettings = new PlayerMovementSettings();
 
+    [Header("体力: パラメータ設定")]
+    [Tooltip("体力、無敵時間、死亡後復帰待機、デバッグ死亡トリガーをまとめた設定です。")]
+    [SerializeField] private PlayerHealthSettings healthSettings = new PlayerHealthSettings();
+
     // 物理移動本体。
     // 速度変更、物理拘束、重力挙動などに使う。
     private Rigidbody rb;
