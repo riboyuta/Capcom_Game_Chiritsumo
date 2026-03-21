@@ -38,6 +38,13 @@ public sealed partial class PlayerController
     // 死亡シーケンス開始要求の統一入口。
     // 初回の要求だけを受理し、死因を保存したうえで Dead 状態への遷移を開始する。
     // すでに死亡開始済みなら何もせず戻り、二重死亡開始を防ぐ。
+    // 外部コンポーネント向けの奈落・環境即死入口。
+    // 内部の死亡統一入口へ死因 Hazard で委譲する。
+    public bool RequestHazardDeath()
+    {
+        return RequestDeathStart(DeathCause.Hazard);
+    }
+
     private bool RequestDeathStart(DeathCause cause)
     {
         if (isDeathSequencePlaying)
