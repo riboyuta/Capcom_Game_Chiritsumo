@@ -113,7 +113,8 @@ public sealed partial class PlayerController : IDamageable
         knockbackInitialVelocity = Vector3.zero;
         knockbackVelocity = Vector3.zero;
         isKnockback = false;
-
+        isDeathSequencePlaying = false;
+        lastDeathCause = DeathCause.Damage;
         InitializeReactionState();
     }
 
@@ -301,7 +302,6 @@ public sealed partial class PlayerController : IDamageable
     {
         LogHealth("Player died!");
 
-        ChangeReactionState(PlayerReactionState.Dead);
 
         // 掴まれ状態のまま死亡すると他状態と競合しやすいため、先に解除する。
         if (IsGrabbed)
@@ -314,10 +314,9 @@ public sealed partial class PlayerController : IDamageable
         {
             EndKnockback();
         }
-
-        // TODO: 死亡処理
+        RequestDeathStart(DeathCause.Damage);
     }
-
+    
     // =====================================================================
     // 公開ユーティリティ
     // =====================================================================
