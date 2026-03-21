@@ -45,6 +45,17 @@ public sealed class CameraZone : MonoBehaviour
     [Tooltip("overrideOrthographicSizeSmoothTime が有効なときに使用する補間時間です。0 で即時切り替えになります。")]
     [SerializeField] private float orthographicSizeSmoothTime = 0.10f;
 
+    [Header("Activation Rules")]
+    [Tooltip("有効にすると、この Zone の効果は activeDuration 秒経過で自動解除されます。")]
+    [SerializeField] private bool enableTimeLimit = false;
+
+    [Tooltip("enableTimeLimit が有効なときに使う Zone 有効時間 (秒) です。")]
+    [SerializeField, Min(0.01f)] private float activeDuration = 1f;
+
+    [Tooltip("有効にすると、この Zone は最初に発動した 1 回のみ有効になります。")]
+    [SerializeField] private bool activateOnlyOnce = false;
+
+
     [Header("プレイヤー判定タグ")]
     [Tooltip("この Zone の侵入対象として扱うタグです。通常は Player を指定します。")]
     [SerializeField] private string playerTag = "Player";
@@ -55,6 +66,9 @@ public sealed class CameraZone : MonoBehaviour
 
     // プレイヤーが複数 Collider を持つ場合でも安定して所属判定するための集合。
     private readonly HashSet<int> insidePlayerColliderIds = new HashSet<int>();
+    private bool activationConsumed = false;
+    private bool isTimedActivationRunning = false;
+    private float activationExpireTime = 0f;
 
     public CameraBounds ZoneBounds => zoneBounds;
     public bool HasOrthographicSizeOverride => overrideOrthographicSize;
@@ -76,6 +90,28 @@ public sealed class CameraZone : MonoBehaviour
     {
         AutoResolveReferences();
         EnsureZoneVolumeIsTrigger();
+    }
+    private void Update()
+    {
+        if (!isTimedActivationRunning)
+        {
+            return;
+        }
+
+        if (Time.time < activationExpireTime)
+        {
+            return;
+        }
+
+        isTimedActivationRunning = false;
+
+        if (cameraController == null)
+        {
+            Debug.LogWarning("CameraZone: PlayerCameraController reference is missing.", this);
+            return;
+        }
+
+        cameraController.ClearZone(this);
     }
 
     private void OnValidate()
@@ -199,7 +235,21 @@ public sealed class CameraZone : MonoBehaviour
             return;
         }
 
+        if (activateOnlyOnce && activationConsumed)
+        {
+            return;
+        }
         cameraController.ApplyZone(this);
+        activationConsumed = true;
+
+        if (enableTimeLimit)
+        {
+            activationExpireTime = Time.time + activeDuration;
+            isTimedActivationRunning = true;
+            return;
+        }
+
+        isTimedActivationRunning = false;
     }
     
 
@@ -210,7 +260,7 @@ public sealed class CameraZone : MonoBehaviour
             Debug.LogWarning("CameraZone: PlayerCameraController reference is missing.", this);
             return;
         }
-
+        isTimedActivationRunning = false;
         cameraController.ClearZone(this);
     }
 
