@@ -12,6 +12,10 @@ public sealed class PlayerHealthSettings
     [Tooltip("ダメージを受けた後に被ダメージを無効化する時間です。")]
     [Min(0f)] public float invincibilityDuration = 1.0f;
 
+    [Header("体力: 無敵モード")]
+    [Tooltip("常時ダメージを無効化するデバッグ用フラグです。TakeDamage と Kill の受理判定に使います。有効にすると被ダメージ確認はしにくくなりますが、ステージ検証や挙動確認を安全に行えます。")]
+    public bool invincible = false;
+
     [Header("死亡後の復帰待機時間(秒)")]
     [Tooltip("死亡シーケンス開始からチェックポイント復帰まで待機する秒数です。")]
     [Min(0f)] public float respawnDelay = 1.0f;

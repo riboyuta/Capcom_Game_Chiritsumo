@@ -26,10 +26,6 @@ public sealed partial class PlayerController : IDamageable
     // Inspector 設定値
     // =====================================================================
 
-    [Header("体力: 無敵モード")]
-    [Tooltip("常時ダメージを無効化するデバッグ用フラグです。TakeDamage と Kill の受理判定に使います。有効にすると被ダメージ確認はしにくくなりますが、ステージ検証や挙動確認を安全に行えます。")]
-    [SerializeField] private bool invincible = false;
-
     [Header("ノックバック: 耐性倍率")]
     [Tooltip("受けたノックバック力に掛ける倍率です。TakeDamage で knockback_force に乗算して実際の吹き飛び量を決めます。大きいほど強く吹き飛び、小さいほどノックバックを軽減します。1.0 が基準値です。")]
     [SerializeField] private float knockbackResistance = 1.0f;
@@ -85,7 +81,7 @@ public sealed partial class PlayerController : IDamageable
 
     // 無敵判定の統合口。
     // デバッグ無敵、被弾後無敵、掴まれ中をまとめて「ダメージ無効」として扱う。
-    public bool IsInvincible => invincible || invincibilityTimer > 0.0f || IsGrabbed;
+    public bool IsInvincible => (healthSettings != null && healthSettings.invincible) || invincibilityTimer > 0.0f || IsGrabbed;
 
     // ノックバック中かどうかの参照口。
     public bool IsKnockback => isKnockback;
