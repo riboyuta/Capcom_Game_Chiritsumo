@@ -19,9 +19,6 @@ public sealed partial class PlayerController
     // 実行時状態
     // =====================================================================
     [Header("Death / Respawn")]
-    [Tooltip("死亡後に復帰地点へ戻すまでの待機時間(秒)。")]
-    [SerializeField] private float deathRespawnDelay = 1.0f;
-
     [Tooltip("同一シーン内の復帰地点を解決するシステム。未設定時は実行時に探索を試みます。")]
     [SerializeField] private CheckpointSystem checkpointSystem;
 
@@ -79,7 +76,7 @@ public sealed partial class PlayerController
     private IEnumerator CoRespawnSequence()
     {
         LogRespawn("Respawn sequence started");
-        yield return new WaitForSeconds(Mathf.Max(0.0f, deathRespawnDelay));
+        yield return new WaitForSeconds(Mathf.Max(0.0f, healthSettings != null ? healthSettings.respawnDelay : 0.0f));
 
         if (checkpointSystem == null)
         {
@@ -126,7 +123,7 @@ public sealed partial class PlayerController
 
     private void ResetForRespawn()
     {
-        currentHealth = maxHealth;
+        currentHealth = MaxHealth;
         invincibilityTimer = 0.0f;
 
         isKnockback = false;

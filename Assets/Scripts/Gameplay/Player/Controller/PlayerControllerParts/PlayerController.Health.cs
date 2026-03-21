@@ -26,17 +26,9 @@ public sealed partial class PlayerController : IDamageable
     // Inspector 設定値
     // =====================================================================
 
-    [Header("体力: 最大体力")]
-    [Tooltip("プレイヤーの最大 HP です。InitializeHealth で currentHealth の初期値として使います。値を大きくすると耐久力が上がり、小さくすると少ない被弾で倒れやすくなります。")]
-    [SerializeField] private int maxHealth = 3;
-
     [Header("体力: 無敵モード")]
     [Tooltip("常時ダメージを無効化するデバッグ用フラグです。TakeDamage と Kill の受理判定に使います。有効にすると被ダメージ確認はしにくくなりますが、ステージ検証や挙動確認を安全に行えます。")]
     [SerializeField] private bool invincible = false;
-
-    [Header("無敵時間: 継続秒数")]
-    [Tooltip("ダメージを受けた後に被ダメージを無効化する時間です。TakeDamage 後に invincibilityTimer へ設定されます。長くすると連続被弾しにくくなり、短くすると連続でダメージを受けやすくなります。")]
-    [SerializeField] private float invincibilityDuration = 1.0f;
 
     [Header("ノックバック: 耐性倍率")]
     [Tooltip("受けたノックバック力に掛ける倍率です。TakeDamage で knockback_force に乗算して実際の吹き飛び量を決めます。大きいほど強く吹き飛び、小さいほどノックバックを軽減します。1.0 が基準値です。")]
@@ -89,7 +81,7 @@ public sealed partial class PlayerController : IDamageable
     public int CurrentHealth => currentHealth;
 
     // 最大 HP の参照口。
-    public int MaxHealth => maxHealth;
+    public int MaxHealth => ConfiguredMaxHealth;
 
     // 無敵判定の統合口。
     // デバッグ無敵、被弾後無敵、掴まれ中をまとめて「ダメージ無効」として扱う。
@@ -97,6 +89,11 @@ public sealed partial class PlayerController : IDamageable
 
     // ノックバック中かどうかの参照口。
     public bool IsKnockback => isKnockback;
+
+    private int ConfiguredMaxHealth => healthSettings != null ? Mathf.Max(1, healthSettings.maxHealth) : 1;
+
+    private float ConfiguredInvincibilityDuration => healthSettings != null ? Mathf.Max(0.0f, healthSettings.invincibilityDuration) : 0.0f;
+
 
     // =====================================================================
     // 初期化
@@ -106,7 +103,7 @@ public sealed partial class PlayerController : IDamageable
     // メインの Awake / 初期化シーケンスから呼ばれる前提で、HP・無敵時間・ノックバック状態を既定値へ戻す。
     private void InitializeHealth()
     {
-        currentHealth = maxHealth;
+        currentHealth = ConfiguredMaxHealth;
         invincibilityTimer = 0.0f;
 
         knockbackTimer = 0.0f;
@@ -152,10 +149,29 @@ public sealed partial class PlayerController : IDamageable
                 knockbackVelocity = knockbackInitialVelocity * normalized;
             }
         }
-
+        ConsumeDebugDeathRequest();
         UpdateReactionState(deltaTime);
     }
+    private void ConsumeDebugDeathRequest()
+    {
+        if (healthSettings == null)
+        {
+            return;
+        }
 
+        if (healthSettings.debugRequestDeath)
+        {
+            healthSettings.debugRequestDeath = false;
+            RequestDeathStart(DeathCause.Damage);
+            return;
+        }
+
+        if (healthSettings.debugRequestHazardDeath)
+        {
+            healthSettings.debugRequestHazardDeath = false;
+            RequestDeathStart(DeathCause.Hazard);
+        }
+    }
     // =====================================================================
     // IDamageable 実装
     // =====================================================================
@@ -177,7 +193,7 @@ public sealed partial class PlayerController : IDamageable
             currentHealth = 0;
         }
 
-        LogHealth($"Took {damage} damage. Health: {currentHealth}/{maxHealth}");
+        LogHealth($"Took {damage} damage. Health: {currentHealth}/{ConfiguredMaxHealth}");
 
         // ノックバックは force が正で、かつ Rigidbody がある場合だけ開始する。
         if (knockback_force > 0.0f && rb != null)
@@ -188,7 +204,7 @@ public sealed partial class PlayerController : IDamageable
         }
 
         // 被弾後の連続ヒットを防ぐため、最後に無敵時間を開始する。
-        invincibilityTimer = invincibilityDuration;
+        invincibilityTimer = ConfiguredInvincibilityDuration;
 
         // 演出やリアクション遷移の入口。
         OnDamaged(damage, hit_direction, knockback_force);
@@ -326,12 +342,12 @@ public sealed partial class PlayerController : IDamageable
     public void Heal(int amount)
     {
         int previousHealth = currentHealth;
-        currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
+        currentHealth = Mathf.Min(currentHealth + amount, ConfiguredMaxHealth);
         int actualHeal = currentHealth - previousHealth;
 
         if (actualHeal > 0)
         {
-            LogHealth($"Healed {actualHeal}. Health: {currentHealth}/{maxHealth}");
+            LogHealth($"Healed {actualHeal}. Health: {currentHealth}/{ConfiguredMaxHealth}");
         }
     }
 
