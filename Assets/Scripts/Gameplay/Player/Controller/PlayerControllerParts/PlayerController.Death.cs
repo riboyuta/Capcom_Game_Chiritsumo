@@ -56,7 +56,9 @@ public sealed partial class PlayerController
     [Header("参照: PlayerCameraController")]
     [Tooltip("復帰時に標準カメラ状態へ戻すためのカメラ制御コンポーネントです。ResetCameraToWorldDefaults で temporary target や各種上書きを解除するために使います。未設定時は実行時に探索を試みます。")]
     [SerializeField] private PlayerCameraController playerCameraController;
-
+    [Header("参照: PlayerDeathView")]
+    [Tooltip("敵攻撃死の入口で viewRoot の倒れ演出を再生する見た目コンポーネントです。未設定時は実行時に探索を試みます。")]
+    [SerializeField] private PlayerDeathView playerDeathView;
     // =====================================================================
     // 実行時状態
     // =====================================================================
@@ -73,6 +75,11 @@ public sealed partial class PlayerController
     // 死亡要求が重なったときに古いシーケンスを止めるために保持する。
     private Coroutine respawnSequenceCoroutine;
 
+
+    private float ConfiguredDamageDeathIntroDuration => healthSettings != null ? Mathf.Max(0f, healthSettings.damageDeathIntroDuration) : 0f;
+    private float ConfiguredDamageDeathTiltAngle => healthSettings != null ? Mathf.Clamp(healthSettings.damageDeathTiltAngle, 0f, 120f) : 80f;
+    private float ConfiguredDamageDeathZoomSizeOffset => healthSettings != null ? healthSettings.damageDeathZoomSizeOffset : -0.35f;
+    private float ConfiguredDamageDeathZoomSmoothTime => healthSettings != null ? Mathf.Max(0f, healthSettings.damageDeathZoomSmoothTime) : 0.08f;
     // =====================================================================
     // 死亡開始入口
     // =====================================================================
@@ -135,6 +142,13 @@ public sealed partial class PlayerController
     private IEnumerator CoRespawnSequence()
     {
         LogRespawn("Respawn sequence started");
+
+        if (lastDeathCause == DeathCause.Damage)
+        {
+            PlayDamageDeathZoom();
+            PlayDamageDeathIntro();
+            yield return WaitForDamageDeathIntro();
+        }
 
         if (deathTransitionView == null)
         {
@@ -205,6 +219,11 @@ public sealed partial class PlayerController
     // 黒トランジションを通常状態へ戻し、死亡シーケンス進行フラグを解放する。
     private IEnumerator FinishRespawnSequence()
     {
+        if (lastDeathCause == DeathCause.Damage)
+        {
+            ResetDamageDeathPresentation();
+        }
+
         if (deathTransitionView != null)
         {
             LogRespawn("Death transition out started");
@@ -247,6 +266,79 @@ public sealed partial class PlayerController
         playerCameraController.ClearActiveOrthographicSizeSmoothTimeOverride();
     }
 
+    private void PlayDamageDeathZoom()
+    {
+        if (playerCameraController == null)
+        {
+            playerCameraController = FindFirstObjectByType<PlayerCameraController>();
+        }
+
+        if (playerCameraController == null)
+        {
+            LogRespawnWarning("PlayerCameraController missing (damage death zoom skipped)");
+            return;
+        }
+
+        float targetSize = Mathf.Max(0.01f, playerCameraController.EffectiveSize + ConfiguredDamageDeathZoomSizeOffset);
+        playerCameraController.SetActiveOrthographicSizeSmoothTimeOverride(ConfiguredDamageDeathZoomSmoothTime);
+        playerCameraController.SetActiveOrthographicSizeOverride(targetSize);
+        LogRespawn("Damage death zoom applied");
+    }
+
+    private void PlayDamageDeathIntro()
+    {
+        if (playerDeathView == null)
+        {
+            playerDeathView = GetComponentInChildren<PlayerDeathView>();
+        }
+
+        if (playerDeathView == null)
+        {
+            LogRespawnWarning("Damage death rotation target missing");
+            return;
+        }
+
+        playerDeathView.ConfigureDamageDeathIntro(
+            ConfiguredDamageDeathIntroDuration,
+            ConfiguredDamageDeathTiltAngle);
+        playerDeathView.PlayDamageDeathIntro();
+    }
+
+    private IEnumerator WaitForDamageDeathIntro()
+    {
+        float duration = ConfiguredDamageDeathIntroDuration;
+        if (duration <= 0f)
+        {
+            yield break;
+        }
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            if (playerDeathView == null || playerDeathView.IsIntroComplete())
+            {
+                break;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    private void ResetDamageDeathPresentation()
+    {
+        if (playerDeathView == null)
+        {
+            playerDeathView = GetComponentInChildren<PlayerDeathView>();
+        }
+
+        if (playerDeathView == null)
+        {
+            return;
+        }
+
+        playerDeathView.ResetDeathPresentation();
+    }
     // =====================================================================
     // 復帰位置反映
     // =====================================================================
@@ -310,8 +402,8 @@ public sealed partial class PlayerController
         justWallJumpedThisFrame = false;
         justCrossedApexThisFrame = false;
 
-        // 将来の演出追加ポイント:
-        // 見た目回転リセットや追加演出リセット処理をここへ差し込む。
+        ResetDamageDeathPresentation();
+
     }
 
     // =====================================================================

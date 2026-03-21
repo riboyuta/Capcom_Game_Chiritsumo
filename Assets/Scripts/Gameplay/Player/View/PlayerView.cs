@@ -209,6 +209,9 @@ public sealed class PlayerView : MonoBehaviour
     // 崖落ちとジャンプ上昇を区別したいときに使う。
     private bool airborneFromJump;
 
+    // 見た目演出専用の read-only 参照口。
+    // 未設定時は PlayerView 自身の Transform を返して安全側で扱う。
+    public Transform ViewRoot => viewRoot != null ? viewRoot : transform;
     private void Awake()
     {
         // PlayerController が未設定なら親階層から補完する。
