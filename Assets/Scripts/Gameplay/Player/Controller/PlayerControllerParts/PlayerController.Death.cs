@@ -149,8 +149,17 @@ public sealed partial class PlayerController
         ResolvePlayerDeathViewIfNeeded();
         if (playerDeathView != null)
         {
-            LogRespawn("Death transition in started");
-            playerDeathView.PlayTransitionIn();
+            if (lastDeathCause == DeathCause.Hazard)
+            {
+                LogRespawn("Hazard death uses immediate black transition");
+                LogRespawn("Hazard black in started");
+            }
+            else
+            {
+                LogRespawn("Death transition in started");
+            }
+
+            playerDeathView.PlayTransitionIn(lastDeathCause);
 
             // 十分に黒くなるまで待ってから復帰処理へ進める。
             // これにより位置移動やステージ初期化を画面上で見せにくくする。
@@ -217,8 +226,16 @@ public sealed partial class PlayerController
 
         if (playerDeathView != null)
         {
-            LogRespawn("Death transition out started");
-            playerDeathView.PlayTransitionOut();
+            if (lastDeathCause == DeathCause.Hazard)
+            {
+                LogRespawn("Hazard black out started");
+            }
+            else
+            {
+                LogRespawn("Death transition out started");
+            }
+
+            playerDeathView.PlayTransitionOut(lastDeathCause);
 
             yield return new WaitUntil(() =>
                 playerDeathView == null ||
