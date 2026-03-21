@@ -195,6 +195,12 @@ public sealed partial class PlayerController : IEnemyAttackReceiver
 
         // 即時にダメージを入れたい場合だけここで入れる
         // 拘束演出を見せたいなら通常は入れない
+        if (grabIsInstantDeath)
+        {
+            TakeDamage(context.Damage, context.HitDirection, context.KnockbackForce);
+            return;
+        }
+
         if (!killAfterGrabbedDuration && context.Damage > 0)
         {
             TakeDamage(context.Damage, context.HitDirection, context.KnockbackForce);
