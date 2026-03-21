@@ -1045,8 +1045,10 @@ MonoBehaviour:
   damageDeathTiltAngle: 90
   damageDeathZoomSizeOffset: -2
   damageDeathZoomSmoothTime: 2
-  blackInDuration: 2
-  blackOutDuration: 2
+  damageBlackInDuration: 2
+  damageBlackOutDuration: 2
+  hazardBlackInDuration: 2
+  hazardBlackOutDuration: 2
   blackRespawnThreshold: 0.85
 --- !u!1 &833248163
 GameObject:
