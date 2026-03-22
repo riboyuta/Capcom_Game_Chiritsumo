@@ -263,10 +263,10 @@ MonoBehaviour:
   - {fileID: -328500077, guid: f844d5901ee99fc42ae2f5219d4949b6, type: 3}
   endFrames:
   - {fileID: -328500077, guid: f844d5901ee99fc42ae2f5219d4949b6, type: 3}
-  riseFrameRate: 12
-  holdFrameRate: 12
-  smashFrameRate: 16
-  endFrameRate: 12
+  riseFrameRate: 1
+  holdFrameRate: 1
+  smashFrameRate: 1
+  endFrameRate: 1
   loopRise: 0
   loopHold: 0
   loopSmash: 0

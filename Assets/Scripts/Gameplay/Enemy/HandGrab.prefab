@@ -301,12 +301,12 @@ MonoBehaviour:
   - {fileID: 337925152, guid: f51bbecaca8fe014e93fcbdc7f6fd47f, type: 3}
   endFrames:
   - {fileID: 660674674, guid: fad5506704bece04988e4ba9431f7543, type: 3}
-  approachNearFrameRate: 12
-  trackBeforeGrabFrameRate: 10
-  grabStartFrameRate: 14
-  holdPlayerFrameRate: 10
-  missPauseFrameRate: 8
-  endFrameRate: 10
+  approachNearFrameRate: 1
+  trackBeforeGrabFrameRate: 1
+  grabStartFrameRate: 1
+  holdPlayerFrameRate: 1
+  missPauseFrameRate: 1
+  endFrameRate: 1
   loopApproachNear: 0
   loopTrackBeforeGrab: 0
   loopGrabStart: 0
