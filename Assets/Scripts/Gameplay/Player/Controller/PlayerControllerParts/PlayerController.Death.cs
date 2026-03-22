@@ -272,10 +272,7 @@ public sealed partial class PlayerController
             return;
         }
 
-        playerCameraController.ClearTemporaryTarget();
-        playerCameraController.ClearActiveOrthographicSizeOverride();
-        playerCameraController.ClearActiveFollowSmoothingOverride();
-        playerCameraController.ClearActiveOrthographicSizeSmoothTimeOverride();
+        playerCameraController.ResetRuntimeStateForRespawn();
     }
 
     private void PlayDamageDeathZoom()

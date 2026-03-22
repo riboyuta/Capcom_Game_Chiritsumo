@@ -528,12 +528,12 @@ MonoBehaviour:
   damageDeathIntroDuration: 0.3
   damageDeathTiltAngle: 80
   damageDeathZoomSizeOffset: -2
-  damageDeathZoomSmoothTime: 2
-  damageBlackInDuration: 3
+  damageDeathZoomSmoothTime: 3
+  damageBlackInDuration: 5
   damageBlackOutDuration: 1
-  hazardBlackInDuration: 3
+  hazardBlackInDuration: 5
   hazardBlackOutDuration: 1
-  blackRespawnThreshold: 0.34
+  blackRespawnThreshold: 1
 --- !u!1 &529022722
 GameObject:
   m_ObjectHideFlags: 0
@@ -1401,7 +1401,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1431629135
 MonoBehaviour:
   m_ObjectHideFlags: 0
