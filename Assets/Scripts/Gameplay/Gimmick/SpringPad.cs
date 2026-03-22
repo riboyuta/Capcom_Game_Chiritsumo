@@ -30,11 +30,13 @@ public sealed class SpringPad : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        if (!other.CompareTag("Player")) return;
         TryBounce(other.attachedRigidbody);
     }
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (!collision.collider.CompareTag("Player")) return;
         TryBounce(collision.rigidbody);
     }
 

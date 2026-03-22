@@ -24,6 +24,7 @@ public sealed class WindGimmick : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
+        if (!other.CompareTag("Player")) return;
         TryApplyWind(other.attachedRigidbody);
     }
 
@@ -75,6 +76,7 @@ public sealed class WindGimmick : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
+        if (!other.CompareTag("Player")) return;
         Rigidbody targetRb = other.attachedRigidbody;
         if (targetRb == null) return;
 

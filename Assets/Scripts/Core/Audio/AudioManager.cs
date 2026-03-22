@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -69,6 +70,9 @@ public sealed class AudioManager : MonoBehaviour
     // SFX / Voice 用オブジェクトプール
     private readonly Queue<AudioSource> _pool = new Queue<AudioSource>();
     private Transform _poolRoot;
+
+    // 重複再生トラッキング（PlayOverlap 用）
+    private readonly List<AudioSource> _overlaps = new List<AudioSource>();
 
     // リニアボリューム保持 (0〜1)
     private float _masterVol = 1f;
@@ -162,6 +166,43 @@ public sealed class AudioManager : MonoBehaviour
         TrackHandle(id, handle);
     }
 
+    /// 同じ SFX を重ねて再生する（重複再生可）。再生完了後に自動回収される。
+    public void PlayOverlap(string id, float? volume = null)
+    {
+        if (!TryGetEntry(id, out var entry)) return;
+
+        float vol = volume ?? entry.defaultVolume;
+        AudioSource src = RentSource();
+
+        src.clip            = entry.clip;
+        src.volume          = vol;
+        src.loop            = false; // 重複再生はループ不可
+        src.outputAudioMixerGroup = GetGroup(entry.channel);
+        src.spatialBlend     = 0f;
+        src.Play();
+
+        _overlaps.Add(src);
+    }
+
+    /// 同じ SFX を 3D 空間の指定位置で重ねて再生する（重複再生可）。
+    public void PlayOverlapAtPoint(string id, Vector3 position, float? volume = null)
+    {
+        if (!TryGetEntry(id, out var entry)) return;
+
+        float vol = volume ?? entry.defaultVolume;
+        AudioSource src = RentSource();
+
+        src.clip            = entry.clip;
+        src.volume          = vol;
+        src.loop            = false;
+        src.outputAudioMixerGroup = GetGroup(entry.channel);
+        src.spatialBlend     = 1f;
+        src.transform.position = position;
+        src.Play();
+
+        _overlaps.Add(src);
+    }
+
     // ======================================================================
     //  Control API
     // ======================================================================
@@ -194,6 +235,13 @@ public sealed class AudioManager : MonoBehaviour
             }
         }
         _active.Clear();
+
+        // 重複再生も停止
+        foreach (var src in _overlaps)
+        {
+            ReturnSource(src);
+        }
+        _overlaps.Clear();
     }
 
     /// 指定チャンネルのサウンドをすべて停止する。
@@ -219,6 +267,72 @@ public sealed class AudioManager : MonoBehaviour
             _active.Remove(key);
         }
     }
+
+    // ======================================================================
+    //  Fade API
+    // ======================================================================
+
+    /// 指定 ID のサウンドをフェードインで再生する。
+    /// まだ再生されていなければ Play してから音量を徐々に上げる。
+    public void FadeIn(string id, float duration = 1f)
+    {
+        // まだ再生中でなければ音量 0 で再生開始
+        if (!IsPlaying(id))
+        {
+            Play(id, 0f);
+        }
+
+        if (!_active.TryGetValue(id, out var handle)) return;
+
+        float targetVol = handle.BaseVolume > 0f ? handle.BaseVolume : 1f;
+
+        // 既登録のエントリがあれば defaultVolume を目標値にする
+        if (_registry.TryGetValue(id, out var entry))
+        {
+            targetVol = entry.defaultVolume;
+        }
+
+        StartCoroutine(FadeInCoroutine(handle, targetVol, duration));
+    }
+
+    /// 指定 ID のサウンドをフェードアウトで停止する。
+    public void FadeOut(string id, float duration = 1f)
+    {
+        if (!_active.TryGetValue(id, out var handle)) return;
+        StartCoroutine(FadeOutCoroutine(id, handle, duration));
+    }
+
+    private IEnumerator FadeInCoroutine(AudioHandle handle, float targetVolume, float duration)
+    {
+        handle.Source.volume = 0f;
+
+        for (float t = 0f; t < duration; t += Time.deltaTime)
+        {
+            handle.Source.volume = Mathf.Lerp(0f, targetVolume, t / duration);
+            yield return null;
+        }
+
+        handle.Source.volume = targetVolume;
+        handle.BaseVolume = targetVolume;
+    }
+
+    private IEnumerator FadeOutCoroutine(string id, AudioHandle handle, float duration)
+    {
+        float startVol = handle.Source.volume;
+
+        for (float t = 0f; t < duration; t += Time.deltaTime)
+        {
+            handle.Source.volume = Mathf.Lerp(startVol, 0f, t / duration);
+            yield return null;
+        }
+
+        handle.Source.volume = 0f;
+        Stop(id);
+    }
+
+    // ======================================================================
+    //  Query API
+    // ======================================================================
 
     /// 指定 ID が再生中かどうか。
     public bool IsPlaying(string id)
@@ -507,6 +621,7 @@ public sealed class AudioManager : MonoBehaviour
 
     private void Update()
     {
+        // --- _active の回収 ---
         _finishedKeys.Clear();
 
         foreach (var kvp in _active)
@@ -532,6 +647,16 @@ public sealed class AudioManager : MonoBehaviour
                     ReturnSource(h.Source);
                 }
                 _active.Remove(key);
+            }
+        }
+
+        // --- 重複再生 (PlayOverlap) の回収 ---
+        for (int i = _overlaps.Count - 1; i >= 0; i--)
+        {
+            if (!_overlaps[i].isPlaying)
+            {
+                ReturnSource(_overlaps[i]);
+                _overlaps.RemoveAt(i);
             }
         }
     }

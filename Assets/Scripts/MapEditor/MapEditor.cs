@@ -14,12 +14,27 @@ public class MapEditor : MonoBehaviour
     [Tooltip("キー毎に割り当てられているプレハブ")]
     [SerializeField]　private GameObject[] tilePrefab;
 
-    int currentTile = 1;
-
 
     [Header("現在のステージ番号")]
     [Tooltip("現在編集しているステージの番号")]
     [SerializeField] private int stageNumber = 1;
+
+
+    [Header("コメント")]
+    [Tooltip("ステージ毎に保存されるメモ書き")]
+    [TextArea(15, 30)]
+    [SerializeField] private string comment;
+
+
+    [Header("タイル変換")]
+    [Tooltip("変換したいプレハブをセットしよう")]
+    [SerializeField] private ChangeTileContainer changeTileContainer;
+    [System.Serializable]
+    public struct ChangeTileContainer
+    {
+        public TileTypeEnum target;
+        public TileTypeEnum changeTo;
+    }
 
 
     float gridSize = 1.0f;
@@ -28,12 +43,17 @@ public class MapEditor : MonoBehaviour
 
     bool showLoadConfirm = false;
 
+    private int currentTile = 1;
+
+
+   
 
     void OnEnable()
     {
         RegisterExistingTiles();
     }
 
+ 
     void Update()
     {
       
@@ -149,7 +169,40 @@ public class MapEditor : MonoBehaviour
 
     void ClearTile()
     {
+        foreach (var tile in tiles.Values)
+        {
+            if (tile != null)
+            {
+                Destroy(tile);
+            }
+        }
+    }
 
+
+    void ChangeTileAll(TileTypeEnum from, TileTypeEnum to)
+    {
+        List<Vector3Int> keys = new List<Vector3Int>(tiles.Keys);
+
+        foreach (var gridPos in keys)
+        {
+            GameObject tile = tiles[gridPos];
+
+            TileType tileType = tile.GetComponent<TileType>();
+
+            if (tileType.type == from)
+            {
+                Vector3 pos = tile.transform.position;
+
+                Destroy(tile);
+
+                GameObject newTile =
+                    Instantiate(tilePrefab[(int)to], pos, Quaternion.identity);
+
+                newTile.GetComponent<TileType>().type = to;
+
+                tiles[gridPos] = newTile;
+            }
+        }
     }
 
 
@@ -180,11 +233,18 @@ public class MapEditor : MonoBehaviour
         Debug.Log("Loaded Map Cleared");
     }
 
+    [ContextMenu("ChangeTiles (Editor)")]
+    void ChangeTilesOutPlaying()
+    {
+        ChangeTileAll(changeTileContainer.target, changeTileContainer.changeTo);
+        RegisterExistingTiles();
+    }
+
     //===========================-------
     //　　　　　保存システム
     //===========================-------
 
-    [System.Serializable]
+    [System.Serializable] //タイル個々のクラス
     public class TileData
     {
         public int x;
@@ -194,15 +254,17 @@ public class MapEditor : MonoBehaviour
         public TileTypeEnum type;
     }
 
-    [System.Serializable]
+    [System.Serializable] //マップ全体のクラス
     public class MapData
     {
         public List<TileData> tiles = new List<TileData>();
+        public string comment;
     }
 
     public void SaveMap()
     {
         MapData mapData = new MapData();
+        mapData.comment = comment;
 
         foreach (var tile in tiles)
         {
@@ -211,7 +273,6 @@ public class MapEditor : MonoBehaviour
             data.x = tile.Key.x;
             data.y = tile.Key.y;
             data.z = tile.Key.z;
-
             data.type = tile.Value.GetComponent<TileType>().type;
 
             mapData.tiles.Add(data);
@@ -266,6 +327,7 @@ public class MapEditor : MonoBehaviour
         string json = System.IO.File.ReadAllText(path);
 
         MapData mapData = JsonUtility.FromJson<MapData>(json);
+        comment = mapData.comment;
 
         foreach (TileData data in mapData.tiles)
         {
@@ -279,8 +341,6 @@ public class MapEditor : MonoBehaviour
 
             GameObject tile =
                 Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
-
-            tile.GetComponent<TileType>().type = (TileTypeEnum)data.type;
 
             tiles.Add(gridPos, tile);
         }
