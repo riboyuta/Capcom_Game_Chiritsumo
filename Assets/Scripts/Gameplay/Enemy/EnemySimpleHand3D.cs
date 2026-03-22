@@ -1,27 +1,13 @@
 using UnityEngine;
 
-// 責務:
-// - 3D 空間で一定方向へ単純移動する
-// - Player タグとの Trigger 接触を検知し、PlayerController の既存死亡入口を呼ぶ
-// - 腕 / 手の平の 2 レイヤー構成で簡易 Sprite アニメを再生する
-// - 全体 / 腕 / 手の平 の見た目位置とスケールを Inspector から調整できる
-//
-// 非責務:
-// - 敵 AI や経路探索
-// - ダメージ計算や死亡可否判定そのもの
-// - Sprite 生成やアセット読込
-//
-// 前提:
-// - 3D Trigger 判定が機能する構成である
-// - Player は playerTag で識別できる
-// - PlayerController は接触先自身または親階層から取得できる
-// - 座標系は X=左右, Y=上下, Z=奥行き を想定
 [DisallowMultipleComponent]
 public sealed class EnemySimpleHand3D : MonoBehaviour
 {
-    // =====================================================================
-    // Inspector 設定値
-    // =====================================================================
+    private enum AttackType
+    {
+        Smash,
+        Grab
+    }
 
     [Header("移動")]
     [SerializeField, Min(0f)] private float moveSpeed = 2.0f;
@@ -30,6 +16,21 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
     [Header("判定")]
     [SerializeField] private string playerTag = "Player";
     [SerializeField] private bool disableAfterHit = false;
+
+    [Header("攻撃: 参照")]
+    [SerializeField] private Transform player;
+    [SerializeField] private HandSmashAttack handSmashPrefab;
+    [SerializeField] private HandGrabAttack handGrabPrefab;
+
+    [Header("攻撃: 基本設定")]
+    [SerializeField] private Vector3 handSpawnOffset = new Vector3(2.0f, 1.0f, 0.0f);
+    [SerializeField, Min(0f)] private float smashAttackRangeX = 8.0f;
+    [SerializeField, Min(0f)] private float grabAttackRangeX = 3.0f;
+    [SerializeField, Min(0f)] private float attackCooldown = 2.5f;
+    [SerializeField] private float groundY = 0.0f;
+
+    [Header("攻撃: デバッグ")]
+    [SerializeField] private bool debugTriggerWithSpace = false;
 
     [Header("見た目参照")]
     [SerializeField] private Transform visualRoot;
@@ -57,17 +58,18 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
     [SerializeField] private bool enableDebugLog;
     [SerializeField] private bool logMissingReferences = true;
 
-    // =====================================================================
-    // 実行時状態
-    // =====================================================================
-
     private Rigidbody rb;
     private bool isDisabled;
     private float animationTimer;
+    private float attackCooldownTimer;
+    private bool isHandActive;
+    private GameObject activeHandInstance;
 
-    // =====================================================================
-    // 初期化 / 検証
-    // =====================================================================
+    private AttackType lastAttackType = AttackType.Smash;
+    private int sameAttackStreakCount = 0;
+
+    private Vector3 initialPosition;
+    private Quaternion initialRotation;
 
     private void Reset()
     {
@@ -79,10 +81,21 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
 
         if (visualRoot == null)
         {
             visualRoot = transform;
+        }
+
+        if (player == null)
+        {
+            GameObject playerObject = GameObject.FindGameObjectWithTag(playerTag);
+            if (playerObject != null)
+            {
+                player = playerObject.transform;
+            }
         }
 
         TryAutoAssignRenderers();
@@ -97,6 +110,9 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
     {
         moveSpeed = Mathf.Max(0f, moveSpeed);
         animationFps = Mathf.Max(0f, animationFps);
+        smashAttackRangeX = Mathf.Max(0f, smashAttackRangeX);
+        grabAttackRangeX = Mathf.Max(0f, grabAttackRangeX);
+        attackCooldown = Mathf.Max(0f, attackCooldown);
 
         if (visualRootLocalScale.x == 0f) visualRootLocalScale.x = 1f;
         if (visualRootLocalScale.y == 0f) visualRootLocalScale.y = 1f;
@@ -123,10 +139,6 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
         TryAutoAssignRenderers();
     }
 
-    // =====================================================================
-    // 毎フレーム更新
-    // =====================================================================
-
     private void FixedUpdate()
     {
         if (isDisabled || rb == null)
@@ -147,11 +159,23 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
 
         UpdateSimpleAnimation();
         ApplyVisualLayout();
-    }
 
-    // =====================================================================
-    // Trigger 判定
-    // =====================================================================
+        if (attackCooldownTimer > 0.0f)
+        {
+            attackCooldownTimer -= Time.deltaTime;
+        }
+
+        if (debugTriggerWithSpace)
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                TryStartRandomAttack();
+            }
+            return;
+        }
+
+        TryStartRandomAttack();
+    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -165,13 +189,13 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
             return;
         }
 
-        PlayerController player = other.GetComponent<PlayerController>();
-        if (player == null)
+        PlayerController playerController = other.GetComponent<PlayerController>();
+        if (playerController == null)
         {
-            player = other.GetComponentInParent<PlayerController>();
+            playerController = other.GetComponentInParent<PlayerController>();
         }
 
-        if (player == null)
+        if (playerController == null)
         {
             if (logMissingReferences)
             {
@@ -180,7 +204,7 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
             return;
         }
 
-        bool accepted = player.RequestDamageDeath();
+        bool accepted = playerController.RequestDamageDeath();
 
         if (!accepted)
         {
@@ -202,9 +226,233 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
         }
     }
 
-    // =====================================================================
-    // 無効化処理
-    // =====================================================================
+    private void TryStartRandomAttack()
+    {
+        if (isHandActive)
+        {
+            return;
+        }
+
+        if (attackCooldownTimer > 0.0f)
+        {
+            return;
+        }
+
+        ResolvePlayerIfNeeded();
+        if (player == null)
+        {
+            return;
+        }
+
+        float dx = Mathf.Abs(player.position.x - transform.position.x);
+
+        bool canUseSmash = handSmashPrefab != null && dx <= smashAttackRangeX;
+        bool canUseGrab = handGrabPrefab != null && dx <= grabAttackRangeX;
+
+        if (!canUseSmash && !canUseGrab)
+        {
+            return;
+        }
+
+        if (canUseSmash && !canUseGrab)
+        {
+            if (TryStartSmashAttack())
+            {
+                RecordAttackType(AttackType.Smash);
+            }
+            return;
+        }
+
+        if (!canUseSmash && canUseGrab)
+        {
+            if (TryStartGrabAttack())
+            {
+                RecordAttackType(AttackType.Grab);
+            }
+            return;
+        }
+
+        AttackType selectedAttackType = SelectNextAttackType();
+
+        if (selectedAttackType == AttackType.Smash)
+        {
+            if (TryStartSmashAttack())
+            {
+                RecordAttackType(AttackType.Smash);
+            }
+        }
+        else
+        {
+            if (TryStartGrabAttack())
+            {
+                RecordAttackType(AttackType.Grab);
+            }
+        }
+    }
+
+    private AttackType SelectNextAttackType()
+    {
+        if (sameAttackStreakCount >= 2)
+        {
+            return GetOppositeAttackType(lastAttackType);
+        }
+
+        return Random.value < 0.5f ? AttackType.Smash : AttackType.Grab;
+    }
+
+    private AttackType GetOppositeAttackType(AttackType attackType)
+    {
+        return attackType == AttackType.Smash ? AttackType.Grab : AttackType.Smash;
+    }
+
+    private void RecordAttackType(AttackType attackType)
+    {
+        if (sameAttackStreakCount == 0)
+        {
+            lastAttackType = attackType;
+            sameAttackStreakCount = 1;
+            return;
+        }
+
+        if (attackType == lastAttackType)
+        {
+            sameAttackStreakCount++;
+        }
+        else
+        {
+            lastAttackType = attackType;
+            sameAttackStreakCount = 1;
+        }
+    }
+
+    private bool TryStartSmashAttack()
+    {
+        if (isHandActive)
+        {
+            return false;
+        }
+
+        if (handSmashPrefab == null)
+        {
+            if (logMissingReferences)
+            {
+                Debug.LogWarning("[EnemySimpleHand3D] HandSmashAttack prefab が未設定です。", this);
+            }
+            return false;
+        }
+
+        if (player == null)
+        {
+            return false;
+        }
+
+        Vector3 spawnPosition = transform.position + handSpawnOffset;
+
+        HandSmashAttack handInstance = Instantiate(
+            handSmashPrefab,
+            spawnPosition,
+            Quaternion.identity
+        );
+
+        activeHandInstance = handInstance.gameObject;
+        isHandActive = true;
+        attackCooldownTimer = attackCooldown;
+
+        handInstance.StartAttack(
+            spawnPosition,
+            player,
+            groundY,
+            OnHandAttackFinished
+        );
+
+        if (enableDebugLog)
+        {
+            Debug.Log("[EnemySimpleHand3D] Smash attack started.", this);
+        }
+
+        return true;
+    }
+
+    private bool TryStartGrabAttack()
+    {
+        if (isHandActive)
+        {
+            return false;
+        }
+
+        if (handGrabPrefab == null)
+        {
+            if (logMissingReferences)
+            {
+                Debug.LogWarning("[EnemySimpleHand3D] HandGrabAttack prefab が未設定です。", this);
+            }
+            return false;
+        }
+
+        if (player == null)
+        {
+            return false;
+        }
+
+        Vector3 spawnPosition = transform.position + handSpawnOffset;
+
+        HandGrabAttack handInstance = Instantiate(
+            handGrabPrefab,
+            spawnPosition,
+            Quaternion.identity
+        );
+
+        activeHandInstance = handInstance.gameObject;
+        isHandActive = true;
+        attackCooldownTimer = attackCooldown;
+
+        handInstance.StartAttack(
+            spawnPosition,
+            player,
+            OnHandAttackFinished
+        );
+
+        if (enableDebugLog)
+        {
+            Debug.Log("[EnemySimpleHand3D] Grab attack started.", this);
+        }
+
+        return true;
+    }
+
+    private void OnHandAttackFinished()
+    {
+        isHandActive = false;
+        activeHandInstance = null;
+    }
+
+    public void ResetToRespawnState()
+    {
+        transform.position = initialPosition;
+        transform.rotation = initialRotation;
+
+        attackCooldownTimer = 0.0f;
+        isHandActive = false;
+        isDisabled = false;
+        animationTimer = 0.0f;
+
+        if (activeHandInstance != null)
+        {
+            Destroy(activeHandInstance);
+            activeHandInstance = null;
+        }
+
+        Collider col = GetComponent<Collider>();
+        if (col != null)
+        {
+            col.enabled = true;
+        }
+
+        if (!gameObject.activeSelf)
+        {
+            gameObject.SetActive(true);
+        }
+    }
 
     private void DisableSelf()
     {
@@ -218,10 +466,6 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
 
         gameObject.SetActive(false);
     }
-
-    // =====================================================================
-    // 簡易 Sprite アニメ
-    // =====================================================================
 
     private void UpdateSimpleAnimation()
     {
@@ -272,10 +516,6 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
         target.sprite = frames[index];
     }
 
-    // =====================================================================
-    // 見た目調整
-    // =====================================================================
-
     private void ApplyVisualLayout()
     {
         if (visualRoot != null)
@@ -297,9 +537,19 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
         }
     }
 
-    // =====================================================================
-    // 参照補完
-    // =====================================================================
+    private void ResolvePlayerIfNeeded()
+    {
+        if (player != null)
+        {
+            return;
+        }
+
+        GameObject playerObject = GameObject.FindGameObjectWithTag(playerTag);
+        if (playerObject != null)
+        {
+            player = playerObject.transform;
+        }
+    }
 
     private void TryAutoAssignRenderers()
     {
