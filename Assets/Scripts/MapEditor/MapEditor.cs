@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor;
 using UnityEngine;
 
 [ExecuteAlways]
 public class MapEditor : MonoBehaviour
 {
-
 
     Dictionary<Vector3Int, GameObject> tiles =
         new Dictionary<Vector3Int, GameObject>();
@@ -21,8 +21,8 @@ public class MapEditor : MonoBehaviour
     [Tooltip("現在編集しているステージの番号")]
     [SerializeField] private int stageNumber = 1;
 
-    float gridSize = 1.0f;
 
+    float gridSize = 1.0f;
    
     bool showSaveConfirm = false;
 
