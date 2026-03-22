@@ -1361,6 +1361,7 @@ GameObject:
   - component: {fileID: 1189614811}
   - component: {fileID: 1189614810}
   - component: {fileID: 1189614809}
+  - component: {fileID: 1189614815}
   m_Layer: 0
   m_Name: PlayerRoot
   m_TagString: Player
@@ -1605,6 +1606,41 @@ Transform:
   - {fileID: 1332477524}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1189614815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1189614808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0176c90e384004d4eb0990f45007c65f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAudioController
+  playerController: {fileID: 1189614811}
+  enableJump: 1
+  enableWallJump: 1
+  enableNormalLanding: 1
+  enableStrongLanding: 1
+  enableWallSlide: 1
+  enableGroundStep: 1
+  enableAirStep: 1
+  enableDamageDeath: 1
+  enableHazardDeath: 1
+  jumpAudioId: SFX_player_jump
+  wallJumpAudioId: SFX_player_walljump
+  normalLandingAudioId: SFX_player_land
+  strongLandingAudioId: SFX_player_land
+  wallSlideAudioId: SFX_player_wallslide
+  groundStepAudioId: SFX_player_step
+  airStepAudioId: SFX_player_step
+  damageDeathAudioId: SFX_game_over
+  hazardDeathAudioId: SFX_game_over
+  useStrongLandingMinAirTime: 1
+  strongLandingMinAirTime: 0.2
+  useStrongLandingMinFallHeight: 1
+  strongLandingMinFallHeight: 6
 --- !u!1 &1298716506
 GameObject:
   m_ObjectHideFlags: 0
