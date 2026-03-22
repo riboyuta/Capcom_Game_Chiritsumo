@@ -204,6 +204,14 @@ public sealed class HandHeadMover : MonoBehaviour
         ResetMovementState();
     }
 
+    // 移動平面モードを外部から同期する。
+    // controller 側の攻撃平面を source of truth にしたいときに使う。
+    public void SetMovementPlaneMode(MovementPlaneMode newPlaneMode)
+    {
+        movementPlaneMode = newPlaneMode;
+        ResetMovementState();
+    }
+
     // 方向・再照準タイマー・有効方向フラグを初期状態へ戻す。
     // target 差し替えや強制再配置の直後に使う前提。
     public void ResetMovementState()

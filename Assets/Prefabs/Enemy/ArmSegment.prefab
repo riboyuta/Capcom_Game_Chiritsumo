@@ -40,6 +40,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6743007373889972510}
+  - component: {fileID: 6218038968195991971}
   m_Layer: 0
   m_Name: ArmSegment
   m_TagString: Untagged
@@ -63,6 +64,33 @@ Transform:
   - {fileID: 4289664438730877091}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6218038968195991971
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3746233343278457844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 461dd941a560d20419fb1326b79eed88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArmSegmentView
+  spriteRoot: {fileID: 4289664438730877091}
+  startSocket: {fileID: 2370303706910938030}
+  endSocket: {fileID: 1438185570476850523}
+  spriteRenderer: {fileID: 2139582720795384704}
+  planeMode: 0
+  autoInitializeOnAwake: 1
+  allowScaleX: 0
+  allowScaleY: 0
+  overrideSortingLayerName: 
+  showSocketGizmos: 0
+  restLength: 0
+  initialLocalScale: {x: 1, y: 1, z: 1}
+  isInitialized: 0
+  cachedStartLocalPosition: {x: 0, y: 0, z: 0}
+  cachedEndLocalPosition: {x: 0, y: 0, z: 0}
 --- !u!1 &4292357531307899945
 GameObject:
   m_ObjectHideFlags: 0

@@ -257,6 +257,13 @@ public sealed class ArmSegmentView : MonoBehaviour
         gameObject.SetActive(visible);
     }
 
+    // 表示平面モードを外部から同期する。
+    // controller の攻撃平面設定と合わせる用途を想定する。
+    public void SetPlaneMode(SegmentViewPlaneMode newPlaneMode)
+    {
+        planeMode = newPlaneMode;
+    }
+
     // =====================================================================
     // 座標変換 / 軸解決
     // =====================================================================

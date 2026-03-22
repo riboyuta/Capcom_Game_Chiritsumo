@@ -46,6 +46,10 @@ public sealed class CreepingArmAttackController : MonoBehaviour
     [Tooltip("現在の手の平位置の参照元です。StartAttack の初期地点候補と TickAttack 中の currentPalmLogicPoint 更新に使います。未設定だと現在手の平位置の追従更新は行われません。")]
     [SerializeField] private Transform palmSocket;
 
+    [Header("参照: Head 移動コンポーネント")]
+    [Tooltip("手先ヘッドの移動本体です。TickAttack で TickMovement(deltaTime) を呼びます。未設定でも controller 自体は動作継続し、palmSocket 位置だけでチェーン更新します。")]
+    [SerializeField] private HandHeadMover headMover;
+
     [Header("参照: セグメント配置ルート")]
     [Tooltip("将来セグメント GameObject を生成・配置する親 Transform です。StartAttack 時に未設定なら自分自身へ補完します。セグメント生成実装が接続されたときの配置先になります。")]
     [SerializeField] private Transform segmentPoolRoot;
@@ -135,10 +139,12 @@ public sealed class CreepingArmAttackController : MonoBehaviour
     [Tooltip("現在のロジック節点列を確認するための一覧です。現状は StartAttack 時に初期点のみ入り、将来の ArmChainModel 接続先になります。調整用ではなく可視化用です。")]
     [SerializeField] private List<Vector2> debugChainPoints = new List<Vector2>();
 
-    [Header("デバッグ(Runtime): セグメント実体一覧")]
-    [Tooltip("実行時に生成したセグメント GameObject 一覧です。StopAttack や ClearRuntimeState で破棄対象になります。現状は未生成のため空が基本で、将来の表示接続確認用です。")]
-    [SerializeField] private List<GameObject> runtimeSegmentInstances = new List<GameObject>();
+    [Header("デバッグ(Runtime): セグメントView一覧")]
+    [Tooltip("実行時に生成 / 再利用している ArmSegmentView 一覧です。必要本数不足時に追加生成し、過剰分は非表示化して再利用します。")]
+    [SerializeField] private List<ArmSegmentView> runtimeSegmentViews = new List<ArmSegmentView>();
 
+    // 腕の確定節点列ロジックモデル。
+    private ArmChainModel chainModel = new ArmChainModel();
     // =====================================================================
     // ライフサイクル
     // =====================================================================
@@ -194,11 +200,20 @@ public sealed class CreepingArmAttackController : MonoBehaviour
         if (headRoot != null)
         {
             headRoot.position = LiftLogicPointToWorld(initialLogicPoint);
-            ApplyHeadSortingPlaceholder();
         }
 
+        if (headMover != null)
+        {
+            headMover.SnapToWorldPosition(LiftLogicPointToWorld(initialLogicPoint));
+        }
+
+        ApplyHeadSortingPlaceholder();
+        SyncMoverAndSegmentPlaneModes();
+
+        chainModel.Reset(initialLogicPoint, segmentLength, maxSegmentCount);
+
         debugChainPoints.Clear();
-        debugChainPoints.Add(initialLogicPoint);
+        SyncDebugChainPointsFromModel();
 
         attackTimer = 0f;
         isAttacking = true;
@@ -208,25 +223,16 @@ public sealed class CreepingArmAttackController : MonoBehaviour
             segmentPoolRoot = transform;
         }
 
-        if (logSegmentCount && segmentPrefab == null)
-        {
-            Debug.LogWarning(
-                "[CreepingArmAttackController] segmentPrefab is not assigned yet. Scaffold mode continues without segment visuals.",
-                this
-            );
-        }
-
-        // NOTE:
-        // runtimeSegment は Start 時点では生成しない。
-        // 将来 ArmSegmentView 接続時に必要な初期表示をここへ入れる。
+        HideAllSegmentViews();
     }
+
 
     // 攻撃を停止する。
     // 進行フラグを下ろし、実行時生成物を破棄する。
     public void StopAttack()
     {
         isAttacking = false;
-        ClearRuntimeState();
+        HideAllSegmentViews();
     }
 
     // 攻撃状態を完全リセットする。
@@ -239,6 +245,14 @@ public sealed class CreepingArmAttackController : MonoBehaviour
         initialLogicPoint = Vector2.zero;
         currentPalmLogicPoint = Vector2.zero;
         debugChainPoints.Clear();
+
+        if (headMover != null)
+        {
+            headMover.ResetMovementState();
+        }
+
+        chainModel.Clear();
+        HideAllSegmentViews();
     }
 
     // =====================================================================
@@ -251,17 +265,45 @@ public sealed class CreepingArmAttackController : MonoBehaviour
     {
         attackTimer += deltaTime;
 
+        if (headMover != null)
+        {
+            headMover.TickMovement(deltaTime);
+        }
+
         if (palmSocket != null)
         {
             currentPalmLogicPoint = ProjectWorldToLogicPlane(palmSocket.position);
         }
+        else if (headRoot != null)
+        {
+            currentPalmLogicPoint = ProjectWorldToLogicPlane(headRoot.position);
+        }
 
-        // TODO:
-        // ここで HandHeadMover を呼び、head / palm の移動目標を更新する。
-        // ここで ArmChainModel を呼び、2D ロジック節点列を更新する。
-        // ここで ArmSegmentView を呼び、節点列を見た目へ反映する。
-        // ArmLethalHitbox などの当たり判定制御も専用コンポーネントへ委譲する。
-        // newestSegmentSortingOrder / sortingStepPerSegment を使った描画順更新を実装する。
+        if (!chainModel.IsInitialized)
+        {
+            chainModel.Reset(initialLogicPoint, segmentLength, maxSegmentCount);
+        }
+
+        chainModel.CommitHeadPoint(currentPalmLogicPoint);
+        SyncDebugChainPointsFromModel();
+
+        IReadOnlyList<Vector2> chainPoints = chainModel.ChainPoints;
+        int fixedSegmentCount = Mathf.Max(0, chainPoints.Count - 1);
+        bool shouldDrawTail = drawTailToCurrentPalm && chainPoints.Count >= 1;
+        if (shouldDrawTail)
+        {
+            Vector2 lastCommitted = chainPoints[chainPoints.Count - 1];
+            if ((currentPalmLogicPoint - lastCommitted).sqrMagnitude <= 1e-6f)
+            {
+                shouldDrawTail = false;
+            }
+        }
+
+        int requiredCount = fixedSegmentCount + (shouldDrawTail ? 1 : 0);
+        EnsureSegmentViewCount(requiredCount);
+        UpdateSegmentViews(chainPoints, fixedSegmentCount, shouldDrawTail);
+
+        ApplyHeadSortingPlaceholder();
 
         if (attackDuration > 0f && attackTimer >= attackDuration)
         {
@@ -271,7 +313,7 @@ public sealed class CreepingArmAttackController : MonoBehaviour
         if (logSegmentCount)
         {
             Debug.Log(
-                $"[CreepingArmAttackController] debugChainPoints={debugChainPoints.Count}, runtimeSegments={runtimeSegmentInstances.Count}, newestSegmentSortingOrder={newestSegmentSortingOrder}, sortingStepPerSegment={sortingStepPerSegment}",
+                $"[CreepingArmAttackController] chainPoints={debugChainPoints.Count}, activeSegments={requiredCount}, pooledViews={runtimeSegmentViews.Count}, newestSegmentSortingOrder={newestSegmentSortingOrder}, sortingStepPerSegment={sortingStepPerSegment}",
                 this
             );
         }
@@ -319,25 +361,142 @@ public sealed class CreepingArmAttackController : MonoBehaviour
     // 実行時生成物整理
     // =====================================================================
 
-    // 実行時に生成したセグメント実体を破棄する。
-    // pooling 未導入の現状では Destroy を使い、一覧も空に戻す。
-    private void ClearRuntimeState()
+    // 必要本数に満たない ArmSegmentView を不足分だけ生成する。
+    // 既存分は再利用し、過剰分は非表示化して維持する。
+    private void EnsureSegmentViewCount(int requiredCount)
     {
-        for (int i = 0; i < runtimeSegmentInstances.Count; i++)
+        if (requiredCount <= 0)
         {
-            GameObject instance = runtimeSegmentInstances[i];
-            if (instance != null)
-            {
-                Destroy(instance);
-            }
+            HideAllSegmentViews();
+            return;
         }
 
-        runtimeSegmentInstances.Clear();
+        if (segmentPrefab == null)
+        {
+            return;
+        }
 
-        // TODO:
-        // pooling を導入する場合は Destroy ではなく inactive 化へ切り替える。
+        if (segmentPoolRoot == null)
+        {
+            segmentPoolRoot = transform;
+        }
+
+        while (runtimeSegmentViews.Count < requiredCount)
+        {
+            GameObject instance = Instantiate(segmentPrefab, segmentPoolRoot);
+            ArmSegmentView view = instance.GetComponent<ArmSegmentView>();
+            if (view == null)
+            {
+                view = instance.GetComponentInChildren<ArmSegmentView>();
+            }
+
+            if (view == null)
+            {
+                Debug.LogWarning("[CreepingArmAttackController] segmentPrefab has no ArmSegmentView.", this);
+                Destroy(instance);
+                break;
+            }
+
+            view.SetVisible(false);
+            view.SetPlaneMode(ConvertSegmentViewPlaneMode());
+            runtimeSegmentViews.Add(view);
+        }
     }
 
+    // chainPoints を使って segment view の見た目と描画順を更新する。
+    private void UpdateSegmentViews(IReadOnlyList<Vector2> chainPoints, int fixedSegmentCount, bool shouldDrawTail)
+    {
+        int activeCount = fixedSegmentCount + (shouldDrawTail ? 1 : 0);
+        for (int i = 0; i < runtimeSegmentViews.Count; i++)
+        {
+            ArmSegmentView view = runtimeSegmentViews[i];
+            if (view == null)
+            {
+                continue;
+            }
+
+            if (i >= activeCount)
+            {
+                view.SetVisible(false);
+                continue;
+            }
+
+            Vector2 backLogic;
+            Vector2 frontLogic;
+            if (i < fixedSegmentCount)
+            {
+                backLogic = chainPoints[i];
+                frontLogic = chainPoints[i + 1];
+            }
+            else
+            {
+                backLogic = chainPoints[chainPoints.Count - 1];
+                frontLogic = currentPalmLogicPoint;
+            }
+
+            Vector3 backWorld = LiftLogicPointToWorld(backLogic);
+            Vector3 frontWorld = LiftLogicPointToWorld(frontLogic);
+            int sortingOrder = newestSegmentSortingOrder - ((activeCount - 1 - i) * sortingStepPerSegment);
+            view.Apply(backWorld, frontWorld, sortingLayerName, sortingOrder);
+        }
+    }
+
+    // 全セグメント view を非表示化する。
+    private void HideAllSegmentViews()
+    {
+        for (int i = 0; i < runtimeSegmentViews.Count; i++)
+        {
+            if (runtimeSegmentViews[i] != null)
+            {
+                runtimeSegmentViews[i].SetVisible(false);
+            }
+        }
+    }
+
+    // chainModel の点列を debug 表示配列へ同期する。
+    private void SyncDebugChainPointsFromModel()
+    {
+        debugChainPoints.Clear();
+        if (!chainModel.IsInitialized)
+        {
+            return;
+        }
+
+        IReadOnlyList<Vector2> chainPoints = chainModel.ChainPoints;
+        for (int i = 0; i < chainPoints.Count; i++)
+        {
+            debugChainPoints.Add(chainPoints[i]);
+        }
+    }
+
+    // AttackPlaneMode を SegmentView 用 plane mode に変換する。
+    private ArmSegmentView.SegmentViewPlaneMode ConvertSegmentViewPlaneMode()
+    {
+        return attackPlaneMode == AttackPlaneMode.XZ
+            ? ArmSegmentView.SegmentViewPlaneMode.XZ
+            : ArmSegmentView.SegmentViewPlaneMode.XY;
+    }
+
+    // controller が source of truth になるよう、mover / view の平面モードを揃える。
+    private void SyncMoverAndSegmentPlaneModes()
+    {
+        if (headMover != null)
+        {
+            MovementPlaneMode movementMode = attackPlaneMode == AttackPlaneMode.XZ
+                ? MovementPlaneMode.XZ
+                : MovementPlaneMode.XY;
+            headMover.SetMovementPlaneMode(movementMode);
+        }
+
+        ArmSegmentView.SegmentViewPlaneMode viewMode = ConvertSegmentViewPlaneMode();
+        for (int i = 0; i < runtimeSegmentViews.Count; i++)
+        {
+            if (runtimeSegmentViews[i] != null)
+            {
+                runtimeSegmentViews[i].SetPlaneMode(viewMode);
+            }
+        }
+    }
     // =====================================================================
     // 仮描画順設定
     // =====================================================================

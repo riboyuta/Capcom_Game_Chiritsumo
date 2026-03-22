@@ -708,7 +708,7 @@ Transform:
   m_GameObject: {fileID: 382874335}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -20, y: 25, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -785,6 +785,11 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 15.820001, y: 22.04, z: 0}
   m_Center: {x: 9.01, y: 11.02, z: 0}
+--- !u!4 &615927180 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2564374699015845103, guid: 575adefc154a47542959edb35f24afb1, type: 3}
+  m_PrefabInstance: {fileID: 6172812202918670027}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &669143496
 GameObject:
   m_ObjectHideFlags: 0
@@ -2766,16 +2771,105 @@ PrefabInstance:
       propertyPath: m_Name
       value: CreepingArmAttack
       objectReference: {fileID: 0}
+    - target: {fileID: 7749574789193972971, guid: 575adefc154a47542959edb35f24afb1, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7749574789193972971, guid: 575adefc154a47542959edb35f24afb1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6172812202918670033}
+    - targetCorrespondingSourceObject: {fileID: 3074269209389679572, guid: 575adefc154a47542959edb35f24afb1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6172812202918670032}
   m_SourcePrefab: {fileID: 100100000, guid: 575adefc154a47542959edb35f24afb1, type: 3}
 --- !u!4 &6172812202918670028 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3623994831124556589, guid: 575adefc154a47542959edb35f24afb1, type: 3}
   m_PrefabInstance: {fileID: 6172812202918670027}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &6172812202918670029 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7258454203881293260, guid: 575adefc154a47542959edb35f24afb1, type: 3}
+  m_PrefabInstance: {fileID: 6172812202918670027}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6172812202918670030 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3074269209389679572, guid: 575adefc154a47542959edb35f24afb1, type: 3}
+  m_PrefabInstance: {fileID: 6172812202918670027}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6172812202918670031 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7749574789193972971, guid: 575adefc154a47542959edb35f24afb1, type: 3}
+  m_PrefabInstance: {fileID: 6172812202918670027}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6172812202918670032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6172812202918670030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a216fe2d22f60ec408135f61bfb47197, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandHeadMover
+  target: {fileID: 1259927093}
+  headRoot: {fileID: 615927180}
+  moveSpeed: 4
+  movementPlaneMode: 0
+  updateDirectionContinuously: 1
+  stopDistance: 0
+  retargetInterval: 0
+  useDistanceSpeedBoost: 0
+  distanceForMaxBoost: 6
+  maxSpeedMultiplier: 1.5
+  showMoveDebug: 1
+  currentMoveDirectionWorld: {x: 0, y: 0, z: 0}
+  retargetTimer: 0
+  hasValidDirection: 0
+--- !u!114 &6172812202918670033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6172812202918670031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc5610307bb362b43b2c05949da710e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CreepingArmAttackController
+  optionalSpawnAnchor: {fileID: 382874336}
+  headRoot: {fileID: 6172812202918670028}
+  palmSocket: {fileID: 6172812202918670029}
+  headMover: {fileID: 6172812202918670032}
+  segmentPoolRoot: {fileID: 6172812202918670028}
+  segmentPrefab: {fileID: 3746233343278457844, guid: 007f0747c8d4dca4984a97eaf2f33005, type: 3}
+  segmentLength: 0.5
+  maxSegmentCount: 12
+  drawTailToCurrentPalm: 1
+  attackPlaneMode: 0
+  fixedDepth: 0
+  sortingLayerName: Enemy
+  headSortingOrder: 200
+  newestSegmentSortingOrder: 199
+  sortingStepPerSegment: 1
+  autoStartOnEnable: 1
+  attackDuration: 5
+  useSpawnAnchorAsInitialPoint: 1
+  showGizmos: 1
+  logSegmentCount: 1
+  isAttacking: 1
+  attackTimer: 0
+  initialLogicPoint: {x: 0, y: 0}
+  currentPalmLogicPoint: {x: 0, y: 0}
+  debugChainPoints: []
+  runtimeSegmentViews: []
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
