@@ -1,55 +1,56 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 // 責務:
-// - 腕の確定節点列を純ロジックで保持する
-// - 現在手の平位置から、segmentLength ごとに新しい確定点を追加する
-// - 最大節数を超えた古い点を先頭から捨てて、最新側を維持する
+// - chainPoints（各ワープ後の手位置列）の真実を保持する
+// - ワープ発生時にのみ新しい点を 1 つ追加する
+// - maxSegmentCount を「節数上限」として維持する
 //
 // 非責務:
-// - ワールド座標との変換は担当しない
-// - 見た目生成や Sprite / Mesh 更新は担当しない
-// - 移動制御や当たり判定は担当しない
+// - 毎フレーム距離計算による自動節生成
+// - world / logic plane 変換
+// - view 更新 / pooling / MonoBehaviour 更新
 //
 // 依存先:
-// - Mathf: 安全な下限処理と節数計算に使用
 // - List<Vector2>: 節点列の保持に使用
+// - Mathf: 節数計算と上限安全化に使用
+// - float.IsFinite: 非有限値ガードに使用
 //
 // 前提条件:
-// - maxSegmentCount は「点数」ではなく「節数（点間の本数）」の上限として扱う
-// - Reset() 後に CommitHeadPoint() を呼ぶ
-// - segmentLength は 0 より十分大きい値を想定する
+// - Reset() 後に PushWarpPoint() を呼ぶ
+// - maxSegmentCount は「点数」ではなく「節数（点間本数）」の上限として扱う
+// - 1 回のワープに対して 1 点だけ追加する運用を前提にする
 public sealed class ArmChainModel
 {
     // =====================================================================
     // 定数
     // =====================================================================
 
-    // 0 長さや極小距離による不安定な正規化を避けるための最小長さ。
-    private const float MinSegmentLength = 0.0001f;
+    // 同一点とみなすための許容誤差。
+    // ワープ後位置が末尾点とほぼ同じときは重複追加を防ぐ。
+    private const float PointEqualityEpsilon = 0.0001f;
 
     // =====================================================================
     // 実行時状態
     // =====================================================================
 
-    // 現在の確定節点列。
-    // 先頭が最も古く、末尾が最新の確定点。
+    // chainPoints は「各ワープ後の手位置列」。
+    // 先頭が最古、末尾が最新。
     private readonly List<Vector2> chainPoints = new();
 
-    // 節 1 本あたりの基準長さ。
-    // Reset 時に確定し、CommitHeadPoint の追加間隔として使う。
+    // 将来の調整用に保持する節基準長さ。
+    // 現在の実装では距離ベース自動追加には使わない。
     private float segmentLength;
 
-    // 許可する最大節数。
-    // 「点数」ではなく「点間の本数」で管理する。
+    // maxSegmentCount は「点数」ではなく「節数（点間本数）」の上限。
     private int maxSegmentCount;
 
-    // 最後に確定した点。
-    // 新しい点を積む基準位置として使う。
+    // 末尾点と常に一致させる最新確定点。
     private Vector2 lastCommittedPoint;
 
     // Reset 済みかどうか。
-    // 初期化前の Commit を防ぐためのガード。
+    // 初期化前の Push を防ぐガードに使う。
     private bool isInitialized;
 
     // =====================================================================
@@ -72,7 +73,7 @@ public sealed class ArmChainModel
     // =====================================================================
 
     // モデルを初期化する。
-    // 初期点を 1 つだけ持つ状態から開始し、最大節数制限も即時反映する。
+    // 初期点を 1 つだけ持つ状態から開始し、節数上限も即時反映する。
     public void Reset(Vector2 initialPoint, float segmentLength, int maxSegmentCount)
     {
         chainPoints.Clear();
@@ -87,67 +88,51 @@ public sealed class ArmChainModel
         TrimToMaxSegmentCount();
     }
 
-    // 現在手の平位置に向かって、segmentLength ごとに新しい確定点を追加する。
-    // 戻り値は今回追加した点数。
-    public int CommitHeadPoint(Vector2 currentPalmPoint)
+    // 新しいワープ後位置を 1 点だけ追加する。
+    // 毎フレーム距離からの自動生成は行わない。
+    // 戻り値は今回追加した点数（0 or 1）。
+    public int PushWarpPoint(Vector2 newPoint)
     {
         if (!isInitialized)
         {
             return 0;
         }
 
-        if (segmentLength <= MinSegmentLength)
+        if (!IsFinite(newPoint))
         {
             return 0;
         }
 
-        // 入力値や内部状態に非有限値が混ざっている場合は更新を止める。
-        if (!IsFinite(currentPalmPoint) || !IsFinite(lastCommittedPoint))
+        // 念のため点列が空なら、そのまま初回点として受ける。
+        if (chainPoints.Count == 0)
         {
-            return 0;
-        }
-
-        int addedCount = 0;
-
-        while (true)
-        {
-            Vector2 delta = currentPalmPoint - lastCommittedPoint;
-            float distance = delta.magnitude;
-
-            // 次の 1 点を置くのに必要な距離が足りないなら終了する。
-            if (distance < segmentLength)
-            {
-                break;
-            }
-
-            // 極小距離での正規化を避ける安全ガード。
-            if (distance <= MinSegmentLength)
-            {
-                break;
-            }
-
-            Vector2 dir = delta / distance;
-            Vector2 newPoint = lastCommittedPoint + dir * segmentLength;
-
-            if (!IsFinite(newPoint))
-            {
-                break;
-            }
-
             chainPoints.Add(newPoint);
             lastCommittedPoint = newPoint;
-            addedCount++;
-
-            // 追加のたびに最大節数を守り、最新側を残す。
             TrimToMaxSegmentCount();
+            return 1;
         }
 
-        if (chainPoints.Count > 0)
+        Vector2 tail = chainPoints[chainPoints.Count - 1];
+
+        // 末尾点とほぼ同じ位置なら重複点を増やさない。
+        if (NearlyEqual(tail, newPoint, PointEqualityEpsilon))
         {
-            lastCommittedPoint = chainPoints[chainPoints.Count - 1];
+            return 0;
         }
 
-        return addedCount;
+        chainPoints.Add(newPoint);
+        lastCommittedPoint = newPoint;
+
+        TrimToMaxSegmentCount();
+        return 1;
+    }
+
+    // 旧 API との互換入口。
+    // 以前の距離ベース自動生成は廃止し、現在は PushWarpPoint に委譲するだけにしている。
+    [Obsolete("Use PushWarpPoint(newPoint). CommitHeadPoint no longer performs distance-based auto generation.")]
+    public int CommitHeadPoint(Vector2 currentPalmPoint)
+    {
+        return PushWarpPoint(currentPalmPoint);
     }
 
     // モデルを完全に空状態へ戻す。
@@ -170,14 +155,22 @@ public sealed class ArmChainModel
         return float.IsFinite(value.x) && float.IsFinite(value.y);
     }
 
-    // 最大節数を超えた古い点を先頭から捨てる。
-    // 「最新の節構成を保つ」ことを優先し、末尾側は残す。
+    // 2 点がほぼ同じ位置かどうかを判定する。
+    // 平方距離で比較して sqrt を避ける。
+    private static bool NearlyEqual(Vector2 a, Vector2 b, float epsilon)
+    {
+        float dx = a.x - b.x;
+        float dy = a.y - b.y;
+        return (dx * dx) + (dy * dy) <= epsilon * epsilon;
+    }
+
+    // SegmentCount が maxSegmentCount を超える間、先頭を削除して最新側を残す。
+    // 古い節から捨てることで、「最新のワープ履歴」を優先して保持する。
     private void TrimToMaxSegmentCount()
     {
-        int safeMaxSegmentCount = Mathf.Max(0, maxSegmentCount);
-        maxSegmentCount = safeMaxSegmentCount;
+        maxSegmentCount = Mathf.Max(0, maxSegmentCount);
 
-        while (SegmentCount > safeMaxSegmentCount && chainPoints.Count > 0)
+        while (SegmentCount > maxSegmentCount && chainPoints.Count > 0)
         {
             chainPoints.RemoveAt(0);
         }

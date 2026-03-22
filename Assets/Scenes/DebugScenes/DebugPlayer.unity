@@ -708,7 +708,7 @@ Transform:
   m_GameObject: {fileID: 382874335}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -20, y: 25, z: 0}
+  m_LocalPosition: {x: -67.2, y: 25, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2820,18 +2820,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HandHeadMover
   target: {fileID: 1259927093}
   headRoot: {fileID: 615927180}
-  moveSpeed: 4
   movementPlaneMode: 0
-  updateDirectionContinuously: 1
-  stopDistance: 0
-  retargetInterval: 0
-  useDistanceSpeedBoost: 0
-  distanceForMaxBoost: 6
-  maxSpeedMultiplier: 1.5
+  pauseDuration: 3
+  stepLength: 5
+  faceTargetContinuously: 1
+  wobbleAngleAmplitude: 5
+  wobbleFrequency: 5
   showMoveDebug: 1
   currentMoveDirectionWorld: {x: 0, y: 0, z: 0}
-  retargetTimer: 0
   hasValidDirection: 0
+  pauseTimer: 0
+  warpedThisTick: 0
+  lastWarpFromWorld: {x: 0, y: 0, z: 0}
+  lastWarpToWorld: {x: 0, y: 0, z: 0}
 --- !u!114 &6172812202918670033
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2852,7 +2853,7 @@ MonoBehaviour:
   segmentPrefab: {fileID: 3746233343278457844, guid: 007f0747c8d4dca4984a97eaf2f33005, type: 3}
   segmentLength: 0.5
   maxSegmentCount: 12
-  drawTailToCurrentPalm: 1
+  drawTailToCurrentPalm: 0
   attackPlaneMode: 0
   fixedDepth: 0
   sortingLayerName: Enemy
@@ -2860,7 +2861,7 @@ MonoBehaviour:
   newestSegmentSortingOrder: 199
   sortingStepPerSegment: 1
   autoStartOnEnable: 1
-  attackDuration: 5
+  attackDuration: 0
   useSpawnAnchorAsInitialPoint: 1
   showGizmos: 1
   logSegmentCount: 1
