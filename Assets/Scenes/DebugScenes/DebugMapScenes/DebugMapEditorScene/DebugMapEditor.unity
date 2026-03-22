@@ -549,8 +549,11 @@ MonoBehaviour:
   - {fileID: 5550725159217658167, guid: ebb6862cbe9ccf946998d8dfba82fcd2, type: 3}
   - {fileID: 5759075175670442077, guid: 7ce17bd8c2b6fdf4596b65d0e38ccfb2, type: 3}
   - {fileID: 5222379767539595353, guid: f2617c72ae17efe48914a6a84dbd1200, type: 3}
-  stageNumber: 1
+  stageNumber: 2
   comment: "\uFF10\uFF1D \u901A\u5E38\u30D6\u30ED\u30C3\u30AF\n\uFF11\uFF1D\n\uFF12\uFF1D\n\uFF13\uFF1D\u30B9\u30A4\u30C3\u30C1\uFF08\u30AE\u30DF\u30C3\u30AF\uFF09\n\uFF14\uFF1D\u6249\uFF08\u30AE\u30DF\u30C3\u30AF\uFF09\n\uFF15\uFF1D\u5D29\u308C\u5E8A\uFF08\u30AE\u30DF\u30C3\u30AF\uFF09\n\uFF16\uFF1D\n\uFF17\uFF1D\n\uFF18\uFF1D\n\uFF19\uFF1D\n"
+  changeTileContainer:
+    target: 0
+    changeTo: 0
 --- !u!4 &1470899798
 Transform:
   m_ObjectHideFlags: 0
