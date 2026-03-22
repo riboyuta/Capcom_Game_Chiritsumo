@@ -3,9 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public sealed class GrabHitbox : MonoBehaviour
 {
-    private HandGrabAttack owner;
     private BoxCollider boxCollider;
-    private bool hitEnabled = false;
 
     private void Awake()
     {
@@ -13,36 +11,58 @@ public sealed class GrabHitbox : MonoBehaviour
         boxCollider.isTrigger = true;
     }
 
-    public void Initialize(HandGrabAttack owner)
+    public GameObject FindPlayerInGrabArea()
     {
-        this.owner = owner;
-    }
-
-    public void SetHitEnabled(bool enabled)
-    {
-        hitEnabled = enabled;
-
-        if (boxCollider != null)
+        if (boxCollider == null)
         {
-            boxCollider.enabled = enabled;
+            return null;
         }
+
+        Vector3 worldCenter = transform.TransformPoint(boxCollider.center);
+        Vector3 halfExtents = Vector3.Scale(boxCollider.size * 0.5f, transform.lossyScale);
+        Quaternion orientation = transform.rotation;
+
+        Collider[] hits = Physics.OverlapBox(
+            worldCenter,
+            halfExtents,
+            orientation,
+            ~0,
+            QueryTriggerInteraction.Collide
+        );
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Collider hit = hits[i];
+            if (hit == null)
+            {
+                continue;
+            }
+
+            if (!hit.CompareTag("Player"))
+            {
+                continue;
+            }
+
+            return hit.gameObject;
+        }
+
+        return null;
     }
 
-    private void OnTriggerEnter(Collider other)
+#if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
     {
-        if (!hitEnabled)
+        BoxCollider targetCollider = boxCollider != null ? boxCollider : GetComponent<BoxCollider>();
+        if (targetCollider == null)
         {
             return;
         }
 
-        if (!other.CompareTag("Player"))
-        {
-            return;
-        }
-
-        if (owner != null)
-        {
-            owner.NotifyGrabHit(other.gameObject);
-        }
+        Matrix4x4 oldMatrix = Gizmos.matrix;
+        Gizmos.matrix = transform.localToWorldMatrix;
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireCube(targetCollider.center, targetCollider.size);
+        Gizmos.matrix = oldMatrix;
     }
+#endif
 }

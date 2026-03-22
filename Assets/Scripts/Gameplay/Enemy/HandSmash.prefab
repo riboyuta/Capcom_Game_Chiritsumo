@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 1248396300350782899}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.25, z: 0}
+  m_LocalPosition: {x: 0.76, y: 0.47, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -52,7 +52,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.58, y: 1, z: 1}
+  m_Size: {x: 2.08, y: 0.56, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &939916035371832881
 MonoBehaviour:
@@ -141,12 +141,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandSmashAttack
   riseHeight: 5
-  riseSpeed: 10
-  holdTime: 0.15
-  smashSpeed: 24
+  riseSpeed: 12.25
+  holdTime: 0.2
+  holdLiftHeight: 0.5
+  holdLiftSpeed: 6
+  smashSpeed: 40
   endLifeTime: 0.2
   reachThreshold: 0.05
   palmHitbox: {fileID: 939916035371832881}
+  view: {fileID: 2132904375097717002}
 --- !u!1 &3333165700228034583
 GameObject:
   m_ObjectHideFlags: 0
@@ -157,6 +160,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3765795145287793564}
   - component: {fileID: 3125920352077900172}
+  - component: {fileID: 2132904375097717002}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -174,7 +178,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -1.7, y: 1.35, z: 0}
-  m_LocalScale: {x: 1.5922, y: 1.5922, z: 1.5922}
+  m_LocalScale: {x: 1.6765866, y: 1.6765866, z: 1.6765866}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1245821450785125729}
@@ -228,7 +232,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
+  m_Sprite: {fileID: -328500077, guid: f844d5901ee99fc42ae2f5219d4949b6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -238,3 +242,32 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &2132904375097717002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3333165700228034583}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35beccb421c9005498b1f9ada4ddec41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandSmashView
+  spriteRenderer: {fileID: 3125920352077900172}
+  riseFrames:
+  - {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
+  holdFrames:
+  - {fileID: -328500077, guid: f844d5901ee99fc42ae2f5219d4949b6, type: 3}
+  smashFrames:
+  - {fileID: -328500077, guid: f844d5901ee99fc42ae2f5219d4949b6, type: 3}
+  endFrames:
+  - {fileID: -328500077, guid: f844d5901ee99fc42ae2f5219d4949b6, type: 3}
+  riseFrameRate: 12
+  holdFrameRate: 12
+  smashFrameRate: 16
+  endFrameRate: 12
+  loopRise: 0
+  loopHold: 0
+  loopSmash: 0
+  loopEnd: 0

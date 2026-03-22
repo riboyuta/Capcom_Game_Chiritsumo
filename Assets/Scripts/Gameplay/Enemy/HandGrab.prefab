@@ -127,7 +127,7 @@ Rigidbody:
   m_UseGravity: 0
   m_IsKinematic: 1
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 120
   m_CollisionDetection: 0
 --- !u!114 &2321828064626340005
 MonoBehaviour:
@@ -141,13 +141,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b68ec6da3bb6504bb7d8616b55c1a7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandGrabAttack
-  approachSpeed: 14
+  approachNearSpeed: 12
+  grabMoveSpeed: 20
+  nearDistance: 1.8
   reachThreshold: 0.15
-  holdDuration: 0.35
+  preGrabTrackDuration: 0.5
+  trackUpdateDuration: 0.5
+  holdDuration: 0.7
   missPauseDuration: 0.2
   endLifeTime: 0.37
   grabHitbox: {fileID: 5963670478721026430}
   grabAnchor: {fileID: 43771532443994516}
+  view: {fileID: 1465742463774575682}
 --- !u!1 &4776703147606785312
 GameObject:
   m_ObjectHideFlags: 0
@@ -173,7 +178,7 @@ Transform:
   m_GameObject: {fileID: 4776703147606785312}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.98, y: 0.09, z: 0}
+  m_LocalPosition: {x: 2.32, y: 0.82, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -189,6 +194,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9017135669379843774}
   - component: {fileID: 4269651253241496702}
+  - component: {fileID: 1465742463774575682}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -206,7 +212,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.27, y: 1.27, z: 1.27}
+  m_LocalScale: {x: 1.573022, y: 1.573022, z: 1.573022}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 3659553753918598766}
@@ -270,3 +276,42 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1465742463774575682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8800664096687959020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5af3632827ad25248ad628df0cba433f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandGrabView
+  spriteRenderer: {fileID: 4269651253241496702}
+  approachNearFrames:
+  - {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
+  trackBeforeGrabFrames:
+  - {fileID: 46627556, guid: f51bbecaca8fe014e93fcbdc7f6fd47f, type: 3}
+  grabStartFrames:
+  - {fileID: 1457071121, guid: f51bbecaca8fe014e93fcbdc7f6fd47f, type: 3}
+  holdPlayerFrames:
+  - {fileID: 619398014, guid: f51bbecaca8fe014e93fcbdc7f6fd47f, type: 3}
+  missPauseFrames:
+  - {fileID: 337925152, guid: f51bbecaca8fe014e93fcbdc7f6fd47f, type: 3}
+  endFrames:
+  - {fileID: 660674674, guid: fad5506704bece04988e4ba9431f7543, type: 3}
+  approachNearFrameRate: 12
+  trackBeforeGrabFrameRate: 10
+  grabStartFrameRate: 14
+  holdPlayerFrameRate: 10
+  missPauseFrameRate: 8
+  endFrameRate: 10
+  loopApproachNear: 0
+  loopTrackBeforeGrab: 0
+  loopGrabStart: 0
+  loopHoldPlayer: 0
+  loopMissPause: 0
+  loopEnd: 0
+  defaultSortingOrder: 0
+  grabbedSortingOrder: 10

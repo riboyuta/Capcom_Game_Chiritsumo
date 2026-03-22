@@ -7,17 +7,23 @@ public sealed class HandGrabAttack : MonoBehaviour
     private enum AttackState
     {
         Idle,
-        Approach,
+        ApproachNear,
+        TrackBeforeGrab,
+        GrabStart,
         HoldPlayer,
         MissPause,
         End
     }
 
     [Header("Move")]
-    [SerializeField] private float approachSpeed = 14.0f;
-    [SerializeField] private float reachThreshold = 0.15f;
+    [SerializeField] private float approachNearSpeed = 12.0f;
+    [SerializeField] private float grabMoveSpeed = 18.0f;
+    [SerializeField] private float nearDistance = 1.25f;
+    [SerializeField] private float reachThreshold = 0.08f;
 
     [Header("Timing")]
+    [SerializeField] private float preGrabTrackDuration = 0.5f;
+    [SerializeField] private float trackUpdateDuration = 0.2f;
     [SerializeField] private float holdDuration = 0.35f;
     [SerializeField] private float missPauseDuration = 0.2f;
     [SerializeField] private float endLifeTime = 0.1f;
@@ -25,11 +31,18 @@ public sealed class HandGrabAttack : MonoBehaviour
     [Header("References")]
     [SerializeField] private GrabHitbox grabHitbox;
     [SerializeField] private Transform grabAnchor;
+    [SerializeField] private HandGrabView view;
 
     private Rigidbody rigidBody;
     private AttackState state = AttackState.Idle;
 
-    private Vector3 approachTargetPosition;
+    private Transform targetPlayer;
+    private Vector3 latestPlayerPosition;
+    private Vector3 approachNearTargetPosition;
+    private Vector3 finalGrabTargetPosition;
+
+    private float trackTimer = 0.0f;
+    private float trackedElapsedTime = 0.0f;
     private float holdTimer = 0.0f;
     private float missPauseTimer = 0.0f;
     private float endTimer = 0.0f;
@@ -45,34 +58,40 @@ public sealed class HandGrabAttack : MonoBehaviour
         rigidBody = GetComponent<Rigidbody>();
         rigidBody.useGravity = false;
         rigidBody.isKinematic = true;
-
-        if (grabHitbox != null)
-        {
-            grabHitbox.Initialize(this);
-            grabHitbox.SetHitEnabled(false);
-        }
     }
 
     public void StartAttack(
         Vector3 spawnPosition,
-        Vector3 targetPlayerPosition,
+        Transform targetPlayer,
         Action onFinished
     )
     {
         transform.position = spawnPosition;
-        approachTargetPosition = targetPlayerPosition;
+
+        this.targetPlayer = targetPlayer;
         this.onFinished = onFinished;
+
+        latestPlayerPosition = targetPlayer != null ? targetPlayer.position : GetAnchorWorldPosition();
+        approachNearTargetPosition = CalculateApproachNearTarget(GetAnchorWorldPosition(), latestPlayerPosition);
+        finalGrabTargetPosition = latestPlayerPosition;
 
         hasGrabbedPlayer = false;
         grabbedPlayerController = null;
         grabbedPlayerRigidbody = null;
 
-        if (grabHitbox != null)
-        {
-            grabHitbox.SetHitEnabled(true);
-        }
+        trackTimer = 0.0f;
+        trackedElapsedTime = 0.0f;
+        holdTimer = 0.0f;
+        missPauseTimer = 0.0f;
+        endTimer = 0.0f;
 
-        state = AttackState.Approach;
+        state = AttackState.ApproachNear;
+
+        if (view != null)
+        {
+            view.SetDefaultSorting();
+            view.PlayApproachNear();
+        }
     }
 
     private void Update()
@@ -82,8 +101,16 @@ public sealed class HandGrabAttack : MonoBehaviour
             case AttackState.Idle:
                 break;
 
-            case AttackState.Approach:
-                TickApproach();
+            case AttackState.ApproachNear:
+                TickApproachNear();
+                break;
+
+            case AttackState.TrackBeforeGrab:
+                TickTrackBeforeGrab();
+                break;
+
+            case AttackState.GrabStart:
+                TickGrabStart();
                 break;
 
             case AttackState.HoldPlayer:
@@ -108,45 +135,104 @@ public sealed class HandGrabAttack : MonoBehaviour
         }
     }
 
-    private void TickApproach()
+    private void TickApproachNear()
     {
+        UpdateTrackedPlayerPosition();
+
+        Vector3 currentAnchorPosition = GetAnchorWorldPosition();
+        approachNearTargetPosition = CalculateApproachNearTarget(currentAnchorPosition, latestPlayerPosition);
+
+        Vector3 rootTargetPosition = GetRootPositionForAnchorTarget(approachNearTargetPosition);
+
         Vector3 next = Vector3.MoveTowards(
             transform.position,
-            approachTargetPosition,
-            approachSpeed * Time.deltaTime
+            rootTargetPosition,
+            approachNearSpeed * Time.deltaTime
         );
 
         transform.position = next;
 
-        //Vector3 moveDirection = approachTargetPosition - transform.position;
-        //if (moveDirection.sqrMagnitude > 0.0001f)
-        //{
-        //    transform.rotation = Quaternion.LookRotation(moveDirection.normalized, Vector3.up);
-        //}
-
-        if (hasGrabbedPlayer)
+        if (Vector3.Distance(GetAnchorWorldPosition(), approachNearTargetPosition) <= reachThreshold)
         {
-            if (grabHitbox != null)
-            {
-                grabHitbox.SetHitEnabled(false);
-            }
+            transform.position = rootTargetPosition;
+            trackTimer = preGrabTrackDuration;
+            trackedElapsedTime = 0.0f;
+            state = AttackState.TrackBeforeGrab;
 
-            holdTimer = holdDuration;
-            state = AttackState.HoldPlayer;
+            if (view != null)
+            {
+                view.PlayTrackBeforeGrab();
+            }
+        }
+    }
+
+    private void TickTrackBeforeGrab()
+    {
+        trackedElapsedTime += Time.deltaTime;
+
+        if (trackedElapsedTime <= trackUpdateDuration)
+        {
+            UpdateTrackedPlayerPosition();
+            finalGrabTargetPosition = latestPlayerPosition;
+        }
+
+        trackTimer -= Time.deltaTime;
+        if (trackTimer > 0.0f)
+        {
             return;
         }
 
-        if (Vector3.Distance(transform.position, approachTargetPosition) <= reachThreshold)
-        {
-            transform.position = approachTargetPosition;
+        state = AttackState.GrabStart;
 
-            if (grabHitbox != null)
+        if (view != null)
+        {
+            view.PlayGrabStart();
+        }
+    }
+
+    private void TickGrabStart()
+    {
+        Vector3 rootTargetPosition = GetRootPositionForAnchorTarget(finalGrabTargetPosition);
+
+        Vector3 next = Vector3.MoveTowards(
+            transform.position,
+            rootTargetPosition,
+            grabMoveSpeed * Time.deltaTime
+        );
+
+        transform.position = next;
+
+        if (Vector3.Distance(GetAnchorWorldPosition(), finalGrabTargetPosition) <= reachThreshold)
+        {
+            transform.position = rootTargetPosition;
+
+            GameObject playerObject = grabHitbox != null ? grabHitbox.FindPlayerInGrabArea() : null;
+            if (playerObject != null)
             {
-                grabHitbox.SetHitEnabled(false);
+                TryStartGrab(playerObject);
             }
 
-            missPauseTimer = missPauseDuration;
-            state = AttackState.MissPause;
+            if (hasGrabbedPlayer)
+            {
+                holdTimer = holdDuration;
+                state = AttackState.HoldPlayer;
+
+                if (view != null)
+                {
+                    view.SetGrabbedSorting();
+                    view.PlayHoldPlayer();
+                }
+            }
+            else
+            {
+                missPauseTimer = missPauseDuration;
+                state = AttackState.MissPause;
+
+                if (view != null)
+                {
+                    view.PlayMissPause();
+                }
+            }
         }
     }
 
@@ -162,8 +248,19 @@ public sealed class HandGrabAttack : MonoBehaviour
         }
 
         ReleaseGrabbedPlayerAndKill();
+
+        if (view != null)
+        {
+            view.SetDefaultSorting();
+        }
+
         endTimer = endLifeTime;
         state = AttackState.End;
+
+        if (view != null)
+        {
+            view.PlayEnd();
+        }
     }
 
     private void TickMissPause()
@@ -174,8 +271,18 @@ public sealed class HandGrabAttack : MonoBehaviour
             return;
         }
 
+        if (view != null)
+        {
+            view.SetDefaultSorting();
+        }
+
         endTimer = endLifeTime;
         state = AttackState.End;
+
+        if (view != null)
+        {
+            view.PlayEnd();
+        }
     }
 
     private void TickEnd()
@@ -189,7 +296,53 @@ public sealed class HandGrabAttack : MonoBehaviour
         FinishAttack();
     }
 
-    public void NotifyGrabHit(GameObject playerObject)
+    private void UpdateTrackedPlayerPosition()
+    {
+        if (targetPlayer == null)
+        {
+            return;
+        }
+
+        latestPlayerPosition = targetPlayer.position;
+    }
+
+    private Vector3 CalculateApproachNearTarget(Vector3 fromPosition, Vector3 playerPosition)
+    {
+        Vector3 toPlayer = playerPosition - fromPosition;
+        float distance = toPlayer.magnitude;
+
+        if (distance <= 0.0001f)
+        {
+            return playerPosition;
+        }
+
+        Vector3 direction = toPlayer / distance;
+        float offsetDistance = Mathf.Min(nearDistance, distance);
+        return playerPosition - direction * offsetDistance;
+    }
+
+    private Vector3 GetAnchorWorldPosition()
+    {
+        if (grabAnchor != null)
+        {
+            return grabAnchor.position;
+        }
+
+        return transform.position;
+    }
+
+    private Vector3 GetRootPositionForAnchorTarget(Vector3 anchorTargetPosition)
+    {
+        if (grabAnchor == null)
+        {
+            return anchorTargetPosition;
+        }
+
+        Vector3 anchorOffset = grabAnchor.position - transform.position;
+        return anchorTargetPosition - anchorOffset;
+    }
+
+    private void TryStartGrab(GameObject playerObject)
     {
         if (hasGrabbedPlayer)
         {

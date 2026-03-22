@@ -1,10 +1,14 @@
 using UnityEngine;
 
-// 左から迫ってくる敵本体。
-// 本体接触による死亡判定と、手攻撃の発動を担当する。
 [RequireComponent(typeof(Collider))]
 public sealed class EnemyCore : MonoBehaviour
 {
+    private enum AttackType
+    {
+        Smash,
+        Grab
+    }
+
     [Header("References")]
     [SerializeField] private Transform player;
     [SerializeField] private HandSmashAttack handSmashPrefab;
@@ -16,7 +20,7 @@ public sealed class EnemyCore : MonoBehaviour
     [Header("Attack")]
     [SerializeField] private Vector3 handSpawnOffset = new Vector3(2.0f, 1.0f, 0.0f);
     [SerializeField] private float smashAttackRangeX = 8.0f;
-    [SerializeField] private float grabAttackRangeX = 8.0f;
+    [SerializeField] private float grabAttackRangeX = 3.0f;
     [SerializeField] private float attackCooldown = 2.5f;
     [SerializeField] private float groundY = 0.0f;
 
@@ -26,6 +30,13 @@ public sealed class EnemyCore : MonoBehaviour
     private float attackCooldownTimer = 0.0f;
     private bool isHandActive = false;
 
+    private Vector3 initialPosition;
+    private Quaternion initialRotation;
+    private GameObject activeHandInstance;
+
+    private AttackType lastAttackType = AttackType.Smash;
+    private int sameAttackStreakCount = 0;
+
     private void Reset()
     {
         Collider col = GetComponent<Collider>();
@@ -34,6 +45,9 @@ public sealed class EnemyCore : MonoBehaviour
 
     private void Awake()
     {
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
+
         if (player == null)
         {
             GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
@@ -62,21 +76,12 @@ public sealed class EnemyCore : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                TryStartSmashAttack();
+                TryStartRandomAttack();
             }
             return;
         }
 
-        float dx = Mathf.Abs(player.position.x - transform.position.x);
-        if (dx <= smashAttackRangeX)
-        {
-            TryStartSmashAttack();
-        }
-
-        if (dx <= grabAttackRangeX)
-        {
-            TryStartGrabAttack();
-        }
+        TryStartRandomAttack();
     }
 
     private void MoveTowardsPlayer()
@@ -88,7 +93,7 @@ public sealed class EnemyCore : MonoBehaviour
         transform.position = pos;
     }
 
-    private void TryStartSmashAttack()
+    private void TryStartRandomAttack()
     {
         if (isHandActive)
         {
@@ -100,15 +105,113 @@ public sealed class EnemyCore : MonoBehaviour
             return;
         }
 
+        if (player == null)
+        {
+            return;
+        }
+
+        float dx = Mathf.Abs(player.position.x - transform.position.x);
+
+        bool canUseSmash = handSmashPrefab != null && dx <= smashAttackRangeX;
+        bool canUseGrab = handGrabPrefab != null && dx <= grabAttackRangeX;
+
+        if (!canUseSmash && !canUseGrab)
+        {
+            return;
+        }
+
+        if (canUseSmash && !canUseGrab)
+        {
+            if (TryStartSmashAttack())
+            {
+                RecordAttackType(AttackType.Smash);
+            }
+            return;
+        }
+
+        if (!canUseSmash && canUseGrab)
+        {
+            if (TryStartGrabAttack())
+            {
+                RecordAttackType(AttackType.Grab);
+            }
+            return;
+        }
+
+        AttackType selectedAttackType = SelectNextAttackType();
+
+        if (selectedAttackType == AttackType.Smash)
+        {
+            if (TryStartSmashAttack())
+            {
+                RecordAttackType(AttackType.Smash);
+            }
+        }
+        else
+        {
+            if (TryStartGrabAttack())
+            {
+                RecordAttackType(AttackType.Grab);
+            }
+        }
+    }
+
+    private AttackType SelectNextAttackType()
+    {
+        if (sameAttackStreakCount >= 2)
+        {
+            return GetOppositeAttackType(lastAttackType);
+        }
+
+        return Random.value < 0.5f ? AttackType.Smash : AttackType.Grab;
+    }
+
+    private AttackType GetOppositeAttackType(AttackType attackType)
+    {
+        return attackType == AttackType.Smash ? AttackType.Grab : AttackType.Smash;
+    }
+
+    private void RecordAttackType(AttackType attackType)
+    {
+        if (sameAttackStreakCount == 0)
+        {
+            lastAttackType = attackType;
+            sameAttackStreakCount = 1;
+            return;
+        }
+
+        if (attackType == lastAttackType)
+        {
+            sameAttackStreakCount++;
+        }
+        else
+        {
+            lastAttackType = attackType;
+            sameAttackStreakCount = 1;
+        }
+    }
+
+    private bool TryStartSmashAttack()
+    {
+        if (isHandActive)
+        {
+            return false;
+        }
+
+        if (attackCooldownTimer > 0.0f)
+        {
+            return false;
+        }
+
         if (handSmashPrefab == null)
         {
             Debug.LogWarning("EnemyCore: HandSmashAttack prefab が設定されていません。");
-            return;
+            return false;
         }
 
         if (player == null)
         {
-            return;
+            return false;
         }
 
         Vector3 spawnPosition = transform.position + handSpawnOffset;
@@ -120,36 +223,44 @@ public sealed class EnemyCore : MonoBehaviour
             Quaternion.identity
         );
 
+        activeHandInstance = handInstance.gameObject;
         isHandActive = true;
         attackCooldownTimer = attackCooldown;
 
         handInstance.StartAttack(
             spawnPosition,
-            targetPlayerPosition,
+            player,
             groundY,
             OnHandAttackFinished
         );
+
+        return true;
     }
 
-    private void TryStartGrabAttack()
+    private bool TryStartGrabAttack()
     {
         if (isHandActive)
         {
-            return;
+            return false;
         }
 
         if (attackCooldownTimer > 0.0f)
         {
-            return;
+            return false;
         }
 
-        if (handGrabPrefab == null || player == null)
+        if (handGrabPrefab == null)
         {
-            return;
+            Debug.LogWarning("EnemyCore: HandGrabAttack prefab が設定されていません。");
+            return false;
+        }
+
+        if (player == null)
+        {
+            return false;
         }
 
         Vector3 spawnPosition = transform.position + handSpawnOffset;
-        Vector3 targetPlayerPosition = player.position;
 
         HandGrabAttack handInstance = Instantiate(
             handGrabPrefab,
@@ -157,19 +268,23 @@ public sealed class EnemyCore : MonoBehaviour
             Quaternion.identity
         );
 
+        activeHandInstance = handInstance.gameObject;
         isHandActive = true;
         attackCooldownTimer = attackCooldown;
 
         handInstance.StartAttack(
             spawnPosition,
-            targetPlayerPosition,
+            player,
             OnHandAttackFinished
         );
+
+        return true;
     }
 
     private void OnHandAttackFinished()
     {
         isHandActive = false;
+        activeHandInstance = null;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -192,5 +307,20 @@ public sealed class EnemyCore : MonoBehaviour
         }
 
         Debug.LogWarning("EnemyCore: PlayerController が見つからないため死亡要求を送れませんでした。", playerObject);
+    }
+
+    public void ResetToRespawnState()
+    {
+        transform.position = initialPosition;
+        transform.rotation = initialRotation;
+
+        attackCooldownTimer = 0.0f;
+        isHandActive = false;
+
+        if (activeHandInstance != null)
+        {
+            Destroy(activeHandInstance);
+            activeHandInstance = null;
+        }
     }
 }
