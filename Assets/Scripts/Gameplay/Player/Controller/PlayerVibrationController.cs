@@ -23,6 +23,7 @@ public sealed class PlayerVibrationController : MonoBehaviour
         NormalLanding = 2,
         StrongLanding = 3,
         WallKick = 4,
+        Death = 5,
     }
     // 単発振動用の設定データ。
     // 壁キック、強着地、ステップなど「一定時間だけ鳴らす」振動に使う。
@@ -101,6 +102,16 @@ public sealed class PlayerVibrationController : MonoBehaviour
     [SerializeField]
     private bool enableStrongLanding = true;
 
+    [Header("振動イベント有効化: 死亡(Damage)")]
+    [Tooltip("有効時、Damage 死亡開始時に単発振動を再生します。")]
+    [SerializeField]
+    private bool enableDamageDeath = true;
+
+    [Header("振動イベント有効化: 死亡(Hazard)")]
+    [Tooltip("有効時、Hazard 死亡開始時に単発振動を再生します。")]
+    [SerializeField]
+    private bool enableHazardDeath = true;
+
 
     [Header("強着地判定: 空中時間チェック有効")]
     [Tooltip("有効時、強着地判定に最小空中時間の条件を使用します。短い段差着地を強着地扱いしたくない場合に使います。")]
@@ -177,6 +188,27 @@ public sealed class PlayerVibrationController : MonoBehaviour
         highFrequency = 0.18f,
         duration = 0.11f
     };
+
+    [Header("単発振動設定: 死亡(Damage)")]
+    [Tooltip("Damage 死亡開始時に再生する単発振動の設定です。死亡開始を確実に知覚できるよう、既存の移動系振動より優先して鳴らします。")]
+    [SerializeField]
+    private OneShotRumbleSettings damageDeath = new OneShotRumbleSettings
+    {
+        lowFrequency = 0.80f,
+        highFrequency = 0.35f,
+        duration = 0.16f
+    };
+
+    [Header("単発振動設定: 死亡(Hazard)")]
+    [Tooltip("Hazard 死亡開始時に再生する単発振動の設定です。Damage 死亡と分けて調整できます。")]
+    [SerializeField]
+    private OneShotRumbleSettings hazardDeath = new OneShotRumbleSettings
+    {
+        lowFrequency = 0.58f,
+        highFrequency = 0.75f,
+        duration = 0.12f
+    };
+
 
 
     [Header("デバッグ表示: 有効化")]
@@ -354,9 +386,42 @@ public sealed class PlayerVibrationController : MonoBehaviour
         wallSlidePulsePlaying = false;
         wallSlideTimer = 0f;
         oneShotTimer = 0f;
+        activeOneShotPriority = RumblePriority.WallSlide;
         activeRumbleName = "None";
 
         ResetCurrentGamepadHaptics();
+    }
+    // 死亡振動を再生する。
+    // 死亡開始時は最優先で、残留振動を必ず停止してから単発再生する。
+    public void PlayDeath(PlayerController.DeathCause cause)
+    {
+        StopAllRumble();
+
+        OneShotRumbleSettings settings;
+        string rumbleName;
+
+        if (cause == PlayerController.DeathCause.Hazard)
+        {
+            if (!enableHazardDeath)
+            {
+                return;
+            }
+
+            settings = hazardDeath;
+            rumbleName = "HazardDeath";
+        }
+        else
+        {
+            if (!enableDamageDeath)
+            {
+                return;
+            }
+
+            settings = damageDeath;
+            rumbleName = "DamageDeath";
+        }
+
+        PlayOneShot(settings, RumblePriority.Death, rumbleName);
     }
 
     // 単発振動を再生する共通処理。

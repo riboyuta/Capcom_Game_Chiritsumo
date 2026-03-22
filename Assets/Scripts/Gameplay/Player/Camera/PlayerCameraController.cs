@@ -427,6 +427,20 @@ public sealed class PlayerCameraController : MonoBehaviour
         ReevaluateActiveZone();
     }
 
+    public void ResetRuntimeStateForRespawn()
+    {
+        activeZones.Clear();
+        zoneEnterOrders.Clear();
+        zoneEnterSequence = 0;
+
+        ApplyWorldFallback();
+
+        ClearTemporaryTarget();
+        orthographicSizeVelocity = 0f;
+        velocityX = 0f;
+        velocityY = 0f;
+    }
+
     private void ReevaluateActiveZone()
     {
         CameraZone resolvedZone = ResolveBestZone();
