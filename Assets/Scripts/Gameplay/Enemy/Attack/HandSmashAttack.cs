@@ -1,8 +1,6 @@
 using System;
 using UnityEngine;
 
-// 叩きつけ攻撃用の手オブジェクト。
-// 本体近くから出現し、プレイヤー上空へ掲げてから真下に振り下ろす。
 [RequireComponent(typeof(Rigidbody))]
 public sealed class HandSmashAttack : MonoBehaviour
 {
@@ -19,19 +17,27 @@ public sealed class HandSmashAttack : MonoBehaviour
     [SerializeField] private float riseHeight = 5.0f;
     [SerializeField] private float riseSpeed = 10.0f;
     [SerializeField] private float holdTime = 0.15f;
+    [SerializeField] private float holdLiftHeight = 0.4f;
+    [SerializeField] private float holdLiftSpeed = 6.0f;
     [SerializeField] private float smashSpeed = 24.0f;
     [SerializeField] private float endLifeTime = 0.2f;
     [SerializeField] private float reachThreshold = 0.05f;
 
     [Header("References")]
     [SerializeField] private PalmHitbox palmHitbox;
+    [SerializeField] private HandSmashView view;
 
     private Rigidbody rigidBody;
     private AttackState state = AttackState.Idle;
 
+    private Transform targetPlayer;
+    private float groundY = 0.0f;
+
     private Vector3 spawnPosition;
     private Vector3 riseTargetPosition;
     private Vector3 smashTargetPosition;
+    private Vector3 holdStartPosition;
+    private Vector3 holdLiftTargetPosition;
 
     private float holdTimer = 0.0f;
     private float endTimer = 0.0f;
@@ -53,32 +59,41 @@ public sealed class HandSmashAttack : MonoBehaviour
 
     public void StartAttack(
         Vector3 spawnPosition,
-        Vector3 targetPlayerPosition,
+        Transform targetPlayer,
         float groundY,
         Action onFinished
     )
     {
         this.spawnPosition = spawnPosition;
+        this.targetPlayer = targetPlayer;
+        this.groundY = groundY;
+        this.onFinished = onFinished;
+
+        Vector3 currentTargetPosition = targetPlayer != null ? targetPlayer.position : spawnPosition;
 
         riseTargetPosition = new Vector3(
-            targetPlayerPosition.x,
-            targetPlayerPosition.y + riseHeight,
-            targetPlayerPosition.z
+            currentTargetPosition.x,
+            currentTargetPosition.y + riseHeight,
+            currentTargetPosition.z
         );
 
         smashTargetPosition = new Vector3(
-            riseTargetPosition.x,
+            currentTargetPosition.x,
             groundY,
-            riseTargetPosition.z
+            currentTargetPosition.z
         );
 
-        this.onFinished = onFinished;
         transform.position = this.spawnPosition;
         state = AttackState.Rise;
 
         if (palmHitbox != null)
         {
             palmHitbox.SetHitEnabled(false);
+        }
+
+        if (view != null)
+        {
+            view.PlayRise();
         }
     }
 
@@ -109,6 +124,8 @@ public sealed class HandSmashAttack : MonoBehaviour
 
     private void TickRise()
     {
+        UpdateTargetsWhileRising();
+
         Vector3 next = Vector3.MoveTowards(
             transform.position,
             riseTargetPosition,
@@ -120,13 +137,28 @@ public sealed class HandSmashAttack : MonoBehaviour
         if (Vector3.Distance(transform.position, riseTargetPosition) <= reachThreshold)
         {
             transform.position = riseTargetPosition;
+
+            holdStartPosition = transform.position;
+            holdLiftTargetPosition = holdStartPosition + Vector3.up * holdLiftHeight;
+
             holdTimer = holdTime;
             state = AttackState.Hold;
+
+            if (view != null)
+            {
+                view.PlayHold();
+            }
         }
     }
 
     private void TickHold()
     {
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            holdLiftTargetPosition,
+            holdLiftSpeed * Time.deltaTime
+        );
+
         holdTimer -= Time.deltaTime;
         if (holdTimer > 0.0f)
         {
@@ -139,6 +171,11 @@ public sealed class HandSmashAttack : MonoBehaviour
         }
 
         state = AttackState.Smash;
+
+        if (view != null)
+        {
+            view.PlaySmash();
+        }
     }
 
     private void TickSmash()
@@ -162,6 +199,11 @@ public sealed class HandSmashAttack : MonoBehaviour
 
             endTimer = endLifeTime;
             state = AttackState.End;
+
+            if (view != null)
+            {
+                view.PlayEnd();
+            }
         }
     }
 
@@ -174,6 +216,28 @@ public sealed class HandSmashAttack : MonoBehaviour
         }
 
         FinishAttack();
+    }
+
+    private void UpdateTargetsWhileRising()
+    {
+        if (targetPlayer == null)
+        {
+            return;
+        }
+
+        Vector3 currentTargetPosition = targetPlayer.position;
+
+        riseTargetPosition = new Vector3(
+            currentTargetPosition.x,
+            currentTargetPosition.y + riseHeight,
+            currentTargetPosition.z
+        );
+
+        smashTargetPosition = new Vector3(
+            currentTargetPosition.x,
+            groundY,
+            currentTargetPosition.z
+        );
     }
 
     private void FinishAttack()
