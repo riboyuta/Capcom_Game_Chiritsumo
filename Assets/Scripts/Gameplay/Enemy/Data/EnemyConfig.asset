@@ -15,12 +15,12 @@ MonoBehaviour:
   pressureSpeed: 1.5
   attackInterval: 3
   windupDuration: 0.5
-  recoveryDuration: 0.5
+  recoveryDuration: 0.4
   deathZoneOffset: 0
-  grabDuration: 2
-  grabActiveStartTime: 0.58
-  grabActiveEndTime: 1.15
-  smashDuration: 1.5
-  smashActiveStartTime: 0.5
-  smashActiveEndTime: 0.7
+  grabDuration: 1.47
+  grabActiveStartTime: 0.45
+  grabActiveEndTime: 0.98
+  smashDuration: 1.24
+  smashActiveStartTime: 0.2
+  smashActiveEndTime: 0.45
   smashWindupOffset: {x: 4, y: 6, z: 0}

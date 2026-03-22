@@ -22,24 +22,46 @@ public sealed class EnemyDeathZone : MonoBehaviour
         transform.position = p;
     }
 
-    // プレイヤー接触時は仮通知のみ行う。
-    // 外部の PlayerHealth や GameManager はここでは直接呼ばない。
+    // プレイヤー接触時に環境死（Hazard Death）を要求する。
+    // PlayerController.RequestHazardDeath() を呼び出して即死処理を実行する。
     // Unity の 3D Trigger 接触時に自動で呼ばれるコールバック。
     private void OnTriggerEnter(Collider other)
     {
+        HandlePlayerContact(other.gameObject);
+    }
+
+    // プレイヤーとの物理衝突時に環境死（Hazard Death）を要求する。
+    // Player の Collider が Trigger でない場合はこちらが呼ばれる。
+    private void OnCollisionEnter(Collision collision)
+    {
+        HandlePlayerContact(collision.gameObject);
+    }
+
+    // プレイヤー接触時の共通処理。
+    // Trigger/Collision 両方から呼び出される。
+    private void HandlePlayerContact(GameObject contactObject)
+    {
         // 指定されたタグ以外は無視
-        if (!other.CompareTag(targetTag))
+        if (!contactObject.CompareTag(targetTag))
         {
             return;
         }
 
-        // 接触を警告ログで通知（実際の死亡処理は別途実装予定）
-        Debug.Log($"[EnemyDeathZone] {other.name} が即死ラインへ接触しました。死亡処理は未接続です。", this);
+        // PlayerController を取得
+        PlayerController player = contactObject.GetComponent<PlayerController>();
+        if (player == null)
+        {
+            Debug.LogWarning($"[EnemyDeathZone] {contactObject.name} has target tag but no PlayerController", this);
+            return;
+        }
+
+        // 環境死を要求
+        bool deathAccepted = player.RequestHazardDeath();
 
         // デバッグログが有効なら詳細情報を出力
         if (showDebugLog)
         {
-            Debug.Log($"[EnemyDeathZone] 接触タグ={other.tag}", this);
+            Debug.Log($"[EnemyDeathZone] {contactObject.name} requested hazard death (accepted={deathAccepted})", this);
         }
     }
 }
