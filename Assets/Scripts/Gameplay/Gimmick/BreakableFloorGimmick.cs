@@ -32,6 +32,10 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
     [Tooltip("振動の周波数。値を大きくすると速い振動になります。見た目の雰囲気に合わせて調整してください。")]
     [SerializeField, Min(0.1f)] private float vibrationSpeed = 30.0f;
 
+    [Header("リスポーン設定")]
+    [Tooltip("チェックを入れると、破壊から一定時間後に自動で復活します。外すと一度きりで壊れたままになります。")]
+    [SerializeField] private bool autoRespawn = true;
+
     private Collider floorCollider;
     private Renderer[] visualRenderers;
     private FloorState currentState = FloorState.Idle;
@@ -119,8 +123,8 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
         // 既に振動中や破損済みの場合は無視
         if (currentState != FloorState.Idle) return;
 
-        // rigidbody があるオブジェクトが乗ったら反応
-        if (other.attachedRigidbody != null)
+        // rigidbody があり、かつ Player タグが付いているオブジェクトが乗ったら反応
+        if (other.attachedRigidbody != null && other.CompareTag("Player"))
         {
             // 乗ったらシーケンス開始
             sequenceCoroutine = StartCoroutine(BreakSequence());
@@ -152,11 +156,14 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
         // 2. 破壊（消滅）フェーズ
         BreakFloor();
 
-        // 3. リスポーン待ち
-        yield return new WaitForSeconds(respawnInterval);
+        if (autoRespawn)
+        {
+            // 3. リスポーン待ち
+            yield return new WaitForSeconds(respawnInterval);
 
-        // 4. 再出現
-        RespawnFloor();
+            // 4. 再出現
+            RespawnFloor();
+        }
         sequenceCoroutine = null;
     }
 

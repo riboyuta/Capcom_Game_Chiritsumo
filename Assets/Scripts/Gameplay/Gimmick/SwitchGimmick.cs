@@ -67,11 +67,13 @@ public class SwitchGimmick : MonoBehaviour, IRespawnResettable
 
     private void OnTriggerStay(Collider other)
     {
+        if (!other.CompareTag("Player")) return;
         TryPush(other.attachedRigidbody);
     }
 
     private void OnCollisionStay(Collision collision)
     {
+        if (!collision.collider.CompareTag("Player")) return;
         TryPush(collision.rigidbody);
     }
 
