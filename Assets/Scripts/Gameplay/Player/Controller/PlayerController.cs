@@ -207,6 +207,7 @@ public sealed partial class PlayerController : MonoBehaviour
         if (isStepping)
         {
             ApplyStepVelocity();
+            UpdateAudioEvents();
             UpdateVibrationEvents();
             FinalizeVisualState(previousVelocityY);
             return;
@@ -222,6 +223,7 @@ public sealed partial class PlayerController : MonoBehaviour
         ApplyCustomGravity();
 
         // 状態変化が確定したあとで振動イベントを通知する。
+        UpdateAudioEvents();
         UpdateVibrationEvents();
         FinalizeVisualState(previousVelocityY);
     }
