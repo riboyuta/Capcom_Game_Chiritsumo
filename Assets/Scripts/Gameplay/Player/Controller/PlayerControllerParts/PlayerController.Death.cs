@@ -117,9 +117,10 @@ public sealed partial class PlayerController
             LogHealth("Death state entered");
         }
 
-        // 死亡開始入口で 1 回だけ振動を通知する。
-        // 実際の停止/再生詳細は PlayerVibrationController 側へ委譲する。
+        // 死亡開始入口で 1 回だけ振動と音声を通知する。
+        // 実際の停止/再生詳細は各 Controller 側へ委譲する。
         PlayDeathVibration(cause);
+        PlayDeathSound(cause);
 
         StartRespawnSequence();
         return true;
@@ -386,8 +387,9 @@ public sealed partial class PlayerController
     // 体力、ノックバック、リアクション、掴み、接地、壁、ステップ、入力バッファ類をまとめて初期化する。
     private void ResetForRespawn()
     {
-        // 復帰初期化時の保険として、残留振動を明示停止する。
+        // 復帰初期化時の保険として、残留振動と音声を明示停止する。
         vibrationController?.StopAllRumble();
+        audioController?.StopAllSounds();
 
         currentHealth = MaxHealth;
         invincibilityTimer = 0.0f;

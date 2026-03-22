@@ -13,6 +13,12 @@ public sealed class TitleSceneController : MonoBehaviour
     {
         Debug.Log("[TitleSceneController] Title scene started.");
 
+        // シーン開始時に明転させる。
+        if (FadeController.Instance != null)
+        {
+            FadeController.Instance.FadeIn(0.5f);
+        }
+
         AudioManager.Instance.FadeIn("BGM_title", 1.0f);
     }
 
@@ -46,8 +52,13 @@ public sealed class TitleSceneController : MonoBehaviour
         AudioManager.Instance.PlayOverlap("SFX_button_enter");
         AudioManager.Instance.FadeOut("BGM_title",1.0f);
 
-        // Wait a bit for the sound
-        yield return new WaitForSeconds(0.4f);
+        // フェードアウト（暗転）しながらSEの余韻を待つ。
+        if (FadeController.Instance != null)
+        {
+            FadeController.Instance.FadeOut(0.5f);
+        }
+
+        yield return new WaitForSeconds(0.5f);
 
         SceneFlow.LoadGame();
     }

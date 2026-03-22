@@ -61,7 +61,17 @@ public sealed class BootSceneController : MonoBehaviour
     private void Start()
     {
         Debug.Log("[BootSceneController] Boot scene started.");
-        SceneFlow.LoadTitle();
+
+        // Boot起動時は画面を暗転状態にしてからTitleへ遷移する。
+        // Title側のStart()でフェードインが走る。
+        if (FadeController.Instance != null)
+        {
+            FadeController.Instance.FadeOut(0f, () => SceneFlow.LoadTitle());
+        }
+        else
+        {
+            SceneFlow.LoadTitle();
+        }
     }
 
     private void OnDestroy()
