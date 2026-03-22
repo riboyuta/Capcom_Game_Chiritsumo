@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public sealed class CameraZone : MonoBehaviour
+public sealed class CameraZone : MonoBehaviour, IRespawnResettable
 {
     [Header("対象プレイヤーカメラ")]
     [Tooltip("この Zone の境界を適用する PlayerCameraController です。未設定時は MainCamera から自動探索します。")]
@@ -261,6 +261,24 @@ public sealed class CameraZone : MonoBehaviour
             return;
         }
         isTimedActivationRunning = false;
+        cameraController.ClearZone(this);
+    }
+
+    public void CaptureInitialState()
+    {
+    }
+
+    public void ResetToRespawnState()
+    {
+        activationConsumed = false;
+        isTimedActivationRunning = false;
+        activationExpireTime = 0f;
+        insidePlayerColliderIds.Clear();
+
+        if (cameraController == null)
+        {
+            return;
+        }
         cameraController.ClearZone(this);
     }
 
