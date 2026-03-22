@@ -8,13 +8,15 @@ public sealed class EnemyCore : MonoBehaviour
     [Header("References")]
     [SerializeField] private Transform player;
     [SerializeField] private HandSmashAttack handSmashPrefab;
+    [SerializeField] private HandGrabAttack handGrabPrefab;
 
     [Header("Move")]
     [SerializeField] private float moveSpeed = 2.0f;
 
     [Header("Attack")]
     [SerializeField] private Vector3 handSpawnOffset = new Vector3(2.0f, 1.0f, 0.0f);
-    [SerializeField] private float attackRangeX = 8.0f;
+    [SerializeField] private float smashAttackRangeX = 8.0f;
+    [SerializeField] private float grabAttackRangeX = 8.0f;
     [SerializeField] private float attackCooldown = 2.5f;
     [SerializeField] private float groundY = 0.0f;
 
@@ -66,9 +68,14 @@ public sealed class EnemyCore : MonoBehaviour
         }
 
         float dx = Mathf.Abs(player.position.x - transform.position.x);
-        if (dx <= attackRangeX)
+        if (dx <= smashAttackRangeX)
         {
             TryStartSmashAttack();
+        }
+
+        if (dx <= grabAttackRangeX)
+        {
+            TryStartGrabAttack();
         }
     }
 
@@ -120,6 +127,42 @@ public sealed class EnemyCore : MonoBehaviour
             spawnPosition,
             targetPlayerPosition,
             groundY,
+            OnHandAttackFinished
+        );
+    }
+
+    private void TryStartGrabAttack()
+    {
+        if (isHandActive)
+        {
+            return;
+        }
+
+        if (attackCooldownTimer > 0.0f)
+        {
+            return;
+        }
+
+        if (handGrabPrefab == null || player == null)
+        {
+            return;
+        }
+
+        Vector3 spawnPosition = transform.position + handSpawnOffset;
+        Vector3 targetPlayerPosition = player.position;
+
+        HandGrabAttack handInstance = Instantiate(
+            handGrabPrefab,
+            spawnPosition,
+            Quaternion.identity
+        );
+
+        isHandActive = true;
+        attackCooldownTimer = attackCooldown;
+
+        handInstance.StartAttack(
+            spawnPosition,
+            targetPlayerPosition,
             OnHandAttackFinished
         );
     }
