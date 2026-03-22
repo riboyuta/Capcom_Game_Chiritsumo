@@ -10,8 +10,9 @@ public enum MovementPlaneMode
 
 // 責務:
 // - target に向かう移動方向を平面上で計算する
-// - headRoot を対象平面上で一定速度または距離連動速度で移動させる
-// - リターゲット間隔や stopDistance による移動制御を行う
+// - headRoot を対象平面上で一定距離ワープさせる
+// - ワープ間の停止時間を管理する
+// - target 方向への向き更新を行う
 //
 // 非責務:
 // - target の選定ロジックは担当しない
@@ -21,7 +22,7 @@ public enum MovementPlaneMode
 // 依存先:
 // - target: 追従先の Transform
 // - headRoot: 実際に移動させる Transform
-// - Time.deltaTime: TickMovement の進行に使用
+// - Time.deltaTime / Time.time: TickMovement と停止中揺れに使用
 //
 // 前提条件:
 // - 外部から TickMovement(deltaTime) が継続的に呼ばれる
@@ -41,37 +42,29 @@ public sealed class HandHeadMover : MonoBehaviour
     [Tooltip("実際に移動させる Transform です。未設定時はこのコンポーネント自身の transform を使います。headRoot を変えると、移動させる見た目や当たり判定の基準が変わります。")]
     [SerializeField] private Transform headRoot;
 
-    [Header("移動: 基本速度")]
-    [Tooltip("平面上の移動速度です。TickMovement で step 計算に使います。大きくすると速く進み、小さくすると遅くなります。0 以下なら移動しません。")]
-    [SerializeField] private float moveSpeed = 4f;
-
     [Header("移動: 平面モード")]
     [Tooltip("移動を XY 平面で扱うか XZ 平面で扱うかの設定です。ProjectWorldToPlane と LiftPlaneToWorld の座標変換に使います。切り替えると同じ target でも移動方向の解釈が変わります。")]
     [SerializeField] private MovementPlaneMode movementPlaneMode = MovementPlaneMode.XY;
 
-    [Header("移動: 常時方向更新")]
-    [Tooltip("有効にすると毎回 TickMovement で target 方向を再計算します。無効にすると初回または retargetInterval 経過時だけ更新し、途中は同じ方向へ進み続けます。")]
-    [SerializeField] private bool updateDirectionContinuously = true;
+    [Header("ワープ移動: 停止時間(秒)")]
+    [Tooltip("各ワープのあとに待つ時間です。TickMovement で pauseTimer を減算し、0 以下になったタイミングで次の WarpStep を許可します。大きくするとカクカクした遅い追跡になり、小さくすると連続的にワープしやすくなります。")]
+    [SerializeField] private float pauseDuration = 0.25f;
 
-    [Header("移動: 停止距離")]
-    [Tooltip("target までの平面距離がこの値以下になったら移動を止める距離です。TickMovement の冒頭で判定に使います。大きくすると手前で止まり、小さくするとより近くまで寄ります。0 なら停止距離判定を実質無効化できます。")]
-    [SerializeField] private float stopDistance = 0f;
+    [Header("ワープ移動: 1回の移動距離")]
+    [Tooltip("1 回のワープで進む平面距離です。WarpStep で currentMoveDirectionWorld に沿って移動量として使います。大きくすると一歩が長くなり、小さくすると細かく刻む移動になります。0 以下だと位置は変えず、停止時間だけ進みます。")]
+    [SerializeField] private float stepLength = 1f;
 
-    [Header("再照準: 更新間隔(秒)")]
-    [Tooltip("updateDirectionContinuously が無効なときに、方向を再計算する間隔です。retargetTimer と比較して TryUpdateDirection を呼ぶか決めます。0 なら初回取得後は方向更新しません。")]
-    [SerializeField] private float retargetInterval = 0f;
+    [Header("向き: 常時ターゲット方向へ向ける")]
+    [Tooltip("有効にすると、TickMovement 中に currentMoveDirectionWorld を使って headRoot の向きを更新します。無効なら移動方向が更新されても見た目の回転は変えません。")]
+    [SerializeField] private bool faceTargetContinuously = true;
 
-    [Header("速度補正: 距離連動ブースト有効")]
-    [Tooltip("有効にすると、target までの距離に応じて速度倍率を上げます。EvaluateSpeedMultiplier で使われ、遠いと速く、近いと通常速度に近づきます。無効なら常に等速です。")]
-    [SerializeField] private bool useDistanceSpeedBoost = false;
+    [Header("向き: 停止中揺れ角度")]
+    [Tooltip("停止中に向きへ加える揺れ角度の振幅です。UpdateFacing で isPaused かつ wobbleFrequency が正のときに使います。大きくすると停止中の揺れが大きくなり、0 なら揺れません。")]
+    [SerializeField] private float wobbleAngleAmplitude = 0f;
 
-    [Header("速度補正: 最大ブースト距離")]
-    [Tooltip("距離連動ブーストで最大倍率に達する基準距離です。EvaluateSpeedMultiplier で distanceForMaxBoost として使います。小さくすると短距離でもすぐ最大倍率になり、大きくすると緩やかに加速します。")]
-    [SerializeField] private float distanceForMaxBoost = 6f;
-
-    [Header("速度補正: 最大速度倍率")]
-    [Tooltip("距離連動ブースト時の最大速度倍率です。useDistanceSpeedBoost が有効なときに使います。1 より大きいほど遠距離で速く動き、1 以下は実質通常速度になります。")]
-    [SerializeField] private float maxSpeedMultiplier = 1.5f;
+    [Header("向き: 停止中揺れ周波数")]
+    [Tooltip("停止中揺れの速さです。UpdateFacing で Time.time と組み合わせて使用します。大きくすると細かく速く揺れ、小さくするとゆっくり揺れます。0 以下だと揺れません。")]
+    [SerializeField] private float wobbleFrequency = 0f;
 
     [Header("デバッグ: 移動Gizmos表示")]
     [Tooltip("有効にすると OnDrawGizmosSelected で現在方向と target 投影点を表示します。移動ロジック確認用であり、ゲーム挙動そのものは変わりません。")]
@@ -83,16 +76,28 @@ public sealed class HandHeadMover : MonoBehaviour
     // =====================================================================
 
     [Header("デバッグ(Runtime): 現在移動方向(World)")]
-    [Tooltip("現在採用されているワールド移動方向です。TryUpdateDirection で更新され、TickMovement で実際の移動方向として使います。調整用ではなく方向解決の観測用です。")]
+    [Tooltip("現在採用されているワールド移動方向です。TryUpdateDirection で更新され、TickMovement で実際のワープ方向として使います。調整用ではなく方向解決の観測用です。")]
     [SerializeField] private Vector3 currentMoveDirectionWorld;
-
-    [Header("デバッグ(Runtime): 再照準タイマー")]
-    [Tooltip("次に方向更新するまでの経過時間です。updateDirectionContinuously が無効かつ retargetInterval が正のときに加算されます。調整用ではなく再照準タイミング確認用です。")]
-    [SerializeField] private float retargetTimer;
 
     [Header("デバッグ(Runtime): 有効方向あり")]
     [Tooltip("現在有効な移動方向が解決できているかどうかです。target 未設定や target と同位置のときは false になります。調整用ではなく移動可否の観測用です。")]
     [SerializeField] private bool hasValidDirection;
+
+    [Header("デバッグ(Runtime): 停止タイマー")]
+    [Tooltip("次のワープまでの残り停止時間です。TickMovement で減算し、0 以下になったフレームで WarpStep を実行します。調整用ではなくワープ間隔確認用です。")]
+    [SerializeField] private float pauseTimer;
+
+    [Header("デバッグ(Runtime): 今フレームワープしたか")]
+    [Tooltip("この TickMovement 呼び出しで実際に WarpStep が走ったかどうかです。攻撃側が節点追加タイミングを観測するときに使う想定で、調整用ではなく確認専用です。")]
+    [SerializeField] private bool warpedThisTick;
+
+    [Header("デバッグ(Runtime): 最終ワープ開始位置(World)")]
+    [Tooltip("直近の WarpStep 実行時にワープ前だったワールド座標です。ワープ軌跡確認用であり、調整値ではありません。")]
+    [SerializeField] private Vector3 lastWarpFromWorld;
+
+    [Header("デバッグ(Runtime): 最終ワープ到達位置(World)")]
+    [Tooltip("直近の WarpStep 実行時にワープ後だったワールド座標です。ワープ軌跡確認用であり、調整値ではありません。")]
+    [SerializeField] private Vector3 lastWarpToWorld;
 
     // =====================================================================
     // 公開プロパティ
@@ -105,86 +110,70 @@ public sealed class HandHeadMover : MonoBehaviour
     // target があり、かつ有効な方向が確定しているときだけ true。
     public bool IsMoving => target != null && hasValidDirection;
 
+    // 今フレームのワープ発生有無の参照口。
+    public bool WarpedThisTick => warpedThisTick;
+
+    // 直近ワープ前位置の参照口。
+    public Vector3 LastWarpFromWorld => lastWarpFromWorld;
+
+    // 直近ワープ後位置の参照口。
+    public Vector3 LastWarpToWorld => lastWarpToWorld;
+
+    // =====================================================================
+    // 初期化
+    // =====================================================================
+
+    // 起動時に移動状態を初期状態へ戻す。
+    private void Awake()
+    {
+        ResetMovementState();
+    }
+
     // =====================================================================
     // 公開操作
     // =====================================================================
 
-    // headRoot を target に向けて平面上で進める。
-    // 外部の Update / Tick から呼ばれる前提で、停止距離・再照準・速度倍率をまとめて処理する。
+    // headRoot を target に向けて平面上でワープ移動させる。
+    // 外部の Update / Tick から呼ばれる前提で、停止タイマー満了時だけ stepLength 分ワープする。
     public void TickMovement(float deltaTime)
     {
-        if (deltaTime <= 0f)
-        {
-            return;
-        }
+        warpedThisTick = false;
 
         Transform activeHeadRoot = headRoot != null ? headRoot : transform;
         if (target == null)
-        {
-            return;
-        }
-
-        // 停止距離を設ける場合は、十分近い時点で移動を打ち切る。
-        if (stopDistance > 0f)
-        {
-            float distanceToTargetOnPlane = DistanceOnPlane(activeHeadRoot.position, target.position);
-            if (distanceToTargetOnPlane <= stopDistance)
-            {
-                return;
-            }
-        }
-
-        bool shouldUpdateDirection = updateDirectionContinuously;
-        if (!updateDirectionContinuously)
-        {
-            // 常時更新しない構成では、
-            // 初回未解決時または再照準間隔経過時だけ方向を更新する。
-            if (!hasValidDirection)
-            {
-                shouldUpdateDirection = true;
-            }
-            else if (retargetInterval > 0f)
-            {
-                retargetTimer += deltaTime;
-                if (retargetTimer >= retargetInterval)
-                {
-                    shouldUpdateDirection = true;
-                    retargetTimer = 0f;
-                }
-            }
-        }
-
-        if (shouldUpdateDirection)
-        {
-            TryUpdateDirection();
-        }
-
-        if (!hasValidDirection)
-        {
-            return;
-        }
-
-        float distance = DistanceOnPlane(activeHeadRoot.position, target.position);
-        float speedMultiplier = EvaluateSpeedMultiplier(distance);
-        float step = Mathf.Max(0f, moveSpeed) * speedMultiplier * deltaTime;
-        if (step <= 0f)
-        {
-            return;
-        }
-
-        Vector2 currentPlanePos = ProjectWorldToPlane(activeHeadRoot.position);
-        Vector2 moveDirPlane = ProjectWorldToPlane(currentMoveDirectionWorld);
-        float dirSqrMagnitude = moveDirPlane.sqrMagnitude;
-        if (dirSqrMagnitude <= 1e-8f)
         {
             hasValidDirection = false;
             currentMoveDirectionWorld = Vector3.zero;
             return;
         }
 
-        moveDirPlane /= Mathf.Sqrt(dirSqrMagnitude);
-        Vector2 nextPlanePos = currentPlanePos + moveDirPlane * step;
-        activeHeadRoot.position = LiftPlaneToWorld(nextPlanePos, activeHeadRoot.position);
+        if (!TryUpdateDirection())
+        {
+            if (faceTargetContinuously)
+            {
+                UpdateFacing(activeHeadRoot, false);
+            }
+
+            return;
+        }
+
+        if (faceTargetContinuously)
+        {
+            bool isPaused = pauseTimer > 0f;
+            UpdateFacing(activeHeadRoot, isPaused);
+        }
+
+        if (deltaTime > 0f && float.IsFinite(deltaTime))
+        {
+            pauseTimer -= deltaTime;
+        }
+
+        if (pauseTimer > 0f)
+        {
+            return;
+        }
+
+        WarpStep(activeHeadRoot);
     }
 
     // headRoot を指定ワールド座標へ即時移動し、移動状態をリセットする。
@@ -212,13 +201,42 @@ public sealed class HandHeadMover : MonoBehaviour
         ResetMovementState();
     }
 
-    // 方向・再照準タイマー・有効方向フラグを初期状態へ戻す。
+    // 1 回あたりのワープ距離を外部から更新する。
+    // 非有限値は受け付けず、0 未満にはしない。
+    public void SetStepLength(float length)
+    {
+        if (!float.IsFinite(length))
+        {
+            return;
+        }
+
+        stepLength = Mathf.Max(0f, length);
+    }
+
+    // ワープ間の停止時間を外部から更新する。
+    // 非有限値は受け付けず、0 未満にはしない。
+    public void SetPauseDuration(float duration)
+    {
+        if (!float.IsFinite(duration))
+        {
+            return;
+        }
+
+        pauseDuration = Mathf.Max(0f, duration);
+    }
+
+    // 方向・停止タイマー・ワープ観測値を初期状態へ戻す。
     // target 差し替えや強制再配置の直後に使う前提。
     public void ResetMovementState()
     {
         currentMoveDirectionWorld = Vector3.zero;
-        retargetTimer = 0f;
         hasValidDirection = false;
+        pauseTimer = 0f;
+        warpedThisTick = false;
+
+        Transform activeHeadRoot = headRoot != null ? headRoot : transform;
+        lastWarpFromWorld = activeHeadRoot.position;
+        lastWarpToWorld = activeHeadRoot.position;
     }
 
     // =====================================================================
@@ -247,7 +265,7 @@ public sealed class HandHeadMover : MonoBehaviour
     }
 
     // =====================================================================
-    // 方向解決 / 速度補正
+    // 方向解決 / ワープ / 向き
     // =====================================================================
 
     // 現在位置から target への平面方向を更新する。
@@ -280,35 +298,80 @@ public sealed class HandHeadMover : MonoBehaviour
             : new Vector3(normalizedPlaneDirection.x, 0f, normalizedPlaneDirection.y);
 
         hasValidDirection = true;
-        retargetTimer = 0f;
         return true;
     }
 
-    // target までの距離に応じた速度倍率を返す。
-    // useDistanceSpeedBoost が無効なら常に 1 を返し、有効時だけ距離で補間する。
-    private float EvaluateSpeedMultiplier(float distance)
+    // 現在方向に沿って 1 ステップ分ワープする。
+    // stepLength が 0 以下、方向が無効、到達先が非有限値なら位置は変えず停止時間だけ再設定する。
+    private void WarpStep(Transform activeHeadRoot)
     {
-        if (!useDistanceSpeedBoost)
+        float clampedStepLength = Mathf.Max(0f, stepLength);
+        if (clampedStepLength <= 0f)
         {
-            return 1f;
+            pauseTimer = Mathf.Max(0f, pauseDuration);
+            return;
         }
 
-        float maxBoostDistance = Mathf.Max(0f, distanceForMaxBoost);
-        float maxMultiplier = Mathf.Max(1f, maxSpeedMultiplier);
-        if (maxBoostDistance <= 0f)
+        Vector3 warpFrom = activeHeadRoot.position;
+        Vector2 fromPlane = ProjectWorldToPlane(warpFrom);
+        Vector2 dirPlane = ProjectWorldToPlane(currentMoveDirectionWorld);
+        float directionSqrMagnitude = dirPlane.sqrMagnitude;
+
+        if (directionSqrMagnitude <= 1e-8f)
         {
-            return maxMultiplier;
+            pauseTimer = Mathf.Max(0f, pauseDuration);
+            return;
         }
 
-        float t = Mathf.Clamp01(distance / maxBoostDistance);
-        return Mathf.Lerp(1f, maxMultiplier, t);
+        dirPlane /= Mathf.Sqrt(directionSqrMagnitude);
+        Vector2 toPlane = fromPlane + dirPlane * clampedStepLength;
+        Vector3 warpTo = LiftPlaneToWorld(toPlane, warpFrom);
+
+        if (!IsFiniteVector3(warpTo))
+        {
+            pauseTimer = Mathf.Max(0f, pauseDuration);
+            return;
+        }
+
+        activeHeadRoot.position = warpTo;
+        lastWarpFromWorld = warpFrom;
+        lastWarpToWorld = warpTo;
+        warpedThisTick = true;
+        pauseTimer = Mathf.Max(0f, pauseDuration);
     }
 
-    // 2 点間の平面距離を返す。
-    // 停止距離判定や速度倍率評価の基準距離として使う。
-    private float DistanceOnPlane(Vector3 a, Vector3 b)
+    // 現在方向へ見た目の向きを合わせる。
+    // 停止中かつ揺れ設定が有効なときだけ、baseRotation に wobble を加える。
+    private void UpdateFacing(Transform activeHeadRoot, bool isPaused)
     {
-        return Vector2.Distance(ProjectWorldToPlane(a), ProjectWorldToPlane(b));
+        Vector2 facingDirPlane = ProjectWorldToPlane(currentMoveDirectionWorld);
+        if (facingDirPlane.sqrMagnitude <= 1e-8f)
+        {
+            return;
+        }
+
+        Quaternion baseRotation = movementPlaneMode == MovementPlaneMode.XY
+            ? Quaternion.LookRotation(Vector3.forward, new Vector3(facingDirPlane.x, facingDirPlane.y, 0f))
+            : Quaternion.LookRotation(new Vector3(facingDirPlane.x, 0f, facingDirPlane.y), Vector3.up);
+
+        if (!isPaused || wobbleAngleAmplitude <= 0f || wobbleFrequency <= 0f)
+        {
+            activeHeadRoot.rotation = baseRotation;
+            return;
+        }
+
+        float wobbleAngle = Mathf.Sin(Time.time * wobbleFrequency * Mathf.PI * 2f) * wobbleAngleAmplitude;
+        Quaternion wobbleRotation = movementPlaneMode == MovementPlaneMode.XY
+            ? Quaternion.AngleAxis(wobbleAngle, Vector3.forward)
+            : Quaternion.AngleAxis(wobbleAngle, Vector3.up);
+
+        activeHeadRoot.rotation = wobbleRotation * baseRotation;
+    }
+
+    // Vector3 の全成分が有限値かどうかを判定する。
+    private static bool IsFiniteVector3(Vector3 value)
+    {
+        return float.IsFinite(value.x) && float.IsFinite(value.y) && float.IsFinite(value.z);
     }
 
     // =====================================================================
