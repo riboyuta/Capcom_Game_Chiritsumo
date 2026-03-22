@@ -5,9 +5,16 @@ using static MapEditor;
 
 public class StageLoader : MonoBehaviour
 {
-    public GameObject[] tilePrefab;
-    public int stageNumber = 1;
-    public float gridSize = 1.0f;
+    [Header("プレハブパレット")]
+    [Tooltip("キー毎に割り当てられているプレハブ")]
+    [SerializeField] private GameObject[] tilePrefab;
+
+    [Header("現在のステージ番号")]
+    [Tooltip("現在編集しているステージの番号")]
+    [SerializeField] private int stageNumber = 1;
+
+
+    private float gridSize = 1.0f;
 
     void Start()
     {
