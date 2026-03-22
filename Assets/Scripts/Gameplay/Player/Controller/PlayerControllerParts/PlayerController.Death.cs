@@ -87,6 +87,13 @@ public sealed partial class PlayerController
         return RequestDeathStart(DeathCause.Hazard);
     }
 
+    // 外部コンポーネント向けのダメージ死入口。
+    // 内部の死亡統一入口へ Damage で委譲する。
+    public bool RequestDamageDeath()
+    {
+        return RequestDeathStart(DeathCause.Damage);
+    }
+
     // 死亡開始要求の統一入口。
     // 初回の要求だけを受理し、死因保存・Dead 状態遷移・復帰シーケンス開始までをまとめて行う。
     private bool RequestDeathStart(DeathCause cause)
