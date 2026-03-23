@@ -418,6 +418,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1159562807559225716, guid: 633e189701e08db4ba53ac88174c2bf5, type: 3}
+      propertyPath: speedMultiplier
+      value: 0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 1496063867258837486, guid: 633e189701e08db4ba53ac88174c2bf5, type: 3}
+      propertyPath: speedMultiplier
+      value: 0.02
+      objectReference: {fileID: 0}
+    - target: {fileID: 1630599092634732629, guid: 633e189701e08db4ba53ac88174c2bf5, type: 3}
+      propertyPath: speedMultiplier
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 2509244193175382877, guid: 633e189701e08db4ba53ac88174c2bf5, type: 3}
+      propertyPath: speedMultiplier
+      value: 0.03
+      objectReference: {fileID: 0}
+    - target: {fileID: 2807933471843540674, guid: 633e189701e08db4ba53ac88174c2bf5, type: 3}
+      propertyPath: autoScrollSpeed
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3959400842773891120, guid: 633e189701e08db4ba53ac88174c2bf5, type: 3}
       propertyPath: m_LocalPosition.x
       value: -41.48959
@@ -461,6 +481,10 @@ PrefabInstance:
     - target: {fileID: 6794129639306007805, guid: 633e189701e08db4ba53ac88174c2bf5, type: 3}
       propertyPath: m_Name
       value: Background
+      objectReference: {fileID: 0}
+    - target: {fileID: 7463826438861177225, guid: 633e189701e08db4ba53ac88174c2bf5, type: 3}
+      propertyPath: speedMultiplier
+      value: 0.01
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -746,9 +770,9 @@ MonoBehaviour:
   damageDeathTiltAngle: 80
   damageDeathZoomSizeOffset: -2
   damageDeathZoomSmoothTime: 3
-  damageBlackInDuration: 5
+  damageBlackInDuration: 3
   damageBlackOutDuration: 1
-  hazardBlackInDuration: 5
+  hazardBlackInDuration: 3
   hazardBlackOutDuration: 1
   blackRespawnThreshold: 1
 --- !u!1 &529022722

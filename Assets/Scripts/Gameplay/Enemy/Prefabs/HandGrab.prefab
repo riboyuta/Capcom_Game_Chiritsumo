@@ -147,7 +147,7 @@ MonoBehaviour:
   nearHeightOffset: 1.21
   reachThreshold: 0.15
   preGrabTrackDuration: 0.5
-  trackUpdateDuration: 0.5
+  trackUpdateDuration: 0.3
   holdDuration: 0.7
   missPauseDuration: 0.2
   endLifeTime: 0.37
