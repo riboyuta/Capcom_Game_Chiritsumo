@@ -11,7 +11,7 @@ public class StageLoader : MonoBehaviour
 
     [Header("現在のステージ番号")]
     [Tooltip("現在編集しているステージの番号")]
-    [SerializeField] private int stageNumber = 1;
+    [SerializeField] private int stageNumber = 5;
 
 
     private float gridSize = 1.0f;
@@ -23,10 +23,12 @@ public class StageLoader : MonoBehaviour
 
     void LoadMap()
     {
-        string folder = Application.dataPath +
-        "/Scenes/DebugScenes/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData";
+        string folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData");
+        string path = Path.Combine(folder, "Stage" + stageNumber + ".json");
 
-        string path = folder + "/Stage" + stageNumber + ".json";
+        //string folder = Application.dataPath +
+        //   "/Scenes/DebugScenes/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData";
+        //string path = folder + "/Stage" + stageNumber + ".json";
 
         if (!File.Exists(path))
         {
