@@ -174,7 +174,6 @@ MonoBehaviour:
   - {fileID: 5409637655077809295, guid: e9f5a7157b6006b41bc199f7352c639d, type: 3}
   - {fileID: 3699133495810676906, guid: 00f69c8dc354a9044993c6947a803638, type: 3}
   stageNumber: 2
-  gridSize: 1
 --- !u!1 &1584491079
 GameObject:
   m_ObjectHideFlags: 0
