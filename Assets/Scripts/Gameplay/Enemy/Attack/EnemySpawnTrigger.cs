@@ -57,7 +57,10 @@ public sealed class EnemySpawnTrigger : MonoBehaviour, IRespawnResettable
         {
             CaptureInitialState();
         }
-
+        if (targetEnemy != null)
+        {
+            targetEnemy.ResetEncounterForRespawn();
+        }
         hasTriggered = initialHasTriggered;
     }
 }
