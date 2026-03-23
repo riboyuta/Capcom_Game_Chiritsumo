@@ -38,6 +38,8 @@ public class StageLoader : MonoBehaviour
 
         MapData mapData = JsonUtility.FromJson<MapData>(json);
 
+        List<GameObject> spawnedTiles = new List<GameObject>();
+
         foreach (TileData data in mapData.tiles)
         {
             Vector3 spawnPos = new Vector3(
@@ -46,7 +48,45 @@ public class StageLoader : MonoBehaviour
                 data.z * gridSize - 0.01f
             );
 
-            Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
+            GameObject tile =
+                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
+
+            TileType tileType = tile.GetComponent<TileType>();
+
+            tileType.type = data.type;
+            tileType.gimmickID = data.gimmickID;
+
+            spawnedTiles.Add(tile);
+        }
+
+        ConnectGimmicks(spawnedTiles);
+    }
+
+
+
+    void ConnectGimmicks(List<GameObject> tiles)
+    {
+        foreach (var tile in tiles)
+        {
+            SlideGimmick slide = tile.GetComponent<SlideGimmick>();
+
+            if (slide == null) continue;
+
+            TileType slideTile = tile.GetComponent<TileType>();
+
+            foreach (var other in tiles)
+            {
+                SwitchGimmick sw = other.GetComponent<SwitchGimmick>();
+
+                if (sw == null) continue;
+
+                TileType swTile = other.GetComponent<TileType>();
+
+                if (slideTile.gimmickID == swTile.gimmickID)
+                {
+                    slide.SetSwitch(sw);
+                }
+            }
         }
     }
 }
