@@ -19,7 +19,7 @@ public sealed class ResultSceneController : MonoBehaviour
             return;
         }
 
-        if (BootSceneController.Instance.DebugInput.NextScenePressed)
+        if (BootSceneController.Instance != null && BootSceneController.Instance.DebugInput.NextScenePressed)
         {
             ReturnToTitle();
         }
