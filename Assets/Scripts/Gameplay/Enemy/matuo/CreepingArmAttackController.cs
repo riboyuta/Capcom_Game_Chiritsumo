@@ -143,6 +143,10 @@ public sealed class CreepingArmAttackController : MonoBehaviour
     [Tooltip("実行時に生成 / 再利用している ArmSegmentView 一覧です。必要本数不足時に追加生成し、過剰分は非表示化して再利用します。")]
     [SerializeField] private List<ArmSegmentView> runtimeSegmentViews = new List<ArmSegmentView>();
 
+    [Header("デバッグ(Runtime): 実働セグメント長")]
+    [Tooltip("StartAttack で解決された実働セグメント長です。head のワープ距離と chain の基準長へ同じ値を適用します。")]
+    [SerializeField] private float effectiveSegmentLength = 0.1f;
+
     // 腕の確定節点列ロジックモデル。
     private ArmChainModel chainModel = new ArmChainModel();
     // =====================================================================
@@ -180,7 +184,6 @@ public sealed class CreepingArmAttackController : MonoBehaviour
         segmentLength = Mathf.Max(0.01f, segmentLength);
         maxSegmentCount = Mathf.Max(1, maxSegmentCount);
         attackScale = Mathf.Max(0.01f, attackScale);
-        float scaledSegmentLength = segmentLength * attackScale;
 
         Vector3 initialWorldPosition = ResolveInitialWorldPosition();
 
@@ -192,17 +195,19 @@ public sealed class CreepingArmAttackController : MonoBehaviour
             headRoot.position = initialWorldPosition;
         }
 
+
         SyncMoverAndSegmentPlaneModes();
+        effectiveSegmentLength = ResolveEffectiveSegmentLength();
 
         if (headMover != null)
         {
             headMover.SnapToWorldPosition(initialWorldPosition);
-            headMover.SetStepLength(scaledSegmentLength);
+            headMover.SetStepLength(effectiveSegmentLength);
         }
 
         ApplyHeadSortingPlaceholder();
 
-        chainModel.Reset(initialLogicPoint, scaledSegmentLength, maxSegmentCount);
+        chainModel.Reset(initialLogicPoint, effectiveSegmentLength, maxSegmentCount);
 
         debugChainPoints.Clear();
         SyncDebugChainPointsFromModel();
@@ -216,6 +221,14 @@ public sealed class CreepingArmAttackController : MonoBehaviour
         }
 
         HideAllSegmentViews();
+
+        if (logSegmentCount)
+        {
+            Debug.Log(
+                $"[CreepingArmAttackController] StartAttack effectiveSegmentLength={effectiveSegmentLength:F4} (attackScale={attackScale:F4})",
+                this
+            );
+        }
     }
 
 
@@ -266,8 +279,7 @@ public sealed class CreepingArmAttackController : MonoBehaviour
 
         if (!chainModel.IsInitialized)
         {
-            float scaledSegmentLength = segmentLength * Mathf.Max(0.01f, attackScale);
-            chainModel.Reset(initialLogicPoint, scaledSegmentLength, maxSegmentCount);
+            chainModel.Reset(initialLogicPoint, Mathf.Max(0.1f, effectiveSegmentLength), maxSegmentCount);
         }
 
         bool warpedThisTick = headMover != null && headMover.WarpedThisTick;
@@ -469,6 +481,55 @@ public sealed class CreepingArmAttackController : MonoBehaviour
                 runtimeSegmentViews[i].SetPlaneMode(viewMode);
             }
         }
+    }
+
+    // 実働セグメント長を解決する。
+    // 優先順位:
+    // 1. segmentPrefab の ArmSegmentView.RestLength * attackScale
+    // 2. Inspector segmentLength * attackScale
+    // 3. 最終 fallback 最小安全値
+    private float ResolveEffectiveSegmentLength()
+    {
+        float safeAttackScale = Mathf.Max(0.01f, attackScale);
+        ArmSegmentView prefabView = TryGetSegmentPrefabView();
+        if (prefabView != null)
+        {
+            prefabView.InitializeIfNeeded();
+            float restLength = prefabView.RestLength;
+            if (restLength > 0.0001f)
+            {
+                float resolved = restLength * safeAttackScale;
+                if (resolved > 0.0001f)
+                {
+                    return resolved;
+                }
+            }
+        }
+
+        float legacyScaledLength = segmentLength * safeAttackScale;
+        if (legacyScaledLength > 0.0001f)
+        {
+            return legacyScaledLength;
+        }
+
+        return 0.1f;
+    }
+
+    // segmentPrefab から ArmSegmentView を取得する。
+    private ArmSegmentView TryGetSegmentPrefabView()
+    {
+        if (segmentPrefab == null)
+        {
+            return null;
+        }
+
+        ArmSegmentView view = segmentPrefab.GetComponent<ArmSegmentView>();
+        if (view != null)
+        {
+            return view;
+        }
+
+        return segmentPrefab.GetComponentInChildren<ArmSegmentView>(true);
     }
     // =====================================================================
     // 仮描画順設定
