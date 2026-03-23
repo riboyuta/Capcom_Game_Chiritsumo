@@ -1131,12 +1131,12 @@ MonoBehaviour:
   orthographicSize: 6
   overrideFollowSmoothing: 1
   smoothTimeX: 0.2
-  smoothTimeY: 0.1
+  smoothTimeY: 0.2
   overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.1
-  enableTimeLimit: 1
-  activeDuration: 4.61
-  activateOnlyOnce: 1
+  orthographicSizeSmoothTime: 0.2
+  enableTimeLimit: 0
+  activeDuration: 1
+  activateOnlyOnce: 0
   playerTag: Player
   drawDebugGizmos: 1
 --- !u!114 &1073388012 stripped
