@@ -66,9 +66,9 @@ public sealed class CreepingArmAttackController : MonoBehaviour
     [Tooltip("生成・管理するセグメント数の上限です。StartAttack で最低 1 に丸めます。大きくすると長い腕を表現しやすくなり、小さいと短い腕になります。")]
     [SerializeField] private int maxSegmentCount = 12;
 
-    [Header("チェーン設定: 末尾から現在手の平へ補助線表示")]
-    [Tooltip("Gizmos 表示時に最後の節点から currentPalmLogicPoint まで補助線を引くかどうかです。デバッグ可視化専用で、ゲーム挙動そのものは変わりません。")]
-    [SerializeField] private bool drawTailToCurrentPalm = true;
+    [Header("Scale")]
+    [Tooltip("攻撃全体のスケール係数です。最低限、ワープ距離(stepLength)へ反映されます。")]
+    [SerializeField] private float attackScale = 1f;
 
     [Header("平面設定: 攻撃平面モード")]
     [Tooltip("攻撃ロジックを XY 平面で扱うか XZ 平面で扱うかを決めます。ProjectWorldToLogicPlane と LiftLogicPointToWorld の座標変換に使われ、選択によって見かけ上の攻撃平面が変わります。")]
@@ -179,38 +179,30 @@ public sealed class CreepingArmAttackController : MonoBehaviour
     {
         segmentLength = Mathf.Max(0.01f, segmentLength);
         maxSegmentCount = Mathf.Max(1, maxSegmentCount);
+        attackScale = Mathf.Max(0.01f, attackScale);
+        float scaledSegmentLength = segmentLength * attackScale;
 
-        Vector3 initialWorldPosition;
-        if (useSpawnAnchorAsInitialPoint && optionalSpawnAnchor != null)
-        {
-            initialWorldPosition = optionalSpawnAnchor.position;
-        }
-        else if (palmSocket != null)
-        {
-            initialWorldPosition = palmSocket.position;
-        }
-        else
-        {
-            initialWorldPosition = transform.position;
-        }
+        Vector3 initialWorldPosition = ResolveInitialWorldPosition();
 
         initialLogicPoint = ProjectWorldToLogicPlane(initialWorldPosition);
         currentPalmLogicPoint = initialLogicPoint;
 
         if (headRoot != null)
         {
-            headRoot.position = LiftLogicPointToWorld(initialLogicPoint);
+            headRoot.position = initialWorldPosition;
         }
+
+        SyncMoverAndSegmentPlaneModes();
 
         if (headMover != null)
         {
-            headMover.SnapToWorldPosition(LiftLogicPointToWorld(initialLogicPoint));
+            headMover.SnapToWorldPosition(initialWorldPosition);
+            headMover.SetStepLength(scaledSegmentLength);
         }
 
         ApplyHeadSortingPlaceholder();
-        SyncMoverAndSegmentPlaneModes();
 
-        chainModel.Reset(initialLogicPoint, segmentLength, maxSegmentCount);
+        chainModel.Reset(initialLogicPoint, scaledSegmentLength, maxSegmentCount);
 
         debugChainPoints.Clear();
         SyncDebugChainPointsFromModel();
@@ -232,6 +224,15 @@ public sealed class CreepingArmAttackController : MonoBehaviour
     public void StopAttack()
     {
         isAttacking = false;
+        attackTimer = 0f;
+
+        if (headMover != null)
+        {
+            headMover.ResetMovementState();
+        }
+
+        chainModel.Clear();
+        debugChainPoints.Clear();
         HideAllSegmentViews();
     }
 
@@ -241,18 +242,8 @@ public sealed class CreepingArmAttackController : MonoBehaviour
     {
         StopAttack();
 
-        attackTimer = 0f;
         initialLogicPoint = Vector2.zero;
         currentPalmLogicPoint = Vector2.zero;
-        debugChainPoints.Clear();
-
-        if (headMover != null)
-        {
-            headMover.ResetMovementState();
-        }
-
-        chainModel.Clear();
-        HideAllSegmentViews();
     }
 
     // =====================================================================
@@ -270,38 +261,28 @@ public sealed class CreepingArmAttackController : MonoBehaviour
             headMover.TickMovement(deltaTime);
         }
 
-        if (palmSocket != null)
-        {
-            currentPalmLogicPoint = ProjectWorldToLogicPlane(palmSocket.position);
-        }
-        else if (headRoot != null)
-        {
-            currentPalmLogicPoint = ProjectWorldToLogicPlane(headRoot.position);
-        }
+        Vector3 currentPalmWorld = ResolveCurrentPalmWorldPosition();
+        currentPalmLogicPoint = ProjectWorldToLogicPlane(currentPalmWorld);
 
         if (!chainModel.IsInitialized)
         {
-            chainModel.Reset(initialLogicPoint, segmentLength, maxSegmentCount);
+            float scaledSegmentLength = segmentLength * Mathf.Max(0.01f, attackScale);
+            chainModel.Reset(initialLogicPoint, scaledSegmentLength, maxSegmentCount);
         }
 
-        chainModel.CommitHeadPoint(currentPalmLogicPoint);
+        bool warpedThisTick = headMover != null && headMover.WarpedThisTick;
+        if (warpedThisTick)
+        {
+            chainModel.PushWarpPoint(currentPalmLogicPoint);
+        }
+
         SyncDebugChainPointsFromModel();
 
         IReadOnlyList<Vector2> chainPoints = chainModel.ChainPoints;
         int fixedSegmentCount = Mathf.Max(0, chainPoints.Count - 1);
-        bool shouldDrawTail = drawTailToCurrentPalm && chainPoints.Count >= 1;
-        if (shouldDrawTail)
-        {
-            Vector2 lastCommitted = chainPoints[chainPoints.Count - 1];
-            if ((currentPalmLogicPoint - lastCommitted).sqrMagnitude <= 1e-6f)
-            {
-                shouldDrawTail = false;
-            }
-        }
-
-        int requiredCount = fixedSegmentCount + (shouldDrawTail ? 1 : 0);
+        int requiredCount = fixedSegmentCount;
         EnsureSegmentViewCount(requiredCount);
-        UpdateSegmentViews(chainPoints, fixedSegmentCount, shouldDrawTail);
+        UpdateSegmentViews(chainPoints, fixedSegmentCount);
 
         ApplyHeadSortingPlaceholder();
 
@@ -310,7 +291,7 @@ public sealed class CreepingArmAttackController : MonoBehaviour
             StopAttack();
         }
 
-        if (logSegmentCount)
+        if (logSegmentCount && warpedThisTick)
         {
             Debug.Log(
                 $"[CreepingArmAttackController] chainPoints={debugChainPoints.Count}, activeSegments={requiredCount}, pooledViews={runtimeSegmentViews.Count}, newestSegmentSortingOrder={newestSegmentSortingOrder}, sortingStepPerSegment={sortingStepPerSegment}",
@@ -404,13 +385,12 @@ public sealed class CreepingArmAttackController : MonoBehaviour
     }
 
     // chainPoints を使って segment view の見た目と描画順を更新する。
-    private void UpdateSegmentViews(IReadOnlyList<Vector2> chainPoints, int fixedSegmentCount, bool shouldDrawTail)
+    private void UpdateSegmentViews(IReadOnlyList<Vector2> chainPoints, int fixedSegmentCount)
     {
-        int activeCount = fixedSegmentCount + (shouldDrawTail ? 1 : 0);
+        int activeCount = fixedSegmentCount;
         for (int i = 0; i < runtimeSegmentViews.Count; i++)
         {
-            ArmSegmentView view = runtimeSegmentViews[i];
-            if (view == null)
+            ArmSegmentView view = runtimeSegmentViews[i];            if (view == null)
             {
                 continue;
             }
@@ -423,19 +403,12 @@ public sealed class CreepingArmAttackController : MonoBehaviour
 
             Vector2 backLogic;
             Vector2 frontLogic;
-            if (i < fixedSegmentCount)
-            {
-                backLogic = chainPoints[i];
-                frontLogic = chainPoints[i + 1];
-            }
-            else
-            {
-                backLogic = chainPoints[chainPoints.Count - 1];
-                frontLogic = currentPalmLogicPoint;
-            }
+            backLogic = chainPoints[i];
+            frontLogic = chainPoints[i + 1];
 
             Vector3 backWorld = LiftLogicPointToWorld(backLogic);
             Vector3 frontWorld = LiftLogicPointToWorld(frontLogic);
+            
             int sortingOrder = newestSegmentSortingOrder - ((activeCount - 1 - i) * sortingStepPerSegment);
             view.Apply(backWorld, frontWorld, sortingLayerName, sortingOrder);
         }
@@ -510,16 +483,26 @@ public sealed class CreepingArmAttackController : MonoBehaviour
             return;
         }
 
-        SpriteRenderer headRenderer = headRoot.GetComponentInChildren<SpriteRenderer>();
-        if (headRenderer == null)
+        int requiredFrontOrder = newestSegmentSortingOrder + Mathf.Max(1, Mathf.Abs(sortingStepPerSegment));
+        int resolvedHeadSortingOrder = Mathf.Max(headSortingOrder, requiredFrontOrder);
+
+        SpriteRenderer[] headRenderers = headRoot.GetComponentsInChildren<SpriteRenderer>(true);
+        if (headRenderers == null || headRenderers.Length == 0)
         {
             return;
         }
 
-        headRenderer.sortingLayerName = sortingLayerName;
-        headRenderer.sortingOrder = headSortingOrder;
-    }
+        for (int i = 0; i < headRenderers.Length; i++)
+        {
+            if (headRenderers[i] == null)
+            {
+                continue;
+            }
 
+            headRenderers[i].sortingLayerName = sortingLayerName;
+            headRenderers[i].sortingOrder = resolvedHeadSortingOrder;
+        }
+    }
     // =====================================================================
     // Gizmos
     // =====================================================================
@@ -537,12 +520,10 @@ public sealed class CreepingArmAttackController : MonoBehaviour
         Gizmos.color = Color.cyan;
         Gizmos.DrawSphere(initialWorld, 0.08f);
 
-        if (palmSocket != null)
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawSphere(palmSocket.position, 0.08f);
-            Gizmos.DrawLine(initialWorld, palmSocket.position);
-        }
+        Vector3 currentPalmWorld = LiftLogicPointToWorld(currentPalmLogicPoint);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawSphere(currentPalmWorld, 0.08f);
+        Gizmos.DrawLine(initialWorld, currentPalmWorld);
 
         if (debugChainPoints == null || debugChainPoints.Count == 0)
         {
@@ -559,12 +540,48 @@ public sealed class CreepingArmAttackController : MonoBehaviour
             prev = next;
         }
 
-        if (drawTailToCurrentPalm)
+    }
+
+    // StartAttack 時に使う初期ワールド位置を解決する。
+    // 参照優先順位:
+    // 1. useSpawnAnchorAsInitialPoint && optionalSpawnAnchor
+    // 2. palmSocket
+    // 3. headRoot
+    // 4. self(transform)
+    private Vector3 ResolveInitialWorldPosition()
+    {
+        if (useSpawnAnchorAsInitialPoint && optionalSpawnAnchor != null)
         {
-            Vector3 palmWorld = LiftLogicPointToWorld(currentPalmLogicPoint);
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawLine(prev, palmWorld);
-            Gizmos.DrawSphere(palmWorld, 0.05f);
+            return optionalSpawnAnchor.position;
         }
+
+        if (palmSocket != null)
+        {
+            return palmSocket.position;
+        }
+
+        if (headRoot != null)
+        {
+            return headRoot.position;
+        }
+
+        return transform.position;
+    }
+
+    // TickAttack 時に参照する現在の手先ワールド位置を解決する。
+    // palmSocket 優先、次に headRoot、最後に self(transform)。
+    private Vector3 ResolveCurrentPalmWorldPosition()
+    {
+        if (palmSocket != null)
+        {
+            return palmSocket.position;
+        }
+
+        if (headRoot != null)
+        {
+            return headRoot.position;
+        }
+
+        return transform.position;
     }
 }
