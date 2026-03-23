@@ -26,8 +26,10 @@ public enum TileGimmickTypeEnum
 {
     None,
 
-    Switch,
-    SlideWall,
+    Switch,    //スイッチ
+    SlideWall, //スライドする壁
+    Breakable, //壊れる床
+    Spring,    //ばね
 
     MAX
 }
