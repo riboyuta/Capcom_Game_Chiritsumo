@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2298395400156925019
+--- !u!1 &2339858130205810551
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,49 +8,46 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1996483113573330320}
-  - component: {fileID: 6025567782917558213}
-  - component: {fileID: 8802403814409486169}
-  - component: {fileID: 7219274154387198012}
-  - component: {fileID: -1096068622150686539}
-  - component: {fileID: 6681109777501939230}
-  m_Layer: 3
-  m_Name: Gimmick_SlideWall
+  - component: {fileID: 3970221030163117104}
+  - component: {fileID: 68288740168071921}
+  - component: {fileID: 3238642932489453772}
+  m_Layer: 0
+  m_Name: BreakBlock
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1996483113573330320
+--- !u!4 &3970221030163117104
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2298395400156925019}
+  m_GameObject: {fileID: 2339858130205810551}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 32.73, y: 2, z: 0}
-  m_LocalScale: {x: 1, y: 3, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 7919696765890889291}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &6025567782917558213
+--- !u!33 &68288740168071921
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2298395400156925019}
+  m_GameObject: {fileID: 2339858130205810551}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &8802403814409486169
+--- !u!23 &3238642932489453772
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2298395400156925019}
+  m_GameObject: {fileID: 2339858130205810551}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -69,7 +66,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 8f9453287506e9c4894ba9793e2aa73d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -93,13 +90,48 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &7219274154387198012
+--- !u!1 &6453188548815068593
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7919696765890889291}
+  - component: {fileID: 2359802621397819976}
+  - component: {fileID: 1361439948427074722}
+  - component: {fileID: 2646225579069338225}
+  m_Layer: 0
+  m_Name: GameGimmick_Spring
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7919696765890889291
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6453188548815068593}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 153.87196, y: 13.71063, z: -20.30784}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3970221030163117104}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &2359802621397819976
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2298395400156925019}
+  m_GameObject: {fileID: 6453188548815068593}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -114,34 +146,37 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &-1096068622150686539
+--- !u!114 &1361439948427074722
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2298395400156925019}
+  m_GameObject: {fileID: 6453188548815068593}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c494f48b2938df54eb2162e37b8b972d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableFloorGimmick
+  visualTransform: {fileID: 3970221030163117104}
+  timeToBreak: 1
+  respawnInterval: 3
+  vibrationIntensity: 0.05
+  vibrationSpeed: 30
+  autoRespawn: 0
+--- !u!114 &2646225579069338225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6453188548815068593}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5cbefe0605652694094dc606600ca1df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TileType
-  type: 0
-  gimmickType: 3
+  type: 9
+  gimmickType: 0
   gimmickID: 0
---- !u!114 &6681109777501939230
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2298395400156925019}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3eeb4237dff60144887c578afa6ba8fa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlideGimmick
-  targetSwitch: {fileID: 0}
-  slideLocalDirection: {x: 0, y: 1, z: 0}
-  slideDistance: 3
-  slideSpeed: 2
+  size: {x: 1, y: 1, z: 1}
