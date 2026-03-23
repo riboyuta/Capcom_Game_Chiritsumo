@@ -31,7 +31,7 @@ public sealed class HandGrabAttack : MonoBehaviour
     [Header("References")]
     [SerializeField] private GrabHitbox grabHitbox;
     [SerializeField] private Transform grabAnchor;
-    [SerializeField] private HandGrabView view;
+    [SerializeField] private HandGrabVisualController visualController;
 
     private Rigidbody rigidBody;
     private AttackState state = AttackState.Idle;
@@ -87,10 +87,10 @@ public sealed class HandGrabAttack : MonoBehaviour
 
         state = AttackState.ApproachNear;
 
-        if (view != null)
+        if (visualController != null)
         {
-            view.SetDefaultSorting();
-            view.PlayApproachNear();
+            visualController.SetDefaultSorting();
+            visualController.PlayApproachNear();
         }
     }
 
@@ -159,9 +159,9 @@ public sealed class HandGrabAttack : MonoBehaviour
             trackedElapsedTime = 0.0f;
             state = AttackState.TrackBeforeGrab;
 
-            if (view != null)
+            if (visualController != null)
             {
-                view.PlayTrackBeforeGrab();
+                visualController.PlayTrackBeforeGrab();
             }
         }
     }
@@ -184,9 +184,9 @@ public sealed class HandGrabAttack : MonoBehaviour
 
         state = AttackState.GrabStart;
 
-        if (view != null)
+        if (visualController != null)
         {
-            view.PlayGrabStart();
+            visualController.PlayGrabStart();
         }
     }
 
@@ -217,10 +217,10 @@ public sealed class HandGrabAttack : MonoBehaviour
                 holdTimer = holdDuration;
                 state = AttackState.HoldPlayer;
 
-                if (view != null)
+                if (visualController != null)
                 {
-                    view.SetGrabbedSorting();
-                    view.PlayHoldPlayer();
+                    visualController.SetGrabbedSorting();
+                    visualController.PlayHoldPlayer();
                 }
             }
             else
@@ -228,9 +228,9 @@ public sealed class HandGrabAttack : MonoBehaviour
                 missPauseTimer = missPauseDuration;
                 state = AttackState.MissPause;
 
-                if (view != null)
+                if (visualController != null)
                 {
-                    view.PlayMissPause();
+                    visualController.PlayMissPause();
                 }
             }
         }
@@ -249,17 +249,17 @@ public sealed class HandGrabAttack : MonoBehaviour
 
         ReleaseGrabbedPlayerAndKill();
 
-        if (view != null)
+        if (visualController != null)
         {
-            view.SetDefaultSorting();
+            visualController.SetEndSorting();
         }
 
         endTimer = endLifeTime;
         state = AttackState.End;
 
-        if (view != null)
+        if (visualController != null)
         {
-            view.PlayEnd();
+            visualController.PlayEnd();
         }
     }
 
@@ -271,17 +271,17 @@ public sealed class HandGrabAttack : MonoBehaviour
             return;
         }
 
-        if (view != null)
+        if (visualController != null)
         {
-            view.SetDefaultSorting();
+            visualController.SetEndSorting();
         }
 
         endTimer = endLifeTime;
         state = AttackState.End;
 
-        if (view != null)
+        if (visualController != null)
         {
-            view.PlayEnd();
+            visualController.PlayEnd();
         }
     }
 

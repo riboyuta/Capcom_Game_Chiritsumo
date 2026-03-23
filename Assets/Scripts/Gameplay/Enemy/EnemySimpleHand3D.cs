@@ -17,6 +17,12 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
     [SerializeField] private string playerTag = "Player";
     [SerializeField] private bool disableAfterHit = false;
 
+    [Header("起動制御")]
+    [SerializeField] private bool startActive = false;
+    [SerializeField] private bool hideUntilActivated = true;
+    [SerializeField] private Vector3 spawnPositionOnActivate;
+    [SerializeField] private bool useSpawnPositionOnActivate = false;
+
     [Header("攻撃: 参照")]
     [SerializeField] private Transform player;
     [SerializeField] private HandSmashAttack handSmashPrefab;
@@ -65,6 +71,10 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
     private bool isHandActive;
     private GameObject activeHandInstance;
 
+    private bool isActivated;
+    private Collider cachedCollider;
+    private Renderer[] cachedRenderers;
+
     private AttackType lastAttackType = AttackType.Smash;
     private int sameAttackStreakCount = 0;
 
@@ -81,6 +91,9 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        cachedCollider = GetComponent<Collider>();
+        cachedRenderers = GetComponentsInChildren<Renderer>(true);
+
         initialPosition = transform.position;
         initialRotation = transform.rotation;
 
@@ -104,6 +117,9 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
         {
             Debug.LogWarning("[EnemySimpleHand3D] Rigidbody がありません。移動は行われません。", this);
         }
+
+        isActivated = startActive;
+        ApplyActivationVisualState();
     }
 
     private void OnValidate()
@@ -141,7 +157,7 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (isDisabled || rb == null)
+        if (isDisabled || rb == null || !isActivated)
         {
             return;
         }
@@ -159,6 +175,11 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
 
         UpdateSimpleAnimation();
         ApplyVisualLayout();
+
+        if (!isActivated)
+        {
+            return;
+        }
 
         if (attackCooldownTimer > 0.0f)
         {
@@ -179,7 +200,7 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (isDisabled)
+        if (isDisabled || !isActivated)
         {
             return;
         }
@@ -223,6 +244,56 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
         if (disableAfterHit)
         {
             DisableSelf();
+        }
+    }
+
+    public void BeginChase()
+    {
+        if (isActivated)
+        {
+            return;
+        }
+
+        if (useSpawnPositionOnActivate)
+        {
+            if (rb != null)
+            {
+                rb.position = spawnPositionOnActivate;
+            }
+            else
+            {
+                transform.position = spawnPositionOnActivate;
+            }
+        }
+
+        isActivated = true;
+        attackCooldownTimer = 0.0f;
+        ApplyActivationVisualState();
+
+        if (enableDebugLog)
+        {
+            Debug.Log("[EnemySimpleHand3D] BeginChase called. Enemy activated.", this);
+        }
+    }
+
+    private void ApplyActivationVisualState()
+    {
+        bool visible = isActivated || !hideUntilActivated;
+
+        if (cachedCollider != null)
+        {
+            cachedCollider.enabled = isActivated;
+        }
+
+        if (cachedRenderers != null)
+        {
+            for (int i = 0; i < cachedRenderers.Length; i++)
+            {
+                if (cachedRenderers[i] != null)
+                {
+                    cachedRenderers[i].enabled = visible;
+                }
+            }
         }
     }
 
@@ -442,11 +513,8 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
             activeHandInstance = null;
         }
 
-        Collider col = GetComponent<Collider>();
-        if (col != null)
-        {
-            col.enabled = true;
-        }
+        isActivated = startActive;
+        ApplyActivationVisualState();
 
         if (!gameObject.activeSelf)
         {
