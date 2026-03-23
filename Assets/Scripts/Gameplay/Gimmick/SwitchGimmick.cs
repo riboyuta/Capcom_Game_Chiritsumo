@@ -42,6 +42,8 @@ public class SwitchGimmick : MonoBehaviour, IRespawnResettable
     // 外部からスイッチがオンになっているか確認するためのプロパティ
     public bool IsPressed { get; private set; }
 
+
+
     private void Awake()
     {
         initialLocalPosition = transform.localPosition;

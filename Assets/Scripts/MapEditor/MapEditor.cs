@@ -252,6 +252,9 @@ public class MapEditor : MonoBehaviour
         public int z;
 
         public TileTypeEnum type;
+        public TileGimmickTypeEnum gimmickType;
+        public TileGimmickIDEnum gimmickID;
+
     }
 
     [System.Serializable] //マップ全体のクラス
@@ -274,6 +277,9 @@ public class MapEditor : MonoBehaviour
             data.y = tile.Key.y;
             data.z = tile.Key.z;
             data.type = tile.Value.GetComponent<TileType>().type;
+            data.gimmickType = tile.Value.GetComponent<TileType>().gimmickType;
+            data.gimmickID = tile.Value.GetComponent<TileType>().gimmickID;
+
 
             mapData.tiles.Add(data);
         }
@@ -341,6 +347,12 @@ public class MapEditor : MonoBehaviour
 
             GameObject tile =
                 Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
+
+            TileType tileType = tile.GetComponent<TileType>();
+
+            tileType.type = data.type;
+            tileType.gimmickType = data.gimmickType;
+            tileType.gimmickID = data.gimmickID;
 
             tiles.Add(gridPos, tile);
         }

@@ -26,6 +26,14 @@ public sealed class GameRoot : MonoBehaviour
 
     private void Start()
     {
+        // シーン開始時に明転させる。
+        if (FadeController.Instance != null)
+        {
+            FadeController.Instance.FadeIn(0.5f);
+        }
+
+        AudioManager.Instance.FadeIn("BGM_main_beforechase",2.0f);
+
         EnterReady();
     }
 

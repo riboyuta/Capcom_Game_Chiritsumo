@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8802403814409486169}
   - component: {fileID: 7219274154387198012}
   - component: {fileID: 3252800094787315705}
+  - component: {fileID: -1096068622150686539}
   m_Layer: 3
   m_Name: Gimmick_SlideWall
   m_TagString: Untagged
@@ -125,7 +126,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eeb4237dff60144887c578afa6ba8fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlideGimmick
-  targetSwitch: {fileID: 0}
+  targetSwitch: {fileID: 4067737057407457829, guid: 9e79bd3b8f943564396fb99368e75042, type: 3}
   slideLocalDirection: {x: 0, y: 1, z: 0}
-  slideDistance: 9
+  slideDistance: 20
   slideSpeed: 2
+--- !u!114 &-1096068622150686539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2298395400156925019}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cbefe0605652694094dc606600ca1df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TileType
+  type: 0
+  gimmickType: 0
+  gimmickID: 0

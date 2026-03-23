@@ -261,6 +261,7 @@ MonoBehaviour:
   _voiceGroup: {fileID: 4993469152110734990, guid: 4c98aa747a511904fa9607d5c7ded55d, type: 2}
   _audioDefs:
   - {fileID: 11400000, guid: df2d76a75e6b1804b9008f11d0b21f26, type: 2}
+  - {fileID: 11400000, guid: 58ea272096d8259428676d0dfb63a0cb, type: 2}
   _initialPoolSize: 8
 --- !u!4 &447867122
 Transform:
