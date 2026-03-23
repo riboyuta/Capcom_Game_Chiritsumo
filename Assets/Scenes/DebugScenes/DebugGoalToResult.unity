@@ -302,12 +302,16 @@ MonoBehaviour:
   movementSettings:
     moveMaxSpeed: 6
     groundAcceleration: 50
+    groundTurnAcceleration: 108
     groundDeceleration: 60
     airAcceleration: 25
+    airTurnAcceleration: 40
     airDeceleration: 20
     jumpVelocity: 10
     gravityScale: 1
     useVariableJump: 1
+    maxJumpHoldTime: 0.12
+    riseGravityMultiplier: 1
     jumpCutMultiplier: 0.5
     useCoyoteTime: 1
     coyoteTime: 0.1
@@ -315,10 +319,13 @@ MonoBehaviour:
     jumpBufferTime: 0.1
     fallGravityMultiplier: 1
     maxFallSpeed: 20
+    useFastFall: 1
+    fastFallGravityMultiplier: 2.6
+    fastFallMaxSpeed: 28
     groundCheckDistance: 0.1
     groundLayerMask:
       serializedVersion: 2
-      m_Bits: 8
+      m_Bits: 0
     useWallSlide: 1
     wallCheckDistance: 0.15
     wallCheckRadius: 0.2
@@ -327,15 +334,41 @@ MonoBehaviour:
     wallJumpHorizontalVelocity: 7
     wallJumpVerticalVelocity: 9
     wallJumpControlLockTime: 0.1
+    wallReattachLockTime: 0.12
     wallInputThreshold: 0.1
     useStep: 1
     stepSpeed: 12
     stepDuration: 0.12
+    stepGravityMultiplier: 0.05
+    restoreStepStartVerticalVelocity: 1
     stepCooldown: 0.35
     allowAirStep: 0
+    allowTurnDuringStep: 1
     useStepBuffer: 1
     stepBufferTime: 0.1
     stepInvulnerable: 0
+  healthSettings:
+    maxHealth: 3
+    invincibilityDuration: 1
+    invincible: 0
+    debugRequestDeath: 0
+    debugRequestHazardDeath: 0
+  checkpointSystem: {fileID: 0}
+  stageResetSystem: {fileID: 0}
+  playerCameraController: {fileID: 0}
+  playerDeathView: {fileID: 0}
+  knockbackResistance: 1
+  knockbackDuration: 0.25
+  decayKnockbackOverTime: 1
+  showHealthDebugLog: 0
+  damagedStateDuration: 0.15
+  grabbedStateDuration: 0.5
+  smashedStateDuration: 0.35
+  grabIsInstantDeath: 1
+  smashIsInstantDeath: 1
+  showReactionDebugLog: 0
+  killAfterGrabbedDuration: 1
+  snapToGrabAnchorImmediately: 1
 --- !u!1 &1066270906
 GameObject:
   m_ObjectHideFlags: 0
