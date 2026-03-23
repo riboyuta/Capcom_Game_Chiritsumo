@@ -25,7 +25,7 @@ public sealed class HandSmashAttack : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private PalmHitbox palmHitbox;
-    [SerializeField] private HandSmashVisualController visualController;
+    [SerializeField] private HandSmashView view;
 
     private Rigidbody rigidBody;
     private AttackState state = AttackState.Idle;
@@ -91,9 +91,9 @@ public sealed class HandSmashAttack : MonoBehaviour
             palmHitbox.SetHitEnabled(false);
         }
 
-        if (visualController != null)
+        if (view != null)
         {
-            visualController.PlayRise();
+            view.PlayRise();
         }
     }
 
@@ -144,9 +144,9 @@ public sealed class HandSmashAttack : MonoBehaviour
             holdTimer = holdTime;
             state = AttackState.Hold;
 
-            if (visualController != null)
+            if (view != null)
             {
-                visualController.PlayHold();
+                view.PlayHold();
             }
         }
     }
@@ -172,9 +172,9 @@ public sealed class HandSmashAttack : MonoBehaviour
 
         state = AttackState.Smash;
 
-        if (visualController != null)
+        if (view != null)
         {
-            visualController.PlaySmash();
+            view.PlaySmash();
         }
     }
 
@@ -200,9 +200,9 @@ public sealed class HandSmashAttack : MonoBehaviour
             endTimer = endLifeTime;
             state = AttackState.End;
 
-            if (visualController != null)
+            if (view != null)
             {
-                visualController.PlayEnd();
+                view.PlayEnd();
             }
         }
     }

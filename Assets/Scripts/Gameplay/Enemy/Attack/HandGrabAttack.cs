@@ -19,6 +19,7 @@ public sealed class HandGrabAttack : MonoBehaviour
     [SerializeField] private float approachNearSpeed = 12.0f;
     [SerializeField] private float grabMoveSpeed = 18.0f;
     [SerializeField] private float nearDistance = 1.25f;
+    [SerializeField] private float nearHeightOffset = 0.75f;
     [SerializeField] private float reachThreshold = 0.08f;
 
     [Header("Timing")]
@@ -31,7 +32,7 @@ public sealed class HandGrabAttack : MonoBehaviour
     [Header("References")]
     [SerializeField] private GrabHitbox grabHitbox;
     [SerializeField] private Transform grabAnchor;
-    [SerializeField] private HandGrabVisualController visualController;
+    [SerializeField] private HandGrabView view;
 
     private Rigidbody rigidBody;
     private AttackState state = AttackState.Idle;
@@ -87,10 +88,10 @@ public sealed class HandGrabAttack : MonoBehaviour
 
         state = AttackState.ApproachNear;
 
-        if (visualController != null)
+        if (view != null)
         {
-            visualController.SetDefaultSorting();
-            visualController.PlayApproachNear();
+            view.SetDefaultSorting();
+            view.PlayApproachNear();
         }
     }
 
@@ -154,14 +155,13 @@ public sealed class HandGrabAttack : MonoBehaviour
 
         if (Vector3.Distance(GetAnchorWorldPosition(), approachNearTargetPosition) <= reachThreshold)
         {
-            transform.position = rootTargetPosition;
             trackTimer = preGrabTrackDuration;
             trackedElapsedTime = 0.0f;
             state = AttackState.TrackBeforeGrab;
 
-            if (visualController != null)
+            if (view != null)
             {
-                visualController.PlayTrackBeforeGrab();
+                view.PlayTrackBeforeGrab();
             }
         }
     }
@@ -184,9 +184,9 @@ public sealed class HandGrabAttack : MonoBehaviour
 
         state = AttackState.GrabStart;
 
-        if (visualController != null)
+        if (view != null)
         {
-            visualController.PlayGrabStart();
+            view.PlayGrabStart();
         }
     }
 
@@ -217,10 +217,10 @@ public sealed class HandGrabAttack : MonoBehaviour
                 holdTimer = holdDuration;
                 state = AttackState.HoldPlayer;
 
-                if (visualController != null)
+                if (view != null)
                 {
-                    visualController.SetGrabbedSorting();
-                    visualController.PlayHoldPlayer();
+                    view.SetGrabbedSorting();
+                    view.PlayHoldPlayer();
                 }
             }
             else
@@ -228,9 +228,9 @@ public sealed class HandGrabAttack : MonoBehaviour
                 missPauseTimer = missPauseDuration;
                 state = AttackState.MissPause;
 
-                if (visualController != null)
+                if (view != null)
                 {
-                    visualController.PlayMissPause();
+                    view.PlayMissPause();
                 }
             }
         }
@@ -249,17 +249,17 @@ public sealed class HandGrabAttack : MonoBehaviour
 
         ReleaseGrabbedPlayerAndKill();
 
-        if (visualController != null)
+        if (view != null)
         {
-            visualController.SetEndSorting();
+            view.SetDefaultSorting();
         }
 
         endTimer = endLifeTime;
         state = AttackState.End;
 
-        if (visualController != null)
+        if (view != null)
         {
-            visualController.PlayEnd();
+            view.PlayEnd();
         }
     }
 
@@ -271,17 +271,17 @@ public sealed class HandGrabAttack : MonoBehaviour
             return;
         }
 
-        if (visualController != null)
+        if (view != null)
         {
-            visualController.SetEndSorting();
+            view.SetDefaultSorting();
         }
 
         endTimer = endLifeTime;
         state = AttackState.End;
 
-        if (visualController != null)
+        if (view != null)
         {
-            visualController.PlayEnd();
+            view.PlayEnd();
         }
     }
 
@@ -313,12 +313,16 @@ public sealed class HandGrabAttack : MonoBehaviour
 
         if (distance <= 0.0001f)
         {
-            return playerPosition;
+            return playerPosition + Vector3.up * nearHeightOffset;
         }
 
         Vector3 direction = toPlayer / distance;
         float offsetDistance = Mathf.Min(nearDistance, distance);
-        return playerPosition - direction * offsetDistance;
+
+        Vector3 baseTarget = playerPosition - direction * offsetDistance;
+        baseTarget += Vector3.up * nearHeightOffset;
+
+        return baseTarget;
     }
 
     private Vector3 GetAnchorWorldPosition()
