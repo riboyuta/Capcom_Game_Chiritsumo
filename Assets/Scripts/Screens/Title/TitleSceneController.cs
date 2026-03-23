@@ -29,11 +29,10 @@ public sealed class TitleSceneController : MonoBehaviour
             return;
         }
 
-        if (BootSceneController.Instance.DebugInput.NextScenePressed)
+        if (BootSceneController.Instance != null && BootSceneController.Instance.DebugInput.NextScenePressed)
         {
             StartGame();
         }
-
     }
 
     public void StartGame()

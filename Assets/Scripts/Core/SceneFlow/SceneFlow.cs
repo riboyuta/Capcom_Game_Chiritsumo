@@ -3,9 +3,16 @@ using UnityEngine.SceneManagement;
 
 public static class SceneFlow
 {
+    private const string BootSceneName = "Boot";
     private const string TitleSceneName = "Title";
     private const string GameSceneName = "Game";
     private const string ResultSceneName = "Result";
+
+    public static void LoadBoot()
+    {
+        Debug.Log("[SceneFlow] LoadBoot requested.");
+        SceneManager.LoadScene(BootSceneName, LoadSceneMode.Single);
+    }
 
     public static void LoadTitle()
     {
