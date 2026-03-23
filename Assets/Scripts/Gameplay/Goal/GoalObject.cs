@@ -6,12 +6,22 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public sealed class GoalObject : MonoBehaviour
 {
-    [Header("Fade Settings")]
-    [SerializeField, Min(0f)] private float fadeOutDuration = 0.5f;
 
     // 二重遷移防止フラグ。
     private bool isTriggered;
+    [SerializeField] private GameRoot gameRoot;
 
+    private void Awake()
+    {
+        if (gameRoot == null)
+        {
+            gameRoot = FindFirstObjectByType<GameRoot>();
+            if (gameRoot == null)
+            {
+                Debug.LogWarning("[GoalObject] GameRoot not found.");
+            }
+        }
+    }
     private void OnTriggerEnter(Collider other)
     {
         // 既にゴール処理開始済みなら無視する。
@@ -26,22 +36,18 @@ public sealed class GoalObject : MonoBehaviour
             return;
         }
 
-        isTriggered = true;
-        Debug.Log("[GoalObject] Player reached the goal.");
+        if (gameRoot == null)
+        {
+            Debug.LogWarning("[GoalObject] Goal detected but GameRoot is missing.");
+            return;
+        }
+        bool accepted = gameRoot.RequestGoalClear();
+        if (!accepted)
+        {
+            return;
+        }
 
-        // FadeManager が存在する場合はフェードアウト後に遷移する。
-        if (FadeController.Instance != null)
-        {
-            FadeController.Instance.FadeOut(fadeOutDuration, () =>
-            {
-                SceneFlow.LoadResult();
-            });
-        }
-        else
-        {
-            // FadeManager が無い場合は即座に遷移する。
-            Debug.LogWarning("[GoalObject] FadeManager not found. Transitioning without fade.");
-            SceneFlow.LoadResult();
-        }
+        isTriggered = true;
+        Debug.Log("[GoalObject] Player reached the goal. Request accepted.");
     }
 }

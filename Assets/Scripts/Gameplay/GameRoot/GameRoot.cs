@@ -17,12 +17,16 @@ public sealed class GameRoot : MonoBehaviour
     [Tooltip("Play 状態を維持する時間(秒)です。実際にプレイ可能な制限時間を調整します。")]
     [SerializeField, Min(0f)] private float playDuration = 10.0f;
 
+    [Header("Result遷移")]
+    [Tooltip("Result 遷移時のフェードアウト時間(秒)です。")]
+    [SerializeField, Min(0f)] private float resultFadeOutDuration = 0.5f;
+
     private State currentState;
     private float playTimer;
     private float readyTimer;
+    private float elapsedTime;
     private bool isTransitioning;
-
-
+    private bool goalClearAccepted;
 
     private void Start()
     {
@@ -34,19 +38,22 @@ public sealed class GameRoot : MonoBehaviour
 
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.FadeIn("BGM_main_beforechase",2.0f);
+            AudioManager.Instance.FadeIn("BGM_main_beforechase", 2.0f);
         }
 
+        elapsedTime = 0f;
+        goalClearAccepted = false;
         EnterReady();
     }
 
     private void Update()
     {
-
         if (isTransitioning)
         {
             return;
         }
+
+        elapsedTime += Time.deltaTime;
 
         switch (currentState)
         {
@@ -90,20 +97,15 @@ public sealed class GameRoot : MonoBehaviour
 
     private void UpdatePlaying()
     {
-        //if (BootSceneController.Instance.DebugInput.NextScenePressed)
-        //{
-        //    EnterResult();
-        //    return;
-        //}
+        // playTimer はデバッグ表示/UI向けの残り時間であり、Result遷移条件には使わない。
         playTimer -= Time.deltaTime;
-
-        if (playTimer > 0f)
+        if (playTimer < 0f)
         {
-            return;
+            playTimer = 0f;
         }
 
         playTimer = 0f;
-        EnterResult();
+        //EnterResult();
     }
 
     private void EnterResult()
@@ -114,9 +116,43 @@ public sealed class GameRoot : MonoBehaviour
     private void UpdateResult()
     {
         isTransitioning = true;
+
+        if (FadeController.Instance != null)
+        {
+            FadeController.Instance.FadeOut(resultFadeOutDuration, SceneFlow.LoadResult);
+            return;
+        }
+
+        Debug.LogWarning("[GameRoot] FadeController not found. Transitioning without fade.");
         SceneFlow.LoadResult();
+    }
+
+    /// <summary>
+    /// ゴール到達を受け付け、Result遷移を開始する。
+    /// Playing 中のみ受理する。
+    /// </summary>
+    public bool RequestGoalClear()
+    {
+        if (isTransitioning || goalClearAccepted)
+        {
+            return false;
+        }
+
+        if (currentState != State.Playing)
+        {
+            Debug.Log($"[GameRoot] GoalClear ignored. currentState={currentState}");
+            return false;
+        }
+
+        goalClearAccepted = true;
+        ResultSceneTransitData.SetClearElapsedTime(elapsedTime);
+        Debug.Log($"[GameRoot] GoalClear accepted. elapsedTime={elapsedTime:F2}s");
+
+        EnterResult();
+        return true;
     }
 
     public string GetCurrentStateName() { return currentState.ToString(); }
     public float GetRemainingPlayTime() { return playTimer; }
+    public float GetElapsedTime() { return elapsedTime; }
 }

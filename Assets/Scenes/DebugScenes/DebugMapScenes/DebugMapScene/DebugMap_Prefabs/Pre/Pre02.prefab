@@ -127,6 +127,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TileType
   type: 1
+  gimmickType: 0
+  gimmickID: 0
 --- !u!65 &-2800495375661160767
 BoxCollider:
   m_ObjectHideFlags: 0
