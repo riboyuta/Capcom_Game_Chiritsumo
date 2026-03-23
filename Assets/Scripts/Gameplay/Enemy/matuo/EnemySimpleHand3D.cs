@@ -497,7 +497,7 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
         activeHandInstance = null;
     }
 
-    public void ResetToRespawnState()
+    public void ResetEncounterForRespawn()
     {
         transform.position = initialPosition;
         transform.rotation = initialRotation;
@@ -506,11 +506,19 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
         isHandActive = false;
         isDisabled = false;
         animationTimer = 0.0f;
+        sameAttackStreakCount = 0;
+        lastAttackType = AttackType.Smash;
 
         if (activeHandInstance != null)
         {
             Destroy(activeHandInstance);
             activeHandInstance = null;
+        }
+
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
         }
 
         isActivated = startActive;
@@ -520,6 +528,11 @@ public sealed class EnemySimpleHand3D : MonoBehaviour
         {
             gameObject.SetActive(true);
         }
+    }
+
+    public void ResetToRespawnState()
+    {
+        ResetEncounterForRespawn();
     }
 
     private void DisableSelf()
