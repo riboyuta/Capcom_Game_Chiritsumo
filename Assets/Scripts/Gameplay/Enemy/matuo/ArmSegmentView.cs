@@ -171,14 +171,15 @@ public sealed class ArmSegmentView : MonoBehaviour
 
     // 見た目適用の簡易入口。
     // sorting layer を外部指定しない場合は空文字で委譲する。
-    public void Apply(Vector3 backWorld, Vector3 frontWorld, int sortingOrder)
+    public void Apply(Vector3 startWorld, Vector3 endWorld, int sortingOrder)
     {
-        Apply(backWorld, frontWorld, string.Empty, sortingOrder);
+        Apply(startWorld, endWorld, string.Empty, sortingOrder);
     }
+
 
     // world の 2 点に合わせて、向き・長さ・位置・描画順を更新する。
     // StartSocket を backWorld 側へ合わせることを優先し、長さは plane 上距離から求める。
-    public void Apply(Vector3 backWorld, Vector3 frontWorld, string sortingLayerName, int sortingOrder)
+    public void Apply(Vector3 startWorld, Vector3 endWorld, string sortingLayerName, int sortingOrder)
     {
         InitializeIfNeeded();
 
@@ -192,9 +193,9 @@ public sealed class ArmSegmentView : MonoBehaviour
             SetVisible(true);
         }
 
-        Vector2 backPlane = ProjectWorldToPlane(backWorld);
-        Vector2 frontPlane = ProjectWorldToPlane(frontWorld);
-        Vector2 planeDelta = frontPlane - backPlane;
+        Vector2 startPlane = ProjectWorldToPlane(startWorld);
+        Vector2 endPlane = ProjectWorldToPlane(endWorld);
+        Vector2 planeDelta = endPlane - startPlane;
         float desiredLength = planeDelta.magnitude;
 
         if (desiredLength <= MinLengthEpsilon)
@@ -233,22 +234,21 @@ public sealed class ArmSegmentView : MonoBehaviour
         scaleTarget.localScale = nextScale;
 
         // 3. StartSocket が backWorld に一致するよう root を平行移動
-        Vector3 constrainedBackWorld = backWorld;
+        // 3. StartSocket が startWorld に一致するよう root を平行移動
+        Vector3 constrainedStartWorld = startWorld;
         switch (planeMode)
         {
             case SegmentViewPlaneMode.XY:
-                constrainedBackWorld.z = backWorld.z;
+                constrainedStartWorld.z = startWorld.z;
                 break;
 
             case SegmentViewPlaneMode.XZ:
-                constrainedBackWorld.y = backWorld.y;
+                constrainedStartWorld.y = startWorld.y;
                 break;
         }
-
-        Vector3 offsetToBack = constrainedBackWorld - startSocket.position;
-        transform.position += offsetToBack;
-
-        ApplySorting(sortingLayerName, sortingOrder);
+        Vector3 offsetToStart = constrainedStartWorld - startSocket.position;
+            transform.position += offsetToStart;
+            ApplySorting(sortingLayerName, sortingOrder);
     }
 
     // GameObject 単位で表示 / 非表示を切り替える。

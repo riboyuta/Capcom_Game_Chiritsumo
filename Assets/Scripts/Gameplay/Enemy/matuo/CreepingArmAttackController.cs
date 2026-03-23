@@ -417,26 +417,26 @@ public sealed class CreepingArmAttackController : MonoBehaviour
                 continue;
             }
 
-            Vector2 backLogic;
-            Vector2 frontLogic;
+            Vector2 startLogic;
+            Vector2 endLogic;
             if (i == newestSegmentIndex && chainPoints.Count >= 2)
             {
-                // 最新節は live palm -> ひとつ前の履歴点で描画する。
-                backLogic = currentPalmLogicPointOnPlane;
-                frontLogic = chainPoints[chainPoints.Count - 2];
+                // 最新節は live palm -> ひとつ前の履歴点で描画する。␊
+                startLogic = currentPalmLogicPointOnPlane;
+                endLogic = chainPoints[chainPoints.Count - 2];
             }
             else
             {
-                // 古い節は従来通り履歴点同士で描画する。
-                backLogic = chainPoints[i + 1];
-                frontLogic = chainPoints[i];
+                // 古い節は常に「新しい側 -> 古い側」の順で描画する。
+                startLogic = chainPoints[i + 1];
+                endLogic = chainPoints[i];
             }
 
-            Vector3 backWorld = LiftLogicPointToWorld(backLogic);
-            Vector3 frontWorld = LiftLogicPointToWorld(frontLogic);
+            Vector3 startWorld = LiftLogicPointToWorld(startLogic);
+            Vector3 endWorld = LiftLogicPointToWorld(endLogic);
 
             int sortingOrder = newestSegmentSortingOrder - ((activeCount - 1 - i) * sortingStepPerSegment);
-            view.Apply(backWorld, frontWorld, sortingLayerName, sortingOrder);
+            view.Apply(startWorld, endWorld, sortingLayerName, sortingOrder);
         }
     }
 
