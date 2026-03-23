@@ -1830,7 +1830,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameRoot
   readyDuration: 1
   playDuration: 10000
-  resultFadeOutDuration: 4
+  resultFadeOutDuration: 2
 --- !u!4 &1603009782
 Transform:
   m_ObjectHideFlags: 0
