@@ -100,7 +100,7 @@ public sealed class GameRoot : MonoBehaviour
         }
 
         playTimer = 0f;
-        EnterResult();
+        //EnterResult();
     }
 
     private void EnterResult()
