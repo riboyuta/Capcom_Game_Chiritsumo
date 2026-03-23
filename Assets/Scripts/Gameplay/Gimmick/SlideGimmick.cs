@@ -22,6 +22,14 @@ public class SlideGimmick : MonoBehaviour
 
     private Vector3 initialLocalPosition;
 
+
+    //生成されたときにスイッチを探すため！
+    public void SetSwitch(SwitchGimmick sw)
+    {
+        targetSwitch = sw;
+    }
+
+
     private void Awake()
     {
         initialLocalPosition = transform.localPosition;

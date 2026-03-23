@@ -91,6 +91,7 @@ public sealed partial class PlayerController
         jumpBufferTimer = 0f;
         jumpHoldTimer = movementSettings.maxJumpHoldTime;
         justJumpedThisFrame = true;
+        PlayJumpSound();
     }
 
     private bool TryApplyWallKick()
@@ -135,6 +136,8 @@ public sealed partial class PlayerController
         justWallJumpedThisFrame = true;
         //振動
         PlayWallKickVibration();
+        //音声
+        PlayWallKickSound();
 
         return true;
     }

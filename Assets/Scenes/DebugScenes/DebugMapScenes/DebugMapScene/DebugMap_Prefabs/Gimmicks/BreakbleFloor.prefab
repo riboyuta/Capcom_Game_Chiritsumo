@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: 7919696765890889291}
   - component: {fileID: 2359802621397819976}
   - component: {fileID: 1361439948427074722}
+  - component: {fileID: 2646225579069338225}
   m_Layer: 0
   m_Name: BreakbleFloor
   m_TagString: Untagged
@@ -163,3 +164,18 @@ MonoBehaviour:
   vibrationIntensity: 0.05
   vibrationSpeed: 30
   autoRespawn: 0
+--- !u!114 &2646225579069338225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6453188548815068593}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cbefe0605652694094dc606600ca1df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TileType
+  type: 9
+  gimmickType: 0
+  gimmickID: 0
