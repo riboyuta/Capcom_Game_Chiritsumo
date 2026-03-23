@@ -30,6 +30,7 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 7072625199681737367}
+  - {fileID: 40821743275649081}
   m_Father: {fileID: 54845863021831391}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2210536961890077483
@@ -110,12 +111,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2459943370238874255}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.0599997, y: -1.68, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: 0.1417543, w: 0.9899019}
+  m_LocalPosition: {x: 2.4486961, y: -1.034353, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7072625199681737367}
+  m_Father: {fileID: 7296045331812786607}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8817927017108179465
 SpriteRenderer:
@@ -186,7 +187,6 @@ GameObject:
   m_Component:
   - component: {fileID: 54845863021831391}
   - component: {fileID: 7451033984243787979}
-  - component: {fileID: 7399983988050620463}
   - component: {fileID: 3166458492546859069}
   m_Layer: 0
   m_Name: EnemySimpleHand3D
@@ -253,27 +253,6 @@ MonoBehaviour:
   animationFps: 8
   enableDebugLog: 0
   logMissingReferences: 0
---- !u!65 &7399983988050620463
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3268368376347136408}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 0
-  serializedVersion: 3
-  m_Size: {x: 9.67, y: 42.34, z: 1}
-  m_Center: {x: 0, y: -0.09301877, z: 0}
 --- !u!54 &3166458492546859069
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -330,8 +309,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 40821743275649081}
+  m_Children: []
   m_Father: {fileID: 7296045331812786607}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 16.299}
 --- !u!212 &8753026961955578720
