@@ -12,7 +12,7 @@
             "x": 37,
             "y": 14,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -113,10 +113,10 @@
             "gimmickID": 0
         },
         {
-            "x": 40,
-            "y": 16,
+            "x": 41,
+            "y": 14,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -137,34 +137,34 @@
             "gimmickID": 0
         },
         {
-            "x": 35,
-            "y": 14,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 36,
-            "y": 14,
+            "y": 15,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 40,
-            "y": 17,
+            "x": 39,
+            "y": 15,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 40,
-            "y": 18,
+            "x": 41,
+            "y": 15,
             "z": 0,
-            "type": 8,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 41,
+            "y": 16,
+            "z": 0,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -172,7 +172,7 @@
             "x": 40,
             "y": 19,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -305,10 +305,10 @@
             "gimmickID": 0
         },
         {
-            "x": 38,
-            "y": 14,
+            "x": 35,
+            "y": 13,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -393,14 +393,6 @@
             "gimmickID": 0
         },
         {
-            "x": 238,
-            "y": 9,
-            "z": 0,
-            "type": 4,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 17,
             "y": 7,
             "z": 0,
@@ -449,18 +441,10 @@
             "gimmickID": 0
         },
         {
-            "x": 248,
-            "y": 24,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": -15,
             "y": 9,
             "z": 0,
-            "type": 6,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -468,7 +452,7 @@
             "x": -14,
             "y": 9,
             "z": 0,
-            "type": 6,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -493,22 +477,6 @@
             "y": 9,
             "z": 0,
             "type": 7,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 231,
-            "y": 20,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 166,
-            "y": 13,
-            "z": 0,
-            "type": 3,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -541,14 +509,6 @@
             "y": 9,
             "z": 0,
             "type": 7,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 237,
-            "y": 9,
-            "z": 0,
-            "type": 4,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -692,7 +652,7 @@
             "x": -4,
             "y": 9,
             "z": 0,
-            "type": 6,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -812,7 +772,7 @@
             "x": 40,
             "y": 13,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1097,30 +1057,6 @@
             "gimmickID": 0
         },
         {
-            "x": 230,
-            "y": 20,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 11,
-            "y": 14,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 137,
-            "y": 16,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": -7,
             "y": 22,
             "z": 0,
@@ -1209,50 +1145,34 @@
             "gimmickID": 0
         },
         {
-            "x": 212,
-            "y": 9,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 39,
-            "y": 15,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 38,
-            "y": 15,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 37,
-            "y": 15,
+            "y": 13,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 36,
-            "y": 15,
+            "y": 13,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 167,
-            "y": 13,
+            "x": 38,
+            "y": 14,
             "z": 0,
-            "type": 3,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 39,
+            "y": 14,
+            "z": 0,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1273,42 +1193,10 @@
             "gimmickID": 0
         },
         {
-            "x": 213,
-            "y": 9,
+            "x": 38,
+            "y": 13,
             "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 214,
-            "y": 9,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 37,
-            "y": 9,
-            "z": 0,
-            "type": 4,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 12,
-            "y": 14,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 39,
-            "y": 14,
-            "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1316,7 +1204,7 @@
             "x": 36,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1341,14 +1229,6 @@
             "y": 8,
             "z": 0,
             "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 38,
-            "y": 9,
-            "z": 0,
-            "type": 4,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1385,14 +1265,6 @@
             "gimmickID": 0
         },
         {
-            "x": 165,
-            "y": 13,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 4,
             "y": 15,
             "z": 0,
@@ -1420,7 +1292,7 @@
             "x": 39,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1516,7 +1388,7 @@
             "x": 40,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1553,14 +1425,6 @@
             "gimmickID": 0
         },
         {
-            "x": 208,
-            "y": 9,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 6,
             "y": 8,
             "z": 0,
@@ -1572,7 +1436,7 @@
             "x": 41,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1612,7 +1476,7 @@
             "x": 40,
             "y": 14,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1620,7 +1484,7 @@
             "x": 41,
             "y": 19,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1649,10 +1513,10 @@
             "gimmickID": 0
         },
         {
-            "x": 42,
-            "y": 14,
+            "x": 41,
+            "y": 18,
             "z": 0,
-            "type": 5,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1660,55 +1524,31 @@
             "x": 41,
             "y": 17,
             "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 42,
-            "y": 12,
-            "z": 0,
-            "type": 5,
-            "gimmickType": 2,
-            "gimmickID": 1
-        },
-        {
-            "x": 41,
-            "y": 18,
-            "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 41,
+            "y": 13,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 40,
             "y": 16,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 41,
-            "y": 15,
+            "x": 40,
+            "y": 17,
             "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 41,
-            "y": 14,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 209,
-            "y": 9,
-            "z": 0,
-            "type": 3,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1721,50 +1561,10 @@
             "gimmickID": 0
         },
         {
-            "x": 207,
-            "y": 9,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 206,
             "y": 9,
             "z": 0,
             "type": 7,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 248,
-            "y": 23,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 201,
-            "y": 9,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 202,
-            "y": 9,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 203,
-            "y": 9,
-            "z": 0,
-            "type": 3,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1845,14 +1645,6 @@
             "y": 9,
             "z": 0,
             "type": 7,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 47,
-            "y": 10,
-            "z": 0,
-            "type": 0,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1973,14 +1765,6 @@
             "y": 9,
             "z": 0,
             "type": 7,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 48,
-            "y": 10,
-            "z": 0,
-            "type": 0,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -2508,7 +2292,7 @@
             "x": 44,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -2516,7 +2300,7 @@
             "x": 43,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -2524,7 +2308,7 @@
             "x": 42,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -2801,14 +2585,6 @@
             "gimmickID": 0
         },
         {
-            "x": 113,
-            "y": 9,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 112,
             "y": 9,
             "z": 0,
@@ -2837,22 +2613,6 @@
             "y": 9,
             "z": 0,
             "type": 7,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 114,
-            "y": 9,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 115,
-            "y": 9,
-            "z": 0,
-            "type": 3,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -4028,7 +3788,7 @@
             "x": 35,
             "y": 15,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -5729,10 +5489,10 @@
             "gimmickID": 0
         },
         {
-            "x": 249,
-            "y": 24,
+            "x": 244,
+            "y": 17,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -5788,7 +5548,7 @@
             "x": 40,
             "y": 15,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -5805,14 +5565,6 @@
             "y": 14,
             "z": 0,
             "type": 6,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 135,
-            "y": 16,
-            "z": 0,
-            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -5929,22 +5681,6 @@
             "gimmickID": 0
         },
         {
-            "x": 150,
-            "y": 9,
-            "z": 0,
-            "type": 4,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 149,
-            "y": 9,
-            "z": 0,
-            "type": 4,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 127,
             "y": 9,
             "z": 0,
@@ -6052,7 +5788,7 @@
             "x": 32,
             "y": 9,
             "z": 0,
-            "type": 6,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -6244,7 +5980,7 @@
             "x": 35,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -7156,7 +6892,7 @@
             "x": 31,
             "y": 9,
             "z": 0,
-            "type": 6,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -7649,7 +7385,7 @@
             "gimmickID": 0
         },
         {
-            "x": 253,
+            "x": 254,
             "y": 10,
             "z": 0,
             "type": 1,
@@ -8177,14 +7913,6 @@
             "gimmickID": 0
         },
         {
-            "x": 23,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 31,
             "y": 22,
             "z": 0,
@@ -8281,26 +8009,10 @@
             "gimmickID": 0
         },
         {
-            "x": 41,
-            "y": 13,
+            "x": 40,
+            "y": 18,
             "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 47,
-            "y": 11,
-            "z": 0,
-            "type": 0,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 48,
-            "y": 11,
-            "z": 0,
-            "type": 0,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -8889,14 +8601,6 @@
             "gimmickID": 0
         },
         {
-            "x": 160,
-            "y": 18,
-            "z": 0,
-            "type": 5,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 168,
             "y": 22,
             "z": 0,
@@ -8925,22 +8629,6 @@
             "y": 17,
             "z": 0,
             "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 160,
-            "y": 17,
-            "z": 0,
-            "type": 5,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 160,
-            "y": 16,
-            "z": 0,
-            "type": 5,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -9273,14 +8961,6 @@
             "gimmickID": 0
         },
         {
-            "x": 173,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 229,
             "y": 9,
             "z": 0,
@@ -9473,14 +9153,6 @@
             "gimmickID": 0
         },
         {
-            "x": 172,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 178,
             "y": 18,
             "z": 0,
@@ -9501,14 +9173,6 @@
             "y": 26,
             "z": 0,
             "type": 6,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 174,
-            "y": 10,
-            "z": 0,
-            "type": 3,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -9692,7 +9356,7 @@
             "x": 21,
             "y": 9,
             "z": 0,
-            "type": 6,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -9724,7 +9388,7 @@
             "x": 20,
             "y": 9,
             "z": 0,
-            "type": 6,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -9874,41 +9538,25 @@
         },
         {
             "x": 248,
-            "y": 21,
+            "y": 17,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 248,
-            "y": 20,
+            "x": 247,
+            "y": 17,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 248,
-            "y": 19,
+            "x": 246,
+            "y": 17,
             "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 25,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 24,
-            "y": 10,
-            "z": 0,
-            "type": 3,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -10769,10 +10417,10 @@
             "gimmickID": 0
         },
         {
-            "x": 248,
-            "y": 18,
+            "x": 245,
+            "y": 17,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -11169,10 +10817,10 @@
             "gimmickID": 0
         },
         {
-            "x": 248,
-            "y": 17,
+            "x": 247,
+            "y": 16,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -12593,14 +12241,6 @@
             "gimmickID": 0
         },
         {
-            "x": 225,
-            "y": 9,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 215,
             "y": 16,
             "z": 0,
@@ -12621,22 +12261,6 @@
             "y": 17,
             "z": 0,
             "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 224,
-            "y": 9,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 226,
-            "y": 9,
-            "z": 0,
-            "type": 3,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -13641,14 +13265,6 @@
             "gimmickID": 0
         },
         {
-            "x": 13,
-            "y": 14,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 236,
             "y": 7,
             "z": 0,
@@ -13697,34 +13313,10 @@
             "gimmickID": 0
         },
         {
-            "x": 16,
-            "y": 14,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 242,
             "y": 7,
             "z": 0,
             "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 17,
-            "y": 14,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 136,
-            "y": 16,
-            "z": 0,
-            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -13796,15 +13388,7 @@
             "x": 247,
             "y": 12,
             "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 15,
-            "y": 14,
-            "z": 0,
-            "type": 2,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -13876,7 +13460,7 @@
             "x": 248,
             "y": 12,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -13884,7 +13468,7 @@
             "x": 249,
             "y": 12,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -13892,7 +13476,7 @@
             "x": 250,
             "y": 12,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -13900,7 +13484,7 @@
             "x": 251,
             "y": 12,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -13908,7 +13492,7 @@
             "x": 252,
             "y": 12,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -13916,7 +13500,7 @@
             "x": 253,
             "y": 12,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -14010,81 +13594,33 @@
         },
         {
             "x": 244,
-            "y": 17,
+            "y": 16,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 245,
-            "y": 17,
+            "y": 16,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 246,
-            "y": 17,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 247,
-            "y": 17,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 248,
-            "y": 22,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 249,
-            "y": 18,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 250,
-            "y": 15,
-            "z": 0,
-            "type": 5,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 249,
-            "y": 20,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 250,
-            "y": 17,
-            "z": 0,
-            "type": 5,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 250,
             "y": 16,
             "z": 0,
-            "type": 5,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 249,
+            "y": 17,
+            "z": 0,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -14092,7 +13628,7 @@
             "x": 247,
             "y": 11,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -14100,7 +13636,7 @@
             "x": 248,
             "y": 11,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -14108,7 +13644,7 @@
             "x": 249,
             "y": 11,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -14116,7 +13652,7 @@
             "x": 250,
             "y": 11,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -14124,7 +13660,7 @@
             "x": 251,
             "y": 11,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -14132,15 +13668,15 @@
             "x": 252,
             "y": 11,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 253,
+            "x": 254,
             "y": 11,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -14217,34 +13753,10 @@
             "gimmickID": 0
         },
         {
-            "x": 244,
+            "x": 249,
             "y": 16,
             "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 245,
-            "y": 16,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 246,
-            "y": 16,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 247,
-            "y": 16,
-            "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -14252,55 +13764,7 @@
             "x": 248,
             "y": 16,
             "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 249,
-            "y": 19,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 249,
-            "y": 23,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 249,
-            "y": 22,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 249,
-            "y": 21,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 249,
-            "y": 16,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 249,
-            "y": 17,
-            "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -14357,14 +13821,6 @@
             "y": 8,
             "z": 0,
             "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 42,
-            "y": 13,
-            "z": 0,
-            "type": 5,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -15777,26 +15233,10 @@
             "gimmickID": 0
         },
         {
-            "x": -2,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 3,
             "y": 14,
             "z": 0,
             "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -1,
-            "y": 10,
-            "z": 0,
-            "type": 3,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -15820,7 +15260,7 @@
             "x": -5,
             "y": 9,
             "z": 0,
-            "type": 6,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -15885,14 +15325,6 @@
             "y": 12,
             "z": 0,
             "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 0,
-            "y": 10,
-            "z": 0,
-            "type": 3,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -16004,7 +15436,7 @@
             "x": 254,
             "y": 12,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -16060,7 +15492,7 @@
             "x": 258,
             "y": 8,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -16068,7 +15500,199 @@
             "x": 260,
             "y": 8,
             "z": 0,
-            "type": 8,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": 9,
+            "z": 0,
+            "type": 7,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": 8,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": 10,
+            "z": 0,
+            "type": 7,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 253,
+            "y": 11,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 260,
+            "y": 7,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 253,
+            "y": 10,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": 10,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": 11,
+            "z": 0,
+            "type": 7,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": 9,
+            "z": 0,
+            "type": 7,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": 9,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": 9,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": 9,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": 9,
+            "z": 0,
+            "type": 7,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 258,
+            "y": 7,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": 8,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": 8,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": 8,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 261,
+            "y": 8,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": 7,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": 7,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": 7,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": 7,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": 9,
+            "z": 0,
+            "type": 7,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": 9,
+            "z": 0,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -16076,63 +15700,7 @@
             "x": 259,
             "y": 9,
             "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": 8,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": 10,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": 11,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
-            "y": 7,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": 10,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": 10,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": 11,
-            "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -16140,68 +15708,28 @@
             "x": 258,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 254,
-            "y": 9,
+            "x": 264,
+            "y": 8,
             "z": 0,
             "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 255,
-            "y": 9,
+            "x": 265,
+            "y": 8,
             "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": 9,
-            "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 257,
-            "y": 9,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": 7,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": 8,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": 8,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
             "y": 8,
             "z": 0,
             "type": 1,
@@ -16210,14 +15738,6 @@
         },
         {
             "x": 261,
-            "y": 8,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
             "y": 7,
             "z": 0,
             "type": 1,
@@ -16225,7 +15745,7 @@
             "gimmickID": 0
         },
         {
-            "x": 254,
+            "x": 262,
             "y": 7,
             "z": 0,
             "type": 1,
@@ -16233,7 +15753,7 @@
             "gimmickID": 0
         },
         {
-            "x": 256,
+            "x": 263,
             "y": 7,
             "z": 0,
             "type": 1,
@@ -16242,7 +15762,63 @@
         },
         {
             "x": 257,
+            "y": 9,
+            "z": 0,
+            "type": 7,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": 9,
+            "z": 0,
+            "type": 7,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 262,
+            "y": 8,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": 8,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
             "y": 7,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": 7,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": 7,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 263,
+            "y": 8,
             "z": 0,
             "type": 1,
             "gimmickType": 0,
@@ -16252,151 +15828,7 @@
             "x": 260,
             "y": 9,
             "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": 9,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 265,
-            "y": 9,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 264,
-            "y": 9,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 264,
-            "y": 8,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 265,
-            "y": 8,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": 8,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": 7,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": 7,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": 7,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": 9,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": 9,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": 8,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 266,
-            "y": 8,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 266,
-            "y": 7,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 265,
-            "y": 7,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 264,
-            "y": 7,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": 8,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 266,
-            "y": 9,
-            "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -16421,78 +15853,6 @@
             "y": 9,
             "z": 0,
             "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": 10,
-            "z": 0,
-            "type": 6,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": 11,
-            "z": 0,
-            "type": 6,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": 11,
-            "z": 0,
-            "type": 6,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": 12,
-            "z": 0,
-            "type": 6,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 264,
-            "y": 12,
-            "z": 0,
-            "type": 6,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 264,
-            "y": 11,
-            "z": 0,
-            "type": 6,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 264,
-            "y": 10,
-            "z": 0,
-            "type": 6,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": 10,
-            "z": 0,
-            "type": 6,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": 12,
-            "z": 0,
-            "type": 6,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -16857,34 +16217,34 @@
             "gimmickID": 0
         },
         {
-            "x": 38,
-            "y": 13,
+            "x": 35,
+            "y": 14,
             "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 37,
-            "y": 13,
-            "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 36,
-            "y": 13,
+            "y": 14,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 35,
-            "y": 13,
+            "x": 38,
+            "y": 15,
             "z": 0,
-            "type": 8,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 37,
+            "y": 15,
+            "z": 0,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -16977,42 +16337,42 @@
             "gimmickID": 0
         },
         {
-            "x": 267,
+            "x": 261,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 268,
+            "x": 262,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 269,
+            "x": 263,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": 9,
+            "z": 0,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 270,
-            "y": 9,
-            "z": 0,
-            "type": 8,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 270,
             "y": 8,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -17020,7 +16380,7 @@
             "x": 269,
             "y": 8,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -17028,7 +16388,7 @@
             "x": 268,
             "y": 8,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -17036,7 +16396,7 @@
             "x": 267,
             "y": 8,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -17076,7 +16436,7 @@
             "x": 271,
             "y": 9,
             "z": 0,
-            "type": 8,
+            "type": 7,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -17148,7 +16508,7 @@
             "x": 271,
             "y": 8,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -17540,7 +16900,7 @@
             "x": 39,
             "y": 13,
             "z": 0,
-            "type": 8,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },

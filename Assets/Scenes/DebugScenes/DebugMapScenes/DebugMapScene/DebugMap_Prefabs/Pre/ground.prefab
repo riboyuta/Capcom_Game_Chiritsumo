@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: -2773460723249797313}
   - component: {fileID: -7863572024843087998}
   m_Layer: 0
-  m_Name: Pre08
+  m_Name: ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -69,7 +69,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 36e98ddc921169c4f93ef9e1744de53d, type: 2}
+  - {fileID: 2100000, guid: caa575393f45e3f4e958a378bf19ae3a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -127,6 +127,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TileType
   type: 7
+  gimmickType: 0
+  gimmickID: 0
 --- !u!65 &-7863572024843087998
 BoxCollider:
   m_ObjectHideFlags: 0
