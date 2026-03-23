@@ -19,10 +19,10 @@ public sealed class ResultSceneController : MonoBehaviour
             return;
         }
 
-        if (BootSceneController.Instance.DebugInput.NextScenePressed)
-        {
-            ReturnToTitle();
-        }
+        //if (BootSceneController.Instance.DebugInput.NextScenePressed)
+        //{
+        //    ReturnToTitle();
+        //}
     }
 
     public void ReturnToTitle()

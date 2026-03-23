@@ -2851,9 +2851,9 @@ MonoBehaviour:
   headMover: {fileID: 6172812202918670032}
   segmentPoolRoot: {fileID: 6172812202918670028}
   segmentPrefab: {fileID: 3746233343278457844, guid: 007f0747c8d4dca4984a97eaf2f33005, type: 3}
-  segmentLength: 0.5
-  maxSegmentCount: 12
-  drawTailToCurrentPalm: 0
+  segmentLength: 1
+  maxSegmentCount: 50
+  attackScale: 1
   attackPlaneMode: 0
   fixedDepth: 0
   sortingLayerName: Enemy
@@ -2871,6 +2871,7 @@ MonoBehaviour:
   currentPalmLogicPoint: {x: 0, y: 0}
   debugChainPoints: []
   runtimeSegmentViews: []
+  effectiveSegmentLength: 0.1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
