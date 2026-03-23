@@ -274,7 +274,7 @@ public sealed class CreepingArmAttackController : MonoBehaviour
             headMover.TickMovement(deltaTime);
         }
 
-        Vector3 currentPalmWorld = ResolveCurrentPalmWorldPosition();
+        Vector3 currentPalmWorld = GetCurrentPalmWorldOnAttackPlane();
         currentPalmLogicPoint = ProjectWorldToLogicPlane(currentPalmWorld);
 
         if (!chainModel.IsInitialized)
@@ -291,10 +291,10 @@ public sealed class CreepingArmAttackController : MonoBehaviour
         SyncDebugChainPointsFromModel();
 
         IReadOnlyList<Vector2> chainPoints = chainModel.ChainPoints;
-        int fixedSegmentCount = Mathf.Max(0, chainPoints.Count - 1);
-        int requiredCount = fixedSegmentCount;
+        int requiredCount = Mathf.Max(0, chainPoints.Count - 1);
         EnsureSegmentViewCount(requiredCount);
-        UpdateSegmentViews(chainPoints, fixedSegmentCount);
+        UpdateSegmentsFromChainPoints(chainPoints, currentPalmLogicPoint);
+
 
         ApplyHeadSortingPlaceholder();
 
@@ -397,12 +397,16 @@ public sealed class CreepingArmAttackController : MonoBehaviour
     }
 
     // chainPoints を使って segment view の見た目と描画順を更新する。
-    private void UpdateSegmentViews(IReadOnlyList<Vector2> chainPoints, int fixedSegmentCount)
+    // chainPoints を使って segment view の見た目と描画順を更新する。
+    // 最新節のみ、back を live な palm に差し替える。
+    private void UpdateSegmentsFromChainPoints(IReadOnlyList<Vector2> chainPoints, Vector2 currentPalmLogicPointOnPlane)
     {
-        int activeCount = fixedSegmentCount;
+        int activeCount = Mathf.Max(0, chainPoints.Count - 1);
+        int newestSegmentIndex = activeCount - 1;
         for (int i = 0; i < runtimeSegmentViews.Count; i++)
         {
-            ArmSegmentView view = runtimeSegmentViews[i];            if (view == null)
+            ArmSegmentView view = runtimeSegmentViews[i];
+            if (view == null)
             {
                 continue;
             }
@@ -415,12 +419,22 @@ public sealed class CreepingArmAttackController : MonoBehaviour
 
             Vector2 backLogic;
             Vector2 frontLogic;
-            backLogic = chainPoints[i];
-            frontLogic = chainPoints[i + 1];
+            if (i == newestSegmentIndex && chainPoints.Count >= 2)
+            {
+                // 最新節は live palm -> ひとつ前の履歴点で描画する。
+                backLogic = currentPalmLogicPointOnPlane;
+                frontLogic = chainPoints[chainPoints.Count - 2];
+            }
+            else
+            {
+                // 古い節は従来通り履歴点同士で描画する。
+                backLogic = chainPoints[i + 1];
+                frontLogic = chainPoints[i];
+            }
 
             Vector3 backWorld = LiftLogicPointToWorld(backLogic);
             Vector3 frontWorld = LiftLogicPointToWorld(frontLogic);
-            
+
             int sortingOrder = newestSegmentSortingOrder - ((activeCount - 1 - i) * sortingStepPerSegment);
             view.Apply(backWorld, frontWorld, sortingLayerName, sortingOrder);
         }
@@ -643,6 +657,15 @@ public sealed class CreepingArmAttackController : MonoBehaviour
             return headRoot.position;
         }
 
+
         return transform.position;
+    }
+
+    // 現在の palm ワールド位置を、controller の攻撃平面定義へ揃えた座標として返す。
+    private Vector3 GetCurrentPalmWorldOnAttackPlane()
+    {
+        Vector3 rawPalmWorld = ResolveCurrentPalmWorldPosition();
+        Vector2 palmLogic = ProjectWorldToLogicPlane(rawPalmWorld);
+        return LiftLogicPointToWorld(palmLogic);
     }
 }
