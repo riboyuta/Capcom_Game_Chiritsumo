@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1456853980954837837}
   - component: {fileID: 7293911705177418730}
   - component: {fileID: 4067737057407457829}
+  - component: {fileID: 6089126053158152044}
   m_Layer: 3
   m_Name: GameGimmick_Switch
   m_TagString: Untagged
@@ -130,4 +131,19 @@ MonoBehaviour:
   pressDepth: 0.15
   pressSpeed: 1
   releaseSpeed: 0.1
-  activateThreshold: 0.9
+  activateThreshold: 0.1
+--- !u!114 &6089126053158152044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7938672335187472900}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cbefe0605652694094dc606600ca1df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TileType
+  type: 0
+  gimmickType: 0
+  gimmickID: 0
