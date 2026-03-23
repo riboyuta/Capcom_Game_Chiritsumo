@@ -100,8 +100,8 @@ GameObject:
   m_Component:
   - component: {fileID: 7919696765890889291}
   - component: {fileID: 2359802621397819976}
-  - component: {fileID: 1361439948427074722}
   - component: {fileID: 2646225579069338225}
+  - component: {fileID: 1101740826883977956}
   m_Layer: 0
   m_Name: GameGimmick_Spring
   m_TagString: Untagged
@@ -146,24 +146,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &1361439948427074722
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6453188548815068593}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c494f48b2938df54eb2162e37b8b972d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BreakableFloorGimmick
-  visualTransform: {fileID: 3970221030163117104}
-  timeToBreak: 1
-  respawnInterval: 3
-  vibrationIntensity: 0.05
-  vibrationSpeed: 30
-  autoRespawn: 0
 --- !u!114 &2646225579069338225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -179,4 +161,18 @@ MonoBehaviour:
   type: 9
   gimmickType: 0
   gimmickID: 0
-  size: {x: 1, y: 1, z: 1}
+--- !u!114 &1101740826883977956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6453188548815068593}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 470af1c28a244fb4da6c026644bbd7fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpringPad
+  bounceSpeed: 27
+  overrideVelocity: 1
+  bounceCooldown: 0.2
