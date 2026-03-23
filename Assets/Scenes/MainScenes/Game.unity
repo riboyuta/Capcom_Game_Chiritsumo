@@ -1156,8 +1156,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 36.800003, y: 18.4, z: 0}
-  m_Center: {x: 55.4, y: 18.2, z: 0}
+  m_Size: {x: 22, y: 19.6, z: 0}
+  m_Center: {x: 86, y: 17.8, z: 0}
 --- !u!1 &1057814150
 GameObject:
   m_ObjectHideFlags: 0
@@ -1174,7 +1174,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1057814151
 Transform:
   m_ObjectHideFlags: 0
@@ -1747,7 +1747,7 @@ Transform:
   m_GameObject: {fileID: 1591877116}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 37, y: 9, z: 0}
+  m_LocalPosition: {x: 75, y: 8, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1923,7 +1923,7 @@ Transform:
   m_GameObject: {fileID: 1833278405}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 73.8, y: 27.4, z: 0}
+  m_LocalPosition: {x: 97, y: 27.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2118,7 +2118,7 @@ Transform:
   m_GameObject: {fileID: 1909397694}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 37, y: 9, z: 0}
+  m_LocalPosition: {x: 73.9, y: 9, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2155,8 +2155,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3.9370384, y: 2.88, z: 1}
-  m_Center: {x: 3.2381077, y: 0, z: 0}
+  m_Size: {x: 22.412487, y: 16.72067, z: 1}
+  m_Center: {x: 12.475832, y: 6.9203367, z: 0}
 --- !u!1 &1923317285
 GameObject:
   m_ObjectHideFlags: 0
@@ -2457,12 +2457,20 @@ PrefabInstance:
       value: 0.713
       objectReference: {fileID: 0}
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: grabAttackRangeX
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: palmLocalOffset.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: palmLocalOffset.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: smashAttackRangeX
+      value: 69
       objectReference: {fileID: 0}
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: visualRootLocalScale.x
