@@ -21,7 +21,9 @@ public class SlideGimmick : MonoBehaviour
     [SerializeField, Min(0.1f)] private float slideSpeed = 2.0f;
 
     private Vector3 initialLocalPosition;
-
+    private float currentDistance = 0f;
+    private bool isBlocked = false;
+    private Collider myCollider;
 
     //生成されたときにスイッチを探すため！
     public void SetSwitch(SwitchGimmick sw)
@@ -29,28 +31,49 @@ public class SlideGimmick : MonoBehaviour
         targetSwitch = sw;
     }
 
-
     private void Awake()
     {
         initialLocalPosition = transform.localPosition;
+        // 自身または子オブジェクトからコライダーを取得します
+        myCollider = GetComponentInChildren<Collider>();
     }
 
     private void Update()
     {
         if (targetSwitch == null) return;
 
-        // 目標位置の計算
-        Vector3 targetLocalPosition = initialLocalPosition;
-        if (targetSwitch.IsPressed)
+        // --- ストッパーの検知 (Physics.OverlapBox) ---
+        // OnTriggerStayはRigidbody等の条件が厳しいため、自前で重なり判定を行います
+        isBlocked = false;
+        if (myCollider != null)
         {
-            targetLocalPosition = initialLocalPosition + (slideLocalDirection.normalized * slideDistance);
+            // コライダーのバウンディングボックスを使って重なっているものを全て取得
+            Collider[] overlaps = Physics.OverlapBox(myCollider.bounds.center, myCollider.bounds.extents, myCollider.transform.rotation);
+            foreach (var overlap in overlaps)
+            {
+                if (overlap.GetComponentInParent<SlideStopper>() != null)
+                {
+                    isBlocked = true;
+                    break;
+                }
+            }
         }
 
-        // 目標位置へ向かって一定の速度で移動
-        transform.localPosition = Vector3.MoveTowards(
-            transform.localPosition,
-            targetLocalPosition,
-            slideSpeed * Time.deltaTime
-        );
+        // --- 移動処理 ---
+        bool shouldOpen = targetSwitch.IsPressed;
+        float targetDistance = shouldOpen ? slideDistance : 0f;
+
+        // 今回のフレームでの移動後の距離を計算
+        float nextDistance = Mathf.MoveTowards(currentDistance, targetDistance, slideSpeed * Time.deltaTime);
+
+        // 前進(開く)しようとしていて、かつストッパーにブロックされている場合は進まない
+        // ※戻る(閉じる)場合はブロックされていても戻れるようにする
+        if (shouldOpen && isBlocked && nextDistance > currentDistance)
+        {
+            nextDistance = currentDistance;
+        }
+
+        currentDistance = nextDistance;
+        transform.localPosition = initialLocalPosition + (slideLocalDirection.normalized * currentDistance);
     }
 }
