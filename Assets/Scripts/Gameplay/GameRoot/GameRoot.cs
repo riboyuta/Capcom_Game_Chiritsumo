@@ -32,7 +32,10 @@ public sealed class GameRoot : MonoBehaviour
             FadeController.Instance.FadeIn(0.5f);
         }
 
-        AudioManager.Instance.FadeIn("BGM_main_beforechase",2.0f);
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.FadeIn("BGM_main_beforechase",2.0f);
+        }
 
         EnterReady();
     }

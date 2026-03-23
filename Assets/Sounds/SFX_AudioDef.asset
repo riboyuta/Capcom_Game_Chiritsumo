@@ -13,113 +13,108 @@ MonoBehaviour:
   m_Name: SFX_AudioDef
   m_EditorClassIdentifier: Assembly-CSharp::AudioDef
   entries:
-  - id: SFX_title_test
-    clip: {fileID: 8300000, guid: 4c2d67f62ff14724db99d92aa8ee6489, type: 3}
-    channel: 1
-    defaultVolume: 1
-    loop: 0
   - id: SFX_button_enter
-    clip: {fileID: 8300000, guid: 179ccfcc594683140baeda6fd0213962, type: 3}
+    clip: {fileID: 8300000, guid: 5a67cc7e542743d43b23fecfd1414443, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_button_back
-    clip: {fileID: 8300000, guid: 1d8c77851d3682246b30b5650bef478d, type: 3}
+    clip: {fileID: 8300000, guid: b2caeff1a69b3d344b49276bd1207d9f, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_scene_change
-    clip: {fileID: 8300000, guid: b7834b8e5304f8c4eb05033c6f36e515, type: 3}
+    clip: {fileID: 8300000, guid: a06c264c27201d94984c8a9ac62fc916, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_game_clear
-    clip: {fileID: 8300000, guid: d88704b3156388f4aab3c047cca9fa9e, type: 3}
+    clip: {fileID: 8300000, guid: c02dfaee5df0e38439ef1468c7ce9385, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_game_over
-    clip: {fileID: 8300000, guid: 91f137337fe69a741bc60a4e609ec413, type: 3}
+    clip: {fileID: 8300000, guid: 87894a197c38e83468416e666d8f6827, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_player_jump
-    clip: {fileID: 8300000, guid: 978e8b508af34da469383fb8169a81d4, type: 3}
+    clip: {fileID: 8300000, guid: 059408aa05982c443a44286b42bf8764, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_player_land
-    clip: {fileID: 8300000, guid: 61d1569199d549c4b9876d60295c5668, type: 3}
+    clip: {fileID: 8300000, guid: fca73f79c05ac1646ab76ef10eff9635, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_player_walk
-    clip: {fileID: 8300000, guid: 2dd1fe98159009a4f9faec0b554f8db6, type: 3}
+    clip: {fileID: 8300000, guid: 3a9947c844e5bae4f9c9387d85df5e1c, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_player_run
-    clip: {fileID: 8300000, guid: f7e87465fd164d340b9d471ea98a99ee, type: 3}
+    clip: {fileID: 8300000, guid: 789be98737578144caba564b00eff7fa, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_player_step
-    clip: {fileID: 8300000, guid: fd5c5950abf82654db35531d27ba5cf8, type: 3}
+    clip: {fileID: 8300000, guid: 5a4bf6711adb6154fa403272093e768c, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_player_walljump
-    clip: {fileID: 8300000, guid: 4a8c8b10d407c4f4483ad0c2c8c6d24c, type: 3}
+    clip: {fileID: 8300000, guid: 830a0f3d416402f469276e4066bf2534, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_player_wallslide
-    clip: {fileID: 8300000, guid: 2fb19b0efc7b01b42b1ebeb841e03ba2, type: 3}
+    clip: {fileID: 8300000, guid: aa37a1a4f2473d8479f4ece540058a1a, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_boss_spawn
-    clip: {fileID: 8300000, guid: 47905e5e853625049935f45ebbd6acee, type: 3}
+    clip: {fileID: 8300000, guid: 37cedac5264bfd941be78c83389a8a45, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_boss_arm_stretch
-    clip: {fileID: 8300000, guid: 98e15b35a50b91f4bbf17e4479faceaf, type: 3}
+    clip: {fileID: 8300000, guid: 592feb59d61825f43a3219713b38fa73, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_boss_grip
-    clip: {fileID: 8300000, guid: c4f8138fb2461b947b1b50c2a73d2016, type: 3}
+    clip: {fileID: 8300000, guid: af5b57c370c32d447bb1d919d6a5b4bb, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_boss_slam
-    clip: {fileID: 8300000, guid: cc4e0bf3833ec4c4d9fc9809171e5a01, type: 3}
+    clip: {fileID: 8300000, guid: e71d493f8aa1bde4e98698a2ad21fc8e, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_breakable_enter
-    clip: {fileID: 8300000, guid: 6a52f5154c506544e803e51bc613c090, type: 3}
+    clip: {fileID: 8300000, guid: a2f9de3e7f4d0f84dbce79955e6f36d1, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_gimmick_breakable_break
-    clip: {fileID: 8300000, guid: af9045c11799a5542b696b646b764ca5, type: 3}
+    clip: {fileID: 8300000, guid: 2dfc30132dbc81f4db49c23eed658d36, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_gimmick_switchwall
-    clip: {fileID: 8300000, guid: bf5ac56941fc7894e902623ca03f2a24, type: 3}
+    clip: {fileID: 8300000, guid: 8605c3a5a6d5aef45ad5226c04120b7f, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_gimmick_push_switch
-    clip: {fileID: 8300000, guid: 6ae076cdf3efacc41a5ec8f5808e48ac, type: 3}
+    clip: {fileID: 8300000, guid: 122e38cbf311aad4690a257880bc19d8, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_gimmick_springpad
-    clip: {fileID: 8300000, guid: 90a8c035d0b37ff4aaf4669a205356c6, type: 3}
+    clip: {fileID: 8300000, guid: d80cd6cb336df6845b9f267d0002d53d, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
