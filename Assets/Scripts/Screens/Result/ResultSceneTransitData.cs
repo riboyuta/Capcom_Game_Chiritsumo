@@ -1,9 +1,7 @@
 using UnityEngine;
 
-/// <summary>
 /// Result シーンへ渡す一時データ。
 /// 値は読み取り時に消費され、次回遷移へ持ち越さない。
-/// </summary>
 public static class ResultSceneTransitData
 {
     private static float? clearElapsedTime;
