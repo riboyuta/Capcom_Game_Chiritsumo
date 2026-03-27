@@ -4,6 +4,13 @@ public sealed partial class PlayerController
 {
     private void UpdateFacingFromMoveInput()
     {
+        // 掴まれ・叩きつけ・死亡などの行動不能中は向き更新を止める。
+        // 死亡中の見た目固定に対して入力側の更新影響を持ち込まないため。
+        if (IsActionLocked)
+        {
+            return;
+        }
+
         // 前ステ中の方向転換を無効化している間は向きを固定する。
         if (isStepping && !movementSettings.allowTurnDuringStep)
         {
