@@ -10,9 +10,20 @@ public sealed class TitleSceneController : MonoBehaviour
         Exit = 1,
     }
 
-    private const float TitleFadeDuration = 0.5f;
-    private const float TitleBgmFadeDuration = 1.0f;
-    private const float ExitWaitDuration = 0.4f;
+    [Header("演出時間")]
+    [Tooltip("タイトル開始時とシーン遷移時のフェード時間。秒単位で調整する。")]
+    [Min(0.0f)]
+
+    [SerializeField] private float titleFadeDuration = 2.0f;
+
+    [Tooltip("タイトルBGMのフェードアウト時間。秒単位で調整する。")]
+    [Min(0.0f)]
+
+    [SerializeField] private float titleBgmFadeDuration = 1.0f;
+
+    [Tooltip("終了SE再生後にアプリ終了または再生停止へ進むまでの待機時間。秒単位で調整する。")]
+    [Min(0.0f)]
+    [SerializeField] private float exitWaitDuration = 0.4f;
 
     private const string TitleBgmCueName = "BGM_title";
     private const string CursorMoveSeCueName = "SFX_cursor_move";
@@ -61,13 +72,13 @@ public sealed class TitleSceneController : MonoBehaviour
         FadeController fadeController = FadeController.Instance;
         if (fadeController != null)
         {
-            fadeController.FadeIn(TitleFadeDuration);
+            fadeController.FadeIn(titleFadeDuration);
         }
 
         AudioManager audioManager = AudioManager.Instance;
         if (audioManager != null)
         {
-            audioManager.FadeIn(TitleBgmCueName, TitleBgmFadeDuration);
+            audioManager.FadeIn(TitleBgmCueName, titleBgmFadeDuration);
         }
 
         RefreshView();
@@ -201,16 +212,16 @@ public sealed class TitleSceneController : MonoBehaviour
         if (audioManager != null)
         {
             audioManager.PlayOverlap(StartSeCueName);
-            audioManager.FadeOut(TitleBgmCueName, TitleBgmFadeDuration);
+            audioManager.FadeOut(TitleBgmCueName, titleBgmFadeDuration);
         }
 
         FadeController fadeController = FadeController.Instance;
         if (fadeController != null)
         {
-            fadeController.FadeOut(TitleFadeDuration);
+            fadeController.FadeOut(titleFadeDuration);
         }
 
-        yield return new WaitForSeconds(TitleFadeDuration);
+        yield return new WaitForSeconds(titleFadeDuration);
 
         SceneFlow.LoadGame();
     }
@@ -238,7 +249,7 @@ public sealed class TitleSceneController : MonoBehaviour
             audioManager.PlayOverlap(ExitSeCueName);
         }
 
-        yield return new WaitForSeconds(ExitWaitDuration);
+        yield return new WaitForSeconds(exitWaitDuration);
 
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;

@@ -12,7 +12,7 @@ EditorBuildSettings:
     path: Assets/Scenes/MainScenes/Title.unity
     guid: a088c8ed9a86dae4f801ed0f4c71eec5
   - enabled: 1
-    path: Assets/Scenes/DebugScenes/DebugGoalToResult.unity
+    path: Assets/Scenes/DebugScenes/Tomoya/DebugGoalToResult.unity
     guid: beff4923251dfc344bad37276c1a4f6f
   - enabled: 1
     path: Assets/Scenes/MainScenes/Game.unity

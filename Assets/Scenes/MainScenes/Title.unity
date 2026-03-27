@@ -147,8 +147,8 @@ RectTransform:
   m_GameObject: {fileID: 95739521}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.4, y: 1.4, z: 1.4}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1282024539}
   m_Father: {fileID: 1102344663}
@@ -559,6 +559,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0666726d906d2c4db5928351b3a1c42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TitleSceneController
+  titleFadeDuration: 1
+  titleBgmFadeDuration: 1
+  exitWaitDuration: 0.4
   menuView: {fileID: 855637340}
   rawInputSource: {fileID: 855637339}
   inputBindings:
@@ -632,8 +635,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TitleMenuView
   itemTransforms:
-  - {fileID: 1282024539}
-  - {fileID: 409429160}
+  - {fileID: 95739522}
+  - {fileID: 946377422}
   normalScaleMultiplier: 1
   selectedScaleMultiplier: 1.15
   scaleFollowSpeed: 10
@@ -665,8 +668,8 @@ RectTransform:
   m_GameObject: {fileID: 946377421}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.4, y: 1.4, z: 1.4}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 409429160}
   m_Father: {fileID: 1102344663}
