@@ -142,10 +142,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HandSmashAttack
   riseHeight: 5
   riseSpeed: 12.25
-  holdTime: 0.2
-  holdLiftHeight: 0.5
+  holdTime: 0.45
+  holdLiftHeight: 11
   holdLiftSpeed: 6
-  smashSpeed: 40
+  smashSpeed: 60
   endLifeTime: 0.2
   reachThreshold: 0.05
   palmHitbox: {fileID: 939916035371832881}

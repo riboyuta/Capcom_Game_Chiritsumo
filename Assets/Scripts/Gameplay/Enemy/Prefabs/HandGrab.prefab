@@ -291,7 +291,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HandGrabView
   spriteRenderer: {fileID: 6791711908043645681}
   approachNearFrames:
-  - {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
+  - {fileID: 2130749020, guid: dd96f51c5a004c442a18bd1b9a4b5475, type: 3}
+  - {fileID: 660674674, guid: fad5506704bece04988e4ba9431f7543, type: 3}
   trackBeforeGrabFrames:
   - {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
   grabStartFrames:
@@ -302,13 +303,13 @@ MonoBehaviour:
   - {fileID: 2130749020, guid: dd96f51c5a004c442a18bd1b9a4b5475, type: 3}
   endFrames:
   - {fileID: 660674674, guid: fad5506704bece04988e4ba9431f7543, type: 3}
-  approachNearFrameRate: 1
+  approachNearFrameRate: 2
   trackBeforeGrabFrameRate: 1
   grabStartFrameRate: 1
   holdPlayerFrameRate: 1
   missPauseFrameRate: 1
   endFrameRate: 1
-  loopApproachNear: 0
+  loopApproachNear: 1
   loopTrackBeforeGrab: 0
   loopGrabStart: 0
   loopHoldPlayer: 0
