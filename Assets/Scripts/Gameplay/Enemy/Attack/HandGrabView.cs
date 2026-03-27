@@ -52,6 +52,8 @@ public sealed class HandGrabView : MonoBehaviour
     private float frameTimer = 0.0f;
     private int currentFrameIndex = 0;
 
+    private string currentPlayingAudioId = null;
+
     private void Awake()
     {
         if (spriteRenderer == null)
@@ -60,6 +62,11 @@ public sealed class HandGrabView : MonoBehaviour
         }
 
         SetDefaultSorting();
+    }
+
+    private void OnDestroy()
+    {
+        StopCurrentAudio();
     }
 
     private void Update()
@@ -92,6 +99,8 @@ public sealed class HandGrabView : MonoBehaviour
     public void PlayApproachNear()
     {
         SetAnimation(AnimState.ApproachNear, approachNearFrames, approachNearFrameRate, loopApproachNear);
+        PlayAudio("SFX_boss_attack_approach");
+        PlayAudio("SFX_boss_grab_approach");
     }
 
     public void PlayTrackBeforeGrab()
@@ -102,6 +111,7 @@ public sealed class HandGrabView : MonoBehaviour
     public void PlayGrabStart()
     {
         SetAnimation(AnimState.GrabStart, grabStartFrames, grabStartFrameRate, loopGrabStart);
+        PlayAudio("SFX_boss_grab");
     }
 
     public void PlayHoldPlayer()
@@ -146,6 +156,8 @@ public sealed class HandGrabView : MonoBehaviour
             return;
         }
 
+        StopCurrentAudio();
+
         currentState = nextState;
         currentFrames = nextFrames;
         currentFrameRate = nextFrameRate;
@@ -179,5 +191,26 @@ public sealed class HandGrabView : MonoBehaviour
         }
 
         spriteRenderer.sprite = currentFrames[currentFrameIndex];
+    }
+
+    private void PlayAudio(string audioId)
+    {
+        if (string.IsNullOrEmpty(audioId) || AudioManager.Instance == null)
+        {
+            return;
+        }
+
+        StopCurrentAudio();
+        AudioManager.Instance.Play(audioId);
+        currentPlayingAudioId = audioId;
+    }
+
+    private void StopCurrentAudio()
+    {
+        if (!string.IsNullOrEmpty(currentPlayingAudioId) && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.Stop(currentPlayingAudioId);
+            currentPlayingAudioId = null;
+        }
     }
 }
