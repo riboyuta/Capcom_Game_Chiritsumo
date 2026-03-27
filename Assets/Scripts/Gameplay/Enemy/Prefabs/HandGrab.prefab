@@ -144,13 +144,13 @@ MonoBehaviour:
   approachNearSpeed: 12
   grabMoveSpeed: 20
   nearDistance: 1.25
-  nearHeightOffset: 1.21
+  nearHeightOffset: 1.2
   reachThreshold: 0.15
   preGrabTrackDuration: 0.5
   trackUpdateDuration: 0.3
   holdDuration: 0.7
-  missPauseDuration: 0.2
-  endLifeTime: 0.37
+  missPauseDuration: 0.3
+  endLifeTime: 0.4
   grabHitbox: {fileID: 5963670478721026430}
   grabAnchor: {fileID: 43771532443994516}
   view: {fileID: 1453498614093003378}

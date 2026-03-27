@@ -5,6 +5,10 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public sealed class HazardVolume : MonoBehaviour
 {
+    [Header("Filter")]
+    [Tooltip("ハザードと反応するタグ（通常は Player）")]
+    [SerializeField] private string targetTag = "Player";
+
     private void Awake()
     {
         Collider colliderComponent = GetComponent<Collider>();
@@ -16,6 +20,11 @@ public sealed class HazardVolume : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        if (!other.CompareTag(targetTag))
+        {
+            return;
+        }
+
         Debug.Log($"[HazardVolume] Hazard entered: {other.name}", this);
 
         PlayerController player = other.GetComponentInParent<PlayerController>();

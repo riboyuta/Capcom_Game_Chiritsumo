@@ -16,22 +16,35 @@ public sealed class HandGrabAttack : MonoBehaviour
     }
 
     [Header("Move")]
+    [Tooltip("プレイヤーの近くへ接近する際の移動速度")]
     [SerializeField] private float approachNearSpeed = 12.0f;
+    [Tooltip("掴み攻撃時の突進速度")]
     [SerializeField] private float grabMoveSpeed = 18.0f;
+    [Tooltip("プレイヤーの近くに位置取りする際の距離")]
     [SerializeField] private float nearDistance = 1.25f;
+    [Tooltip("接近位置のプレイヤーからの高さオフセット")]
     [SerializeField] private float nearHeightOffset = 0.75f;
+    [Tooltip("目標位置への到達判定距離")]
     [SerializeField] private float reachThreshold = 0.08f;
 
     [Header("Timing")]
+    [Tooltip("掴み攻撃前にプレイヤーを追跡する時間")]
     [SerializeField] private float preGrabTrackDuration = 0.5f;
+    [Tooltip("追跡中にプレイヤー位置を更新する時間")]
     [SerializeField] private float trackUpdateDuration = 0.2f;
+    [Tooltip("プレイヤーを掴んでいる時間")]
     [SerializeField] private float holdDuration = 0.35f;
+    [Tooltip("掴み失敗時の待機時間")]
     [SerializeField] private float missPauseDuration = 0.2f;
+    [Tooltip("攻撃終了後の生存時間")]
     [SerializeField] private float endLifeTime = 0.1f;
 
     [Header("References")]
+    [Tooltip("掴み判定用のヒットボックス")]
     [SerializeField] private GrabHitbox grabHitbox;
+    [Tooltip("プレイヤーを掴む位置のアンカー")]
     [SerializeField] private Transform grabAnchor;
+    [Tooltip("手のビジュアル表示コンポーネント")]
     [SerializeField] private HandGrabView view;
 
     private Rigidbody rigidBody;

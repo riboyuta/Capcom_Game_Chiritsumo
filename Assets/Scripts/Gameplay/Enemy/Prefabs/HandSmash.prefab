@@ -141,12 +141,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandSmashAttack
   riseHeight: 5
-  riseSpeed: 12.25
-  holdTime: 0.45
-  holdLiftHeight: 11
-  holdLiftSpeed: 6
+  riseSpeed: 12
+  holdTime: 0.5
+  holdLiftHeight: 15
+  holdLiftSpeed: 20
   smashSpeed: 60
-  endLifeTime: 0.2
+  endLifeTime: 0.3
   reachThreshold: 0.05
   palmHitbox: {fileID: 939916035371832881}
   view: {fileID: 501282521319361110}
@@ -255,7 +255,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandSmashView
   spriteRenderer: {fileID: 5265715603964831950}
-  audioSource: {fileID: 0}
   riseFrames:
   - {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
   holdFrames:
@@ -272,4 +271,3 @@ MonoBehaviour:
   loopHold: 0
   loopSmash: 0
   loopEnd: 0
-  holdSound: {fileID: 8300000, guid: e71d493f8aa1bde4e98698a2ad21fc8e, type: 3}
