@@ -14,17 +14,27 @@ public sealed class HandSmashAttack : MonoBehaviour
     }
 
     [Header("Move")]
+    [Tooltip("上昇時の目標高さ（プレイヤーの位置からの高さ）")]
     [SerializeField] private float riseHeight = 5.0f;
+    [Tooltip("上昇時の移動速度")]
     [SerializeField] private float riseSpeed = 10.0f;
+    [Tooltip("Hold状態の待機時間")]
     [SerializeField] private float holdTime = 0.15f;
+    [Tooltip("Hold状態での上昇高さ")]
     [SerializeField] private float holdLiftHeight = 0.4f;
+    [Tooltip("Hold状態での上昇速度")]
     [SerializeField] private float holdLiftSpeed = 6.0f;
+    [Tooltip("叩きつけ時の落下速度")]
     [SerializeField] private float smashSpeed = 24.0f;
+    [Tooltip("攻撃終了後の生存時間")]
     [SerializeField] private float endLifeTime = 0.2f;
+    [Tooltip("目標位置への到達判定距離")]
     [SerializeField] private float reachThreshold = 0.05f;
 
     [Header("References")]
+    [Tooltip("叩きつけ攻撃の当たり判定")]
     [SerializeField] private PalmHitbox palmHitbox;
+    [Tooltip("手のビジュアル表示コンポーネント")]
     [SerializeField] private HandSmashView view;
 
     private Rigidbody rigidBody;
@@ -40,6 +50,7 @@ public sealed class HandSmashAttack : MonoBehaviour
     private Vector3 holdLiftTargetPosition;
 
     private float holdTimer = 0.0f;
+    private float holdLiftElapsedTime = 0.0f;
     private float endTimer = 0.0f;
 
     private Action onFinished;
@@ -142,6 +153,7 @@ public sealed class HandSmashAttack : MonoBehaviour
             holdLiftTargetPosition = holdStartPosition + Vector3.up * holdLiftHeight;
 
             holdTimer = holdTime;
+            holdLiftElapsedTime = 0.0f;
             state = AttackState.Hold;
 
             if (view != null)
@@ -153,11 +165,14 @@ public sealed class HandSmashAttack : MonoBehaviour
 
     private void TickHold()
     {
-        transform.position = Vector3.MoveTowards(
-            transform.position,
-            holdLiftTargetPosition,
-            holdLiftSpeed * Time.deltaTime
-        );
+        holdLiftElapsedTime += Time.deltaTime;
+
+        float duration = holdLiftHeight / holdLiftSpeed;
+        float t = Mathf.Clamp01(holdLiftElapsedTime / duration);
+
+        float easedT = EaseInCubic(t);
+
+        transform.position = Vector3.Lerp(holdStartPosition, holdLiftTargetPosition, easedT);
 
         holdTimer -= Time.deltaTime;
         if (holdTimer > 0.0f)
@@ -238,6 +253,11 @@ public sealed class HandSmashAttack : MonoBehaviour
             groundY,
             currentTargetPosition.z
         );
+    }
+
+    private float EaseInCubic(float t)
+    {
+        return t * t * t;
     }
 
     private void FinishAttack()
