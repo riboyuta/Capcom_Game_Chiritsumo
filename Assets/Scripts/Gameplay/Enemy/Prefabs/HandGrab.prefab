@@ -144,13 +144,13 @@ MonoBehaviour:
   approachNearSpeed: 12
   grabMoveSpeed: 20
   nearDistance: 1.25
-  nearHeightOffset: 1.21
+  nearHeightOffset: 1.2
   reachThreshold: 0.15
   preGrabTrackDuration: 0.5
   trackUpdateDuration: 0.3
   holdDuration: 0.7
-  missPauseDuration: 0.2
-  endLifeTime: 0.37
+  missPauseDuration: 0.3
+  endLifeTime: 0.4
   grabHitbox: {fileID: 5963670478721026430}
   grabAnchor: {fileID: 43771532443994516}
   view: {fileID: 1453498614093003378}
@@ -212,7 +212,7 @@ Transform:
   m_GameObject: {fileID: 8800664096687959020}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0.6}
   m_LocalScale: {x: 1.573022, y: 1.573022, z: 1.573022}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -265,7 +265,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 5
+  m_SortingOrder: 3
   m_MaskInteraction: 0
   m_Sprite: {fileID: 660674674, guid: fad5506704bece04988e4ba9431f7543, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -291,7 +291,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HandGrabView
   spriteRenderer: {fileID: 6791711908043645681}
   approachNearFrames:
-  - {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
+  - {fileID: 2130749020, guid: dd96f51c5a004c442a18bd1b9a4b5475, type: 3}
+  - {fileID: 660674674, guid: fad5506704bece04988e4ba9431f7543, type: 3}
   trackBeforeGrabFrames:
   - {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
   grabStartFrames:
@@ -302,17 +303,17 @@ MonoBehaviour:
   - {fileID: 2130749020, guid: dd96f51c5a004c442a18bd1b9a4b5475, type: 3}
   endFrames:
   - {fileID: 660674674, guid: fad5506704bece04988e4ba9431f7543, type: 3}
-  approachNearFrameRate: 1
+  approachNearFrameRate: 2
   trackBeforeGrabFrameRate: 1
   grabStartFrameRate: 1
   holdPlayerFrameRate: 1
   missPauseFrameRate: 1
   endFrameRate: 1
-  loopApproachNear: 0
+  loopApproachNear: 1
   loopTrackBeforeGrab: 0
   loopGrabStart: 0
   loopHoldPlayer: 0
   loopMissPause: 0
   loopEnd: 0
-  defaultSortingOrder: 0
+  defaultSortingOrder: 3
   grabbedSortingOrder: 10

@@ -34,7 +34,7 @@ MonoBehaviour:
     defaultVolume: 1
     loop: 0
   - id: SFX_game_over
-    clip: {fileID: 8300000, guid: 87894a197c38e83468416e666d8f6827, type: 3}
+    clip: {fileID: 8300000, guid: 9267399361ad705419ae958cd376e80d, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
@@ -78,17 +78,32 @@ MonoBehaviour:
     channel: 1
     defaultVolume: 1
     loop: 0
-  - id: SFX_boss_arm_stretch
-    clip: {fileID: 8300000, guid: 592feb59d61825f43a3219713b38fa73, type: 3}
+  - id: SFX_boss_attack_approach
+    clip: {fileID: 8300000, guid: 0270ff1d84fcee4499780e7028b54515, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
-  - id: SFX_boss_grip
-    clip: {fileID: 8300000, guid: af5b57c370c32d447bb1d919d6a5b4bb, type: 3}
+  - id: SFX_boss_grab_approach
+    clip: {fileID: 8300000, guid: 592feb59d61825f43a3219713b38fa73, type: 3}
+    channel: 1
+    defaultVolume: 0.429
+    loop: 1
+  - id: SFX_boss_slam_approach
+    clip: {fileID: 8300000, guid: 0049969cd2230174f9a9b0418a1a27c8, type: 3}
+    channel: 1
+    defaultVolume: 0.291
+    loop: 1
+  - id: SFX_boss_grab
+    clip: {fileID: 8300000, guid: aa37a1a4f2473d8479f4ece540058a1a, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
   - id: SFX_boss_slam
+    clip: {fileID: 8300000, guid: c02dfaee5df0e38439ef1468c7ce9385, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 0
+  - id: SFX_boss_slam_hold
     clip: {fileID: 8300000, guid: e71d493f8aa1bde4e98698a2ad21fc8e, type: 3}
     channel: 1
     defaultVolume: 1
