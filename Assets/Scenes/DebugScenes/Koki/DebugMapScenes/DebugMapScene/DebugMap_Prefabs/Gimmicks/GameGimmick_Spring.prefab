@@ -159,7 +159,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TileType
   type: 9
-  gimmickType: 0
+  gimmickType: 4
   gimmickID: 0
 --- !u!114 &1101740826883977956
 MonoBehaviour:
@@ -173,6 +173,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 470af1c28a244fb4da6c026644bbd7fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpringPad
-  bounceSpeed: 27
+  bounceSpeed: 25
   overrideVelocity: 1
   bounceCooldown: 0.2
