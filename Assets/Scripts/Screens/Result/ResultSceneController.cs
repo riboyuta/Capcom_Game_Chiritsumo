@@ -60,10 +60,9 @@ public sealed class ResultSceneController : MonoBehaviour
         bool spacePressed = Input.GetKeyDown(KeyCode.Space);
         bool gamepadConnected = Gamepad.current != null;
         bool gamepadAPressed = gamepadConnected && Gamepad.current.buttonSouth.wasPressedThisFrame;
-        bool debugInputPressed = BootSceneController.Instance != null && BootSceneController.Instance.DebugInput.NextScenePressed;
 
         // Gamepad状態の定期ログ（入力時のみ）
-        if (gamepadAPressed || spacePressed || debugInputPressed)
+        if (gamepadAPressed || spacePressed )
         {
             Debug.Log($"[ResultSceneController] Input state - Gamepad connected: {gamepadConnected}");
         }
@@ -78,12 +77,8 @@ public sealed class ResultSceneController : MonoBehaviour
             Debug.Log("[ResultSceneController] Gamepad A button pressed.");
         }
 
-        if (debugInputPressed)
-        {
-            Debug.Log("[ResultSceneController] Debug input detected.");
-        }
 
-        if (spacePressed || gamepadAPressed || debugInputPressed)
+        if (spacePressed || gamepadAPressed)
         {
             ReturnToTitle();
         }

@@ -6,7 +6,7 @@ using UnityEngine;
 
 // PlayerController と同一 GameObject 上での利用を前提にする。
 [RequireComponent(typeof(PlayerController))]
-public sealed class PlayerAudioController : MonoBehaviour
+public sealed class PlayerAudioSettings : MonoBehaviour
 {
     [Header("音声コントローラー参照")]
     [Tooltip("プレイヤー操作に応じた音声を再生する PlayerController 参照です。未設定時は Awake 初期化時に同一 GameObject から取得を試みます。")]

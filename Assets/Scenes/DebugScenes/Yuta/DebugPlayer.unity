@@ -1817,7 +1817,7 @@ MonoBehaviour:
     useWallKick: 1
     wallJumpHorizontalVelocity: 8
     wallJumpVerticalVelocity: 10.5
-    wallJumpControlLockTime: 0.09
+    wallJumpControlLockTime: 0
     wallReattachLockTime: 0.12
     wallInputThreshold: 0.12
     useStep: 1

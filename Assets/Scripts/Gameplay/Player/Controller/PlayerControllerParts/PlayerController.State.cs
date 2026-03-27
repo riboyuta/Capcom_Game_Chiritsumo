@@ -37,6 +37,15 @@ public sealed partial class PlayerController
 
     // 最後に向いていた左右方向。(-1:left / +1:right)
     private int facing = 1;
+
+    // 死亡演出中に描画向きを固定するかどうか。
+    // true の間は VisualState へ通常 facing ではなく fixedDeathFacing を流す。
+    private bool isDeathFacingFixed;
+
+    // 死亡演出開始時点の描画向き。(-1:left / +1:right)
+    // 0 が入らないよう、設定時に安全補正して扱う。
+    private int fixedDeathFacing = 1;
+
     // 前ステ開始時に固定する進行方向。(-1:left / +1:right)
     private int stepDirection = 1;
     // Update で検出したジャンプ押下を FixedUpdate まで保持する。

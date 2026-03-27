@@ -4,11 +4,11 @@ public sealed partial class PlayerController
 {
     // 実際の音声再生を担当するコンポーネント。
     // この partial は「いつ音を鳴らすか」を決める役割で、
-    // 実際の AudioManager 呼び出しは PlayerAudioController 側に任せる。
-    private PlayerAudioController audioController;
+    // 実際の AudioManager 呼び出しは PlayerAudioSettings 側に任せる。
+    private PlayerAudioSettings audioController;
 
     // PlayerAudioController.Awake() から呼ばれて自身を登録する。
-    internal void SetAudioController(PlayerAudioController controller)
+    internal void SetAudioController(PlayerAudioSettings controller)
     {
         audioController = controller;
     }

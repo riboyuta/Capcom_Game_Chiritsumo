@@ -154,11 +154,11 @@ public sealed class PlayerMovementSettings
 
     [Header("前ステ中重力倍率")]
     [Tooltip("前ステップ中に適用する重力倍率です。0に近いほど浮くような感触になり、1以上で通常に近づきます。")]
-    [Min(0f)] public float stepGravityMultiplier = 0.05f;
+    [Min(0f)] public float stepGravityMultiplier = 0.00f;
 
     [Header("前ステ終了時に開始時Y速度を復元")]
     [Tooltip("有効にすると、前ステップ開始時の縦速度を終了時に戻します。空中前ステ後の落下感や上昇感を保ちたいときに使います。")]
-    public bool restoreStepStartVerticalVelocity = true;
+    public bool restoreStepStartVerticalVelocity = false;
 
     [Header("前ステクールダウン")]
     [Tooltip("前ステップを再使用できるまでの待ち時間です。短いほど連発しやすくなります。")]

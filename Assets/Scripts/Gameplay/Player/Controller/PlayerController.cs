@@ -64,7 +64,7 @@ public sealed partial class PlayerController : MonoBehaviour
         // 前提が崩れると Ground 判定位置が不正になるため停止する。
         if (capsuleCollider.direction != 1)
         {
-            Debug.LogError("PlayerController requires CapsuleCollider.direction to be Y-axis (1).", this);
+            Debug.LogError("PlayerController では CapsuleCollider.direction が Y軸 (1) である必要があります。", this);
             enabled = false;
             return;
         }
@@ -79,11 +79,10 @@ public sealed partial class PlayerController : MonoBehaviour
         // エラーログを出してこのコンポーネントを無効化する。
         if (rawInputSource == null)
         {
-            Debug.LogError("PlayerController requires RawInputSource.", this);
+            Debug.LogError("PlayerController には RawInputSource が必要です。", this);
             enabled = false;
             return;
         }
-
         // 入力リーダーを生成する。
         // ここで「生入力」と「入力割り当て設定」を結び付ける。
         playerInputReader = new PlayerInputReader(rawInputSource, inputBindings);
