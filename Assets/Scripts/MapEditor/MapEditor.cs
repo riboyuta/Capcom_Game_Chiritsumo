@@ -287,7 +287,7 @@ public class MapEditor : MonoBehaviour
         string json = JsonUtility.ToJson(mapData, true);
 
         string folder = Application.dataPath +
-"/Scenes/DebugScenes/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData";
+"/Scenes/DebugScenes/koki/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData";
         if (!Directory.Exists(folder))
         {
             Directory.CreateDirectory(folder);
@@ -316,7 +316,7 @@ public class MapEditor : MonoBehaviour
         tiles.Clear();
 
         string folder = Application.dataPath +
-"/Scenes/DebugScenes/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData";
+"/Scenes/DebugScenes/koki/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData";
         if (!Directory.Exists(folder))
         {
             Directory.CreateDirectory(folder);
