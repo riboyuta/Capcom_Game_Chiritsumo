@@ -142,8 +142,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HandSmashAttack
   riseHeight: 5
   riseSpeed: 12
-  holdTime: 0.5
-  holdLiftHeight: 15
+  holdTime: 0.3
+  holdLiftHeight: 2.5
   holdLiftSpeed: 20
   smashSpeed: 60
   endLifeTime: 0.3

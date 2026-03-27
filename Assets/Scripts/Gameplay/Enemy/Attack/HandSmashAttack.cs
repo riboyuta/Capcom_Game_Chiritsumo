@@ -170,7 +170,7 @@ public sealed class HandSmashAttack : MonoBehaviour
         float duration = holdLiftHeight / holdLiftSpeed;
         float t = Mathf.Clamp01(holdLiftElapsedTime / duration);
 
-        float easedT = EaseInQuad(t);
+        float easedT = EaseInCubic(t);
 
         transform.position = Vector3.Lerp(holdStartPosition, holdLiftTargetPosition, easedT);
 
@@ -255,9 +255,9 @@ public sealed class HandSmashAttack : MonoBehaviour
         );
     }
 
-    private float EaseInQuad(float t)
+    private float EaseInCubic(float t)
     {
-        return t * t;
+        return t * t * t;
     }
 
     private void FinishAttack()

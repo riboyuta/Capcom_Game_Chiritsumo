@@ -180,6 +180,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0298a361fda381948bcb9ef1e9c3ec5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazardVolume
+  targetTag: Player
 --- !u!65 &82181430
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -248,6 +249,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnTrigger
   playerTag: Player
   targetEnemy: {fileID: 1073388012}
+  gameRoot: {fileID: 1603009781}
   triggerOnlyOnce: 1
 --- !u!65 &152479012
 BoxCollider:
@@ -1621,7 +1623,7 @@ Transform:
   m_GameObject: {fileID: 1189614808}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -39, y: 11, z: 0}
+  m_LocalPosition: {x: -39, y: 11, z: -0.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2718,7 +2720,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 54845863021831391, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -0.6
       objectReference: {fileID: 0}
     - target: {fileID: 54845863021831391, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2746,6 +2748,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 54845863021831391, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3166458492546859069, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: m_IsKinematic
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3268368376347136408, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
@@ -2849,6 +2855,18 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1189614814}
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: moveSpeed
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: maxMoveSpeed
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: minMoveSpeed
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: armLocalOffset.x
       value: -0.588
       objectReference: {fileID: 0}
@@ -2871,6 +2889,14 @@ PrefabInstance:
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: smashAttackRangeX
       value: 69
+      objectReference: {fileID: 0}
+    - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: distanceForMaxSpeed
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: distanceForMinSpeed
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: visualRootLocalScale.x
@@ -2900,14 +2926,26 @@ PrefabInstance:
       propertyPath: 'palmFrames.Array.data[0]'
       value: 
       objectReference: {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
+    - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: speedMultiplierWhileAttacking
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8753026961955578720, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 1802195152, guid: 03c2324985d8e214eb3a9815e598851c, type: 3}
+    - target: {fileID: 8753026961955578720, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: m_SortingOrder
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 8817927017108179465, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
+    - target: {fileID: 8817927017108179465, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: m_SortingOrder
+      value: 5
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}
     m_RemovedGameObjects: []

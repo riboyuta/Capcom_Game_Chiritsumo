@@ -28,9 +28,9 @@ public sealed class HandGrabAttack : MonoBehaviour
     [SerializeField] private float reachThreshold = 0.08f;
 
     [Header("Timing")]
-    [Tooltip("掴み攻撃前にプレイヤーを追跡する時間")]
+    [Tooltip("掴み攻撃前に待機する時間")]
     [SerializeField] private float preGrabTrackDuration = 0.5f;
-    [Tooltip("追跡中にプレイヤー位置を更新する時間")]
+    [Tooltip("待機中にプレイヤー位置を更新する時間")]
     [SerializeField] private float trackUpdateDuration = 0.2f;
     [Tooltip("プレイヤーを掴んでいる時間")]
     [SerializeField] private float holdDuration = 0.35f;
