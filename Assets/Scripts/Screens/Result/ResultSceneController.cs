@@ -1,3 +1,4 @@
+using Game.Input;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -9,10 +10,27 @@ public sealed class ResultSceneController : MonoBehaviour
     [SerializeField] private string clearElapsedTimeFormat = "Clear Time: {0:F2}s";
     [Tooltip("タイムがカウントアップする時間（秒）")]
     [SerializeField] private float countUpDuration = 1.5f;
+    [Header("入力参照")]
+    [Tooltip("タイトル画面で使用する生入力取得元。未設定の場合は同じGameObjectから自動取得を試みる。")]
+    [SerializeField] private RawInputSource rawInputSource;
 
+    [Header("入力設定")]
+    [Tooltip("タイトル画面のメニュー操作に使う入力バインド定義。上下移動と決定操作の割り当てをここで管理する。")]
+    [SerializeField] private SystemInputBindings inputBindings = new SystemInputBindings();
+
+    private SystemInputReader systemInputReader;
     private bool isTransitioning;
     private bool isCountingUp;
     private float targetClearTime;
+    private void Awake()
+    {
+        if (!TryResolveRawInputSource())
+        {
+            return;
+        }
+
+        systemInputReader = new SystemInputReader(rawInputSource, inputBindings);
+    }
 
     private void Start()
     {
@@ -60,29 +78,10 @@ public sealed class ResultSceneController : MonoBehaviour
         {
             return;
         }
+        systemInputReader.Update();
+        Debug.Log($"[ResultSceneController] SubmitPressed={systemInputReader.SubmitPressed}");
 
-        bool spacePressed = Input.GetKeyDown(KeyCode.Space);
-        bool gamepadConnected = Gamepad.current != null;
-        bool gamepadAPressed = gamepadConnected && Gamepad.current.buttonSouth.wasPressedThisFrame;
-
-        // Gamepad状態の定期ログ（入力時のみ）
-        if (gamepadAPressed || spacePressed )
-        {
-            Debug.Log($"[ResultSceneController] Input state - Gamepad connected: {gamepadConnected}");
-        }
-
-        if (spacePressed)
-        {
-            Debug.Log("[ResultSceneController] Space key pressed.");
-        }
-
-        if (gamepadAPressed)
-        {
-            Debug.Log("[ResultSceneController] Gamepad A button pressed.");
-        }
-
-
-        if (spacePressed || gamepadAPressed)
+        if (systemInputReader.SubmitPressed)
         {
             if (isCountingUp)
             {
@@ -115,13 +114,13 @@ public sealed class ResultSceneController : MonoBehaviour
             FadeController.Instance.FadeOut(0.5f, () =>
             {
                 Debug.Log("[ResultSceneController] Fade out complete. Loading Boot scene.");
-                SceneFlow.LoadBoot();
+                SceneFlow.LoadTitle();
             });
         }
         else
         {
             Debug.LogWarning("[ResultSceneController] FadeController not found. Loading boot without fade.");
-            SceneFlow.LoadBoot();
+            SceneFlow.LoadTitle();
         }
     }
 
@@ -172,4 +171,25 @@ public sealed class ResultSceneController : MonoBehaviour
 
         Debug.Log($"[ResultSceneController] ✓ Time displayed: {clearElapsedTimeText.text}");
     }
+    private bool TryResolveRawInputSource()
+    {
+        if (rawInputSource != null)
+        {
+            return true;
+        }
+
+        rawInputSource = GetComponent<RawInputSource>();
+
+        if (rawInputSource != null)
+        {
+            return true;
+        }
+
+        Debug.LogError("[ResultSceneController] RawInputSource is required.", this);
+        enabled = false;
+        return false;
+    }
+
 }
+
+
