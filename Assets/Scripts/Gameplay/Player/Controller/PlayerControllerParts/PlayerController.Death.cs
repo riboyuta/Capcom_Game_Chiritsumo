@@ -106,6 +106,8 @@ public sealed partial class PlayerController
 
         isDeathSequencePlaying = true;
         lastDeathCause = cause;
+        // 死亡開始時点の向きを固定し、死亡演出中の見た目反転を防ぐ。
+        CaptureDeathFacingForVisual();
 
         LogHealth($"Death requested: {cause}");
 
@@ -426,7 +428,34 @@ public sealed partial class PlayerController
         justCrossedApexThisFrame = false;
 
         ResetDamageDeathPresentation();
+        // 復帰後は通常どおり facing 更新を使うため、死亡向き固定を解除する。
+        ClearDeathFacingLock();
+    }
 
+    // 死亡開始時点の facing を描画向きとして固定する。
+    // 0 が入る異常値にも備え、必ず -1 / +1 のどちらかへ補正する。
+    private void CaptureDeathFacingForVisual()
+    {
+        fixedDeathFacing = NormalizeFacingSign(facing);
+        isDeathFacingFixed = true;
+    }
+
+    // 復帰時に死亡向き固定を解除し、通常の facing 反映へ戻す。
+    private void ClearDeathFacingLock()
+    {
+        isDeathFacingFixed = false;
+    }
+
+    // 向き値を -1 / +1 のいずれかへ補正する。
+    // 0 や想定外の値が来た場合は右向き(+1)へ寄せて安全に扱う。
+    private int NormalizeFacingSign(int direction)
+    {
+        if (direction < 0)
+        {
+            return -1;
+        }
+
+        return 1;
     }
 
     // =====================================================================

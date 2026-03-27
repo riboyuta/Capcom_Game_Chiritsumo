@@ -119,7 +119,12 @@ public sealed partial class PlayerController
         {
             return false;
         }
-
+        float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
+        bool hasHorizontalInput = Mathf.Abs(inputX) >= movementSettings.wallInputThreshold;
+        if (!hasHorizontalInput)
+        {
+            return false;
+        }
         // 壁と反対方向へ横速度を与え、
         // 上方向には壁ジャンプ用の初速を与える。
         Vector3 velocity = rb.linearVelocity;

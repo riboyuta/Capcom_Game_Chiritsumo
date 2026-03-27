@@ -40,7 +40,8 @@ public sealed partial class PlayerController
         // 万一 null の場合は安全側で 0 扱いにする。
         float currentVelocityY = rb != null ? rb.linearVelocity.y : 0f;
         float currentVelocityX = rb != null ? rb.linearVelocity.x : 0f;
-
+        // 死亡演出中は開始時点で固定した向きを使い、入力で見た目が反転しないようにする。
+        int visualFacing = isDeathFacingFixed ? fixedDeathFacing : facing;
         // 非接地中に、Y速度が
         //   前フレーム/更新前: 正(上昇中)
         //   今フレーム終端  : 0以下(下降開始)
@@ -61,7 +62,7 @@ public sealed partial class PlayerController
             justWallJumpedThisFrame,
             justCrossedApexThisFrame,
             wallSide,
-            facing,
+            visualFacing,
             currentVelocityX,
             currentVelocityY
         );

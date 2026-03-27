@@ -29,12 +29,7 @@ public sealed class GoalSceneController : MonoBehaviour
             return;
         }
 
-        // デバッグ入力で ResultScene へ遷移する。
-        if (BootSceneController.Instance != null &&
-            BootSceneController.Instance.DebugInput.NextScenePressed)
-        {
-            TransitionToResult();
-        }
+
     }
 
     /// ResultScene へ遷移する。

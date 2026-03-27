@@ -147,7 +147,7 @@ RectTransform:
   m_GameObject: {fileID: 95739521}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 4.6016436, y: 3.6813147, z: 1.8406574}
+  m_LocalScale: {x: 1.4, y: 1.4, z: 1.4}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1282024539}
@@ -155,7 +155,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 579, y: -259}
+  m_AnchoredPosition: {x: 270, y: -95}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &95739523
@@ -538,6 +538,8 @@ GameObject:
   m_Component:
   - component: {fileID: 855637338}
   - component: {fileID: 855637337}
+  - component: {fileID: 855637340}
+  - component: {fileID: 855637339}
   m_Layer: 0
   m_Name: TitleSceneController
   m_TagString: Untagged
@@ -557,6 +559,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0666726d906d2c4db5928351b3a1c42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TitleSceneController
+  titleFadeDuration: 1
+  titleBgmFadeDuration: 1
+  exitWaitDuration: 0.4
+  menuView: {fileID: 855637340}
+  rawInputSource: {fileID: 855637339}
+  inputBindings:
+    _up:
+      _primaryKeyboardKey: 37
+      _secondaryKeyboardKey: 63
+      _gamepadButton: 12
+    _down:
+      _primaryKeyboardKey: 33
+      _secondaryKeyboardKey: 64
+      _gamepadButton: 13
+    _left:
+      _primaryKeyboardKey: 15
+      _secondaryKeyboardKey: 61
+      _gamepadButton: 14
+    _right:
+      _primaryKeyboardKey: 18
+      _secondaryKeyboardKey: 62
+      _gamepadButton: 15
+    _submit:
+      _primaryKeyboardKey: 1
+      _secondaryKeyboardKey: 40
+      _gamepadButton: 0
+    _cancel:
+      _primaryKeyboardKey: 38
+      _secondaryKeyboardKey: 60
+      _gamepadButton: 1
+    _pause:
+      _primaryKeyboardKey: 30
+      _secondaryKeyboardKey: 0
+      _gamepadButton: 4
 --- !u!4 &855637338
 Transform:
   m_ObjectHideFlags: 0
@@ -572,6 +608,38 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &855637339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 855637336}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d92c46fb874b4ae4696d00ac6d22a42e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Input.RawInputSource
+  _leftStickDeadzone: 0.2
+  _rightStickDeadzone: 0.2
+--- !u!114 &855637340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 855637336}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 097817d135d77c343a29e2cf485af0d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TitleMenuView
+  itemTransforms:
+  - {fileID: 95739522}
+  - {fileID: 946377422}
+  normalScaleMultiplier: 1
+  selectedScaleMultiplier: 1.15
+  scaleFollowSpeed: 10
 --- !u!1 &946377421
 GameObject:
   m_ObjectHideFlags: 0
@@ -600,7 +668,7 @@ RectTransform:
   m_GameObject: {fileID: 946377421}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 4.5781474, y: 3.6625175, z: 1.8312588}
+  m_LocalScale: {x: 1.4, y: 1.4, z: 1.4}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 409429160}
@@ -608,7 +676,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 563, y: -439}
+  m_AnchoredPosition: {x: 270, y: -150}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &946377423
@@ -964,7 +1032,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1488504188
 RectTransform:
   m_ObjectHideFlags: 0
