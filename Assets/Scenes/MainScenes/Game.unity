@@ -144,7 +144,7 @@ Transform:
   m_GameObject: {fileID: 41582883}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -49, y: 7, z: 0}
+  m_LocalPosition: {x: -48, y: 7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1351,8 +1351,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 315, y: 21, z: 0}
-  m_Center: {x: 108.5, y: 17.5, z: 0}
+  m_Size: {x: 314, y: 24, z: 0}
+  m_Center: {x: 109, y: 19, z: 0}
 --- !u!4 &1175559814
 Transform:
   m_ObjectHideFlags: 0
@@ -1860,7 +1860,7 @@ MonoBehaviour:
   cameraController: {fileID: 1882003663}
   zoneVolume: {fileID: 1650217550}
   zoneBounds: {fileID: 1635022580}
-  priority: 2
+  priority: 1
   overrideOrthographicSize: 1
   orthographicSize: 10.61
   overrideFollowSmoothing: 1
@@ -1869,7 +1869,7 @@ MonoBehaviour:
   overrideOrthographicSizeSmoothTime: 1
   orthographicSizeSmoothTime: 0.1
   enableTimeLimit: 1
-  activeDuration: 2
+  activeDuration: 5
   activateOnlyOnce: 0
   playerTag: Player
   drawDebugGizmos: 1
@@ -2292,7 +2292,7 @@ Transform:
   m_GameObject: {fileID: 1759209964}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 266, y: 28, z: 0}
+  m_LocalPosition: {x: 266, y: 31, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
