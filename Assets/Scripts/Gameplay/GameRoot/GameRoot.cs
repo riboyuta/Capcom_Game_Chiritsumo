@@ -25,6 +25,8 @@ public sealed class GameRoot : MonoBehaviour
     private float playTimer;
     private float readyTimer;
     private float elapsedTime;
+    private bool isElapsedTimeRunning;
+    private bool hasElapsedTimeStarted;
     private bool isTransitioning;
     private bool goalClearAccepted;
 
@@ -42,7 +44,10 @@ public sealed class GameRoot : MonoBehaviour
         }
 
         elapsedTime = 0f;
+        isElapsedTimeRunning = false;
+        hasElapsedTimeStarted = false;
         goalClearAccepted = false;
+
         EnterReady();
     }
 
@@ -53,7 +58,8 @@ public sealed class GameRoot : MonoBehaviour
             return;
         }
 
-        elapsedTime += Time.deltaTime;
+        // 経過時間は、開始通知を受けた後だけ進める。
+        UpdateElapsedTime();
 
         switch (currentState)
         {
@@ -69,6 +75,17 @@ public sealed class GameRoot : MonoBehaviour
                 UpdateResult();
                 break;
         }
+    }
+
+    // EnemySpawnTrigger から開始通知を受けた後だけ経過時間を加算する。
+    private void UpdateElapsedTime()
+    {
+        if (!isElapsedTimeRunning)
+        {
+            return;
+        }
+
+        elapsedTime += Time.deltaTime;
     }
 
     private void EnterReady()
@@ -105,11 +122,12 @@ public sealed class GameRoot : MonoBehaviour
         }
 
         playTimer = 0f;
-        //EnterResult();
     }
 
     private void EnterResult()
     {
+        // Result に入ったら経過時間の加算を止める。
+        isElapsedTimeRunning = false;
         currentState = State.Result;
     }
 
@@ -127,10 +145,23 @@ public sealed class GameRoot : MonoBehaviour
         SceneFlow.LoadResult();
     }
 
-    /// <summary>
+    // EnemySpawnTrigger から最初の有効発動時に呼ばせる。
+    public void StartElapsedTimeIfNeeded()
+    {
+        if (hasElapsedTimeStarted)
+        {
+            return;
+        }
+
+        elapsedTime = 0f;
+        isElapsedTimeRunning = true;
+        hasElapsedTimeStarted = true;
+
+        Debug.Log("[GameRoot] Elapsed timer started by EnemySpawnTrigger.");
+    }
+
     /// ゴール到達を受け付け、Result遷移を開始する。
     /// Playing 中のみ受理する。
-    /// </summary>
     public bool RequestGoalClear()
     {
         if (isTransitioning || goalClearAccepted)
