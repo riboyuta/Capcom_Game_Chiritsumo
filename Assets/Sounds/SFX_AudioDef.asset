@@ -34,7 +34,7 @@ MonoBehaviour:
     defaultVolume: 1
     loop: 0
   - id: SFX_game_over
-    clip: {fileID: 8300000, guid: 87894a197c38e83468416e666d8f6827, type: 3}
+    clip: {fileID: 8300000, guid: 9267399361ad705419ae958cd376e80d, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0

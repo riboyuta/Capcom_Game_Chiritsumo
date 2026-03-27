@@ -805,7 +805,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDeathView
   playerView: {fileID: 395024897}
   deathTransitionView: {fileID: 745865858}
-  damageDeathIntroDuration: 0.3
+  damageDeathIntroDuration: 0.5
   damageDeathTiltAngle: 80
   damageDeathZoomSizeOffset: -2
   damageDeathZoomSmoothTime: 3
