@@ -131,11 +131,5 @@ public sealed class ResultSceneController : MonoBehaviour
         clearElapsedTimeText.text = formattedText;
         Debug.Log($"[ResultSceneController] Text successfully set. Current value: '{clearElapsedTimeText.text}'");
         Debug.Log($"[ResultSceneController] ✓ Time displayed: {formattedText}");
-
-#if UNITY_WEBGL && !UNITY_EDITOR
-        // Unityroomのスコアボード(ID:1)へスコアを送信
-        Application.ExternalCall("unityroom.setScore", 1, clearElapsedTime);
-        Debug.Log($"[ResultSceneController] Sent score {clearElapsedTime} to Unityroom board 1.");
-#endif
     }
 }
