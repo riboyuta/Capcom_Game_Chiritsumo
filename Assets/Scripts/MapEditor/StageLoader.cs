@@ -23,12 +23,20 @@ public class StageLoader : MonoBehaviour
 
     void LoadMap()
     {
-        string folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData");
-        string path = Path.Combine(folder, "Stage" + stageNumber + ".json");
+        string folder;
+        string path;
 
-        //string folder = Application.dataPath +
-        //   "/Scenes/DebugScenes/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData";
-        //string path = folder + "/Stage" + stageNumber + ".json";
+#if UNITY_EDITOR
+        // Unityエディターで実行されている場合
+        folder = Application.dataPath +
+            "/Scenes/DebugScenes/koki/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData";
+#else
+// ビルドされたゲームで実行されている場合
+folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData");
+#endif
+
+        path = Path.Combine(folder, "Stage" + stageNumber + ".json");
+
 
         if (!File.Exists(path))
         {
