@@ -40,12 +40,19 @@ public sealed class HandSmashView : MonoBehaviour
     private float frameTimer = 0.0f;
     private int currentFrameIndex = 0;
 
+    private string currentPlayingAudioId = null;
+
     private void Awake()
     {
         if (spriteRenderer == null)
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
         }
+    }
+
+    private void OnDestroy()
+    {
+        StopCurrentAudio();
     }
 
     private void Update()
@@ -78,16 +85,20 @@ public sealed class HandSmashView : MonoBehaviour
     public void PlayRise()
     {
         SetAnimation(AnimState.Rise, riseFrames, riseFrameRate, loopRise);
+        PlayAudio("SFX_boss_attack_approach");
+        PlayAudio("SFX_boss_slam_approach");
     }
 
     public void PlayHold()
     {
         SetAnimation(AnimState.Hold, holdFrames, holdFrameRate, loopHold);
+        PlayAudio("SFX_boss_slam_hold");
     }
 
     public void PlaySmash()
     {
         SetAnimation(AnimState.Smash, smashFrames, smashFrameRate, loopSmash);
+        PlayAudio("SFX_boss_slam");
     }
 
     public void PlayEnd()
@@ -101,6 +112,8 @@ public sealed class HandSmashView : MonoBehaviour
         {
             return;
         }
+
+        StopCurrentAudio();
 
         currentState = nextState;
         currentFrames = nextFrames;
@@ -135,5 +148,26 @@ public sealed class HandSmashView : MonoBehaviour
         }
 
         spriteRenderer.sprite = currentFrames[currentFrameIndex];
+    }
+
+    private void PlayAudio(string audioId)
+    {
+        if (string.IsNullOrEmpty(audioId) || AudioManager.Instance == null)
+        {
+            return;
+        }
+
+        StopCurrentAudio();
+        AudioManager.Instance.Play(audioId);
+        currentPlayingAudioId = audioId;
+    }
+
+    private void StopCurrentAudio()
+    {
+        if (!string.IsNullOrEmpty(currentPlayingAudioId) && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.Stop(currentPlayingAudioId);
+            currentPlayingAudioId = null;
+        }
     }
 }
