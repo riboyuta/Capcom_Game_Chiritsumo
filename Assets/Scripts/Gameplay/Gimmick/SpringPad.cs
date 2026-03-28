@@ -21,6 +21,12 @@ public sealed class SpringPad : MonoBehaviour
     [Header("最後にバウンスした時刻")]
     private float lastBounceTime = -1f;
 
+    [Header("アニメーション")]
+    [Tooltip("使用するアニメーターを入れる")]
+    [SerializeField] private Animator anim;
+
+
+
     // ──────────────────────────────────────────────
     // 接触検出
     // Collider が Trigger なら OnTriggerEnter、
@@ -53,6 +59,16 @@ public sealed class SpringPad : MonoBehaviour
         {
             return;
         }
+
+
+        // アニメーション再生
+        if (anim != null)
+        {
+            Debug.Log(anim);
+            anim.SetTrigger("Interacted");
+     
+        }
+
 
         lastBounceTime = Time.time;
         ApplyBounce(targetRb);

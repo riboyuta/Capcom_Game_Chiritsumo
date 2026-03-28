@@ -35,6 +35,10 @@ public class SwitchGimmick : MonoBehaviour, IRespawnResettable
     [Tooltip("押し込み深さに対する有効化閾値（0〜1）。この割合以上押し込まれると IsPressed が true になります。")]
     [SerializeField, Range(0f, 1f)] private float activateThreshold = 0.9f;
 
+    [Header("アニメーション")]
+    [Tooltip("使用するアニメーターを入れる")]
+    [SerializeField] private Animator anim;
+
     private Vector3 initialLocalPosition;
     private float currentPressDistance = 0f;
     private bool isPushedThisFrame = false;
@@ -103,6 +107,17 @@ public class SwitchGimmick : MonoBehaviour, IRespawnResettable
         if (isPushedThisFrame || (switchType == SwitchType.OneShot && IsPressed))
         {
             currentPressDistance += pressSpeed * Time.deltaTime;
+
+
+            // アニメーション再生
+            if (anim != null)
+            {
+               // Debug.Log(anim);
+                anim.SetTrigger("Interacted");
+
+            }
+
+
         }
         else
         {
