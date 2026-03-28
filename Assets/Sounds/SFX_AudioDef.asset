@@ -108,20 +108,20 @@ MonoBehaviour:
     channel: 1
     defaultVolume: 1
     loop: 0
-  - id: SFX_breakable_enter
+  - id: SFX_gimmick_breakable_enter
     clip: {fileID: 8300000, guid: a2f9de3e7f4d0f84dbce79955e6f36d1, type: 3}
     channel: 1
-    defaultVolume: 1
+    defaultVolume: 0.25
     loop: 0
   - id: SFX_gimmick_breakable_break
     clip: {fileID: 8300000, guid: 2dfc30132dbc81f4db49c23eed658d36, type: 3}
     channel: 1
-    defaultVolume: 1
+    defaultVolume: 0.25
     loop: 0
   - id: SFX_gimmick_switchwall
     clip: {fileID: 8300000, guid: 8605c3a5a6d5aef45ad5226c04120b7f, type: 3}
     channel: 1
-    defaultVolume: 1
+    defaultVolume: 0.25
     loop: 0
   - id: SFX_gimmick_push_switch
     clip: {fileID: 8300000, guid: 122e38cbf311aad4690a257880bc19d8, type: 3}

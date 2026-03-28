@@ -132,7 +132,18 @@ public class SwitchGimmick : MonoBehaviour, IRespawnResettable
         currentPressDistance = Mathf.Clamp(currentPressDistance, 0f, pressDepth);
 
         // 状態を更新
+        bool wasPressed = IsPressed;
         IsPressed = (currentPressDistance >= pressDepth * activateThreshold);
+
+        // SE:押した瞬間
+        // 前フレームで押されていなくて、今のフレームで押されたら鳴らす
+        if (!wasPressed && IsPressed)
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayOverlap("SFX_gimmick_push_switch");
+            }
+        }
 
         // Transformへ反映
         transform.localPosition = initialLocalPosition + (pushLocalDirection.normalized * currentPressDistance);

@@ -174,6 +174,9 @@ public sealed class GameRoot : MonoBehaviour
         {
             AudioManager.Instance.Stop("BGM_main_beforechase");
             AudioManager.Instance.FadeIn("BGM_main_afterchase", 2.0f);
+
+            // SE:最初のスポーン時
+            AudioManager.Instance.PlayOverlap("SFX_boss_spawn");
         }
     }
 

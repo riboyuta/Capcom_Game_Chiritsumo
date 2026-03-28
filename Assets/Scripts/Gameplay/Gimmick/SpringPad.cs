@@ -69,6 +69,11 @@ public sealed class SpringPad : MonoBehaviour
      
         }
 
+        // SE:作動する瞬間
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayOverlap("SFX_gimmick_springpad");
+        }
 
         lastBounceTime = Time.time;
         ApplyBounce(targetRb);
