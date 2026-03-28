@@ -17,10 +17,6 @@ public sealed class GameRoot : MonoBehaviour
     [Tooltip("Play 状態を維持する時間(秒)です。実際にプレイ可能な制限時間を調整します。")]
     [SerializeField, Min(0f)] private float playDuration = 10.0f;
 
-    [Header("Result遷移")]
-    [Tooltip("Result 遷移時のフェードアウト時間(秒)です。")]
-    [SerializeField, Min(0f)] private float resultFadeOutDuration = 0.5f;
-
     private State currentState;
     private float playTimer;
     private float readyTimer;
@@ -35,7 +31,7 @@ public sealed class GameRoot : MonoBehaviour
         // シーン開始時に明転させる。
         if (FadeController.Instance != null)
         {
-            FadeController.Instance.FadeIn(0.5f);
+            FadeController.Instance.FadeIn();
         }
 
         if (AudioManager.Instance != null)
@@ -143,7 +139,7 @@ public sealed class GameRoot : MonoBehaviour
 
         if (FadeController.Instance != null)
         {
-            FadeController.Instance.FadeOut(resultFadeOutDuration, SceneFlow.LoadResult);
+            FadeController.Instance.FadeOut(onComplete: SceneFlow.LoadResult);
             return;
         }
 

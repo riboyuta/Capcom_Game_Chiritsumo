@@ -51,7 +51,7 @@ public sealed class ResultSceneController : MonoBehaviour
         if (FadeController.Instance != null)
         {
             Debug.Log("[ResultSceneController] FadeController found. Starting fade in.");
-            FadeController.Instance.FadeIn(0.5f);
+            FadeController.Instance.FadeIn();
         }
         else
         {
@@ -122,7 +122,7 @@ public sealed class ResultSceneController : MonoBehaviour
         if (FadeController.Instance != null)
         {
             Debug.Log("[ResultSceneController] Starting fade out...");
-            FadeController.Instance.FadeOut(0.5f, () =>
+            FadeController.Instance.FadeOut(onComplete: () =>
             {
                 Debug.Log("[ResultSceneController] Fade out complete. Loading Boot scene.");
                 SceneFlow.LoadTitle();
