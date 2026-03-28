@@ -124,7 +124,7 @@ MonoBehaviour:
     defaultVolume: 0.25
     loop: 0
   - id: SFX_gimmick_switchwall
-    clip: {fileID: 8300000, guid: 8605c3a5a6d5aef45ad5226c04120b7f, type: 3}
+    clip: {fileID: 8300000, guid: c5ee758d066f2df4ca03a40c57c719ea, type: 3}
     channel: 1
     defaultVolume: 0.25
     loop: 0
