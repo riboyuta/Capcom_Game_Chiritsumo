@@ -19,7 +19,7 @@ MonoBehaviour:
     defaultVolume: 0.5
     loop: 1
   - id: BGM_main_afterchase
-    clip: {fileID: 8300000, guid: 44cd0d5cafba936448dc81c3d0d949b7, type: 3}
+    clip: {fileID: 8300000, guid: 65b5c9e315e2eb64fa0cf26ed4ea0a0c, type: 3}
     channel: 0
     defaultVolume: 0.5
     loop: 1
