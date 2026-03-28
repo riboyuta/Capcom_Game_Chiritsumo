@@ -26,9 +26,7 @@ public sealed class ParallaxLayer : MonoBehaviour
         InitializePositions();
     }
 
-    /// <summary>
     /// スプライトの幅を SpriteRenderer の bounds から取得する。
-    /// </summary>
     private void CalculateSpriteWidth()
     {
         SpriteRenderer sr = spriteA.GetComponent<SpriteRenderer>();
@@ -53,9 +51,7 @@ public sealed class ParallaxLayer : MonoBehaviour
         }
     }
 
-    /// <summary>
     /// spriteB を spriteA の右隣に配置する。
-    /// </summary>
     private void InitializePositions()
     {
         Vector3 posB = spriteA.position;
