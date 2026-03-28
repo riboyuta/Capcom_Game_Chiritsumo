@@ -2,7 +2,7 @@ using UnityEngine;
 
 // 指定したスイッチが押されている間、指定方向にスライドして開くギミック。
 [DisallowMultipleComponent]
-public class SlideGimmick : MonoBehaviour
+public class SlideGimmick : MonoBehaviour, IRespawnResettable
 {
     [Header("ターゲットスイッチ")]
     [Tooltip("監視対象の SwitchGimmick。割り当てたスイッチが押されている間、本ギミックが動作します。シーン内のスイッチオブジェクトをセットしてください。")]
@@ -24,6 +24,7 @@ public class SlideGimmick : MonoBehaviour
     private float currentDistance = 0f;
     private bool isBlocked = false;
     private Collider myCollider;
+    private bool hasCapturedInitialState;
 
     //生成されたときにスイッチを探すため！
     public void SetSwitch(SwitchGimmick sw)
@@ -75,5 +76,29 @@ public class SlideGimmick : MonoBehaviour
 
         currentDistance = nextDistance;
         transform.localPosition = initialLocalPosition + (slideLocalDirection.normalized * currentDistance);
+    }
+    public void CaptureInitialState()
+    {
+        // 初期位置のみを一度だけ保存し、ランタイム状態は変更しません。
+        if (hasCapturedInitialState)
+        {
+            return;
+        }
+
+        initialLocalPosition = transform.localPosition;
+        hasCapturedInitialState = true;
+    }
+
+    public void ResetToRespawnState()
+    {
+        // 死亡リセット時は即時で閉じた状態へ戻します。
+        if (!hasCapturedInitialState)
+        {
+            CaptureInitialState();
+        }
+
+        currentDistance = 0f;
+        isBlocked = false;
+        transform.localPosition = initialLocalPosition;
     }
 }
