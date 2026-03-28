@@ -1847,11 +1847,9 @@ MonoBehaviour:
   damagedStateDuration: 0.15
   grabbedStateDuration: 0.5
   smashedStateDuration: 0.35
-  grabIsInstantDeath: 1
   smashIsInstantDeath: 1
   showReactionDebugLog: 0
   killAfterGrabbedDuration: 1
-  snapToGrabAnchorImmediately: 1
 --- !u!54 &1189614812
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2478,7 +2476,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameRoot
   readyDuration: 1
   playDuration: 10000
-  resultFadeOutDuration: 2
 --- !u!4 &1603009782
 Transform:
   m_ObjectHideFlags: 0
@@ -2818,7 +2815,7 @@ MonoBehaviour:
   smoothTimeY: 0.2
   orthographicSizeSmoothTime: 0.2
   drawDebugGizmos: 1
-  logViewportPosition: 1
+  logViewportPosition: 0
 --- !u!114 &1882003664
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3322,7 +3319,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: maxMoveSpeed
-      value: 7
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: minMoveSpeed

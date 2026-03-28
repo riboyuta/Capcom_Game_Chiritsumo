@@ -25,6 +25,7 @@ public sealed class GameRoot : MonoBehaviour
     private bool hasElapsedTimeStarted;
     private bool isTransitioning;
     private bool goalClearAccepted;
+    private float lastLoggedTime;
 
     private void Start()
     {
@@ -43,6 +44,7 @@ public sealed class GameRoot : MonoBehaviour
         isElapsedTimeRunning = false;
         hasElapsedTimeStarted = false;
         goalClearAccepted = false;
+        lastLoggedTime = -1f;
 
         EnterReady();
     }
@@ -82,6 +84,13 @@ public sealed class GameRoot : MonoBehaviour
         }
 
         elapsedTime += Time.deltaTime;
+
+        // 1秒ごとにログ出力する。
+        if (Mathf.FloorToInt(elapsedTime) > Mathf.FloorToInt(lastLoggedTime))
+        {
+            lastLoggedTime = elapsedTime;
+            Debug.Log($"[GameRoot] Elapsed Time: {elapsedTime:F2}s");
+        }
     }
 
     private void EnterReady()
@@ -158,6 +167,7 @@ public sealed class GameRoot : MonoBehaviour
         elapsedTime = 0f;
         isElapsedTimeRunning = true;
         hasElapsedTimeStarted = true;
+        lastLoggedTime = -1f;
 
         // BGM を変更する。
         if (AudioManager.Instance != null)
@@ -165,8 +175,6 @@ public sealed class GameRoot : MonoBehaviour
             AudioManager.Instance.Stop("BGM_main_beforechase");
             AudioManager.Instance.FadeIn("BGM_main_afterchase", 2.0f);
         }
-
-        Debug.Log("[GameRoot] Elapsed timer started by EnemySpawnTrigger.");
     }
 
     /// ゴール到達を受け付け、Result遷移を開始する。
