@@ -1,9 +1,7 @@
 using UnityEngine;
 
-/// <summary>
 /// 1レイヤー分のパララックススクロールとループ処理を担当する。
 /// 同じスプライトを持つ2つの子オブジェクト（spriteA / spriteB）を交互にループさせる。
-/// </summary>
 public sealed class ParallaxLayer : MonoBehaviour
 {
     [Header("スプライト設定")]
@@ -26,9 +24,7 @@ public sealed class ParallaxLayer : MonoBehaviour
         InitializePositions();
     }
 
-    /// <summary>
     /// スプライトの幅を SpriteRenderer の bounds から取得する。
-    /// </summary>
     private void CalculateSpriteWidth()
     {
         SpriteRenderer sr = spriteA.GetComponent<SpriteRenderer>();
@@ -53,9 +49,7 @@ public sealed class ParallaxLayer : MonoBehaviour
         }
     }
 
-    /// <summary>
     /// spriteB を spriteA の右隣に配置する。
-    /// </summary>
     private void InitializePositions()
     {
         Vector3 posB = spriteA.position;
@@ -63,11 +57,9 @@ public sealed class ParallaxLayer : MonoBehaviour
         spriteB.position = posB;
     }
 
-    /// <summary>
     /// 指定された移動量に speedMultiplier を掛けてスクロールし、
     /// 画面外に出たスプライトをループさせる。
     /// ParallaxBackground から毎フレーム呼ばれる。
-    /// </summary>
     /// <param name="rawDelta">カメラの移動量または自動スクロール量（ワールド単位）。</param>
     /// <param name="cameraX">現在のカメラの X 座標（ループ判定の基準）。</param>
     public void Scroll(float rawDelta, float cameraX)
@@ -83,10 +75,8 @@ public sealed class ParallaxLayer : MonoBehaviour
         WrapSprite(spriteB, spriteA, cameraX);
     }
 
-    /// <summary>
     /// check がカメラから spriteWidth 以上離れた場合、
     /// other の反対側に回り込ませる。
-    /// </summary>
     private void WrapSprite(Transform check, Transform other, float cameraX)
     {
         float distance = check.position.x - cameraX;
@@ -107,8 +97,6 @@ public sealed class ParallaxLayer : MonoBehaviour
         }
     }
 
-    /// <summary>
     /// パララックス係数を返す（外部参照用）。
-    /// </summary>
     public float SpeedMultiplier => speedMultiplier;
 }
