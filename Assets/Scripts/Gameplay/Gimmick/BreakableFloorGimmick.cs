@@ -36,6 +36,11 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
     [Tooltip("チェックを入れると、破壊から一定時間後に自動で復活します。外すと一度きりで壊れたままになります。")]
     [SerializeField] private bool autoRespawn = true;
 
+    [Header("アニメーション")]
+    [Tooltip("使用するアニメーターを入れる")]
+    //  [SerializeField] private Animator anim;
+    [SerializeField] private Animator[] anim = new Animator[6];
+
     private Collider floorCollider;
     private Renderer[] visualRenderers;
     private FloorState currentState = FloorState.Idle;
@@ -58,7 +63,10 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
             {
                 visualTransform = transform;
                 Debug.LogWarning("[BreakableFloorGimmick] Visual Transform が指定されていないため、判定ごと振動します。子のメッシュオブジェクトを指定することを推奨します。");
+
             }
+
+          
         }
 
 
@@ -128,6 +136,18 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
         {
             // 乗ったらシーケンス開始
             sequenceCoroutine = StartCoroutine(BreakSequence());
+
+            // アニメーション再生
+            for (int i = 0; i < 6; i++)
+            {
+                if (anim[i] != null)
+                {
+                    Debug.Log(anim[i]);
+                    anim[i].SetTrigger("Interacted");
+
+                }
+            }
+          
         }
     }
 
