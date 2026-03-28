@@ -72,7 +72,7 @@ public sealed class TitleSceneController : MonoBehaviour
         FadeController fadeController = FadeController.Instance;
         if (fadeController != null)
         {
-            fadeController.FadeIn(titleFadeDuration);
+            fadeController.FadeIn();
         }
 
         AudioManager audioManager = AudioManager.Instance;
@@ -218,7 +218,7 @@ public sealed class TitleSceneController : MonoBehaviour
         FadeController fadeController = FadeController.Instance;
         if (fadeController != null)
         {
-            fadeController.FadeOut(titleFadeDuration);
+            fadeController.FadeOut();
         }
 
         yield return new WaitForSeconds(titleFadeDuration);

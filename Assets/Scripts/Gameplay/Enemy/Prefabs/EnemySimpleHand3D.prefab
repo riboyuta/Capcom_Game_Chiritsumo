@@ -25,8 +25,8 @@ Transform:
   m_GameObject: {fileID: 1923890647421372328}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -14, y: 10.64, z: 0}
-  m_LocalScale: {x: 7.36, y: 7.36, z: 7.36}
+  m_LocalPosition: {x: -10.6, y: 18.9, z: 0}
+  m_LocalScale: {x: 11, y: 11, z: 11}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 7072625199681737367}
@@ -58,13 +58,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2210536961890077483}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3, y: 8.5, z: 0}
-  m_LocalScale: {x: 32.327473, y: 7.0188665, z: 1.1679}
+  m_LocalRotation: {x: -0, y: -0, z: -0.36370695, w: 0.9315135}
+  m_LocalPosition: {x: -6.3, y: 14.5, z: 0}
+  m_LocalScale: {x: 32.455658, y: 7.900983, z: 1.3146791}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 54845863021831391}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -42.656}
 --- !u!65 &2432075843989103128
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -111,8 +111,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2459943370238874255}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.1417543, w: 0.9899019}
-  m_LocalPosition: {x: 2.4486961, y: -1.034353, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -165,9 +165,9 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -328500077, guid: f844d5901ee99fc42ae2f5219d4949b6, type: 3}
+  m_Sprite: {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -224,32 +224,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb0efa252678a6b43bb577b182aff4e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySimpleHand3D
-  moveSpeed: 3.08
+  moveSpeed: 3
   moveAxis: {x: 1, y: 0, z: 0}
+  useDistanceBasedSpeed: 1
+  minMoveSpeed: 4
+  maxMoveSpeed: 8
+  distanceForMaxSpeed: 60
+  distanceForMinSpeed: 20
+  speedMultiplierWhileAttacking: 1
   playerTag: Player
   disableAfterHit: 0
+  startActive: 0
+  hideUntilActivated: 1
+  spawnPositionOnActivate: {x: 0, y: 0, z: 0}
+  useSpawnPositionOnActivate: 0
   player: {fileID: 0}
   handSmashPrefab: {fileID: 7987207932610904844, guid: ea966305bed4f37429175f8b895b5d11, type: 3}
   handGrabPrefab: {fileID: 2321828064626340005, guid: 435d8c79af265d14380212c7c9e22c23, type: 3}
   handSpawnOffset: {x: 2, y: 1, z: 0}
-  smashAttackRangeX: 30
-  grabAttackRangeX: 30
+  smashAttackRangeX: 70
+  grabAttackRangeX: 50
   attackCooldown: 2.5
   groundY: 0
   debugTriggerWithSpace: 0
   visualRoot: {fileID: 7296045331812786607}
   armRenderer: {fileID: 8753026961955578720}
   palmRenderer: {fileID: 8817927017108179465}
-  visualRootLocalOffset: {x: -18.5, y: 14, z: 0}
-  visualRootLocalScale: {x: 7, y: 7, z: 1}
-  armLocalOffset: {x: 0, y: 0, z: 0}
+  visualRootLocalOffset: {x: -10, y: 18.5, z: 0}
+  visualRootLocalScale: {x: 11, y: 11, z: 11}
+  armLocalOffset: {x: -0.588, y: 0.713, z: 0}
   armLocalScale: {x: 1, y: 1, z: 1}
-  palmLocalOffset: {x: 2.06, y: -1.68, z: 0}
+  palmLocalOffset: {x: 0, y: 0, z: 0}
   palmLocalScale: {x: 1, y: 1, z: 1}
   armFrames:
-  - {fileID: -962448715, guid: 7a78e7b2a70b6ee4fa0bb9cdcf43137b, type: 3}
+  - {fileID: 1802195152, guid: 03c2324985d8e214eb3a9815e598851c, type: 3}
   palmFrames:
-  - {fileID: -328500077, guid: f844d5901ee99fc42ae2f5219d4949b6, type: 3}
+  - {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
   animationFps: 8
   enableDebugLog: 0
   logMissingReferences: 0
@@ -276,7 +286,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 0
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -305,13 +315,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4119112838642931143}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.1417543, w: 0.9899019}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.588, y: 0.713, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7296045331812786607}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 16.299}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8753026961955578720
 SpriteRenderer:
   serializedVersion: 2
@@ -359,9 +369,9 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 4
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -962448715, guid: 7a78e7b2a70b6ee4fa0bb9cdcf43137b, type: 3}
+  m_Sprite: {fileID: 1802195152, guid: 03c2324985d8e214eb3a9815e598851c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

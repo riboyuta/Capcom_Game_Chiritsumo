@@ -150,41 +150,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f12b9d033c8830a41af2998051bfd947, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BootSceneController
-  _rawInputSource: {fileID: 259605075}
-  _systemInputBindings:
-    _up:
-      _primaryKeyboardKey: 37
-      _secondaryKeyboardKey: 63
-      _gamepadButton: 12
-    _down:
-      _primaryKeyboardKey: 33
-      _secondaryKeyboardKey: 64
-      _gamepadButton: 13
-    _left:
-      _primaryKeyboardKey: 15
-      _secondaryKeyboardKey: 61
-      _gamepadButton: 14
-    _right:
-      _primaryKeyboardKey: 18
-      _secondaryKeyboardKey: 62
-      _gamepadButton: 15
-    _submit:
-      _primaryKeyboardKey: 1
-      _secondaryKeyboardKey: 40
-      _gamepadButton: 0
-    _cancel:
-      _primaryKeyboardKey: 38
-      _secondaryKeyboardKey: 60
-      _gamepadButton: 1
-    _pause:
-      _primaryKeyboardKey: 30
-      _secondaryKeyboardKey: 0
-      _gamepadButton: 4
-  _debugInputBindings:
-    _toggleDebugViewKey: 94
-    _reloadSceneKey: 101
-    _nextSceneKey: 102
-    _previousSceneKey: 103
 --- !u!4 &259605074
 Transform:
   m_ObjectHideFlags: 0
@@ -226,6 +191,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f65c3217c12592a4f9673bd771c30ac6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FadeManager
+  defaultFadeInDuration: 2
+  defaultFadeOutDuration: 2
 --- !u!1 &447867120
 GameObject:
   m_ObjectHideFlags: 0

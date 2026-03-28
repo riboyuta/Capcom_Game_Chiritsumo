@@ -2,7 +2,7 @@
 
 // PlayerController の攻撃リアクション状態を担当する partial。
 // 通常被弾、掴まれ、叩きつけ、死亡の状態遷移を管理する。
-public sealed partial class PlayerController : IEnemyAttackReceiver
+public sealed partial class PlayerController
 {
     // プレイヤーの攻撃リアクション状態。
     // 通常状態から、被弾、掉まれ、叩きつけ、死亡状態へ遷移する。
@@ -28,10 +28,6 @@ public sealed partial class PlayerController : IEnemyAttackReceiver
     [Header("Smashed継続時間")]
     [Tooltip("敵に叩きつけられた状態が継続する時間です。")]
     [SerializeField] private float smashedStateDuration = 0.35f;
-    // Grab 攻撃を受けたら即座に死亡するか（false なら拘束演出後に判定）
-    [Header("Grab即死判定")]
-    [Tooltip("Grab攻撃を受けた瞬間に即死するかどうかを設定します。")]
-    [SerializeField] private bool grabIsInstantDeath = true;
     // Smash 攻撃を受けたら即座に死亡するか（false ならダメージとノックバックのみ）
     [Header("Smash即死判定")]
     [Tooltip("Smash攻撃を受けた瞬間に即死するかどうかを設定します。")]
@@ -46,10 +42,6 @@ public sealed partial class PlayerController : IEnemyAttackReceiver
     [Header("拘束後即死")]
     [Tooltip("Grabbed状態の継続時間終了後に即死級ダメージを与えるかどうかを設定します。")]
     [SerializeField] private bool killAfterGrabbedDuration = true;
-    // Grab 攻撃を受けた瞬間に手の位置へワープさせるか
-    [Header("即座にワープ")]
-    [Tooltip("Grab攻撃を受けた瞬間に敵の手の位置へワープさせるかどうかを設定します。")]
-    [SerializeField] private bool snapToGrabAnchorImmediately = true;
 
     // 現在のリアクション状態
     private PlayerReactionState reactionState = PlayerReactionState.Normal;
@@ -148,81 +140,6 @@ public sealed partial class PlayerController : IEnemyAttackReceiver
             case PlayerReactionState.Dead:
                 break;
         }
-    }
-
-    // 敵攻撃を受け取るメソッド。IEnemyAttackReceiver インターフェースの実装。
-    // EnemyAttackController から呼び出され、攻撃種類に応じた処理を振り分ける。
-    public void ReceiveEnemyAttack(EnemyAttackContext context)
-    {
-        // 死亡状態なら何もしない
-        if (reactionState == PlayerReactionState.Dead)
-        {
-            return;
-        }
-
-        // 攻撃種類に応じて処理を振り分ける
-        switch (context.AttackType)
-        {
-            case EnemyAttackController.EnemyAttackType.Grab:
-                HandleGrabAttack(context);
-                break;
-
-            case EnemyAttackController.EnemyAttackType.Smash:
-                HandleSmashAttack(context);
-                break;
-        }
-    }
-
-    // Grab 攻撃を受けたときの処理。
-    // 掴まれ状態に遷移し、設定に応じて即死または拘束演出を行う。
-    private void HandleGrabAttack(EnemyAttackContext context)
-    {
-        LogReaction("Grab attack received.");
-
-        // 掴まれている手の Transform を記録
-        currentGrabAnchor = context.GrabAnchor;
-        // Grabbed 状態に遷移
-        ChangeReactionState(PlayerReactionState.Grabbed);
-
-        // 掴まれた瞬間に手の位置へワープさせる設定なら実行
-        if (snapToGrabAnchorImmediately && currentGrabAnchor != null)
-        {
-            Vector3 pos = transform.position;
-            pos.x = currentGrabAnchor.position.x;
-            pos.y = currentGrabAnchor.position.y;
-            transform.position = pos;
-        }
-
-        // 即時にダメージを入れたい場合だけここで入れる
-        // 拘束演出を見せたいなら通常は入れない
-        if (grabIsInstantDeath)
-        {
-            TakeDamage(context.Damage, context.HitDirection, context.KnockbackForce);
-            return;
-        }
-
-        if (!killAfterGrabbedDuration && context.Damage > 0)
-        {
-            TakeDamage(context.Damage, context.HitDirection, context.KnockbackForce);
-        }
-    }
-
-    // Smash 攻撃を受けたときの処理。
-    // 設定に応じて即死または Smashed 状態へ遷移する。
-    private void HandleSmashAttack(EnemyAttackContext context)
-    {
-        LogReaction("Smash attack received.");
-
-        // Smash が即死設定なら、そのままダメージを入れて終了
-        if (smashIsInstantDeath)
-        {
-            TakeDamage(context.Damage, context.HitDirection, context.KnockbackForce);
-            return;
-        }
-
-        // 即死でない場合は Smashed 状態に遷移してダメージを入れる
-        ChangeReactionState(PlayerReactionState.Smashed);
-        TakeDamage(context.Damage, context.HitDirection, context.KnockbackForce);
     }
 
     // リアクション状態を変更し、タイマーをリセットする。

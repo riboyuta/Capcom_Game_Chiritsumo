@@ -9,7 +9,7 @@ public sealed class EnemySpawnTrigger : MonoBehaviour, IRespawnResettable
 
     [Header("敵設定")]
     [Tooltip("この Trigger で追跡開始させる敵です。")]
-    [SerializeField] private EnemySimpleHand3D targetEnemy;
+    [SerializeField] private EnemyCore targetEnemy;
 
     [Header("ゲーム進行")]
     [Tooltip("初回有効発動時に経過時間計測の開始通知を送る GameRoot です。")]
