@@ -20,7 +20,7 @@
 // - この partial は PlayerController の一部として使われる
 // - メイン側から InitializeHealth(), UpdateHealth(deltaTime), ApplyKnockbackVelocity() が適切なタイミングで呼ばれる
 // - 疑似3D横スク前提で、ノックバック計算では Z 軸移動を扱わない
-public sealed partial class PlayerController : IDamageable
+public sealed partial class PlayerController
 {
     // =====================================================================
     // Inspector 設定値
