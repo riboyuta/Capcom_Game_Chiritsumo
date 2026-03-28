@@ -137,7 +137,7 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
             // 乗ったらシーケンス開始
             sequenceCoroutine = StartCoroutine(BreakSequence());
 
-            // --- SE: 壊れる床にプレイヤーが接触し、崩壊を始めた瞬間 ---
+            // SE:崩壊を始めた瞬間
             if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.PlayOverlap("SFX_gimmick_breakable_enter");
@@ -203,10 +203,10 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
             r.enabled = false;
         }
 
-        // --- SE: 完全に壊れる瞬間 ---
+        // SE:壊れる瞬間
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlayOverlap("SFX_gimmick_breakable_enter");
+            AudioManager.Instance.PlayOverlap("SFX_gimmick_breakable_break");
         }
     }
 

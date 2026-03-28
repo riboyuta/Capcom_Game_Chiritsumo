@@ -38,6 +38,11 @@ MonoBehaviour:
     channel: 1
     defaultVolume: 1
     loop: 0
+  - id: SFX_gameresult_drumroll
+    clip: {fileID: 8300000, guid: ae960c3996da0d748a82b9c143be081d, type: 3}
+    channel: 1
+    defaultVolume: 0.5
+    loop: 0
   - id: SFX_player_jump
     clip: {fileID: 8300000, guid: 059408aa05982c443a44286b42bf8764, type: 3}
     channel: 1

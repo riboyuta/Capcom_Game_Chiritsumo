@@ -95,6 +95,13 @@ public sealed class ResultSceneController : MonoBehaviour
                 isCountingUp = false;
                 clearElapsedTimeText.text = string.Format(clearElapsedTimeFormat, targetClearTime);
                 Debug.Log("[ResultSceneController] Count up skipped.");
+
+                // SE: カウントアップ終了(スキップ時)
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.Stop("SFX_gameresult_drumroll");
+                    AudioManager.Instance.PlayOverlap("SFX_game_clear");
+                }
             }
             else
             {
@@ -150,6 +157,13 @@ public sealed class ResultSceneController : MonoBehaviour
         Debug.Log($"[ResultSceneController] Text object: {clearElapsedTimeText.gameObject.name}, Active: {clearElapsedTimeText.gameObject.activeInHierarchy}");
 
         targetClearTime = clearElapsedTime;
+
+        // SE: ドラムロール開始
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.Play("SFX_gameresult_drumroll");
+        }
+
         StartCoroutine(CountUpClearTime(clearElapsedTime));
     }
 
@@ -178,6 +192,13 @@ public sealed class ResultSceneController : MonoBehaviour
             // スキップされずにアニメーションが終わった場合、最終値を正確に設定
             clearElapsedTimeText.text = string.Format(clearElapsedTimeFormat, targetTime);
             isCountingUp = false;
+
+            // SE: カウントアップ終了(自然完了時)
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.Stop("SFX_gameresult_drumroll");
+                AudioManager.Instance.PlayOverlap("SFX_game_clear");
+            }
         }
 
         Debug.Log($"[ResultSceneController] ✓ Time displayed: {clearElapsedTimeText.text}");
