@@ -1,3 +1,4 @@
+using Game.Input;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -7,8 +8,29 @@ public sealed class ResultSceneController : MonoBehaviour
     [Header("Result UI")]
     [SerializeField] private TMP_Text clearElapsedTimeText;
     [SerializeField] private string clearElapsedTimeFormat = "Clear Time: {0:F2}s";
+    [Tooltip("タイムがカウントアップする時間（秒）")]
+    [SerializeField] private float countUpDuration = 1.5f;
+    [Header("入力参照")]
+    [Tooltip("タイトル画面で使用する生入力取得元。未設定の場合は同じGameObjectから自動取得を試みる。")]
+    [SerializeField] private RawInputSource rawInputSource;
 
+    [Header("入力設定")]
+    [Tooltip("タイトル画面のメニュー操作に使う入力バインド定義。上下移動と決定操作の割り当てをここで管理する。")]
+    [SerializeField] private SystemInputBindings inputBindings = new SystemInputBindings();
+
+    private SystemInputReader systemInputReader;
     private bool isTransitioning;
+    private bool isCountingUp;
+    private float targetClearTime;
+    private void Awake()
+    {
+        if (!TryResolveRawInputSource())
+        {
+            return;
+        }
+
+        systemInputReader = new SystemInputReader(rawInputSource, inputBindings);
+    }
 
     private void Start()
     {
@@ -56,31 +78,22 @@ public sealed class ResultSceneController : MonoBehaviour
         {
             return;
         }
+        systemInputReader.Update();
+        Debug.Log($"[ResultSceneController] SubmitPressed={systemInputReader.SubmitPressed}");
 
-        bool spacePressed = Input.GetKeyDown(KeyCode.Space);
-        bool gamepadConnected = Gamepad.current != null;
-        bool gamepadAPressed = gamepadConnected && Gamepad.current.buttonSouth.wasPressedThisFrame;
-
-        // Gamepad状態の定期ログ（入力時のみ）
-        if (gamepadAPressed || spacePressed )
+        if (systemInputReader.SubmitPressed)
         {
-            Debug.Log($"[ResultSceneController] Input state - Gamepad connected: {gamepadConnected}");
-        }
-
-        if (spacePressed)
-        {
-            Debug.Log("[ResultSceneController] Space key pressed.");
-        }
-
-        if (gamepadAPressed)
-        {
-            Debug.Log("[ResultSceneController] Gamepad A button pressed.");
-        }
-
-
-        if (spacePressed || gamepadAPressed)
-        {
-            ReturnToTitle();
+            if (isCountingUp)
+            {
+                // カウントアップのアニメーションをスキップして即座に最終結果を表示
+                isCountingUp = false;
+                clearElapsedTimeText.text = string.Format(clearElapsedTimeFormat, targetClearTime);
+                Debug.Log("[ResultSceneController] Count up skipped.");
+            }
+            else
+            {
+                ReturnToTitle();
+            }
         }
     }
 
@@ -101,13 +114,13 @@ public sealed class ResultSceneController : MonoBehaviour
             FadeController.Instance.FadeOut(0.5f, () =>
             {
                 Debug.Log("[ResultSceneController] Fade out complete. Loading Boot scene.");
-                SceneFlow.LoadBoot();
+                SceneFlow.LoadTitle();
             });
         }
         else
         {
             Debug.LogWarning("[ResultSceneController] FadeController not found. Loading boot without fade.");
-            SceneFlow.LoadBoot();
+            SceneFlow.LoadTitle();
         }
     }
 
@@ -125,11 +138,58 @@ public sealed class ResultSceneController : MonoBehaviour
 
         Debug.Log($"[ResultSceneController] Text object: {clearElapsedTimeText.gameObject.name}, Active: {clearElapsedTimeText.gameObject.activeInHierarchy}");
 
-        string formattedText = string.Format(clearElapsedTimeFormat, clearElapsedTime);
-        Debug.Log($"[ResultSceneController] Formatted text: '{formattedText}'");
-
-        clearElapsedTimeText.text = formattedText;
-        Debug.Log($"[ResultSceneController] Text successfully set. Current value: '{clearElapsedTimeText.text}'");
-        Debug.Log($"[ResultSceneController] ✓ Time displayed: {formattedText}");
+        targetClearTime = clearElapsedTime;
+        StartCoroutine(CountUpClearTime(clearElapsedTime));
     }
+
+    private System.Collections.IEnumerator CountUpClearTime(float targetTime)
+    {
+        isCountingUp = true;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < countUpDuration && isCountingUp)
+        {
+            elapsedTime += Time.deltaTime;
+            
+            // 0から1へ正規化された時間
+            float t = Mathf.Clamp01(elapsedTime / countUpDuration);
+            // EaseOutCubic（最後に向かってゆっくりになるイージング）
+            float tEased = 1f - Mathf.Pow(1f - t, 3f);
+            
+            float currentTime = Mathf.Lerp(0f, targetTime, tEased);
+
+            clearElapsedTimeText.text = string.Format(clearElapsedTimeFormat, currentTime);
+            yield return null;
+        }
+
+        if (isCountingUp)
+        {
+            // スキップされずにアニメーションが終わった場合、最終値を正確に設定
+            clearElapsedTimeText.text = string.Format(clearElapsedTimeFormat, targetTime);
+            isCountingUp = false;
+        }
+
+        Debug.Log($"[ResultSceneController] ✓ Time displayed: {clearElapsedTimeText.text}");
+    }
+    private bool TryResolveRawInputSource()
+    {
+        if (rawInputSource != null)
+        {
+            return true;
+        }
+
+        rawInputSource = GetComponent<RawInputSource>();
+
+        if (rawInputSource != null)
+        {
+            return true;
+        }
+
+        Debug.LogError("[ResultSceneController] RawInputSource is required.", this);
+        enabled = false;
+        return false;
+    }
+
 }
+
+
