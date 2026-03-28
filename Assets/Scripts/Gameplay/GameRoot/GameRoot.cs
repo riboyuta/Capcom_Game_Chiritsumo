@@ -17,10 +17,6 @@ public sealed class GameRoot : MonoBehaviour
     [Tooltip("Play 状態を維持する時間(秒)です。実際にプレイ可能な制限時間を調整します。")]
     [SerializeField, Min(0f)] private float playDuration = 10.0f;
 
-    [Header("Result遷移")]
-    [Tooltip("Result 遷移時のフェードアウト時間(秒)です。")]
-    [SerializeField, Min(0f)] private float resultFadeOutDuration = 0.5f;
-
     private State currentState;
     private float playTimer;
     private float readyTimer;
@@ -29,13 +25,14 @@ public sealed class GameRoot : MonoBehaviour
     private bool hasElapsedTimeStarted;
     private bool isTransitioning;
     private bool goalClearAccepted;
+    private float lastLoggedTime;
 
     private void Start()
     {
         // シーン開始時に明転させる。
         if (FadeController.Instance != null)
         {
-            FadeController.Instance.FadeIn(0.5f);
+            FadeController.Instance.FadeIn();
         }
 
         if (AudioManager.Instance != null)
@@ -47,6 +44,7 @@ public sealed class GameRoot : MonoBehaviour
         isElapsedTimeRunning = false;
         hasElapsedTimeStarted = false;
         goalClearAccepted = false;
+        lastLoggedTime = -1f;
 
         EnterReady();
     }
@@ -86,6 +84,13 @@ public sealed class GameRoot : MonoBehaviour
         }
 
         elapsedTime += Time.deltaTime;
+
+        // 1秒ごとにログ出力する。
+        if (Mathf.FloorToInt(elapsedTime) > Mathf.FloorToInt(lastLoggedTime))
+        {
+            lastLoggedTime = elapsedTime;
+            Debug.Log($"[GameRoot] Elapsed Time: {elapsedTime:F2}s");
+        }
     }
 
     private void EnterReady()
@@ -129,6 +134,12 @@ public sealed class GameRoot : MonoBehaviour
         // Result に入ったら経過時間の加算を止める。
         isElapsedTimeRunning = false;
         currentState = State.Result;
+
+        // BGM を停止する。
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.Stop("BGM_main_afterchase");
+        }
     }
 
     private void UpdateResult()
@@ -137,7 +148,7 @@ public sealed class GameRoot : MonoBehaviour
 
         if (FadeController.Instance != null)
         {
-            FadeController.Instance.FadeOut(resultFadeOutDuration, SceneFlow.LoadResult);
+            FadeController.Instance.FadeOut(onComplete: SceneFlow.LoadResult);
             return;
         }
 
@@ -156,8 +167,14 @@ public sealed class GameRoot : MonoBehaviour
         elapsedTime = 0f;
         isElapsedTimeRunning = true;
         hasElapsedTimeStarted = true;
+        lastLoggedTime = -1f;
 
-        Debug.Log("[GameRoot] Elapsed timer started by EnemySpawnTrigger.");
+        // BGM を変更する。
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.Stop("BGM_main_beforechase");
+            AudioManager.Instance.FadeIn("BGM_main_afterchase", 2.0f);
+        }
     }
 
     /// ゴール到達を受け付け、Result遷移を開始する。

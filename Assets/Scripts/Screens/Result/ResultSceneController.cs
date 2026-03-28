@@ -34,6 +34,12 @@ public sealed class ResultSceneController : MonoBehaviour
 
     private void Start()
     {
+        // Result シーンの BGM を再生する。
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.FadeIn("BGM_result", 1.0f);
+        }
+
         Debug.Log("[ResultSceneController] Start - Scene initialized.");
         Debug.Log($"[ResultSceneController] clearElapsedTimeText assigned: {clearElapsedTimeText != null}");
 
@@ -45,7 +51,7 @@ public sealed class ResultSceneController : MonoBehaviour
         if (FadeController.Instance != null)
         {
             Debug.Log("[ResultSceneController] FadeController found. Starting fade in.");
-            FadeController.Instance.FadeIn(0.5f);
+            FadeController.Instance.FadeIn();
         }
         else
         {
@@ -99,6 +105,11 @@ public sealed class ResultSceneController : MonoBehaviour
 
     public void ReturnToTitle()
     {
+        // BGM を停止する。
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.Stop("BGM_result");
+        }
         if (isTransitioning)
         {
             Debug.LogWarning("[ResultSceneController] ReturnToTitle called but already transitioning.");
@@ -111,7 +122,7 @@ public sealed class ResultSceneController : MonoBehaviour
         if (FadeController.Instance != null)
         {
             Debug.Log("[ResultSceneController] Starting fade out...");
-            FadeController.Instance.FadeOut(0.5f, () =>
+            FadeController.Instance.FadeOut(onComplete: () =>
             {
                 Debug.Log("[ResultSceneController] Fade out complete. Loading Boot scene.");
                 SceneFlow.LoadTitle();

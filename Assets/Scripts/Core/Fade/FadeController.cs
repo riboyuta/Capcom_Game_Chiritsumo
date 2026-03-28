@@ -7,12 +7,16 @@ using UnityEngine.UI;
 /// Canvas + CanvasGroup をコードで動的生成するため Prefab は不要。
 /// DontDestroyOnLoad で全シーンにわたって永続する。
 /// 
-/// 使用例:
-///   FadeManager.Instance.FadeOut(0.5f, () => SceneFlow.LoadResult());
-///   FadeManager.Instance.FadeIn(0.5f);
 public sealed class FadeController : MonoBehaviour
 {
     public static FadeController Instance { get; private set; }
+
+    [Header("フェード設定")]
+    [Tooltip("デフォルトのフェードイン時間（秒）")]
+    [SerializeField, Min(0f)] private float defaultFadeInDuration = 0.5f;
+
+    [Tooltip("デフォルトのフェードアウト時間（秒）")]
+    [SerializeField, Min(0f)] private float defaultFadeOutDuration = 0.5f;
 
     // フェード中かどうか。
     public bool IsFading { get; private set; }
@@ -52,19 +56,21 @@ public sealed class FadeController : MonoBehaviour
     }
 
     /// 画面を暗転させる（alpha 0 → 1）。
-    /// duration..フェードにかける秒数。
+    /// duration..フェードにかける秒数。未指定時はインスペクターのデフォルト値を使用。
     /// onComplete..フェード完了時に呼ばれるコールバック。
-    public void FadeOut(float duration, Action onComplete = null)
+    public void FadeOut(float? duration = null, Action onComplete = null)
     {
-        StartFade(0f, 1f, duration, onComplete);
+        float actualDuration = duration ?? defaultFadeOutDuration;
+        StartFade(0f, 1f, actualDuration, onComplete);
     }
 
     /// 画面を復帰させる（alpha 1 → 0）。
-    /// duration..フェードにかける秒数。
+    /// duration..フェードにかける秒数。未指定時はインスペクターのデフォルト値を使用。
     /// onComplete..フェード完了時に呼ばれるコールバック。
-    public void FadeIn(float duration, Action onComplete = null)
+    public void FadeIn(float? duration = null, Action onComplete = null)
     {
-        StartFade(1f, 0f, duration, onComplete);
+        float actualDuration = duration ?? defaultFadeInDuration;
+        StartFade(1f, 0f, actualDuration, onComplete);
     }
 
     /// フェードを開始する。実行中のフェードがあれば中断して上書きする。
