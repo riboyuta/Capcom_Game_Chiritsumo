@@ -141,7 +141,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eeb4237dff60144887c578afa6ba8fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlideGimmick
-  targetSwitch: {fileID: 0}
+  targetSwitch: {fileID: 4067737057407457829, guid: 9e79bd3b8f943564396fb99368e75042, type: 3}
   slideLocalDirection: {x: 0, y: 1, z: 0}
   slideDistance: 3
   slideSpeed: 2
