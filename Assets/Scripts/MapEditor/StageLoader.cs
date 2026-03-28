@@ -15,7 +15,7 @@ public class StageLoader : MonoBehaviour
 
 
     private float gridSize = 1.0f;
-
+    private readonly List<GameObject> spawnedTiles = new List<GameObject>();
     void Start()
     {
         LoadMap();
@@ -23,6 +23,20 @@ public class StageLoader : MonoBehaviour
 
     void LoadMap()
     {
+        BuildStageMapFromJson();
+    }
+
+    // 死亡復帰向けに既存ランタイムマップを破棄してから再生成します。
+    public void RebuildStageForRespawn()
+    {
+        ClearSpawnedTiles();
+        BuildStageMapFromJson();
+    }
+
+    // JSON 読み込みとタイル生成の本体処理です。
+    void BuildStageMapFromJson()
+    {
+
         string folder;
         string path;
 
@@ -40,7 +54,7 @@ folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData")
 
         if (!File.Exists(path))
         {
-            Debug.Log("Map file not found");
+            Debug.LogWarning("マップファイルが見つかりません。");
             return;
         }
 
@@ -48,7 +62,7 @@ folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData")
 
         MapData mapData = JsonUtility.FromJson<MapData>(json);
 
-        List<GameObject> spawnedTiles = new List<GameObject>();
+        spawnedTiles.Clear();
 
         foreach (TileData data in mapData.tiles)
         {
@@ -71,7 +85,23 @@ folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData")
 
         ConnectGimmicks(spawnedTiles);
     }
+    // StageLoader が生成したランタイムタイルのみを明示的に破棄します。
+    void ClearSpawnedTiles()
+    {
+        for (int i = 0; i < spawnedTiles.Count; i++)
+        {
+            if (spawnedTiles[i] == null)
+            {
+                continue;
+            }
 
+            Destroy(spawnedTiles[i]);
+        }
+
+        spawnedTiles.Clear();
+    }
+
+    // 生成済みタイル同士の関連を見て Slide と Switch の接続を組み直します。
 
 
     void ConnectGimmicks(List<GameObject> tiles)

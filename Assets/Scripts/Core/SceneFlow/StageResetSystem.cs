@@ -14,12 +14,19 @@ public sealed class StageResetSystem : MonoBehaviour
 
     private void Awake()
     {
+        // リセット対象を収集します（初期状態の保存は Start で実施）。
         CollectTargets();
+    }
+
+    private void Start()
+    {
+        // 全ギミックの Awake 完了後に初期状態を一度だけ保存します。
         CaptureInitialStateAll();
     }
 
     public void ResetAllToRespawnState()
     {
+        // 初期状態未保存のケース（実行順や例外ケース）でも安全に保存します。
         if (!hasCapturedInitialState)
         {
             CaptureInitialStateAll();
@@ -37,6 +44,7 @@ public sealed class StageResetSystem : MonoBehaviour
 
     private void CollectTargets()
     {
+        // シーン内の IRespawnResettable を収集して対象リストを構築します。
         resetTargets.Clear();
 
         MonoBehaviour[] behaviours = FindObjectsByType<MonoBehaviour>(
@@ -56,11 +64,23 @@ public sealed class StageResetSystem : MonoBehaviour
 
     private void CaptureInitialStateAll()
     {
+        // 初期状態は一度だけ保存し、途中状態で上書きしないようにします。
+        if (hasCapturedInitialState)
+        {
+            return;
+        }
+
         for (int i = 0; i < resetTargets.Count; i++)
         {
+            if (resetTargets[i] == null)
+            {
+                continue;
+            }
+
             resetTargets[i].CaptureInitialState();
         }
 
         hasCapturedInitialState = true;
+        Debug.Log("[StageResetSystem] Initial state capture complete", this);
     }
 }

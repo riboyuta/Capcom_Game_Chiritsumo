@@ -3,7 +3,7 @@ using UnityEngine;
 
 // プレイヤーが一定以上の速度（前ステップなど）で接触すると破壊されるオブジェクト
 [RequireComponent(typeof(Collider))]
-public class SpeedBreakableGimmick : MonoBehaviour
+public class SpeedBreakableGimmick : MonoBehaviour, IRespawnResettable
 {
     private enum GimmickState
     {
@@ -29,7 +29,11 @@ public class SpeedBreakableGimmick : MonoBehaviour
     private Collider gimmickCollider;
     private Renderer[] visualRenderers;
     private GimmickState currentState = GimmickState.Idle;
-
+    private Coroutine respawnCoroutine;
+    private bool hasCapturedInitialState;
+    private bool initialColliderEnabled;
+    private bool[] initialRendererEnabledStates;
+    private GimmickState initialState;
     private void Awake()
     {
         gimmickCollider = GetComponent<Collider>();
@@ -51,11 +55,13 @@ public class SpeedBreakableGimmick : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        // 衝突時の速度条件を判定して破壊可否を決めます。
         CheckAndBreak(collision.collider, collision);
     }
 
     private void OnTriggerEnter(Collider other)
     {
+        // トリガー接触時の速度条件を判定して破壊可否を決めます。
         CheckAndBreak(other, null);
     }
 
@@ -99,6 +105,7 @@ public class SpeedBreakableGimmick : MonoBehaviour
 
     private void BreakGimmick()
     {
+        // 破壊状態に移行し、判定と見た目を無効化します。
         currentState = GimmickState.Broken;
 
         // 判定を一時的に無効化
@@ -115,7 +122,7 @@ public class SpeedBreakableGimmick : MonoBehaviour
         // 復活するかどうか
         if (willRespawn)
         {
-            StartCoroutine(RespawnSequence());
+            respawnCoroutine = StartCoroutine(RespawnSequence());
         }
     }
 
@@ -128,6 +135,7 @@ public class SpeedBreakableGimmick : MonoBehaviour
 
     private void RespawnGimmick()
     {
+        // 復活状態へ戻し、判定と見た目を有効化します。
         currentState = GimmickState.Idle;
 
         // 判定を復活
@@ -137,6 +145,69 @@ public class SpeedBreakableGimmick : MonoBehaviour
         foreach (var r in visualRenderers)
         {
             r.enabled = true;
+        }
+
+        respawnCoroutine = null;
+    }
+
+    public void CaptureInitialState()
+    {
+        // 初期状態は一度だけ保存し、保存中にランタイム状態は変更しません。
+        if (hasCapturedInitialState)
+        {
+            return;
+        }
+
+        initialState = currentState;
+        initialColliderEnabled = gimmickCollider != null && gimmickCollider.enabled;
+
+        if (visualRenderers == null)
+        {
+            initialRendererEnabledStates = new bool[0];
+        }
+        else
+        {
+            initialRendererEnabledStates = new bool[visualRenderers.Length];
+            for (int i = 0; i < visualRenderers.Length; i++)
+            {
+                initialRendererEnabledStates[i] = visualRenderers[i] != null && visualRenderers[i].enabled;
+            }
+        }
+
+        hasCapturedInitialState = true;
+    }
+
+    public void ResetToRespawnState()
+    {
+        // 死亡リセット時は進行中の復活待ちを止め、保存済み初期状態へ即時復元します。
+        if (!hasCapturedInitialState)
+        {
+            CaptureInitialState();
+        }
+
+        if (respawnCoroutine != null)
+        {
+            StopCoroutine(respawnCoroutine);
+            respawnCoroutine = null;
+        }
+
+        currentState = initialState;
+
+        if (gimmickCollider != null)
+        {
+            gimmickCollider.enabled = initialColliderEnabled;
+        }
+
+        int rendererCount = visualRenderers == null ? 0 : visualRenderers.Length;
+        for (int i = 0; i < rendererCount; i++)
+        {
+            if (visualRenderers[i] == null)
+            {
+                continue;
+            }
+
+            bool enabledState = i < initialRendererEnabledStates.Length && initialRendererEnabledStates[i];
+            visualRenderers[i].enabled = enabledState;
         }
     }
 }
