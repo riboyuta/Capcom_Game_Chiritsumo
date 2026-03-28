@@ -129,6 +129,12 @@ public sealed class GameRoot : MonoBehaviour
         // Result に入ったら経過時間の加算を止める。
         isElapsedTimeRunning = false;
         currentState = State.Result;
+
+        // BGM を停止する。
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.Stop("BGM_main_afterchase");
+        }
     }
 
     private void UpdateResult()
@@ -156,6 +162,13 @@ public sealed class GameRoot : MonoBehaviour
         elapsedTime = 0f;
         isElapsedTimeRunning = true;
         hasElapsedTimeStarted = true;
+
+        // BGM を変更する。
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.Stop("BGM_main_beforechase");
+            AudioManager.Instance.FadeIn("BGM_main_afterchase", 2.0f);
+        }
 
         Debug.Log("[GameRoot] Elapsed timer started by EnemySpawnTrigger.");
     }

@@ -34,6 +34,12 @@ public sealed class ResultSceneController : MonoBehaviour
 
     private void Start()
     {
+        // Result シーンの BGM を再生する。
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.FadeIn("BGM_result", 1.0f);
+        }
+
         Debug.Log("[ResultSceneController] Start - Scene initialized.");
         Debug.Log($"[ResultSceneController] clearElapsedTimeText assigned: {clearElapsedTimeText != null}");
 
@@ -99,6 +105,11 @@ public sealed class ResultSceneController : MonoBehaviour
 
     public void ReturnToTitle()
     {
+        // BGM を停止する。
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.Stop("BGM_result");
+        }
         if (isTransitioning)
         {
             Debug.LogWarning("[ResultSceneController] ReturnToTitle called but already transitioning.");
