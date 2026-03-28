@@ -74,6 +74,16 @@ public class SlideGimmick : MonoBehaviour, IRespawnResettable
             nextDistance = currentDistance;
         }
 
+        // SE:スライドが開始した瞬間
+        // それまで距離が0で、このフレームから動き出す場合に鳴らす
+        if (currentDistance == 0f && nextDistance > 0f)
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayOverlap("SFX_gimmick_switchwall");
+            }
+        }
+
         currentDistance = nextDistance;
         transform.localPosition = initialLocalPosition + (slideLocalDirection.normalized * currentDistance);
     }

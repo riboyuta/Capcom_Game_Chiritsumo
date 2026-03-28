@@ -137,6 +137,12 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
             // 乗ったらシーケンス開始
             sequenceCoroutine = StartCoroutine(BreakSequence());
 
+            // --- SE: 壊れる床にプレイヤーが接触し、崩壊を始めた瞬間 ---
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayOverlap("SFX_gimmick_breakable_enter");
+            }
+
             // アニメーション再生
             for (int i = 0; i < 6; i++)
             {
@@ -195,6 +201,12 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
         foreach (var r in visualRenderers)
         {
             r.enabled = false;
+        }
+
+        // --- SE: 完全に壊れる瞬間 ---
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayOverlap("SFX_gimmick_breakable_enter");
         }
     }
 
