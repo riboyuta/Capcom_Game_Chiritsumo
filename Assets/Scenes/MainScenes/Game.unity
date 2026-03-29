@@ -6893,7 +6893,7 @@ MonoBehaviour:
   zoneBounds: {fileID: 1225296266}
   priority: 2
   overrideOrthographicSize: 1
-  orthographicSize: 9
+  orthographicSize: 7.5
   overrideFollowSmoothing: 1
   smoothTimeX: 0.2
   smoothTimeY: 0.2
