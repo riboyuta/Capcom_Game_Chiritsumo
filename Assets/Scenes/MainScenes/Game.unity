@@ -3015,7 +3015,7 @@ MonoBehaviour:
   - {fileID: 7338064284890883238, guid: 6e11940374d9c7742868f4bbaf43c64c, type: 3}
   - {fileID: 5409637655077809295, guid: 42bf8138dc9c58a4cae9f73d44cb557a, type: 3}
   - {fileID: 3699133495810676906, guid: 00f69c8dc354a9044993c6947a803638, type: 3}
-  stageNumber: 5
+  stageNumber: 10
 --- !u!4 &861842949
 Transform:
   m_ObjectHideFlags: 0
