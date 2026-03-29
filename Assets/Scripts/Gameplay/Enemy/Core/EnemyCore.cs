@@ -62,6 +62,14 @@ public sealed class EnemyCore : MonoBehaviour
     [SerializeField] private SpriteRenderer armRenderer;
     [SerializeField] private SpriteRenderer palmRenderer;
 
+    [Header("カメラシェイク (接近時)")]
+    [Tooltip("プレイヤー近接時に発生させるカメラ振動のプロファイル")]
+    [SerializeField] private Capcom_Game_Chiritsumo.Camera.CameraShake.CameraShakeProfile continuousShakeProfile;
+    [Tooltip("揺れが最大(強度1.0)になるプレイヤーとの距離")]
+    [SerializeField, Min(0f)] private float maxShakeDistance = 2.0f;
+    [Tooltip("揺れが発生し始める(強度0.0)プレイヤーとの距離")]
+    [SerializeField, Min(0f)] private float minShakeDistance = 10.0f;
+
     [Header("見た目: 全体調整")]
     [SerializeField] private Vector3 visualRootLocalOffset = Vector3.zero;
     [SerializeField] private Vector3 visualRootLocalScale = Vector3.one;
@@ -164,6 +172,8 @@ public sealed class EnemyCore : MonoBehaviour
         smashAttackRangeX = Mathf.Max(0f, smashAttackRangeX);
         grabAttackRangeX = Mathf.Max(0f, grabAttackRangeX);
         attackCooldown = Mathf.Max(0f, attackCooldown);
+        maxShakeDistance = Mathf.Max(0f, maxShakeDistance);
+        minShakeDistance = Mathf.Max(maxShakeDistance, minShakeDistance);
 
         if (visualRootLocalScale.x == 0f) visualRootLocalScale.x = 1f;
         if (visualRootLocalScale.y == 0f) visualRootLocalScale.y = 1f;
@@ -212,6 +222,9 @@ public sealed class EnemyCore : MonoBehaviour
         UpdateSimpleAnimation();
         ApplyVisualLayout();
 
+        // プレイヤー距離に応じたカメラシェイク
+        UpdateCameraShake();
+
         if (!isActivated)
         {
             return;
@@ -232,6 +245,35 @@ public sealed class EnemyCore : MonoBehaviour
         }
 
         TryStartRandomAttack();
+    }
+
+    private void UpdateCameraShake()
+    {
+        if (continuousShakeProfile == null || isDisabled || !isActivated)
+        {
+            return;
+        }
+
+        ResolvePlayerIfNeeded();
+        if (player == null)
+        {
+            return;
+        }
+
+        float dx = Mathf.Abs(player.position.x - transform.position.x);
+
+        if (dx > minShakeDistance)
+        {
+            return; // 遠い場合は揺らさない
+        }
+
+        // 距離を0(遠い)～1(近い)に変換
+        float intensity = 1.0f - Mathf.InverseLerp(maxShakeDistance, minShakeDistance, dx);
+
+        Capcom_Game_Chiritsumo.Camera.CameraShake.CameraShakeManager.Instance?.SetContinuousIntensity(intensity, continuousShakeProfile);
+        
+        // プレイヤーへの距離に応じたVignette（暗転と脈打ち）効果を適用
+        Capcom_Game_Chiritsumo.Camera.VignetteEffects.VignetteManager.Instance?.SetContinuousIntensity(intensity);
     }
 
     private void OnTriggerEnter(Collider other)
