@@ -122,10 +122,10 @@ public sealed class CameraZone : MonoBehaviour, IRespawnResettable
 
     private void AutoResolveReferences()
     {
-        // Camera 未設定なら MainCamera から補完。
+        // Camera 未設定なら MainCamera またはその親から補完。
         if (cameraController == null && Camera.main != null)
         {
-            cameraController = Camera.main.GetComponent<PlayerCameraController>();
+            cameraController = Camera.main.GetComponentInParent<PlayerCameraController>();
         }
 
         // ZoneVolume 未設定なら子名から補完。

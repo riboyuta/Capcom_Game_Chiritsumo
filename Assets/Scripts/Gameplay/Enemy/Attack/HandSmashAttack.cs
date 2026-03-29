@@ -37,6 +37,10 @@ public sealed class HandSmashAttack : MonoBehaviour
     [Tooltip("手のビジュアル表示コンポーネント")]
     [SerializeField] private HandSmashView view;
 
+    [Header("Camera Shake")]
+    [Tooltip("地面に到達した時に発生させるカメラ振動のプロファイル")]
+    [SerializeField] private Capcom_Game_Chiritsumo.Camera.CameraShake.CameraShakeProfile smashShakeProfile;
+
     private Rigidbody rigidBody;
     private AttackState state = AttackState.Idle;
 
@@ -210,6 +214,12 @@ public sealed class HandSmashAttack : MonoBehaviour
             if (palmHitbox != null)
             {
                 palmHitbox.SetHitEnabled(false);
+            }
+
+            // カメラシェイク処理を追加 (プロファイルが設定されていれば揺らす)
+            if (smashShakeProfile != null)
+            {
+                Capcom_Game_Chiritsumo.Camera.CameraShake.CameraShakeManager.Instance?.ExecuteImpulseShake(smashShakeProfile);
             }
 
             endTimer = endLifeTime;

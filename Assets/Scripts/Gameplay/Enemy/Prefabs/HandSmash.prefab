@@ -150,6 +150,7 @@ MonoBehaviour:
   reachThreshold: 0.05
   palmHitbox: {fileID: 939916035371832881}
   view: {fileID: 501282521319361110}
+  smashShakeProfile: {fileID: 11400000, guid: 61c0ef45a736cd64592a04e117fd58c8, type: 2}
 --- !u!1 &3333165700228034583
 GameObject:
   m_ObjectHideFlags: 0
