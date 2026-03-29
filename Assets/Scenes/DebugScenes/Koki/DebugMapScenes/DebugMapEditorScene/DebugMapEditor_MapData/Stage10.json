@@ -19770,17 +19770,17 @@
         },
         {
             "x": 300,
-            "y": 29,
+            "y": 30,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 300,
-            "y": 28,
+            "y": 31,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -19788,7 +19788,7 @@
             "x": 300,
             "y": 27,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -19882,17 +19882,17 @@
         },
         {
             "x": 300,
-            "y": 30,
+            "y": 29,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 300,
-            "y": 31,
+            "y": 28,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -20218,65 +20218,9 @@
         },
         {
             "x": 301,
-            "y": 27,
+            "y": 31,
             "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 302,
-            "y": 27,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 303,
-            "y": 27,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 304,
-            "y": 27,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 305,
-            "y": 27,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 306,
-            "y": 27,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 307,
-            "y": 27,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 308,
-            "y": 27,
-            "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -20289,15 +20233,7 @@
             "gimmickID": 5
         },
         {
-            "x": 310,
-            "y": 27,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 311,
+            "x": 313,
             "y": 27,
             "z": 0,
             "type": 1,
@@ -20314,57 +20250,9 @@
         },
         {
             "x": 313,
-            "y": 27,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 313,
-            "y": 28,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 313,
-            "y": 29,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 313,
-            "y": 30,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 313,
-            "y": 31,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 313,
-            "y": 32,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 313,
             "y": 33,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -20411,14 +20299,6 @@
         {
             "x": 318,
             "y": 22,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 312,
-            "y": 28,
             "z": 0,
             "type": 1,
             "gimmickType": 0,
@@ -22834,7 +22714,7 @@
         },
         {
             "x": 311,
-            "y": 28,
+            "y": 27,
             "z": 0,
             "type": 1,
             "gimmickType": 0,
@@ -22842,31 +22722,7 @@
         },
         {
             "x": 310,
-            "y": 28,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 307,
-            "y": 28,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 306,
-            "y": 28,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 305,
-            "y": 28,
+            "y": 27,
             "z": 0,
             "type": 1,
             "gimmickType": 0,
@@ -22874,73 +22730,49 @@
         },
         {
             "x": 304,
-            "y": 28,
+            "y": 27,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 303,
-            "y": 28,
+            "x": 305,
+            "y": 27,
             "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 302,
-            "y": 28,
-            "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 301,
-            "y": 28,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 308,
-            "y": 28,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 312,
-            "y": 29,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 312,
             "y": 30,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 312,
-            "y": 31,
+            "x": 303,
+            "y": 27,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 312,
-            "y": 32,
+            "x": 302,
+            "y": 27,
             "z": 0,
-            "type": 1,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 306,
+            "y": 27,
+            "z": 0,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -22956,7 +22788,7 @@
             "x": 312,
             "y": 33,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -22964,23 +22796,23 @@
             "x": 301,
             "y": 29,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 301,
-            "y": 30,
+            "y": 28,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 301,
-            "y": 31,
+            "y": 27,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -23033,10 +22865,10 @@
             "gimmickID": 0
         },
         {
-            "x": 301,
+            "x": 303,
             "y": 32,
             "z": 0,
-            "type": 1,
+            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -26482,14 +26314,6 @@
         },
         {
             "x": 309,
-            "y": 28,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 309,
             "y": 27,
             "z": 0,
             "type": 1,
@@ -26629,6 +26453,286 @@
             "y": 19,
             "z": 0,
             "type": 3,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 313,
+            "y": 30,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 312,
+            "y": 30,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 307,
+            "y": 30,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 304,
+            "y": 33,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 304,
+            "y": 34,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 303,
+            "y": 34,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 303,
+            "y": 33,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 301,
+            "y": 32,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 308,
+            "y": 30,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 302,
+            "y": 32,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 302,
+            "y": 33,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 302,
+            "y": 34,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 306,
+            "y": 30,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 303,
+            "y": 31,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 302,
+            "y": 31,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 302,
+            "y": 30,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 302,
+            "y": 28,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 303,
+            "y": 28,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 303,
+            "y": 29,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 303,
+            "y": 30,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 302,
+            "y": 29,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 311,
+            "y": 33,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 310,
+            "y": 33,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 309,
+            "y": 33,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 308,
+            "y": 33,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 307,
+            "y": 33,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 306,
+            "y": 33,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 305,
+            "y": 33,
+            "z": 0,
+            "type": 2,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 305,
+            "y": 34,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 306,
+            "y": 34,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 307,
+            "y": 34,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 308,
+            "y": 34,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 309,
+            "y": 34,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 310,
+            "y": 34,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 311,
+            "y": 34,
+            "z": 0,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         }
