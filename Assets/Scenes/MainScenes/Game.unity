@@ -6893,7 +6893,7 @@ MonoBehaviour:
   zoneBounds: {fileID: 1225296266}
   priority: 2
   overrideOrthographicSize: 1
-  orthographicSize: 9
+  orthographicSize: 7.5
   overrideFollowSmoothing: 1
   smoothTimeX: 0.2
   smoothTimeY: 0.2
@@ -8424,7 +8424,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: minMoveSpeed
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: armLocalOffset.x
@@ -8464,7 +8464,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: distanceForMinSpeed
-      value: 30
+      value: 33
       objectReference: {fileID: 0}
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: debugTriggerWithSpace
