@@ -4,8 +4,8 @@ using UnityEngine.Serialization;
 
 // 同じ GameObject に複数付けて、カメラ制御が競合しないようにする。
 [DisallowMultipleComponent]
-// このコンポーネントは Camera を必須とする。
-[RequireComponent(typeof(Camera))]
+// このコンポーネントは Camera を必須とする。（※CameraShakeManagerと分離するためRequireComponentを解除しました）
+// [RequireComponent(typeof(Camera))]
 public sealed class PlayerCameraController : MonoBehaviour
 {
     // -----------------------------
