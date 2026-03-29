@@ -5267,7 +5267,7 @@ MonoBehaviour:
   smoothTimeX: 0.2
   smoothTimeY: 0.2
   overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
+  orthographicSizeSmoothTime: 0.5
   enableTimeLimit: 0
   activeDuration: 1
   activateOnlyOnce: 0
@@ -7094,8 +7094,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 49.960022, y: 9.19, z: 0}
-  m_Center: {x: 144.57999, y: 9.095, z: 0}
+  m_Size: {x: 49.960022, y: 9.500001, z: 0}
+  m_Center: {x: 144.57999, y: 9.250001, z: 0}
 --- !u!1 &1736129245
 GameObject:
   m_ObjectHideFlags: 0
@@ -8361,7 +8361,7 @@ Transform:
   m_GameObject: {fileID: 1948069609}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 169.56, y: 13.69, z: 0}
+  m_LocalPosition: {x: 169.56, y: 14, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
