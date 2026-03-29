@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [DisallowMultipleComponent]
 public sealed class EnemyCore : MonoBehaviour
@@ -70,6 +71,11 @@ public sealed class EnemyCore : MonoBehaviour
     [Tooltip("揺れが発生し始める(強度0.0)プレイヤーとの距離")]
     [SerializeField, Min(0f)] private float minShakeDistance = 10.0f;
 
+    [Header("コントローラー振動 (接近時)")]
+    [SerializeField] private bool enableProximityRumble = true;
+    [SerializeField, Range(0f, 1f)] private float maxProximityLowFrequency = 0.5f;
+    [SerializeField, Range(0f, 1f)] private float maxProximityHighFrequency = 0.5f;
+
     [Header("見た目: 全体調整")]
     [SerializeField] private Vector3 visualRootLocalOffset = Vector3.zero;
     [SerializeField] private Vector3 visualRootLocalScale = Vector3.one;
@@ -101,7 +107,8 @@ public sealed class EnemyCore : MonoBehaviour
     private bool isActivated;
     private Collider cachedCollider;
     private Renderer[] cachedRenderers;
-    private PlayerVibrationController cachedVibrationController;
+    private PlayerController cachedPlayerController;
+    private bool isProximityRumbling;
 
     private AttackType lastAttackType = AttackType.Smash;
     private int sameAttackStreakCount = 0;
@@ -223,8 +230,8 @@ public sealed class EnemyCore : MonoBehaviour
         UpdateSimpleAnimation();
         ApplyVisualLayout();
 
-        // プレイヤー距離に応じたカメラシェイク
-        UpdateCameraShake();
+        // プレイヤー距離に応じたエフェクト（画面揺れ、Vignette、振動）
+        UpdateProximityEffects();
 
         if (!isActivated)
         {
@@ -248,44 +255,85 @@ public sealed class EnemyCore : MonoBehaviour
         TryStartRandomAttack();
     }
 
-    private void UpdateCameraShake()
+    private void UpdateProximityEffects()
     {
-        if (continuousShakeProfile == null || isDisabled || !isActivated)
+        if (isDisabled || !isActivated)
         {
+            StopProximityRumbleIfNeeded();
             return;
         }
 
         ResolvePlayerIfNeeded();
         if (player == null)
         {
+            StopProximityRumbleIfNeeded();
             return;
         }
 
         float dx = Mathf.Abs(player.position.x - transform.position.x);
+        float intensity = 0f;
 
-        if (dx > minShakeDistance)
+        if (dx <= minShakeDistance)
         {
-            return; // 遠い場合は揺らさない
+            intensity = 1.0f - Mathf.InverseLerp(maxShakeDistance, minShakeDistance, dx);
         }
 
-        // 距離を0(遠い)～1(近い)に変換
-        float intensity = 1.0f - Mathf.InverseLerp(maxShakeDistance, minShakeDistance, dx);
+        // カメラシェイク
+        if (continuousShakeProfile != null)
+        {
+            Capcom_Game_Chiritsumo.Camera.CameraShake.CameraShakeManager.Instance?.SetContinuousIntensity(intensity, continuousShakeProfile);
+        }
 
-        Capcom_Game_Chiritsumo.Camera.CameraShake.CameraShakeManager.Instance?.SetContinuousIntensity(intensity, continuousShakeProfile);
-        
-        // プレイヤーへの距離に応じたVignette（暗転と脈打ち）効果を適用
+        // Vignette（暗転と脈打ち）
         Capcom_Game_Chiritsumo.Camera.VignetteEffects.VignetteManager.Instance?.SetContinuousIntensity(intensity);
 
-        // プレイヤーへの距離に応じたコントローラー振動を適用
-        if (cachedVibrationController == null && player != null)
+        // コントローラー振動
+        UpdateProximityRumble(intensity);
+    }
+
+    private void UpdateProximityRumble(float intensity)
+    {
+        if (!enableProximityRumble || Gamepad.current == null)
         {
-            cachedVibrationController = player.GetComponentInChildren<PlayerVibrationController>();
+            StopProximityRumbleIfNeeded();
+            return;
         }
-        
-        if (cachedVibrationController != null)
+
+        if (cachedPlayerController == null && player != null)
         {
-            cachedVibrationController.SetContinuousProximityIntensity(intensity);
+            cachedPlayerController = player.GetComponentInChildren<PlayerController>();
         }
+
+        if (cachedPlayerController != null && cachedPlayerController.IsDeadState)
+        {
+            StopProximityRumbleIfNeeded();
+            return;
+        }
+
+        if (intensity <= 0.01f)
+        {
+            StopProximityRumbleIfNeeded();
+            return;
+        }
+
+        float low = maxProximityLowFrequency * intensity;
+        float high = maxProximityHighFrequency * intensity;
+        Gamepad.current.SetMotorSpeeds(low, high);
+        isProximityRumbling = true;
+    }
+
+    private void StopProximityRumbleIfNeeded()
+    {
+        if (isProximityRumbling && Gamepad.current != null)
+        {
+            Gamepad.current.ResetHaptics();
+            isProximityRumbling = false;
+        }
+    }
+
+    private void OnDisable()
+    {
+        StopProximityRumbleIfNeeded();
     }
 
     private void OnTriggerEnter(Collider other)
