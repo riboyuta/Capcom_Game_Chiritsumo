@@ -169,6 +169,15 @@ public sealed class PlayerVibrationController : MonoBehaviour
     [SerializeField]
     private WallSlideRumbleSettings wallSlide = new WallSlideRumbleSettings();
 
+    [Header("微振動設定: 敵接近(Proximity)")]
+    [Tooltip("敵が近接した際に鳴らす持続的な振動設定。画面揺れやVignetteの強度に連動させることを想定しています。")]
+    [SerializeField]
+    private bool enableProximityRumble = true;
+    [SerializeField, Range(0f, 1f)]
+    private float maxProximityLowFrequency = 0.5f;
+    [SerializeField, Range(0f, 1f)]
+    private float maxProximityHighFrequency = 0.5f;
+
     [Header("単発振動設定: 通常着地")]
     [Tooltip("通常着地時に再生する単発振動の設定です。基準となる弱めの着地感として調整します。")]
     [SerializeField]
@@ -236,6 +245,11 @@ public sealed class PlayerVibrationController : MonoBehaviour
     [SerializeField]
     private float oneShotTimer;
 
+    [Header("Runtime(Debug): 敵接近振動強度")]
+    [Tooltip("敵接近時の持続的な振動の現在強度です。他から毎フレーム設定され、徐々に減衰します。")]
+    [SerializeField]
+    private float debugProximityIntensity;
+
     [Header("Runtime(Debug): 現在の振動名")]
     [Tooltip("現在どの振動状態を再生中かを識別するための名前です。挙動確認やログ照合時の目印として使います。")]
     [SerializeField]
@@ -272,6 +286,9 @@ public sealed class PlayerVibrationController : MonoBehaviour
 
         // 壁滑り微振動のパルス制御を進める。
         UpdateWallSlidePulse();
+
+        // 敵接近時の持続的な振動制御を進める。
+        UpdateProximityRumble();
 
         // デバッグ用に現在の Gamepad をキャッシュ更新する。
         UpdateDebugGamepadCache();
@@ -334,6 +351,7 @@ public sealed class PlayerVibrationController : MonoBehaviour
     }
 
     // 空中前ステ振動を再生する。
+    // 前ステ振動を再生する。(空中)
     public void PlayAirStep()
     {
         if (!enableAirStep)
@@ -342,6 +360,24 @@ public sealed class PlayerVibrationController : MonoBehaviour
         }
 
         PlayOneShot(airStep, RumblePriority.Step, "AirStep");
+    }
+
+    // 敵接近などによる継続的な振動強度を設定する。
+    // 毎フレーム呼ばれることを想定しており、一定時間呼ばれないと自動で減衰・停止する。
+    public void SetContinuousProximityIntensity(float intensity)
+    {
+        if (!enableProximityRumble)
+        {
+            return;
+        }
+
+        if (playerController != null && playerController.IsDeadState)
+        {
+            return;
+        }
+
+        // フレーム内で複数回呼ばれた場合は強い方を採用する
+        debugProximityIntensity = Mathf.Max(debugProximityIntensity, Mathf.Clamp01(intensity));
     }
 
     // 壁滑り微振動を開始する。
@@ -527,6 +563,54 @@ public sealed class PlayerVibrationController : MonoBehaviour
         wallSlidePulsePlaying = true;
         wallSlideTimer = wallSlide.pulseDuration;
         activeRumbleName = "WallSlidePulse";
+    }
+
+    // 敵接近時の持続的な振動制御を行う。
+    private void UpdateProximityRumble()
+    {
+        if (!enableProximityRumble)
+        {
+            return;
+        }
+
+        // 死亡状態のときは受け付けず強度をリセットする
+        if (playerController != null && playerController.IsDeadState)
+        {
+            debugProximityIntensity = 0f;
+            return;
+        }
+
+        // 単発振動や壁滑りパルスが優先される場合は、接近強度は減衰させるだけにしてモーターは弄らない
+        if (IsOneShotPlaying() || (wallSlideActive && wallSlidePulsePlaying))
+        {
+            debugProximityIntensity = Mathf.Lerp(debugProximityIntensity, 0f, Time.deltaTime * 5f);
+            return;
+        }
+
+        if (debugProximityIntensity > 0.01f)
+        {
+            if (TryGetGamepad(out Gamepad gamepad))
+            {
+                float low = maxProximityLowFrequency * debugProximityIntensity;
+                float high = maxProximityHighFrequency * debugProximityIntensity;
+                gamepad.SetMotorSpeeds(low, high);
+            }
+            activeRumbleName = "ProximityContinuous";
+
+            // 毎フレーム更新されない場合は自動的に0へ向かって減衰する
+            debugProximityIntensity = Mathf.Lerp(debugProximityIntensity, 0f, Time.deltaTime * 5f);
+
+            // 十分に小さくなったら停止を確実にする
+            if (debugProximityIntensity < 0.01f)
+            {
+                debugProximityIntensity = 0f;
+                ResetCurrentGamepadHaptics();
+                if (activeRumbleName == "ProximityContinuous")
+                {
+                    activeRumbleName = "None";
+                }
+            }
+        }
     }
 
     // 単発振動が再生中かどうか。

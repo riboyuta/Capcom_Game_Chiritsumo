@@ -101,6 +101,7 @@ public sealed class EnemyCore : MonoBehaviour
     private bool isActivated;
     private Collider cachedCollider;
     private Renderer[] cachedRenderers;
+    private PlayerVibrationController cachedVibrationController;
 
     private AttackType lastAttackType = AttackType.Smash;
     private int sameAttackStreakCount = 0;
@@ -274,6 +275,17 @@ public sealed class EnemyCore : MonoBehaviour
         
         // プレイヤーへの距離に応じたVignette（暗転と脈打ち）効果を適用
         Capcom_Game_Chiritsumo.Camera.VignetteEffects.VignetteManager.Instance?.SetContinuousIntensity(intensity);
+
+        // プレイヤーへの距離に応じたコントローラー振動を適用
+        if (cachedVibrationController == null && player != null)
+        {
+            cachedVibrationController = player.GetComponentInChildren<PlayerVibrationController>();
+        }
+        
+        if (cachedVibrationController != null)
+        {
+            cachedVibrationController.SetContinuousProximityIntensity(intensity);
+        }
     }
 
     private void OnTriggerEnter(Collider other)
