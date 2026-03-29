@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Networking;
 using static MapEditor;
 
 public class StageLoader : MonoBehaviour
@@ -19,18 +21,25 @@ public class StageLoader : MonoBehaviour
     void Start()
     {
         LoadMap();
+
     }
 
     void LoadMap()
     {
+
+#if UNITY_WEBGL && !UNITY_EDITOR //ビルド時でWebGL版
+    StartCoroutine(BuildStageMapFromJsonWeb());
+#else
         BuildStageMapFromJson();
+#endif
+
     }
 
     // 死亡復帰向けに既存ランタイムマップを破棄してから再生成します。
     public void RebuildStageForRespawn()
     {
         ClearSpawnedTiles();
-        BuildStageMapFromJson();
+        LoadMap();        
     }
 
     // JSON 読み込みとタイル生成の本体処理です。
@@ -62,7 +71,8 @@ folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData")
 
         MapData mapData = JsonUtility.FromJson<MapData>(json);
 
-        spawnedTiles.Clear();
+        //spawnedTiles.Clear();
+        ClearSpawnedTiles();
 
         foreach (TileData data in mapData.tiles)
         {
@@ -85,6 +95,53 @@ folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData")
 
         ConnectGimmicks(spawnedTiles);
     }
+
+
+    IEnumerator BuildStageMapFromJsonWeb()
+    {
+        string folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData");
+        string path = Path.Combine(folder, "Stage" + stageNumber + ".json");
+
+        UnityWebRequest request = UnityWebRequest.Get(path);
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError(request.error);
+            yield break;
+        }
+
+        string json = request.downloadHandler.text;
+
+        //spawnedTiles.Clear();   
+        ClearSpawnedTiles();
+
+        MapData mapData = JsonUtility.FromJson<MapData>(json);
+
+        foreach (TileData data in mapData.tiles)
+        {
+            Vector3 spawnPos = new Vector3(
+                data.x * gridSize,
+                data.y * gridSize,
+                data.z * gridSize - 0.01f
+            );
+
+            GameObject tile =
+                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
+
+            TileType tileType = tile.GetComponent<TileType>();
+            tileType.type = data.type;
+            tileType.gimmickID = data.gimmickID;
+
+            spawnedTiles.Add(tile);
+        }
+
+        ConnectGimmicks(spawnedTiles);
+    }
+
+
+
+
     // StageLoader が生成したランタイムタイルのみを明示的に破棄します。
     void ClearSpawnedTiles()
     {
