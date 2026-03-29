@@ -67,6 +67,12 @@ namespace Capcom_Game_Chiritsumo.Camera.VignetteEffects
 
         private void OnDestroy()
         {
+            // 動的生成したVolumeProfileがメモリに残ったままエディタが参照しようとするエラーを防ぐため破棄する
+            if (_volume != null && _volume.profile != null)
+            {
+                Destroy(_volume.profile);
+            }
+
             if (_instance == this)
             {
                 _instance = null;
