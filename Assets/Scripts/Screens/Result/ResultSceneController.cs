@@ -2,7 +2,6 @@ using Game.Input;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using unityroom.Api;
 
 public sealed class ResultSceneController : MonoBehaviour
 {
@@ -153,7 +152,6 @@ public sealed class ResultSceneController : MonoBehaviour
             Debug.LogError("[ResultSceneController] clearElapsedTimeText is not assigned in Inspector!");
             Debug.LogError("[ResultSceneController] Please assign a TMP_Text component in the Inspector.");
             return;
-
         }
 
         Debug.Log($"[ResultSceneController] Text object: {clearElapsedTimeText.gameObject.name}, Active: {clearElapsedTimeText.gameObject.activeInHierarchy}");
@@ -165,9 +163,6 @@ public sealed class ResultSceneController : MonoBehaviour
         {
             AudioManager.Instance.Play("SFX_gameresult_drumroll");
         }
-
-        // タイム確定時に自動的にランキングへ送信
-        SendRankingScore();
 
         StartCoroutine(CountUpClearTime(clearElapsedTime));
     }
@@ -227,12 +222,6 @@ public sealed class ResultSceneController : MonoBehaviour
         return false;
     }
 
-    /// UnityroomApiClientを用いて、クリアタイムをランキングに自動送信します。
-    public void SendRankingScore()
-    {
-        // ボード番号(1)にスコアを送信します。
-        // 第3引数の ScoreboardWriteMode は適宜変更
-        Debug.Log($"[ResultSceneController] Send ranking score: {targetClearTime}s");
-        UnityroomApiClient.Instance.SendScore(1, targetClearTime, ScoreboardWriteMode.HighScoreAsc);
-    }
 }
+
+
