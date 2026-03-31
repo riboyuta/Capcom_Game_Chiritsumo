@@ -28,7 +28,8 @@ public class StageLoader : MonoBehaviour
     {
 
 #if UNITY_WEBGL && !UNITY_EDITOR //ビルド時でWebGL版
-    StartCoroutine(BuildStageMapFromJsonWeb());
+    //StartCoroutine(BuildStageMapFromJsonWeb());
+     BuildStageMapFromJsonResources(); //Resourceからの読み込み
 #else
         BuildStageMapFromJson();
 #endif
@@ -140,8 +141,47 @@ folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData")
     }
 
 
+    void BuildStageMapFromJsonResources() //Resourceからの読み込み (ファイル場所に注意)
+    {
+        TextAsset jsonFile = Resources.Load<TextAsset>("Maps/Stage" + stageNumber);
+
+        if (jsonFile == null)
+        {
+            Debug.LogError("Map not found: Stage" + stageNumber);
+            return;
+        }
+
+        string json = jsonFile.text;
+
+        ClearSpawnedTiles();
+
+        MapData mapData = JsonUtility.FromJson<MapData>(json);
+
+        foreach (TileData data in mapData.tiles)
+        {
+            Vector3 spawnPos = new Vector3(
+                data.x * gridSize,
+                data.y * gridSize,
+                data.z * gridSize - 0.01f
+            );
+
+            GameObject tile =
+                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
+
+            TileType tileType = tile.GetComponent<TileType>();
+            tileType.type = data.type;
+            tileType.gimmickID = data.gimmickID;
+
+            spawnedTiles.Add(tile);
+        }
+
+        ConnectGimmicks(spawnedTiles);
+    }
 
 
+
+
+    
     // StageLoader が生成したランタイムタイルのみを明示的に破棄します。
     void ClearSpawnedTiles()
     {
