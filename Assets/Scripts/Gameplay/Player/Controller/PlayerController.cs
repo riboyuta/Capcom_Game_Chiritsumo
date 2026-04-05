@@ -178,9 +178,16 @@ public sealed partial class PlayerController : MonoBehaviour
         CaptureLandingSnapshot();
 
         // 接地しているなら急降下状態を解除する。
+        // 外部打ち上げ状態は、上昇中でなければ解除する。
+        // バネ床で打ち上げ直後はまだ接地判定が残ることがあるため、
+        // 上昇中（velocity.y > 0）の場合はフラグを維持する。
         if (isGrounded)
         {
             isFastFalling = false;
+            if (rb == null || rb.linearVelocity.y <= 0f)
+            {
+                isExternalLaunched = false;
+            }
         }
 
         // 物理フレームで壁接触状態を更新する。
