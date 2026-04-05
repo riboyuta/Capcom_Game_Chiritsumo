@@ -98,6 +98,12 @@ public sealed partial class PlayerController
             return;
         }
 
+        // レールに乗っているときは前ステップを開始しない。
+        if (isGrinding)
+        {
+            return;
+        }
+
         // 空中前ステップ無効時は、非接地なら開始しない。
         if (!isGrounded && !movementSettings.allowAirStep)
         {

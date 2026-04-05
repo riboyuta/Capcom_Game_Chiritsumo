@@ -184,5 +184,19 @@ public sealed class PlayerMovementSettings
     [Tooltip("有効にすると、前ステップ中を無敵扱いにする想定のフラグです。実際に無敵処理へ反映するかは呼び出し側実装に依存します。")]
     public bool stepInvulnerable = false;
 
+    [Header("レール滑走速度")]
+    [Tooltip("レール上を滑る速度です。大きいほど速くレール上を移動します。")]
+    [Min(0f)] public float grindSpeed = 15f;
 
+    [Header("レールジャンプ上速度")]
+    [Tooltip("レールからジャンプ離脱する際の上方向の初速です。")]
+    public float grindJumpVerticalVelocity = 12f;
+
+    [Header("レール再吸着ロック時間")]
+    [Tooltip("レールジャンプ直後に再びレールに吸着してしまうのを防ぐための無効化時間です。")]
+    [Min(0f)] public float railReattachLockTime = 0.2f;
+
+    [Header("レール乗車制限角度")]
+    [Tooltip("空中から直接レールに飛び乗る際、レールの傾きがこれ以上（垂直寄り）だと乗れずに弾かれる角度です（度）。")]
+    [Range(0f, 90f)] public float maxAttachSlopeAngle = 45f;
 }

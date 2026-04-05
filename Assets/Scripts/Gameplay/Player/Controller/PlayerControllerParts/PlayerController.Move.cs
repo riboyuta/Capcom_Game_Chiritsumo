@@ -31,6 +31,9 @@ public sealed partial class PlayerController
 
         // 壁キック後の再付着ロック残り時間を減らす。
         wallReattachLockTimer = Mathf.Max(0f, wallReattachLockTimer - deltaTime);
+        
+        // レール再吸着ロック残り時間を減らす。
+        railReattachLockTimer = Mathf.Max(0f, railReattachLockTimer - deltaTime);
     }
 
     private void ApplyHorizontalMovement(float deltaTime)
@@ -123,5 +126,129 @@ public sealed partial class PlayerController
             velocity.y = minVelocityY;
             rb.linearVelocity = velocity;
         }
+    }
+
+    private void ApplyGrindMovement(float deltaTime)
+    {
+        if (currentRail == null || currentRail.RailPath.Count < 2)
+        {
+            EndGrind(Vector3.zero);
+            return;
+        }
+
+        // ジャンプ入力があれば離脱
+        if (jumpRequested)
+        {
+            jumpRequested = false;
+            // レールの傾きに関係なくひとまず上方向にジャンプさせる
+            Vector3 jumpVel = rb.linearVelocity;
+            jumpVel.y = movementSettings.grindJumpVerticalVelocity;
+            
+            // ジャンプ後しばらく同じレールまたは他のレールに吸着しないようにロック
+            railReattachLockTimer = movementSettings.railReattachLockTime;
+            
+            // 横方向の速度は保つ
+            EndGrind(jumpVel);
+            UpdateAudioEvents();
+            return;
+        }
+
+        // 前進する距離
+        float moveDelta = movementSettings.grindSpeed * deltaTime;
+
+        // レールをなぞる処理
+        while (moveDelta > 0f)
+        {
+            Vector3 startP = currentRail.RailPath[currentRailSegment];
+            Vector3 endP = currentRail.RailPath[currentRailSegment + 1];
+            float segmentLength = Vector3.Distance(startP, endP);
+
+            if (grindDirection > 0)
+            {
+                // 順方向に進む
+                float remainingSegment = segmentLength - distanceOnRailSegment;
+                if (moveDelta <= remainingSegment)
+                {
+                    // このセグメント内で移動が収まる場合
+                    distanceOnRailSegment += moveDelta;
+                    moveDelta = 0f;
+                }
+                else
+                {
+                    // 次のセグメントへまたがる場合
+                    moveDelta -= remainingSegment;
+                    currentRailSegment++;
+                    distanceOnRailSegment = 0f;
+
+                    // 終点に達した場合
+                    if (currentRailSegment >= currentRail.RailPath.Count - 1)
+                    {
+                        Vector3 launchDir = (endP - startP).normalized;
+                        Vector3 launchVel = launchDir * movementSettings.grindSpeed;
+                        EndGrind(launchVel);
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                // 逆方向に進む
+                float remainingSegment = distanceOnRailSegment;
+                if (moveDelta <= remainingSegment)
+                {
+                    distanceOnRailSegment -= moveDelta;
+                    moveDelta = 0f;
+                }
+                else
+                {
+                    moveDelta -= remainingSegment;
+                    currentRailSegment--;
+
+                    // 始点に達した場合
+                    if (currentRailSegment < 0)
+                    {
+                        Vector3 launchDir = (startP - endP).normalized; // 逆向き
+                        Vector3 launchVel = launchDir * movementSettings.grindSpeed;
+                        EndGrind(launchVel);
+                        return;
+                    }
+                    else
+                    {
+                        // 次（インデックス的には前）のセグメントの長さを取得
+                        Vector3 nextStart = currentRail.RailPath[currentRailSegment];
+                        Vector3 nextEnd = currentRail.RailPath[currentRailSegment + 1];
+                        distanceOnRailSegment = Vector3.Distance(nextStart, nextEnd);
+                    }
+                }
+            }
+        }
+
+        // 最終的な位置計算と速度反映
+        Vector3 finalStart = currentRail.RailPath[currentRailSegment];
+        Vector3 finalEnd = currentRail.RailPath[currentRailSegment + 1];
+        Vector3 segDir = (finalEnd - finalStart).normalized;
+        
+        Vector3 targetPos = finalStart + segDir * distanceOnRailSegment;
+        
+        // 足元がレールに接するようにオフセットを計算
+        float worldHalfHeight = (capsuleCollider.height * 0.5f) * Mathf.Abs(transform.lossyScale.y);
+        Vector3 centerOffset = transform.TransformVector(capsuleCollider.center);
+        Vector3 footOffset = centerOffset - Vector3.up * worldHalfHeight;
+        
+        targetPos -= footOffset;
+        
+        // Zは固定しておくか、レールに合わせるか。基本2DなのでレールのZを見る。
+        // もしプレイヤーのZが固定なら
+        targetPos.z = transform.position.z;
+
+        // 次の瞬間の速度ベクトルとして疑似的にlinearVelocityを入れる
+        Vector3 moveVel = segDir * (movementSettings.grindSpeed * grindDirection);
+        moveVel.z = 0; // z補正
+
+        rb.MovePosition(targetPos);
+        rb.linearVelocity = moveVel; // 離脱時等に使うのでvelocityも更新しておく
+        
+        // 振り向き
+        facing = moveVel.x > 0 ? 1 : (moveVel.x < 0 ? -1 : facing);
     }
 }

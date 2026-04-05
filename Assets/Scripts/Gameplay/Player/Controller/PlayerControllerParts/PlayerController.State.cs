@@ -105,4 +105,24 @@ public sealed partial class PlayerController
     // true の間は可変ジャンプカットを適用しない。
     // 着地時に自動で解除される。
     private bool isExternalLaunched;
+
+    // --- Grind Rail (レール滑走) 関連の状態 ---
+    
+    // 現在レール上を滑らかに滑走中かどうか
+    private bool isGrinding;
+    
+    // 現在乗っているレールギミック
+    private RailGimmick currentRail;
+    
+    // レール上で現在位置しているセグメントのインデックス
+    private int currentRailSegment;
+    
+    // 現在のセグメント上での進行距離
+    private float distanceOnRailSegment;
+    
+    // ウェイポイントに対する進行方向 (+1: start to end, -1: end to start)
+    private int grindDirection = 1;
+    
+    // レール再吸着ロックタイマー
+    private float railReattachLockTimer;
 }
