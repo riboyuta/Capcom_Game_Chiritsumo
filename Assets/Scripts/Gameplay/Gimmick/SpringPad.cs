@@ -1,24 +1,23 @@
 using UnityEngine;
 
 // バネ床ギミック。
-// プレイヤーが接触すると transform.up 方向へ跳ね返す。
+// プレイヤーが接触すると固定高さだけ跳ね上げる。
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider))]
 public sealed class SpringPad : MonoBehaviour
 {
-    [Header("跳ね返し: 速度")]
-    [Tooltip("跳ね返すときに与える速度（m/s）。値が大きいほど高く／遠くへ飛びます。")]
-    [SerializeField, Min(0.1f)] private float bounceSpeed = 15f;
+    [Header("跳ね返し: 到達高さ（メートル）")]
+    [Tooltip("バネで跳ね上がったときに到達する高さ（m）。物理公式 v = √(2gh) で初速を自動計算します。")]
+    [SerializeField, Min(0.1f)] private float bounceHeight = 5f;
 
-    [Header("跳ね返し: 速度上書きフラグ")]
-    [Tooltip("true の場合、跳ね返し軸方向の既存速度を上書きします。false の場合は既存速度に跳ね返しベクトルを加算します。用途に応じて選択してください。")]
-    [SerializeField] private bool overrideVelocity = true;
+    [Header("跳ね返し: 重力スケール")]
+    [Tooltip("プレイヤーの重力倍率に合わせてください。PlayerMovementSettings.gravityScale と同じ値を設定すると正確な高さになります。")]
+    [SerializeField, Min(0.1f)] private float gravityScale = 3f;
 
     [Header("跳ね返し: クールダウン（秒）")]
     [Tooltip("同一オブジェクトが短時間で連続して跳ねられるのを防ぐクールダウン時間（秒）。値を大きくすると連続バウンスを減らせます。")]
     [SerializeField, Min(0f)] private float bounceCooldown = 0.2f;
 
-    [Header("最後にバウンスした時刻")]
     private float lastBounceTime = -1f;
 
     [Header("アニメーション")]
@@ -64,9 +63,7 @@ public sealed class SpringPad : MonoBehaviour
         // アニメーション再生
         if (anim != null)
         {
-            Debug.Log(anim);
             anim.SetTrigger("Interacted");
-     
         }
 
         // SE:作動する瞬間
@@ -76,6 +73,15 @@ public sealed class SpringPad : MonoBehaviour
         }
 
         lastBounceTime = Time.time;
+
+        // プレイヤーに外部打ち上げを通知する。
+        // 可変ジャンプカットによる速度削減を防ぐ。
+        PlayerController player = targetRb.GetComponent<PlayerController>();
+        if (player != null)
+        {
+            player.NotifyExternalLaunch();
+        }
+
         ApplyBounce(targetRb);
     }
 
@@ -88,19 +94,20 @@ public sealed class SpringPad : MonoBehaviour
         // このオブジェクトのローカル上方向を跳ね返し方向とする。
         Vector3 bounceDir = transform.up.normalized;
 
+        // 有効重力の大きさを求める（下向きを正とする）。
+        float effectiveGravity = Mathf.Abs(Physics.gravity.y) * gravityScale;
+
+        // 指定高さへ到達するための初速を計算する。 v = √(2gh)
+        float bounceSpeed = Mathf.Sqrt(2f * effectiveGravity * bounceHeight);
+
         // 現在の速度を取得する。
         Vector3 velocity = targetRb.linearVelocity;
 
-        if (overrideVelocity)
-        {
-            float dot = Vector3.Dot(velocity, bounceDir);
-            velocity -= dot * bounceDir;
-            velocity += bounceDir * bounceSpeed;
-        }
-        else
-        {
-            velocity += bounceDir * bounceSpeed;
-        }
+        // 跳ね返し方向の既存速度成分を除去し、新しい速度で上書きする。
+        // 横速度はそのまま維持される。
+        float dot = Vector3.Dot(velocity, bounceDir);
+        velocity -= dot * bounceDir;
+        velocity += bounceDir * bounceSpeed;
 
         targetRb.linearVelocity = velocity;
     }
