@@ -35,6 +35,9 @@ public sealed partial class PlayerController : MonoBehaviour
     [Tooltip("体力、無敵時間、死亡後復帰待機、デバッグ死亡トリガーをまとめた設定です。")]
     [SerializeField] private PlayerHealthSettings healthSettings = new PlayerHealthSettings();
 
+    // 外部（ギミック等）からの参照用プロパティ
+    public PlayerMovementSettings MovementSettings => movementSettings;
+
     // 物理移動本体。
     // 速度変更、物理拘束、重力挙動などに使う。
     private Rigidbody rb;
@@ -219,6 +222,16 @@ public sealed partial class PlayerController : MonoBehaviour
             return;
         }
 
+        // 追加アクションとしてレール滑走中なら専用フローを優先する
+        if (isGrinding)
+        {
+            ApplyGrindMovement(deltaTime);
+            UpdateAudioEvents();
+            UpdateVibrationEvents();
+            FinalizeVisualState(previousVelocityY);
+            return;
+        }
+
         // 通常移動フロー。
         // 横移動、ジャンプ、可変ジャンプ、急降下、壁滑り、追加重力を順に適用する。
         ApplyHorizontalMovement(deltaTime);
@@ -232,5 +245,38 @@ public sealed partial class PlayerController : MonoBehaviour
         UpdateAudioEvents();
         UpdateVibrationEvents();
         FinalizeVisualState(previousVelocityY);
+    }
+
+    // --- Grind Rail メソッド ---
+    public void StartGrind(RailGimmick rail, int segmentIndex, float distanceOnSegment, int direction)
+    {
+        if (IsActionLocked || isGrinding) return;
+        if (railReattachLockTimer > 0f) return;
+
+        isGrinding = true;
+        currentRail = rail;
+        currentRailSegment = segmentIndex;
+        distanceOnRailSegment = distanceOnSegment;
+        grindDirection = direction;
+
+        // レール走行開始時に縦や横の余分な重力・速度を一旦切る
+        rb.linearVelocity = Vector3.zero;
+        isGrounded = false;
+        isFastFalling = false;
+        
+        Debug.Log($"Started Grinding. segment:{segmentIndex}, dir:{direction}");
+    }
+
+    private void EndGrind(Vector3 releaseVelocity)
+    {
+        if (!isGrinding) return;
+
+        isGrinding = false;
+        currentRail = null;
+
+        // 離脱時の速度を乗せる
+        rb.linearVelocity = releaseVelocity;
+        
+        // 直後からジャンプなどが効くようにするなどの調整があればここで行う
     }
 }
