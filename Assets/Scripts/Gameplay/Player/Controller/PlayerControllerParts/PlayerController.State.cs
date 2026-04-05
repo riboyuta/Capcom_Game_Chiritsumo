@@ -100,4 +100,9 @@ public sealed partial class PlayerController
     // Wall 判定デバッグ可視化用の左右ヒット結果。
     private bool leftWallCheckHit;
     private bool rightWallCheckHit;
+
+    // 外部要因（バネ床など）で打ち上げられた状態。
+    // true の間は可変ジャンプカットを適用しない。
+    // 着地時に自動で解除される。
+    private bool isExternalLaunched;
 }

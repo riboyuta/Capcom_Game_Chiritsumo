@@ -155,6 +155,12 @@ public sealed partial class PlayerController
             return;
         }
 
+        // 外部要因（バネ床など）で打ち上げられた場合はカットしない。
+        if (isExternalLaunched)
+        {
+            return;
+        }
+
         // ボタンを押し続けている間は切らない。
         if (playerInputReader.JumpHeld)
         {

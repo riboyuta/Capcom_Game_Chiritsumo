@@ -100,4 +100,11 @@ public sealed partial class PlayerController
 
     // デバッグ表示向けの右壁判定ヒット結果。
     public bool RightWallCheckHit => rightWallCheckHit;
+
+    // 外部要因（バネ床など）で打ち上げられたことをプレイヤーに通知する。
+    // 可変ジャンプカットをスキップし、着地時に自動で解除される。
+    public void NotifyExternalLaunch()
+    {
+        isExternalLaunched = true;
+    }
 }
