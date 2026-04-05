@@ -119,6 +119,188 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &31727794
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 31727799}
+  - component: {fileID: 31727798}
+  - component: {fileID: 31727797}
+  - component: {fileID: 31727796}
+  - component: {fileID: 31727795}
+  m_Layer: 0
+  m_Name: ShadowEnemy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &31727795
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 31727794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b343bacc5e3b9284396837fc5b224e88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShadowChaserEnemy
+  recorder: {fileID: 1189614816}
+  targetPlayer: {fileID: 1189614811}
+  visualRoot: {fileID: 0}
+  controlledRenderers: []
+  delayTime: 1
+  useInterpolation: 1
+  snapDistance: 0.5
+  smoothFollow: 1
+  followSmoothSharpness: 300
+  isActiveOnStart: 0
+  spawnPoint: {fileID: 264922970}
+  moveToSpawnPointOnActivate: 1
+  resetToSpawnPointOnDeactivate: 0
+  useSpawnSequence: 1
+  spawnDelay: 0.2
+  spawnDuration: 1
+  spawnOffset: {x: 0, y: 0, z: 0}
+  spawnStartScale: {x: 0.6, y: 0.6, z: 1}
+  hideDuringSpawnDelay: 1
+  startFollowAfterSpawn: 1
+  useCatchUp: 1
+  catchUpDuration: 1.5
+  catchUpFollowSharpness: 5
+  catchUpCompleteDistance: 0.08
+  catchUpCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.30950928
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  contactRadius: 0.4
+  applyFacingToVisual: 1
+  showTargetGizmo: 1
+  targetGizmoColor: {r: 0, g: 1, b: 1, a: 1}
+  showSpawnPointGizmo: 1
+  spawnPointGizmoColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  showCatchUpTargetGizmo: 1
+  catchUpTargetGizmoColor: {r: 0, g: 1, b: 0, a: 1}
+--- !u!65 &31727796
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 31727794}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &31727797
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 31727794}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &31727798
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 31727794}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &31727799
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 31727794}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -39.05, y: 10.99429, z: -0.30761}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 264922970}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &41582883
 GameObject:
   m_ObjectHideFlags: 0
@@ -228,6 +410,7 @@ GameObject:
   - component: {fileID: 152479013}
   - component: {fileID: 152479012}
   - component: {fileID: 152479011}
+  - component: {fileID: 152479014}
   m_Layer: 0
   m_Name: EnemySpawnTrigger
   m_TagString: Untagged
@@ -242,7 +425,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 152479010}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d250bb7f298bdde45bffe65faa83cb60, type: 3}
   m_Name: 
@@ -281,12 +464,28 @@ Transform:
   m_GameObject: {fileID: 152479010}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 45, y: 17.4, z: 0}
+  m_LocalPosition: {x: -33.78, y: 17.4, z: 0}
   m_LocalScale: {x: 1, y: 20.925, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &152479014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 152479010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b2a5630e83714348b5b0cf5d9721091, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShadowChaserActivator
+  targetEnemy: {fileID: 31727795}
+  oneShot: 1
+  usePlayerTag: 1
+  playerTag: Player
 --- !u!1 &250173647
 GameObject:
   m_ObjectHideFlags: 0
@@ -320,6 +519,37 @@ Transform:
   - {fileID: 1175559814}
   - {fileID: 1882003662}
   m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &264922969
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 264922970}
+  m_Layer: 0
+  m_Name: EnemySpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &264922970
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 264922969}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 31727799}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &277121806
 PrefabInstance:
@@ -1228,6 +1458,7 @@ GameObject:
   - component: {fileID: 1189614810}
   - component: {fileID: 1189614809}
   - component: {fileID: 1189614815}
+  - component: {fileID: 1189614816}
   m_Layer: 0
   m_Name: PlayerRoot
   m_TagString: Player
@@ -1505,6 +1736,23 @@ MonoBehaviour:
   strongLandingMinAirTime: 0.2
   useStrongLandingMinFallHeight: 1
   strongLandingMinFallHeight: 6
+--- !u!114 &1189614816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1189614808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c061274fb14e7445a906d3bd717329b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerShadowRecorder
+  playerController: {fileID: 1189614811}
+  recordInterval: 0.02
+  maxHistoryDuration: 2
+  showDebugPath: 1
+  debugPathColor: {r: 1, g: 0, b: 1, a: 1}
 --- !u!1 &1298716506
 GameObject:
   m_ObjectHideFlags: 0
@@ -1693,7 +1941,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameRoot
   readyDuration: 1
   playDuration: 10000
-  resultFadeOutDuration: 2
 --- !u!4 &1603009782
 Transform:
   m_ObjectHideFlags: 0
@@ -2237,6 +2484,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: EnemyCore
       objectReference: {fileID: 0}
+    - target: {fileID: 3268368376347136408, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7451033984243787979, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: player
       value: 
@@ -2300,3 +2551,4 @@ SceneRoots:
   - {fileID: 1705471359}
   - {fileID: 1939107290}
   - {fileID: 152479013}
+  - {fileID: 31727799}
