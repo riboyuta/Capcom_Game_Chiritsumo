@@ -19,7 +19,7 @@ public sealed class PlayerVibrationController : MonoBehaviour
     private enum RumblePriority
     {
         WallSlide = 0,
-        Step = 1,
+        Dash = 1,
         NormalLanding = 2,
         StrongLanding = 3,
         WallKick = 4,
@@ -72,15 +72,15 @@ public sealed class PlayerVibrationController : MonoBehaviour
         public float pulseInterval = 0.10f;
     }
 
-    [Header("振動イベント有効化: 地上前ステ")]
-    [Tooltip("有効時、地上での前ステップ開始時に単発振動を再生します。移動系の振動比較や一時的な無効化に使います。")]
+    [Header("振動イベント有効化: 地上ダッシュ")]
+    [Tooltip("有効時、地上でのダッシュ開始時に単発振動を再生します。移動系の振動比較や一時的な無効化に使います。")]
     [SerializeField]
-    private bool enableGroundStep = true;
+    private bool enableGroundDash = true;
 
-    [Header("振動イベント有効化: 空中前ステ")]
-    [Tooltip("有効時、空中での前ステップ開始時に単発振動を再生します。地上前ステとの違いを確認したいときに使います。")]
+    [Header("振動イベント有効化: 空中ダッシュ")]
+    [Tooltip("有効時、空中でのダッシュ開始時に単発振動を再生します。地上ダッシュとの違いを確認したいときに使います。")]
     [SerializeField]
-    private bool enableAirStep = true;
+    private bool enableAirDash = true;
 
     [Header("振動イベント有効化: 壁キック")]
     [Tooltip("有効時、壁キック発生時に単発振動を再生します。壁アクション系の気持ちよさ確認や比較調整に使います。")]
@@ -134,20 +134,20 @@ public sealed class PlayerVibrationController : MonoBehaviour
     private float strongLandingMinFallHeight = 6.00f;
 
 
-    [Header("単発振動設定: 地上前ステ")]
-    [Tooltip("地上での前ステップ時に再生する単発振動の設定です。素早い移動感を出しつつ、重くなりすぎない触感に調整する用途です。")]
+    [Header("単発振動設定: 地上ダッシュ")]
+    [Tooltip("地上でのダッシュ時に再生する単発振動の設定です。素早い移動感を出しつつ、重くなりすぎない触感に調整する用途です。")]
     [SerializeField]
-    private OneShotRumbleSettings groundStep = new OneShotRumbleSettings
+    private OneShotRumbleSettings groundDash = new OneShotRumbleSettings
     {
         lowFrequency = 0.20f,
         highFrequency = 0.30f,
         duration = 0.06f
     };
 
-    [Header("単発振動設定: 空中前ステ")]
-    [Tooltip("空中での前ステップ時に再生する単発振動の設定です。地上前ステより軽く鋭い印象を出したい場合に調整します。")]
+    [Header("単発振動設定: 空中ダッシュ")]
+    [Tooltip("空中でのダッシュ時に再生する単発振動の設定です。地上ダッシュより軽く鋭い印象を出したい場合に調整します。")]
     [SerializeField]
-    private OneShotRumbleSettings airStep = new OneShotRumbleSettings
+    private OneShotRumbleSettings airDash = new OneShotRumbleSettings
     {
         lowFrequency = 0.10f,
         highFrequency = 0.40f,
@@ -322,26 +322,26 @@ public sealed class PlayerVibrationController : MonoBehaviour
         PlayOneShot(normalLanding, RumblePriority.NormalLanding, "NormalLanding");
     }
 
-    // 地上前ステ振動を再生する。
-    public void PlayGroundStep()
+    // 地上ダッシュ振動を再生する。
+    public void PlayGroundDash()
     {
-        if (!enableGroundStep)
+        if (!enableGroundDash)
         {
             return;
         }
 
-        PlayOneShot(groundStep, RumblePriority.Step, "GroundStep");
+        PlayOneShot(groundDash, RumblePriority.Dash, "GroundDash");
     }
 
-    // 空中前ステ振動を再生する。
-    public void PlayAirStep()
+    // 空中ダッシュ振動を再生する。
+    public void PlayAirDash()
     {
-        if (!enableAirStep)
+        if (!enableAirDash)
         {
             return;
         }
 
-        PlayOneShot(airStep, RumblePriority.Step, "AirStep");
+        PlayOneShot(airDash, RumblePriority.Dash, "AirDash");
     }
 
     // 壁滑り微振動を開始する。

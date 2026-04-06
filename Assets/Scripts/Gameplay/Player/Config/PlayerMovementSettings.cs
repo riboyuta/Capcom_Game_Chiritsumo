@@ -140,49 +140,63 @@ public sealed class PlayerMovementSettings
     [Tooltip("壁方向へ入力していると見なす最小入力値です。小さすぎると誤判定しやすく、大きすぎると意図した壁操作が出にくくなります。")]
     [Range(0f, 1f)] public float wallInputThreshold = 0.12f;
 
-    [Header("前ステを使う")]
-    [Tooltip("前方向へ素早く移動するステップ機能を有効にします。")]
-    public bool useStep = true;
+    [Header("ダッシュを使う")]
+    [Tooltip("前方向へ素早く移動するダッシュ機能を有効にします。")]
+    public bool useDash = true;
 
-    [Header("前ステ速度")]
-    [Tooltip("前ステップ中の移動速度です。大きいほど一気に前へ進みます。")]
-    [Min(0f)] public float stepSpeed = 18f;
+    [Header("ダッシュ速度")]
+    [Tooltip("ダッシュ中の移動速度です。大きいほど一気に前へ進みます。")]
+    [Min(0f)] public float dashSpeed = 18f;
 
-    [Header("前ステ時間")]
-    [Tooltip("前ステップ状態を維持する時間です。長いほど移動距離が伸びやすくなります。")]
-    [Min(0f)] public float stepDuration = 0.13f;
+    [Header("ダッシュ時間")]
+    [Tooltip("ダッシュ状態を維持する時間です。長いほど移動距離が伸びやすくなります。")]
+    [Min(0f)] public float dashDuration = 0.13f;
 
-    [Header("前ステ中重力倍率")]
-    [Tooltip("前ステップ中に適用する重力倍率です。0に近いほど浮くような感触になり、1以上で通常に近づきます。")]
-    [Min(0f)] public float stepGravityMultiplier = 0.00f;
+    [Header("ダッシュ中重力倍率")]
+    [Tooltip("ダッシュ中に適用する重力倍率です。0に近いほど浮くような感触になり、1以上で通常に近づきます。")]
+    [Min(0f)] public float dashGravityMultiplier = 0.00f;
 
-    [Header("前ステ終了時に開始時Y速度を復元")]
-    [Tooltip("有効にすると、前ステップ開始時の縦速度を終了時に戻します。空中前ステ後の落下感や上昇感を保ちたいときに使います。")]
-    public bool restoreStepStartVerticalVelocity = false;
+    [Header("ダッシュ終了時に開始時Y速度を復元")]
+    [Tooltip("有効にすると、ダッシュ開始時の縦速度を終了時に戻します。空中ダッシュ後の落下感や上昇感を保ちたいときに使います。")]
+    public bool restoreDashStartVerticalVelocity = false;
 
-    [Header("前ステクールダウン")]
-    [Tooltip("前ステップを再使用できるまでの待ち時間です。短いほど連発しやすくなります。")]
-    [Min(0f)] public float stepCooldown = 0.58f;
+    [Header("ダッシュクールダウン")]
+    [Tooltip("ダッシュを再使用できるまでの待ち時間です。短いほど連発しやすくなります。")]
+    [Min(0f)] public float dashCooldown = 0.58f;
 
-    [Header("空中前ステを許可")]
-    [Tooltip("有効にすると、空中でも前ステップを使用できます。")]
-    public bool allowAirStep = true;
+    [Header("空中ダッシュを許可")]
+    [Tooltip("有効にすると、空中でもダッシュを使用できます。")]
+    public bool allowAirDash = true;
 
-    [Header("前ステ中の方向転換を許可")]
-    [Tooltip("有効にすると、前ステップ中でも左右入力で向きや進行方向を変えられます。無効にすると開始方向を維持します。")]
-    public bool allowTurnDuringStep = true;
+    [Header("ダッシュ中の方向転換を許可")]
+    [Tooltip("有効にすると、ダッシュ中でも左右入力で向きや進行方向を変えられます。無効にすると開始方向を維持します。")]
+    public bool allowTurnDuringDash = true;
 
-    [Header("前ステ入力バッファを使う")]
-    [Tooltip("前ステップ入力を少しの間保持し、条件成立時に自動で発動できるようにします。先行入力の救済用です。")]
-    public bool useStepBuffer = true;
+    [Header("ダッシュ入力バッファを使う")]
+    [Tooltip("ダッシュ入力を少しの間保持し、条件成立時に自動で発動できるようにします。先行入力の救済用です。")]
+    public bool useDashBuffer = true;
 
-    [Header("前ステ入力保持時間")]
-    [Tooltip("前ステップ入力をバッファとして保持する時間です。長いほど先行入力が通りやすくなります。")]
-    [Min(0f)] public float stepBufferTime = 0.06f;
+    [Header("ダッシュ入力保持時間")]
+    [Tooltip("ダッシュ入力をバッファとして保持する時間です。長いほど先行入力が通りやすくなります。")]
+    [Min(0f)] public float dashBufferTime = 0.06f;
 
-    [Header("前ステ中無敵")]
-    [Tooltip("有効にすると、前ステップ中を無敵扱いにする想定のフラグです。実際に無敵処理へ反映するかは呼び出し側実装に依存します。")]
-    public bool stepInvulnerable = false;
+    [Header("ダッシュ中無敵")]
+    [Tooltip("有効にすると、ダッシュ中を無敵扱いにする想定のフラグです。実際に無敵処理へ反映するかは呼び出し側実装に依存します。")]
+    public bool dashInvulnerable = false;
 
+    [Header("レール滑走速度")]
+    [Tooltip("レール上を滑る速度です。大きいほど速くレール上を移動します。")]
+    [Min(0f)] public float grindSpeed = 15f;
 
+    [Header("レールジャンプ上速度")]
+    [Tooltip("レールからジャンプ離脱する際の上方向の初速です。")]
+    public float grindJumpVerticalVelocity = 12f;
+
+    [Header("レール再吸着ロック時間")]
+    [Tooltip("レールジャンプ直後に再びレールに吸着してしまうのを防ぐための無効化時間です。")]
+    [Min(0f)] public float railReattachLockTime = 0.2f;
+
+    [Header("レール乗車制限角度")]
+    [Tooltip("空中から直接レールに飛び乗る際、レールの傾きがこれ以上（垂直寄り）だと乗れずに弾かれる角度です（度）。")]
+    [Range(0f, 90f)] public float maxAttachSlopeAngle = 45f;
 }

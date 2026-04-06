@@ -2,125 +2,131 @@ using UnityEngine;
 
 public sealed partial class PlayerController
 {
-    private void UpdateStepTimers(float deltaTime)
+    private void UpdateDashTimers(float deltaTime)
     {
-        // 前ステップのクールダウン残り時間を減らす。
-        stepCooldownTimer = Mathf.Max(0f, stepCooldownTimer - deltaTime);
+        // ダッシュのクールダウン残り時間を減らす。
+        dashCooldownTimer = Mathf.Max(0f, dashCooldownTimer - deltaTime);
 
-        // 前ステップ中でなければステップ時間は 0 に戻す。
-        if (!isStepping)
+        // ダッシュ中でなければダッシュ時間は 0 に戻す。
+        if (!isDashing)
         {
-            stepTimer = 0f;
+            dashTimer = 0f;
             return;
         }
 
-        // 前ステップ中は残り時間を減らす。
-        stepTimer = Mathf.Max(0f, stepTimer - deltaTime);
+        // ダッシュ中は残り時間を減らす。
+        dashTimer = Mathf.Max(0f, dashTimer - deltaTime);
 
-        // 残り時間がなくなったら前ステップ終了とする。
-        if (stepTimer <= 0f)
+        // 残り時間がなくなったらダッシュ終了とする。
+        if (dashTimer <= 0f)
         {
-            EndStep();
+            EndDash();
         }
     }
 
-    private void EndStep()
+    private void EndDash()
     {
-        isStepping = false;
+        isDashing = false;
 
-        if (!movementSettings.restoreStepStartVerticalVelocity)
+        if (!movementSettings.restoreDashStartVerticalVelocity)
         {
             return;
         }
 
         Vector3 velocity = rb.linearVelocity;
-        velocity.y = stepStartVerticalVelocity;
+        velocity.y = dashStartVerticalVelocity;
         rb.linearVelocity = velocity;
     }
 
-    private void UpdateStepBufferTimer(float deltaTime)
+    private void UpdateDashBufferTimer(float deltaTime)
     {
-        // ステップバッファ無効時は常に 0 にする。
-        if (!movementSettings.useStepBuffer)
+        // ダッシュバッファ無効時は常に 0 にする。
+        if (!movementSettings.useDashBuffer)
         {
-            stepBufferTimer = 0f;
+            dashBufferTimer = 0f;
             return;
         }
 
-        // ステップバッファの残り時間を減らす。
-        stepBufferTimer = Mathf.Max(0f, stepBufferTimer - deltaTime);
+        // ダッシュバッファの残り時間を減らす。
+        dashBufferTimer = Mathf.Max(0f, dashBufferTimer - deltaTime);
     }
 
-    private void TryStartStep()
+    private void TryStartDash()
     {
         // 機能が無効なら入力とバッファを破棄する。
-        if (!movementSettings.useStep)
+        if (!movementSettings.useDash)
         {
-            stepRequested = false;
-            stepBufferTimer = 0f;
+            dashRequested = false;
+            dashBufferTimer = 0f;
             return;
         }
 
-        // 今フレームのステップ要求を読み取る。
-        bool immediateStepRequest = stepRequested;
+        // 今フレームのダッシュ要求を読み取る。
+        bool immediateDashRequest = dashRequested;
 
         // 入力があった場合は、必要ならバッファ時間を開始する。
-        if (immediateStepRequest)
+        if (immediateDashRequest)
         {
-            if (movementSettings.useStepBuffer)
+            if (movementSettings.useDashBuffer)
             {
-                stepBufferTimer = movementSettings.stepBufferTime;
+                dashBufferTimer = movementSettings.dashBufferTime;
             }
 
             // 読み取った入力は消費済みにする。
-            stepRequested = false;
+            dashRequested = false;
         }
 
-        // バッファ中なら過去の入力でもステップ要求ありとみなす。
-        bool hasBufferedStep = movementSettings.useStepBuffer && stepBufferTimer > 0f;
-        bool hasStepRequest = immediateStepRequest || hasBufferedStep;
+        // バッファ中なら過去の入力でもダッシュ要求ありとみなす。
+        bool hasBufferedDash = movementSettings.useDashBuffer && dashBufferTimer > 0f;
+        bool hasDashRequest = immediateDashRequest || hasBufferedDash;
 
         // 要求がなければ何もしない。
-        if (!hasStepRequest)
+        if (!hasDashRequest)
         {
             return;
         }
 
-        // すでに前ステップ中なら開始しない。
-        if (isStepping)
+        // すでにダッシュ中なら開始しない。
+        if (isDashing)
         {
             return;
         }
 
         // クールダウン中は開始しない。
-        if (stepCooldownTimer > 0f)
+        if (dashCooldownTimer > 0f)
         {
             return;
         }
 
-        // 空中前ステップ無効時は、非接地なら開始しない。
-        if (!isGrounded && !movementSettings.allowAirStep)
+        // レールに乗っているときはダッシュを開始しない。
+        if (isGrinding)
         {
             return;
         }
 
-        // 前ステップ開始状態へ入る。
-        isStepping = true;
+        // 空中ダッシュ無効時は、非接地なら開始しない。
+        if (!isGrounded && !movementSettings.allowAirDash)
+        {
+            return;
+        }
+
+        // ダッシュ開始状態へ入る。
+        isDashing = true;
         isFastFalling = false;
-        stepTimer = movementSettings.stepDuration;
-        stepCooldownTimer = movementSettings.stepCooldown;
-        stepStartVerticalVelocity = rb.linearVelocity.y;
-        Vector2 stepStartVelocity = rb.linearVelocity;
-        stepStartVelocity.y = 0f;
-        rb.linearVelocity = stepStartVelocity;
-        stepDirection = facing;
+        dashTimer = movementSettings.dashDuration;
+        dashCooldownTimer = movementSettings.dashCooldown;
+        dashStartVerticalVelocity = rb.linearVelocity.y;
+        Vector2 dashStartVelocity = rb.linearVelocity;
+        dashStartVelocity.y = 0f;
+        rb.linearVelocity = dashStartVelocity;
+        dashDirection = facing;
         isWallSliding = false;
 
-        // ステップ入力とバッファを消費する。
-        stepRequested = false;
-        stepBufferTimer = 0f;
+        // ダッシュ入力とバッファを消費する。
+        dashRequested = false;
+        dashBufferTimer = 0f;
 
-        // 前ステップ開始時はジャンプ要求も破棄する。
+        // ダッシュ開始時はジャンプ要求も破棄する。
         jumpRequested = false;
         if (movementSettings.useJumpBuffer)
         {

@@ -55,7 +55,7 @@ public sealed partial class PlayerController
         visualState = new VisualState(
             isGrounded,
             isWallSliding,
-            isStepping,
+            isDashing,
             isFastFalling,
             justLandedThisFrame,
             justJumpedThisFrame,
@@ -81,8 +81,8 @@ public sealed partial class PlayerController
         // 現在壁滑り中か。
         public readonly bool isWallSliding;
 
-        // 現在前ステップ中か。
-        public readonly bool isStepping;
+        // 現在ダッシュ中か。
+        public readonly bool isDashing;
 
         // 現在急降下中か。
         public readonly bool isFastFalling;
@@ -128,7 +128,7 @@ public sealed partial class PlayerController
         public VisualState(
             bool isGrounded,
             bool isWallSliding,
-            bool isStepping,
+            bool isDashing,
             bool isFastFalling,
             bool justLanded,
             bool justJumped,
@@ -141,7 +141,7 @@ public sealed partial class PlayerController
         {
             this.isGrounded = isGrounded;
             this.isWallSliding = isWallSliding;
-            this.isStepping = isStepping;
+            this.isDashing = isDashing;
             this.isFastFalling = isFastFalling;
             this.justLanded = justLanded;
             this.justJumped = justJumped;
