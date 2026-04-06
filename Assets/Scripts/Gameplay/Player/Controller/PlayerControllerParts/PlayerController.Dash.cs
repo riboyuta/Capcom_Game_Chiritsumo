@@ -2,8 +2,52 @@ using UnityEngine;
 
 public sealed partial class PlayerController
 {
+    public enum DashRefillReason
+    {
+        Grounded,
+        Gimmick,
+        Scripted
+    }
+
+    private void UpdateDashResourceState()
+    {
+        // 接地/状態に応じたダッシュ回復を処理する。
+        HandleGroundDashRefill();
+
+        // 次フレームの接地遷移検出用に状態を保存する。
+        wasGroundedLastFrame = isGrounded;
+    }
+
+    private void HandleGroundDashRefill()
+    {
+        // 接地回復が無効なら何もしない。
+        if (!movementSettings.useGroundDashRefill)
+        {
+            return;
+        }
+
+        // 接地していない間は回復しない。
+        if (!isGrounded)
+        {
+            return;
+        }
+
+        // レール滑走中や壁捕まり中は接地回復対象外とする。
+        if (isGrinding || isWallGrabbing)
+        {
+            return;
+        }
+
+        // 残数不足時だけ回復を試みる。
+        if (currentDashCharges < Mathf.Max(1, movementSettings.maxDashCharges))
+        {
+            TryRefillDash(DashRefillReason.Grounded);
+        }
+    }
+
     private void UpdateDashTimers(float deltaTime)
     {
+
         // ダッシュのクールダウン残り時間を減らす。
         dashCooldownTimer = Mathf.Max(0f, dashCooldownTimer - deltaTime);
 
@@ -23,7 +67,81 @@ public sealed partial class PlayerController
             EndDash();
         }
     }
+    private bool CanConsumeDash()
+    {
+        // ダッシュ機能が無効なら消費不可。
+        if (!movementSettings.useDash)
+        {
+            return false;
+        }
 
+        // 残数がないなら消費不可。
+        if (currentDashCharges <= 0)
+        {
+            return false;
+        }
+
+        // すでにダッシュ中なら消費不可。
+        if (isDashing)
+        {
+            return false;
+        }
+
+        // レール滑走中は消費不可。
+        if (isGrinding)
+        {
+            return false;
+        }
+
+        // 再入力ロック中は消費不可。
+        if (dashCooldownTimer > 0f)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool TryConsumeDash()
+    {
+        if (!CanConsumeDash())
+        {
+            return false;
+        }
+
+        currentDashCharges = Mathf.Max(0, currentDashCharges - 1);
+        return true;
+    }
+
+    private bool CanRefillDash(DashRefillReason reason)
+    {
+        // 将来理由ごとに制限を追加できるよう、分岐構造だけ先に置く。
+        switch (reason)
+        {
+            case DashRefillReason.Grounded:
+            case DashRefillReason.Gimmick:
+            case DashRefillReason.Scripted:
+            default:
+                return true;
+        }
+    }
+
+    public bool TryRefillDash(DashRefillReason reason)
+    {
+        if (!CanRefillDash(reason))
+        {
+            return false;
+        }
+
+        int maxCharges = Mathf.Max(1, movementSettings.maxDashCharges);
+        if (currentDashCharges >= maxCharges)
+        {
+            return false;
+        }
+
+        currentDashCharges = maxCharges;
+        return true;
+    }
     private void EndDash()
     {
         isDashing = false;
@@ -86,36 +204,25 @@ public sealed partial class PlayerController
             return;
         }
 
-        // すでにダッシュ中なら開始しない。
-        if (isDashing)
+        // 残数・状態・再入力ロック条件を満たすか確認する。
+        if (!CanConsumeDash())
         {
             return;
         }
 
-        // クールダウン中は開始しない。
-        if (dashCooldownTimer > 0f)
+        // ダッシュリソースを消費できなければ開始しない。
+        if (!TryConsumeDash())
         {
             return;
         }
 
-        // レールに乗っているときはダッシュを開始しない。
-        if (isGrinding)
-        {
-            return;
-        }
-
-        // 空中ダッシュ無効時は、非接地なら開始しない。
-        if (!isGrounded && !movementSettings.allowAirDash)
-        {
-            return;
-        }
         // ダッシュ開始時は壁捕まり状態を解除する。
         ExitWallGrab();
         // ダッシュ開始状態へ入る。
         isDashing = true;
         isFastFalling = false;
         dashTimer = movementSettings.dashDuration;
-        dashCooldownTimer = movementSettings.dashCooldown;
+        dashCooldownTimer = movementSettings.dashRetryLockTime;
         dashStartVerticalVelocity = rb.linearVelocity.y;
         Vector2 dashStartVelocity = rb.linearVelocity;
         dashStartVelocity.y = 0f;

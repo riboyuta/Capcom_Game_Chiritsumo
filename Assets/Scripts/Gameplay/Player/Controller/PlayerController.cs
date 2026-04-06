@@ -96,6 +96,10 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // 振動関連の比較用状態を初期化する。
         InitializeVibrationState();
+
+        // ダッシュ残数管理の初期状態を設定する。
+        currentDashCharges = Mathf.Max(1, movementSettings.maxDashCharges);
+        wasGroundedLastFrame = false;
     }
 
     private void Update()
@@ -207,7 +211,10 @@ public sealed partial class PlayerController : MonoBehaviour
         // 壁キック入力ロックタイマーを減算する。
         UpdateWallJumpLockTimer(deltaTime);
 
-        // ダッシュの継続時間とクールダウンを更新する。
+        // ダッシュ残数の回復/接地遷移状態を更新する。
+        UpdateDashResourceState();
+
+        // ダッシュの継続時間と再入力ロックを更新する。
         UpdateDashTimers(deltaTime);
 
         // ダッシュ入力バッファタイマーを更新する。

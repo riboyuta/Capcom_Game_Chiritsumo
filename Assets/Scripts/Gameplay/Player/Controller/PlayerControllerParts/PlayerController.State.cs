@@ -38,6 +38,14 @@ public sealed partial class PlayerController
     // ダッシュクールダウン残り時間。
     private float dashCooldownTimer;
 
+    // 現在のダッシュ残数。
+    private int currentDashCharges;
+
+    // 前フレームの接地状態。
+    // 接地遷移を検出して、必要時のみダッシュ回復させるために使う。
+    private bool wasGroundedLastFrame;
+
+
     // ダッシュ開始時のY速度。
     private float dashStartVerticalVelocity;
 

@@ -176,6 +176,18 @@ public sealed class PlayerMovementSettings
     [Tooltip("有効にすると、空中でもダッシュを使用できます。")]
     public bool allowAirDash = true;
 
+    [Header("ダッシュ最大残数")]
+    [Tooltip("同時に保持できるダッシュ残数の最大値です。Step 2 ではリソース式ダッシュの上限として使います。")]
+    [Min(1)] public int maxDashCharges = 1;
+
+    [Header("接地時ダッシュ回復を使う")]
+    [Tooltip("有効にすると、接地中にダッシュ残数が最大未満なら最大まで回復します。")]
+    public bool useGroundDashRefill = true;
+
+    [Header("ダッシュ再入力ロック時間")]
+    [Tooltip("同一入力や連続判定の暴発を防ぐための最小ロック時間です。クールダウン用途ではなく再入力抑制用途です。")]
+    [Min(0f)] public float dashRetryLockTime = 0.02f;
+
     [Header("ダッシュ中の方向転換を許可")]
     [Tooltip("有効にすると、ダッシュ中でも左右入力で向きや進行方向を変えられます。無効にすると開始方向を維持します。")]
     public bool allowTurnDuringDash = true;
