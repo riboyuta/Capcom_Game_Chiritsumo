@@ -16,7 +16,10 @@ public sealed partial class PlayerController
         {
             return;
         }
-
+        if (isWallGrabbing)
+        {
+            return;
+        }
         // 移動入力の X 成分を -1 から 1 の範囲に収める。
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
 

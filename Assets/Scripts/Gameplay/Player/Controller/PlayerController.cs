@@ -196,9 +196,13 @@ public sealed partial class PlayerController : MonoBehaviour
         // 物理フレームで壁接触状態を更新する。
         CheckWallContact();
 
+        // 壁捕まり状態の進入・離脱を更新する。
+        UpdateWallGrabState();
+
         // ジャンプ補助タイマーを更新する。
         // 例: コヨーテタイム、ジャンプバッファなど。
         UpdateJumpAssistTimers(deltaTime);
+
 
         // 壁キック入力ロックタイマーを減算する。
         UpdateWallJumpLockTimer(deltaTime);
@@ -230,6 +234,21 @@ public sealed partial class PlayerController : MonoBehaviour
             UpdateVibrationEvents();
             FinalizeVisualState(previousVelocityY);
             return;
+        }
+
+        // 壁捕まり中は先にジャンプだけ試し、
+        // まだ捕まり中なら専用移動を適用して通常移動へ入らない。
+        if (isWallGrabbing)
+        {
+            ApplyJump();
+            if (isWallGrabbing)
+            {
+                ApplyWallGrabMovement();
+                UpdateAudioEvents();
+                UpdateVibrationEvents();
+                FinalizeVisualState(previousVelocityY);
+                return;
+            }
         }
 
         // 通常移動フロー。

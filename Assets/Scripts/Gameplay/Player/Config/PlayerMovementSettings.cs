@@ -104,6 +104,14 @@ public sealed class PlayerMovementSettings
     [Tooltip("壁に接触したときに落下速度を抑える壁滑り機能を有効にします。")]
     public bool useWallSlide = true;
 
+    [Header("壁捕まりを使う")]
+    [Tooltip("空中で壁に接触中に Grab 入力を保持しているとき、壁に捕まる機能を有効にします。")]
+    public bool useWallGrab = true;
+
+    [Header("壁捕まり中の縦速度")]
+    [Tooltip("壁捕まり中に維持する縦速度です。0でその場維持、負値でゆっくり下降、正値で上昇します。")]
+    public float wallGrabVerticalSpeed = 0f;
+
     [Header("壁判定距離")]
     [Tooltip("左右方向への壁チェック距離です。短すぎると壁検出が不安定になり、長すぎると遠い壁に反応しやすくなります。")]
     [Min(0f)] public float wallCheckDistance = 0.15f;
@@ -199,4 +207,20 @@ public sealed class PlayerMovementSettings
     [Header("レール乗車制限角度")]
     [Tooltip("空中から直接レールに飛び乗る際、レールの傾きがこれ以上（垂直寄り）だと乗れずに弾かれる角度です（度）。")]
     [Range(0f, 90f)] public float maxAttachSlopeAngle = 45f;
+
+    [Header("ダッシュ方向入力を8方向にスナップする")]
+    [Tooltip("有効にすると、ゲームパッドのダッシュ方向入力を8方向へ丸めます。セレステ寄りの入力感にしたいときに使います。")]
+    public bool useEightWayDashInput = true;
+
+    [Header("ダッシュ方向入力のデッドゾーン")]
+    [Tooltip("ダッシュ方向としてゲームパッド入力を受け付ける最小値です。小さいほど弱い倒しでも方向入力として扱います。")]
+    [Range(0f, 1f)] public float dashDirectionDeadZone = 0.25f;
+
+    [Header("ダッシュ斜め入力補助角度")]
+    [Tooltip("8方向スナップ時に斜め方向を少し選びやすくする補助角度です。大きいほど斜めが出しやすくなります。")]
+    [Range(0f, 22.5f)] public float dashDiagonalAssistAngle = 8.0f;
+
+    [Header("移動入力のゲームパッドデッドゾーン")]
+    [Tooltip("通常移動でゲームパッド入力を採用する最小値です。微小ドリフトでキーボード入力が食われるのを防ぎます。")]
+    [Range(0f, 1f)] public float moveInputGamepadDeadZone = 0.20f;
 }

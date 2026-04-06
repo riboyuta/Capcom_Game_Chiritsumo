@@ -109,7 +109,8 @@ public sealed partial class PlayerController
         {
             return;
         }
-
+        // ダッシュ開始時は壁捕まり状態を解除する。
+        ExitWallGrab();
         // ダッシュ開始状態へ入る。
         isDashing = true;
         isFastFalling = false;

@@ -20,6 +20,12 @@ public sealed partial class PlayerController
     // 現在壁滑り中かどうか。
     private bool isWallSliding;
 
+    // 現在壁捕まり中かどうか。
+    private bool isWallGrabbing;
+
+    // 捕まっている壁の左右。(-1:left / +1:right / 0:none)
+    private int wallGrabSide;
+
     // 現在ダッシュ中かどうか。
     private bool isDashing;
 
