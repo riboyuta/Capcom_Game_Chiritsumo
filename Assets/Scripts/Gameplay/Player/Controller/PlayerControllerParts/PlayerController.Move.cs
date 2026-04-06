@@ -2,26 +2,26 @@ using UnityEngine;
 
 public sealed partial class PlayerController
 {
-    private void ApplyStepVelocity()
+    private void ApplyDashVelocity()
     {
-        int movingDirection = movementSettings.allowTurnDuringStep ? facing : stepDirection;
+        int movingDirection = movementSettings.allowTurnDuringDash ? facing : dashDirection;
 
-        Vector2 steppingVelocity = rb.linearVelocity;
-        steppingVelocity.x = movingDirection * movementSettings.stepSpeed;
+        Vector2 dashingVelocity = rb.linearVelocity;
+        dashingVelocity.x = movingDirection * movementSettings.dashSpeed;
 
-        // 前ステップ中の縦挙動は専用処理を優先し、
+        // ダッシュ中の縦挙動は専用処理を優先し、
         // 通常の重力/落下/壁滑り処理で上書きしない。
-        if (movementSettings.stepGravityMultiplier <= 0f)
+        if (movementSettings.dashGravityMultiplier <= 0f)
         {
-            steppingVelocity.y = 0f;
+            dashingVelocity.y = 0f;
         }
         else
         {
-            float stepGravityScale = movementSettings.gravityScale * movementSettings.stepGravityMultiplier;
-            steppingVelocity.y += Physics.gravity.y * stepGravityScale * Time.fixedDeltaTime;
+            float dashGravityScale = movementSettings.gravityScale * movementSettings.dashGravityMultiplier;
+            dashingVelocity.y += Physics.gravity.y * dashGravityScale * Time.fixedDeltaTime;
         }
 
-        rb.linearVelocity = steppingVelocity;
+        rb.linearVelocity = dashingVelocity;
     }
 
     private void UpdateWallJumpLockTimer(float deltaTime)

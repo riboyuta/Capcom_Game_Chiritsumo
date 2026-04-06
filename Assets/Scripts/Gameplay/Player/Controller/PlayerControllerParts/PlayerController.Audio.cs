@@ -25,7 +25,7 @@ public sealed partial class PlayerController
 
         // 状態変化に応じて各種音声イベントを判定する。
         UpdateWallSlideSound();
-        UpdateStepSound();
+        UpdateDashSound();
         UpdateLandingSound();
     }
 
@@ -46,28 +46,28 @@ public sealed partial class PlayerController
         }
     }
 
-    // 前ステ開始時に、地上/空中で音声を分ける。
+    // ダッシュ開始時に、地上/空中で音声を分ける。
     // 判定ロジックは Vibration.cs 側と同じ。
-    // wasStepping / isStepping は Vibration.cs 側で管理済み。
-    private void UpdateStepSound()
+    // wasDashing / isDashing は Vibration.cs 側で管理済み。
+    private void UpdateDashSound()
     {
-        // 「今フレームで前ステ開始した瞬間」だけ鳴らしたい。
-        if (wasStepping || !isStepping)
+        // 「今フレームでダッシュ開始した瞬間」だけ鳴らしたい。
+        if (wasDashing || !isDashing)
         {
             return;
         }
 
-        // 壁滑りから前ステに入るケースでは、ループ音を止める。
+        // 壁滑りからダッシュに入るケースでは、ループ音を止める。
         audioController.StopWallSlideSound();
 
-        // 前ステ開始時点の接地状態で、地上用と空中用の音声を分ける。
+        // ダッシュ開始時点の接地状態で、地上用と空中用の音声を分ける。
         if (isGrounded)
         {
-            audioController.PlayGroundStep();
+            audioController.PlayGroundDash();
         }
         else
         {
-            audioController.PlayAirStep();
+            audioController.PlayAirDash();
         }
     }
 

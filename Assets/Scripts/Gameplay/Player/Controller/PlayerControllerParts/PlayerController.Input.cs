@@ -11,8 +11,8 @@ public sealed partial class PlayerController
             return;
         }
 
-        // 前ステ中の方向転換を無効化している間は向きを固定する。
-        if (isStepping && !movementSettings.allowTurnDuringStep)
+        // ダッシュ中の方向転換を無効化している間は向きを固定する。
+        if (isDashing && !movementSettings.allowTurnDuringDash)
         {
             return;
         }

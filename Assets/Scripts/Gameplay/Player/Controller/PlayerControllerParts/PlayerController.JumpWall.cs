@@ -33,9 +33,9 @@ public sealed partial class PlayerController
 
     private void ApplyJump()
     {
-        // 前ステップ中はジャンプを受け付けない。
+        // ダッシュ中はジャンプを受け付けない。
         // バッファ有効時でもここで破棄する。
-        if (isStepping)
+        if (isDashing)
         {
             jumpRequested = false;
             if (movementSettings.useJumpBuffer)
@@ -96,8 +96,8 @@ public sealed partial class PlayerController
 
     private bool TryApplyWallKick()
     {
-        // 前ステップ中は壁キックしない。
-        if (isStepping)
+        // ダッシュ中は壁キックしない。
+        if (isDashing)
         {
             return false;
         }
@@ -243,8 +243,8 @@ public sealed partial class PlayerController
             return;
         }
 
-        // 接地中・前ステ中・壁滑り中は開始しない。
-        if (isGrounded || isStepping || isWallSliding)
+        // 接地中・ダッシュ中・壁滑り中は開始しない。
+        if (isGrounded || isDashing || isWallSliding)
         {
             return;
         }

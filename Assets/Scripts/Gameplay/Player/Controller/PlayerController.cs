@@ -19,14 +19,14 @@ public sealed partial class PlayerController : MonoBehaviour
     [SerializeField] private RawInputSource rawInputSource;
 
     [Header("入力: 割り当て設定")]
-    [Tooltip("ジャンプやステップなど、プレイヤー操作に対応する入力割り当て定義です。キーやボタンの対応関係をここで管理します。")]
+    [Tooltip("ジャンプやダッシュなど、プレイヤー操作に対応する入力割り当て定義です。キーやボタンの対応関係をここで管理します。")]
     // プレイヤー操作の入力割り当て定義。
     // 実際の入力読み取りは PlayerInputReader が行い、
     // この設定は「どの操作をどの入力に対応させるか」を保持する。
     [SerializeField] private PlayerInputBindings inputBindings = new PlayerInputBindings();
 
     [Header("移動: パラメータ設定")]
-    [Tooltip("移動速度、加速度、ジャンプ、重力、壁滑り、前ステップなどの調整値をまとめた設定です。Inspector からプレイ感を調整します。")]
+    [Tooltip("移動速度、加速度、ジャンプ、重力、壁滑り、ダッシュなどの調整値をまとめた設定です。Inspector からプレイ感を調整します。")]
     // 移動パラメータ群。
     // 速度・加速度・重力倍率・接地判定距離などを保持する。
     [SerializeField] private PlayerMovementSettings movementSettings = new PlayerMovementSettings();
@@ -117,9 +117,9 @@ public sealed partial class PlayerController : MonoBehaviour
             jumpRequested = true;
         }
 
-        if (playerInputReader.StepPressed)
+        if (playerInputReader.DashPressed)
         {
-            stepRequested = true;
+            dashRequested = true;
         }
 
         // 横入力がしきい値を超えたときのみ向きを更新する。
@@ -135,7 +135,7 @@ public sealed partial class PlayerController : MonoBehaviour
         if (IsActionLocked)
         {
             jumpRequested = false;
-            stepRequested = false;
+            dashRequested = false;
             return;
         }
     }
@@ -203,19 +203,19 @@ public sealed partial class PlayerController : MonoBehaviour
         // 壁キック入力ロックタイマーを減算する。
         UpdateWallJumpLockTimer(deltaTime);
 
-        // 前ステの継続時間とクールダウンを更新する。
-        UpdateStepTimers(deltaTime);
+        // ダッシュの継続時間とクールダウンを更新する。
+        UpdateDashTimers(deltaTime);
 
-        // 前ステ入力バッファタイマーを更新する。
-        UpdateStepBufferTimer(deltaTime);
+        // ダッシュ入力バッファタイマーを更新する。
+        UpdateDashBufferTimer(deltaTime);
 
-        // 前ステ開始条件を満たす場合は開始する。
-        TryStartStep();
+        // ダッシュ開始条件を満たす場合は開始する。
+        TryStartDash();
 
-        // 前ステップ中は専用速度を最優先し、通常の縦処理を通さない。
-        if (isStepping)
+        // ダッシュ中は専用速度を最優先し、通常の縦処理を通さない。
+        if (isDashing)
         {
-            ApplyStepVelocity();
+            ApplyDashVelocity();
             UpdateAudioEvents();
             UpdateVibrationEvents();
             FinalizeVisualState(previousVelocityY);

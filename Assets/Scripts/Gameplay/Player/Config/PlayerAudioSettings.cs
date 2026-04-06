@@ -42,15 +42,15 @@ public sealed class PlayerAudioSettings : MonoBehaviour
     [SerializeField]
     private bool enableWallSlide = true;
 
-    [Header("音声イベント有効化: 地上前ステ")]
-    [Tooltip("有効時、地上での前ステップ開始時に音声を再生します。")]
+    [Header("音声イベント有効化: 地上ダッシュ")]
+    [Tooltip("有効時、地上でのダッシュ開始時に音声を再生します。")]
     [SerializeField]
-    private bool enableGroundStep = true;
+    private bool enableGroundDash = true;
 
-    [Header("音声イベント有効化: 空中前ステ")]
-    [Tooltip("有効時、空中での前ステップ開始時に音声を再生します。")]
+    [Header("音声イベント有効化: 空中ダッシュ")]
+    [Tooltip("有効時、空中でのダッシュ開始時に音声を再生します。")]
     [SerializeField]
-    private bool enableAirStep = true;
+    private bool enableAirDash = true;
 
     [Header("音声イベント有効化: 死亡(Damage)")]
     [Tooltip("有効時、Damage 死亡開始時に音声を再生します。")]
@@ -91,15 +91,15 @@ public sealed class PlayerAudioSettings : MonoBehaviour
     [SerializeField]
     private string wallSlideAudioId = "";
 
-    [Header("Audio ID: 地上前ステ")]
-    [Tooltip("地上前ステップ開始時に再生する AudioDef の ID です。")]
+    [Header("Audio ID: 地上ダッシュ")]
+    [Tooltip("地上ダッシュ開始時に再生する AudioDef の ID です。")]
     [SerializeField]
-    private string groundStepAudioId = "";
+    private string groundDashAudioId = "";
 
-    [Header("Audio ID: 空中前ステ")]
-    [Tooltip("空中前ステップ開始時に再生する AudioDef の ID です。")]
+    [Header("Audio ID: 空中ダッシュ")]
+    [Tooltip("空中ダッシュ開始時に再生する AudioDef の ID です。")]
     [SerializeField]
-    private string airStepAudioId = "";
+    private string airDashAudioId = "";
 
     [Header("Audio ID: 死亡(Damage)")]
     [Tooltip("Damage 死亡開始時に再生する AudioDef の ID です。")]
@@ -201,18 +201,18 @@ public sealed class PlayerAudioSettings : MonoBehaviour
         StopSafe(wallSlideAudioId);
     }
 
-    // 地上前ステ音を再生する。
-    public void PlayGroundStep()
+    // 地上ダッシュ音を再生する。
+    public void PlayGroundDash()
     {
-        if (!enableGroundStep) return;
-        PlayOverlapSafe(groundStepAudioId);
+        if (!enableGroundDash) return;
+        PlayOverlapSafe(groundDashAudioId);
     }
 
-    // 空中前ステ音を再生する。
-    public void PlayAirStep()
+    // 空中ダッシュ音を再生する。
+    public void PlayAirDash()
     {
-        if (!enableAirStep) return;
-        PlayOverlapSafe(airStepAudioId);
+        if (!enableAirDash) return;
+        PlayOverlapSafe(airDashAudioId);
     }
 
     // 死亡音を再生する。

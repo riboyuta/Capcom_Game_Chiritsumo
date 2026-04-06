@@ -10,7 +10,7 @@ public sealed partial class PlayerController
     // 前フレームの状態保持。
     // 「今フレームで変化したか」を判定するために使う。
     private bool wasGrounded;
-    private bool wasStepping;
+    private bool wasDashing;
     private bool wasWallSliding;
 
     // 空中に出てからの経過時間(秒)。
@@ -33,7 +33,7 @@ public sealed partial class PlayerController
     {
         // 初期比較用として、現在状態をそのまま保存しておく。
         wasGrounded = isGrounded;
-        wasStepping = isStepping;
+        wasDashing = isDashing;
         wasWallSliding = isWallSliding;
         airborneTimer = 0f;
         highestAirborneFootY = GetCurrentFootY();
@@ -54,7 +54,7 @@ public sealed partial class PlayerController
 
         // 状態変化に応じて各種振動イベントを判定する。
         UpdateWallSlideVibration();
-        UpdateStepVibration();
+        UpdateDashVibration();
         UpdateAirborneMetrics();
         UpdateLandingVibration();
 
@@ -77,29 +77,29 @@ public sealed partial class PlayerController
         }
     }
 
-    // 前ステ開始時に、地上/空中で振動を分ける。
-    private void UpdateStepVibration()
+    // ダッシュ開始時に、地上/空中で振動を分ける。
+    private void UpdateDashVibration()
     {
-        // 「今フレームで前ステ開始した瞬間」だけ振動させたい。
-        // すでに前フレームから前ステ中なら鳴らさない。
-        // 今フレームで前ステしていないなら当然鳴らさない。
-        if (wasStepping || !isStepping)
+        // 「今フレームでダッシュ開始した瞬間」だけ振動させたい。
+        // すでに前フレームからダッシュ中なら鳴らさない。
+        // 今フレームでダッシュしていないなら当然鳴らさない。
+        if (wasDashing || !isDashing)
         {
             return;
         }
 
-        // 壁滑りから前ステに入るケースでは、
+        // 壁滑りからダッシュに入るケースでは、
         // 微振動を止めてから単発振動へ切り替える。
         vibrationController.StopWallSlideRumble();
 
-        // 前ステ開始時点の接地状態で、地上用と空中用の振動を分ける。
+        // ダッシュ開始時点の接地状態で、地上用と空中用の振動を分ける。
         if (isGrounded)
         {
-            vibrationController.PlayGroundStep();
+            vibrationController.PlayGroundDash();
         }
         else
         {
-            vibrationController.PlayAirStep();
+            vibrationController.PlayAirDash();
         }
     }
 
@@ -191,7 +191,7 @@ public sealed partial class PlayerController
     private void CacheVibrationState()
     {
         wasGrounded = isGrounded;
-        wasStepping = isStepping;
+        wasDashing = isDashing;
         wasWallSliding = isWallSliding;
     }
 

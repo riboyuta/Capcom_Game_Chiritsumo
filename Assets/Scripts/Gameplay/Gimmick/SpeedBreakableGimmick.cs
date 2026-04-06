@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-// プレイヤーが一定以上の速度（前ステップなど）で接触すると破壊されるオブジェクト
+// プレイヤーが一定以上の速度（ダッシュなど）で接触すると破壊されるオブジェクト
 [RequireComponent(typeof(Collider))]
 public class SpeedBreakableGimmick : MonoBehaviour, IRespawnResettable
 {
@@ -72,12 +72,12 @@ public class SpeedBreakableGimmick : MonoBehaviour, IRespawnResettable
         // Player タグが付いていないオブジェクトは無視する
         if (!other.CompareTag("Player")) return;
 
-        // プレイヤーかどうかを判定し、前ステ状態や現在の速度を直接取得する
+        // プレイヤーかどうかを判定し、ダッシュ状態や現在の速度を直接取得する
         PlayerController player = other.GetComponentInParent<PlayerController>();
         if (player != null)
         {
-            // IsStepping（前ステ状態）が true なら速度に関わらず確実に破壊する
-            if (player.IsStepping || player.CurrentVelocity.magnitude >= breakSpeedThreshold)
+            // IsDashing（ダッシュ状態）が true なら速度に関わらず確実に破壊する
+            if (player.IsDashing || player.CurrentVelocity.magnitude >= breakSpeedThreshold)
             {
                 BreakGimmick();
                 return;
