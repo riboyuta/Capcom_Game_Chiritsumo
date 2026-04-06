@@ -88,7 +88,7 @@ public sealed partial class PlayerController : MonoBehaviour
         }
         // 入力リーダーを生成する。
         // ここで「生入力」と「入力割り当て設定」を結び付ける。
-        playerInputReader = new PlayerInputReader(rawInputSource, inputBindings);
+        playerInputReader = new PlayerInputReader(rawInputSource, inputBindings, movementSettings);
 
         // Health と Grab システムを初期化する。
         // Health 側で ReactionState 初期化も行う想定。
