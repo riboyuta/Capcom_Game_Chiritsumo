@@ -4,24 +4,7 @@ public sealed partial class PlayerController
 {
     private void ApplyDashVelocity()
     {
-        int movingDirection = movementSettings.allowTurnDuringDash ? facing : dashDirection;
-
-        Vector2 dashingVelocity = rb.linearVelocity;
-        dashingVelocity.x = movingDirection * movementSettings.dashSpeed;
-
-        // ダッシュ中の縦挙動は専用処理を優先し、
-        // 通常の重力/落下/壁滑り処理で上書きしない。
-        if (movementSettings.dashGravityMultiplier <= 0f)
-        {
-            dashingVelocity.y = 0f;
-        }
-        else
-        {
-            float dashGravityScale = movementSettings.gravityScale * movementSettings.dashGravityMultiplier;
-            dashingVelocity.y += Physics.gravity.y * dashGravityScale * Time.fixedDeltaTime;
-        }
-
-        rb.linearVelocity = dashingVelocity;
+        rb.linearVelocity = dashDirection * movementSettings.dashSpeed;
     }
 
     private void UpdateWallJumpLockTimer(float deltaTime)

@@ -227,7 +227,15 @@ public sealed partial class PlayerController
         Vector2 dashStartVelocity = rb.linearVelocity;
         dashStartVelocity.y = 0f;
         rb.linearVelocity = dashStartVelocity;
-        dashDirection = facing;
+        dashDirection = ResolveDashStartDirection();
+        if (dashDirection.x > 0f)
+        {
+            facing = 1;
+        }
+        else if (dashDirection.x < 0f)
+        {
+            facing = -1;
+        }
         isWallSliding = false;
 
         // ダッシュ入力とバッファを消費する。
@@ -240,5 +248,15 @@ public sealed partial class PlayerController
         {
             jumpBufferTimer = 0f;
         }
+    }
+    private Vector2 ResolveDashStartDirection()
+    {
+        Vector2 requestedDirection = playerInputReader.DashDirectionInput;
+        if (requestedDirection == Vector2.zero)
+        {
+            return new Vector2(facing, 0f);
+        }
+
+        return requestedDirection.normalized;
     }
 }

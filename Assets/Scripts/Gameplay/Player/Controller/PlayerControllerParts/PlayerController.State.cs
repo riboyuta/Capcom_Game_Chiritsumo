@@ -60,8 +60,9 @@ public sealed partial class PlayerController
     // 0 が入らないよう、設定時に安全補正して扱う。
     private int fixedDeathFacing = 1;
 
-    // ダッシュ開始時に固定する進行方向。(-1:left / +1:right)
-    private int dashDirection = 1;
+    // ダッシュ開始時に固定する進行方向。
+    // 無入力時は facing から (±1, 0)、入力時は正規化済みベクトルを保持する。
+    private Vector2 dashDirection = Vector2.right;
     // Update で検出したジャンプ押下を FixedUpdate まで保持する。
     // これにより物理フレームとのズレで押下を取りこぼしにくくする。
     private bool jumpRequested;

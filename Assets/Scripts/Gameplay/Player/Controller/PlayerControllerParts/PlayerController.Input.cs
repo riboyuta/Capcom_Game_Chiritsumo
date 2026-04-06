@@ -11,8 +11,7 @@ public sealed partial class PlayerController
             return;
         }
 
-        // ダッシュ中の方向転換を無効化している間は向きを固定する。
-        if (isDashing && !movementSettings.allowTurnDuringDash)
+        if (isDashing)
         {
             return;
         }
