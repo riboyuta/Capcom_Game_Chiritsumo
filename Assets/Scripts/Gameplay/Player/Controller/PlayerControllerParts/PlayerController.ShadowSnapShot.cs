@@ -5,18 +5,22 @@ using UnityEngine;
 public sealed partial class PlayerController
 {
     // 現在フレーム時点の追尾用 snapshot を返す。
+    // PlayerShadowRecorder が定期的に呼び出して履歴を作成する。
     public PlayerShadowSnapshot CaptureShadowSnapshot()
     {
         PlayerShadowSnapshot snapshot = new PlayerShadowSnapshot();
 
         snapshot.time = Time.time;
 
+        // 位置、回転、速度を記録
         snapshot.position = transform.position;
         snapshot.rotation = transform.rotation;
         snapshot.velocity = rb != null ? rb.linearVelocity : Vector3.zero;
 
+        // 向きを正規化して記録
         snapshot.facing = NormalizeShadowFacing(facing);
 
+        // 状態フラグを記録
         snapshot.isGrounded = isGrounded;
         snapshot.isTouchingWall = isTouchingWall;
         snapshot.wallSide = wallSide;
@@ -35,6 +39,7 @@ public sealed partial class PlayerController
     }
 
     // 0 や異常値が入っても -1 / +1 に寄せる。
+    // 追尾敵が左右の向きを確実に判定できるように正規化する。
     private int NormalizeShadowFacing(int direction)
     {
         if (direction < 0)

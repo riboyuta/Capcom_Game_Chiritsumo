@@ -33,42 +33,53 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
     private bool initialColliderEnabled;
     private bool initialHasTriggered;
 
+    // 初期化処理。
+    // Collider を Trigger として設定し、スポーン位置の初期化を行う。
     private void Awake()
     {
         triggerCollider = GetComponent<Collider>();
         triggerCollider.isTrigger = true;
 
+        // スポーン位置が未設定の場合は自身の Transform を使用
         if (spawnPoint == null)
         {
             spawnPoint = transform;
         }
     }
 
+    // トリガーに何かが侵入した時の処理。
+    // プレイヤーが侵入したら ShadowChaserEnemy を起動する。
     private void OnTriggerEnter(Collider other)
     {
+        // ターゲットの敵が未設定なら何もしない
         if (targetEnemy == null)
         {
             return;
         }
 
+        // プレイヤーでなければ無視
         if (!IsPlayer(other))
         {
             return;
         }
 
+        // oneShot モードで既に発動済みなら無視
         if (hasTriggered && oneShot)
         {
             return;
         }
 
+        // トリガー発動フラグを立てる
         hasTriggered = true;
 
+        // スポーン要求を作成し、敵を起動
         ShadowChaserSpawnRequest request = new ShadowChaserSpawnRequest(
             spawnPoint.position,
             spawnPoint.rotation);
 
         targetEnemy.Activate(request);
 
+        // oneShot モードなら、このトリガーを無効化
         if (oneShot)
         {
             enabled = false;
@@ -80,8 +91,11 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
         }
     }
 
+    // Respawn システム用：初期状態をキャプチャする。
+    // リスポーン時にこの状態に戻すことができる。
     public void CaptureInitialState()
     {
+        // 既にキャプチャ済みなら何もしない
         if (hasCapturedInitialState)
         {
             return;
@@ -92,6 +106,7 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
             triggerCollider = GetComponent<Collider>();
         }
 
+        // 初期状態を保存
         initialEnabled = enabled;
         initialColliderEnabled = triggerCollider != null && triggerCollider.enabled;
         initialHasTriggered = hasTriggered;
@@ -99,6 +114,8 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
         hasCapturedInitialState = true;
     }
 
+    // Respawn システム用：キャプチャした初期状態にリセットする。
+    // キャプチャしていない場合はデフォルトの状態にリセットする。
     public void ResetToRespawnState()
     {
         if (triggerCollider == null)
@@ -106,6 +123,7 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
             triggerCollider = GetComponent<Collider>();
         }
 
+        // 初期状態がキャプチャされている場合はそれを復元
         if (hasCapturedInitialState)
         {
             enabled = initialEnabled;
@@ -119,6 +137,7 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
         }
         else
         {
+            // キャプチャされていない場合はデフォルトの状態に
             hasTriggered = false;
             enabled = true;
 
@@ -130,6 +149,8 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
         }
     }
 
+    // プレイヤーかどうかを判定する。
+    // タグ判定と PlayerController コンポーネントの有無で判定する。
     private bool IsPlayer(Collider other)
     {
         if (other == null)
@@ -137,11 +158,13 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
             return false;
         }
 
+        // タグ判定が有効な場合はタグで判定
         if (usePlayerTag && other.CompareTag(playerTag))
         {
             return true;
         }
 
+        // タグが無い場合は PlayerController コンポーネントの有無で判定
         PlayerController player = other.GetComponentInParent<PlayerController>();
         return player != null;
     }

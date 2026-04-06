@@ -38,13 +38,13 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
     [SerializeField] private bool useInterpolation = true;
 
     [Tooltip("目標位置から大きく離れたときに即座に補正する距離です。")]
-    [SerializeField] private float snapDistance = 1.5f;
+    [SerializeField] private float snapDistance = 0.3f;
 
     [Tooltip("通常追尾中も目標位置へ少し滑らかに寄せるかです。")]
     [SerializeField] private bool smoothFollow = true;
 
     [Tooltip("通常追尾中の吸い付き強さです。大きいほど素早く追従します。")]
-    [SerializeField] private float followSmoothSharpness = 20.0f;
+    [SerializeField] private float followSmoothSharpness = 40.0f;
 
     [Tooltip("開始時に有効にするかです。true ならシーン開始時にスポーンシーケンスへ入ります。")]
     [SerializeField] private bool isActiveOnStart = false;
@@ -149,28 +149,35 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
     public bool HasSnapshot => hasLastAppliedSnapshot;
     public PlayerShadowSnapshot CurrentSnapshot => lastAppliedSnapshot;
 
+    // 初期化処理。
+    // 必要な参照を取得し、デフォルトの位置・回転・スケールを保存する。
     private void Awake()
     {
+        // Recorder が未設定ならシーンから探す
         if (recorder == null)
         {
             recorder = FindFirstObjectByType<PlayerShadowRecorder>();
         }
 
+        // targetPlayer が未設定なら recorder から取得
         if (targetPlayer == null && recorder != null)
         {
             targetPlayer = recorder.GetComponent<PlayerController>();
         }
 
+        // visualRoot が未設定なら自身を使用
         if (visualRoot == null)
         {
             visualRoot = transform;
         }
 
+        // controlledRenderers が未設定なら子を含めて自動取得
         if (controlledRenderers == null || controlledRenderers.Length == 0)
         {
             controlledRenderers = GetComponentsInChildren<Renderer>(true);
         }
 
+        // デフォルトの位置・回転・スケールを保存
         defaultPosition = transform.position;
         defaultRotation = transform.rotation;
 
@@ -180,14 +187,17 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             initializedDefaultVisualScale = true;
         }
 
+        // スポーン要求情報の初期化
         currentRequestedSpawnPosition = defaultPosition;
         currentRequestedSpawnRotation = defaultRotation;
         hasRequestedSpawn = false;
 
+        // 初期状態を Idle に設定
         state = ShadowChaserState.Idle;
         SetVisible(!hideDuringSpawnDelay);
     }
 
+    // isActiveOnStart が true なら、シーン開始時に自動的に起動する。
     private void Start()
     {
         if (isActiveOnStart)
@@ -200,6 +210,8 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         }
     }
 
+    // LateUpdate で見た目を更新することで、カクつきを減らす。
+    // 状態に応じて CatchUp または Following の更新処理を実行する。
     private void LateUpdate()
     {
         switch (state)
@@ -295,19 +307,25 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         }
     }
 
+    // 外部から呼ばれて敵を起動する。
+    // トリガーから渡された出現位置へ移動し、スポーンシーケンスを開始する。
     public void Activate(ShadowChaserSpawnRequest request)
     {
+        // 既に Idle 以外の状態なら何もしない
         if (state != ShadowChaserState.Idle)
         {
             return;
         }
 
+        // スポーン要求情報を保存
         currentRequestedSpawnPosition = request.position;
         currentRequestedSpawnRotation = request.rotation;
         hasRequestedSpawn = true;
 
+        // 要求されたスポーン位置へ即座に移動
         MoveToRequestedSpawnImmediate();
 
+        // スポーンシーケンスを使わない場合は即座に追尾開始
         if (!useSpawnSequence)
         {
             SetVisible(true);
@@ -325,6 +343,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             return;
         }
 
+        // スポーンシーケンスを開始
         if (spawnSequenceCoroutine != null)
         {
             StopCoroutine(spawnSequenceCoroutine);
@@ -357,6 +376,8 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         return state != ShadowChaserState.Idle;
     }
 
+    // スポーンシーケンスのコルーチン。
+    // 待機時間を置き、出現演出（オフセット位置から目的地への移動 + スケール変化）を行う。
     private IEnumerator CoSpawnSequence()
     {
         state = ShadowChaserState.SpawnDelay;
@@ -364,6 +385,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         Vector3 targetPosition = GetRequestedSpawnPosition();
         Quaternion targetRotation = GetRequestedSpawnRotation();
 
+        // 待機中は非表示にするかどうか
         if (hideDuringSpawnDelay)
         {
             SetVisible(false);
@@ -373,18 +395,22 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             SetVisible(true);
         }
 
+        // スポーン位置へ移動
         transform.position = targetPosition;
         transform.rotation = targetRotation;
 
+        // 待機時間
         if (spawnDelay > 0f)
         {
             yield return new WaitForSeconds(spawnDelay);
         }
 
+        // 出現演出開始
         state = ShadowChaserState.Spawning;
 
         SetVisible(true);
 
+        // 出現演出の開始位置と終了位置
         Vector3 startPosition = targetPosition + spawnOffset;
         Vector3 endPosition = targetPosition;
 
@@ -399,6 +425,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             visualRoot.localScale = startScale;
         }
 
+        // 出現演出：位置とスケールを補間
         float duration = Mathf.Max(0.0001f, spawnDuration);
         float elapsed = 0f;
 
@@ -417,6 +444,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             yield return null;
         }
 
+        // 最終位置とスケールを確定
         transform.position = endPosition;
 
         if (visualRoot != null)
@@ -424,6 +452,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             visualRoot.localScale = endScale;
         }
 
+        // 出現後に追尾を開始するかどうか
         if (startFollowAfterSpawn)
         {
             BeginCatchUpOrFollow();
@@ -436,26 +465,32 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         spawnSequenceCoroutine = null;
     }
 
+    // CatchUp または通常追尾を開始する。
+    // CatchUp が有効なら、スポーン位置から履歴レールへの滑らかな合流を行う。
     private void BeginCatchUpOrFollow()
     {
+        // CatchUp を使わない場合は即座に通常追尾へ
         if (!useCatchUp)
         {
             BeginFollow();
             return;
         }
 
+        // Recorder がない場合は通常追尾へ
         if (recorder == null)
         {
             BeginFollow();
             return;
         }
 
+        // 履歴から snapshot を取得できない場合は通常追尾へ
         if (!recorder.TryGetSnapshotAtDelay(delayTime, useInterpolation, out PlayerShadowSnapshot snapshot))
         {
             BeginFollow();
             return;
         }
 
+        // CatchUp 開始：現在位置から目標位置へ滑らかに移行
         catchUpTimer = 0f;
         catchUpStartPosition = transform.position;
         catchUpStartRotation = transform.rotation;
@@ -475,6 +510,9 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         state = ShadowChaserState.Following;
     }
 
+    // CatchUp 中の更新処理。
+    // スポーン位置から履歴レールへ滑らかに合流する。
+    // 目標位置に十分近づいたら通常追尾へ移行する。
     private void UpdateCatchUp()
     {
         if (recorder == null)
@@ -483,11 +521,13 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             return;
         }
 
+        // 最新の snapshot を取得
         if (!recorder.TryGetSnapshotAtDelay(delayTime, useInterpolation, out PlayerShadowSnapshot snapshot))
         {
             return;
         }
 
+        // 目標位置を更新
         catchUpCurrentTargetPosition = snapshot.position;
         catchUpCurrentTargetRotation = snapshot.rotation;
         hasCatchUpTarget = true;
@@ -498,16 +538,20 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         float duration = Mathf.Max(0.0001f, catchUpDuration);
         catchUpTimer += Time.deltaTime;
 
+        // 正規化された時間 (0.0 ～ 1.0)
         float normalizedTime = Mathf.Clamp01(catchUpTimer / duration);
 
+        // カーブを適用
         float curveT = normalizedTime;
         if (catchUpCurve != null && catchUpCurve.length > 0)
         {
             curveT = catchUpCurve.Evaluate(normalizedTime);
         }
 
+        // 目標位置への吸い付き計算
         float followLerpFactor = 1f - Mathf.Exp(-Mathf.Max(0.01f, catchUpFollowSharpness) * Time.deltaTime);
 
+        // 現在位置から目標位置への移動目標を計算
         Vector3 movingTargetPosition = Vector3.Lerp(
             transform.position,
             catchUpCurrentTargetPosition,
@@ -518,6 +562,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             catchUpCurrentTargetRotation,
             followLerpFactor);
 
+        // 開始位置から移動目標へ、カーブに応じて補間
         transform.position = Vector3.Lerp(
             catchUpStartPosition,
             movingTargetPosition,
@@ -530,14 +575,19 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
 
         ApplyFacingVisual(snapshot.facing);
 
-        float remainDistance = Vector3.Distance(transform.position, catchUpCurrentTargetPosition);
+        // 目標位置との距離をチェック（パフォーマンス最適化: sqrMagnitude を使用）
+        float sqrRemainDistance = (transform.position - catchUpCurrentTargetPosition).sqrMagnitude;
+        float sqrCompleteDistance = catchUpCompleteDistance * catchUpCompleteDistance;
 
-        if (normalizedTime >= 1f && remainDistance <= Mathf.Max(0.001f, catchUpCompleteDistance))
+        // 時間が経過し、十分近づいたら通常追尾へ移行
+        if (normalizedTime >= 1f && sqrRemainDistance <= Mathf.Max(0.000001f, sqrCompleteDistance))
         {
             BeginFollow();
         }
     }
 
+    // 通常追尾中の更新処理。
+    // delayTime 秒前のプレイヤー履歴を取得し、その位置をなぞる。
     private void UpdateFollow()
     {
         if (recorder == null)
@@ -545,32 +595,41 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             return;
         }
 
+        // delayTime 秒前の snapshot を取得
         if (!recorder.TryGetSnapshotAtDelay(delayTime, useInterpolation, out PlayerShadowSnapshot snapshot))
         {
             return;
         }
 
+        // snapshot を適用して位置を更新
         ApplySnapshot(snapshot);
 
         lastAppliedSnapshot = snapshot;
         hasLastAppliedSnapshot = true;
     }
 
+    // snapshot を適用して自身の位置・回転・向きを更新する。
+    // snapDistance 以上離れている場合は即座に移動、そうでなければ滑らかに追尾する。
     private void ApplySnapshot(PlayerShadowSnapshot snapshot)
     {
-        float distance = Vector3.Distance(transform.position, snapshot.position);
+        // パフォーマンス最適化: 平方根計算を避けるため sqrMagnitude を使用
+        float sqrDistance = (transform.position - snapshot.position).sqrMagnitude;
+        float sqrSnapDistance = snapDistance * snapDistance;
 
-        if (distance >= snapDistance)
+        // snapDistance 以上離れている場合は即座に移動
+        if (sqrDistance >= sqrSnapDistance)
         {
             transform.position = snapshot.position;
         }
         else if (smoothFollow)
         {
+            // 滑らかに追尾
             float lerpFactor = 1f - Mathf.Exp(-Mathf.Max(0.01f, followSmoothSharpness) * Time.deltaTime);
             transform.position = Vector3.Lerp(transform.position, snapshot.position, lerpFactor);
         }
         else
         {
+            // 滑らかな追尾をしない場合は即座に移動
             transform.position = snapshot.position;
         }
 
@@ -590,6 +649,8 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         visualRoot.localScale = scale;
     }
 
+    // プレイヤーとの接触判定。
+    // contactRadius 内にプレイヤーがいたら即死を要求する。
     private void CheckKillContact()
     {
         if (targetPlayer == null)
@@ -597,10 +658,13 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             return;
         }
 
+        // プレイヤーとの距離を計算（パフォーマンス最適化: sqrMagnitude を使用）
         Vector3 playerPosition = targetPlayer.transform.position;
-        float distance = Vector3.Distance(transform.position, playerPosition);
+        float sqrDistance = (transform.position - playerPosition).sqrMagnitude;
+        float sqrContactRadius = contactRadius * contactRadius;
 
-        if (distance > contactRadius)
+        // contactRadius 内にいれば即死を要求
+        if (sqrDistance > sqrContactRadius)
         {
             return;
         }

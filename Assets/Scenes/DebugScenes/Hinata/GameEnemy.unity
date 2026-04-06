@@ -153,9 +153,9 @@ MonoBehaviour:
   targetPlayer: {fileID: 1189614811}
   visualRoot: {fileID: 0}
   controlledRenderers: []
-  delayTime: 1
+  delayTime: 0.6
   useInterpolation: 1
-  snapDistance: 0.5
+  snapDistance: 0.1
   smoothFollow: 1
   followSmoothSharpness: 300
   isActiveOnStart: 0
@@ -458,7 +458,7 @@ MonoBehaviour:
   shadowEnemy: {fileID: 31727795}
   spriteRenderer: {fileID: 155527370}
   viewRoot: {fileID: 155527368}
-  walkThreshold: 0.001
+  walkThreshold: 0.05
   riseThreshold: 0.05
   baseLocalOffset: {x: 0, y: 0, z: 0}
   baseScale: {x: 0.4, y: 0.4, z: 0.4}
@@ -2032,7 +2032,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerShadowRecorder
   playerController: {fileID: 1189614811}
-  recordInterval: 0.02
+  recordInterval: 0
   maxHistoryDuration: 2
   showDebugPath: 1
   debugPathColor: {r: 1, g: 0, b: 1, a: 1}

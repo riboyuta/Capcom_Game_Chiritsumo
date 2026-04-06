@@ -160,23 +160,30 @@ public sealed class ShadowChaserView : MonoBehaviour
 
     public Transform ViewRoot => viewRoot != null ? viewRoot : transform;
 
+    // 初期化処理。
+    // ShadowChaserEnemy と SpriteRenderer の参照を取得し、
+    // スプライトアニメーションプレイヤーを設定する。
     private void Awake()
     {
+        // 未設定なら親階層から ShadowChaserEnemy を取得
         if (shadowEnemy == null)
         {
             shadowEnemy = GetComponentInParent<ShadowChaserEnemy>();
         }
 
+        // 未設定なら同一 GameObject から SpriteRenderer を取得
         if (spriteRenderer == null)
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
         }
 
+        // 未設定なら自身を viewRoot とする
         if (viewRoot == null)
         {
             viewRoot = transform;
         }
 
+        // 必要な参照がすべて揃っているかチェック
         if (shadowEnemy == null || spriteRenderer == null || viewRoot == null)
         {
             Debug.LogError("ShadowChaserView references are missing.", this);
@@ -184,47 +191,63 @@ public sealed class ShadowChaserView : MonoBehaviour
             return;
         }
 
+        // スプライトシーケンスプレイヤーを設定
         sequencePlayer.SetRenderer(spriteRenderer);
 
+        // baseScale が未設定なら viewRoot の現在のスケールを使用
         if (baseScale == Vector3.zero)
         {
             baseScale = viewRoot.localScale;
         }
     }
 
+    // 毎フレーム見た目を更新する。
+    // ShadowChaserEnemy から snapshot を取得し、適切なアニメーション状態に切り替える。
     private void Update()
     {
+        // snapshot がなければ何もしない
         if (!shadowEnemy.HasSnapshot)
         {
             return;
         }
 
+        // 現在のプレイヤー見た目状態を取得
         PlayerController.VisualState state = shadowEnemy.CurrentSnapshot.visualState;
 
+        // 空中コンテキストを更新（ジャンプからの落下かどうかを記憶）
         UpdateAirborneContext(state);
 
+        // 本来のアニメ状態を解決
         desiredAnimState = ResolveDesiredState(state);
 
+        // 状態遷移を処理（最小持続時間などを考慮）
         TickStateTransition(desiredAnimState, Time.deltaTime);
 
+        // スプライトシーケンスプレイヤーを進める
         sequencePlayer.Tick(Time.deltaTime);
         currentFrameIndex = sequencePlayer.CurrentFrame;
 
+        // 見た目補正（向き、スケール、オフセット）を適用
         ApplyVisualCorrection(state);
     }
 
+    // 空中コンテキストを更新する。
+    // ジャンプからの空中状態かどうかを記憶し、アニメ選択に役立てる。
     private void UpdateAirborneContext(PlayerController.VisualState state)
     {
+        // ジャンプした瞬間にフラグを立てる
         if (state.justJumped)
         {
             airborneFromJump = true;
         }
 
+        // 空中から着地したらフラグを下ろす
         if (!wasGrounded && state.isGrounded)
         {
             airborneFromJump = false;
         }
 
+        // 地上から空中に移行したがジャンプではない場合（落下など）
         if (wasGrounded && !state.isGrounded && !state.justJumped)
         {
             airborneFromJump = false;
@@ -299,38 +322,47 @@ public sealed class ShadowChaserView : MonoBehaviour
             || state == AnimState.Fall;
     }
 
+    // 現在のプレイヤー見た目状態から、適切なアニメ状態を決定する。
+    // 優先度の高い順に判定していく。
     private AnimState ResolveDesiredState(PlayerController.VisualState state)
     {
+        // ダッシュ中は最優先
         if (state.isDashing && IsClipEnabled(dashClip))
         {
             return AnimState.Dash;
         }
 
+        // 壁ジャンプした瞬間
         if (state.justWallJumped && IsClipEnabled(wallJumpClip))
         {
             return AnimState.WallJump;
         }
 
+        // 壁ずり中
         if (state.isWallSliding && IsClipEnabled(wallSlideClip))
         {
             return AnimState.WallSlide;
         }
 
+        // ジャンプした瞬間（壁ジャンプを除く）
         if (state.justJumped && !state.justWallJumped && IsClipEnabled(jumpStartClip))
         {
             return AnimState.JumpStart;
         }
 
+        // 着地した瞬間
         if (state.justLanded && IsClipEnabled(landClip))
         {
             return AnimState.Land;
         }
 
+        // 頭頂点を越えて下降に切り替わった瞬間
         if (state.justCrossedApex && IsClipEnabled(jumpToFallClip))
         {
             return AnimState.JumpToFall;
         }
 
+        // 上昇中
         if (!state.isGrounded && state.velocityY > riseThreshold)
         {
             if (IsClipEnabled(jumpRiseClip))
@@ -338,6 +370,7 @@ public sealed class ShadowChaserView : MonoBehaviour
                 return AnimState.JumpRise;
             }
 
+            // JumpRise が無い場合は JumpStart を使う
             if (airborneFromJump && IsClipEnabled(jumpStartClip))
             {
                 return AnimState.JumpStart;
@@ -346,6 +379,7 @@ public sealed class ShadowChaserView : MonoBehaviour
             return hasState ? currentAnimState : AnimState.Idle;
         }
 
+        // 下降中
         if (!state.isGrounded && !state.isWallSliding && !state.isDashing)
         {
             if (IsClipEnabled(fallClip))
@@ -353,6 +387,7 @@ public sealed class ShadowChaserView : MonoBehaviour
                 return AnimState.Fall;
             }
 
+            // Fall が無い場合は JumpToFall を使う
             if (airborneFromJump && IsClipEnabled(jumpToFallClip))
             {
                 return AnimState.JumpToFall;
@@ -361,11 +396,13 @@ public sealed class ShadowChaserView : MonoBehaviour
             return hasState ? currentAnimState : AnimState.Idle;
         }
 
+        // 地上で移動中
         if (state.isGrounded && Mathf.Abs(state.velocityX) >= walkThreshold && IsClipEnabled(walkLoopClip))
         {
             return AnimState.WalkLoop;
         }
 
+        // それ以外は待機
         if (IsClipEnabled(idleClip))
         {
             return AnimState.Idle;
@@ -374,15 +411,20 @@ public sealed class ShadowChaserView : MonoBehaviour
         return hasState ? currentAnimState : AnimState.Idle;
     }
 
+    // 見た目補正を適用する。
+    // 左右反転、スケール、ローカル位置オフセットを設定する。
     private void ApplyVisualCorrection(PlayerController.VisualState state)
     {
+        // facing による左右反転
         bool facingFlipX = state.facing < 0;
         bool extraFlipX = currentClip != null && currentClip.extraFlipX;
         bool extraFlipY = currentClip != null && currentClip.extraFlipY;
 
+        // XOR で反転を結合
         spriteRenderer.flipX = facingFlipX ^ extraFlipX;
         spriteRenderer.flipY = extraFlipY;
 
+        // スケールとオフセットを適用
         float scaleMultiplier = currentClip != null ? currentClip.scaleMultiplier : 1f;
         Vector3 localOffset = currentClip != null ? currentClip.localOffset : Vector3.zero;
 
