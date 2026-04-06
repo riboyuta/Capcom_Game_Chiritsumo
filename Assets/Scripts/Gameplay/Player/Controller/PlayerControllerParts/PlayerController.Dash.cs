@@ -14,8 +14,6 @@ public sealed partial class PlayerController
         // 接地/状態に応じたダッシュ回復を処理する。
         HandleGroundDashRefill();
 
-        // 次フレームの接地遷移検出用に状態を保存する。
-        wasGroundedLastFrame = isGrounded;
     }
 
     private void HandleGroundDashRefill()
@@ -48,8 +46,7 @@ public sealed partial class PlayerController
     private void UpdateDashTimers(float deltaTime)
     {
 
-        // ダッシュのクールダウン残り時間を減らす。
-        dashCooldownTimer = Mathf.Max(0f, dashCooldownTimer - deltaTime);
+
 
         // ダッシュ中でなければダッシュ時間は 0 に戻す。
         if (!isDashing)
@@ -93,8 +90,21 @@ public sealed partial class PlayerController
             return false;
         }
 
-        // 再入力ロック中は消費不可。
-        if (dashCooldownTimer > 0f)
+        return true;
+    }
+
+    private bool CanStartDash()
+    {
+        // 残数・状態など、基本の消費条件を満たしているかを確認する。
+        if (!CanConsumeDash())
+        {
+            return false;
+        }
+
+
+
+        // 地上中だけ地上ダッシュ連続制限タイマーを確認する。
+        if (isGrounded && groundDashCooldownTimer > 0f)
         {
             return false;
         }
@@ -145,6 +155,7 @@ public sealed partial class PlayerController
     private void EndDash()
     {
         isDashing = false;
+        TrySnapToGroundAfterDash();
 
         if (!movementSettings.restoreDashStartVerticalVelocity)
         {
@@ -204,8 +215,8 @@ public sealed partial class PlayerController
             return;
         }
 
-        // 残数・状態・再入力ロック条件を満たすか確認する。
-        if (!CanConsumeDash())
+        // 残数・状態・再入力ロック・地上連続制限条件を満たすか確認する。
+        if (!CanStartDash())
         {
             return;
         }
@@ -222,9 +233,13 @@ public sealed partial class PlayerController
         isDashing = true;
         isFastFalling = false;
         dashTimer = movementSettings.dashDuration;
-        dashCooldownTimer = movementSettings.dashRetryLockTime;
+        if (isGrounded)
+        {
+            groundDashCooldownTimer = movementSettings.groundDashCooldownTime;
+        }
         dashStartVerticalVelocity = rb.linearVelocity.y;
         Vector2 dashStartVelocity = rb.linearVelocity;
+
         dashStartVelocity.y = 0f;
         rb.linearVelocity = dashStartVelocity;
         dashDirection = ResolveDashStartDirection();
@@ -248,6 +263,86 @@ public sealed partial class PlayerController
         {
             jumpBufferTimer = 0f;
         }
+    }
+
+    private void UpdateGroundDashCooldownTimer(float deltaTime)
+    {
+        groundDashCooldownTimer = Mathf.Max(0f, groundDashCooldownTimer - deltaTime);
+    }
+
+    private void HandleGroundDashCooldownOnLanding()
+    {
+        // 空中から接地へ戻った瞬間のみ地上ダッシュ連続制限を解除する。
+        if (!wasGroundedLastFrame && isGrounded)
+        {
+            groundDashCooldownTimer = 0f;
+        }
+    }
+
+    private bool CanSnapToGroundAfterDash()
+    {
+        if (!movementSettings.useDashGroundSnap)
+        {
+            return false;
+        }
+
+        if (isGrounded || isWallGrabbing || isGrinding)
+        {
+            return false;
+        }
+
+        if (dashDirection.y > 0f)
+        {
+            return false;
+        }
+
+        return TryGetDashGroundSnapTarget(out _);
+    }
+
+    private void TrySnapToGroundAfterDash()
+    {
+        if (!CanSnapToGroundAfterDash())
+        {
+            return;
+        }
+
+        if (!TryGetDashGroundSnapTarget(out RaycastHit hit))
+        {
+            return;
+        }
+
+        Vector3 position = rb.position;
+        float capsuleBottomY = capsuleCollider.bounds.min.y;
+        float targetPositionY = hit.point.y + (position.y - capsuleBottomY);
+        float snapDeltaY = targetPositionY - position.y;
+
+        if (snapDeltaY < 0f || snapDeltaY > movementSettings.dashGroundSnapDistance)
+        {
+            return;
+        }
+
+        rb.position = new Vector3(position.x, targetPositionY, position.z);
+        isGrounded = true;
+    }
+
+    private bool TryGetDashGroundSnapTarget(out RaycastHit hit)
+    {
+        Vector3 up = transform.up;
+        Vector3 worldCenter = transform.TransformPoint(capsuleCollider.center);
+        float worldRadius = GetWorldCapsuleRadius();
+        float halfHeight = Mathf.Max(capsuleCollider.height * 0.5f, capsuleCollider.radius);
+        float worldHalfHeight = halfHeight * Mathf.Abs(transform.lossyScale.y);
+        Vector3 bottomSphereCenter = worldCenter - up * (worldHalfHeight - worldRadius);
+        float castDistance = movementSettings.dashGroundSnapDistance + 0.01f;
+
+        return Physics.SphereCast(
+            bottomSphereCenter,
+            worldRadius * 0.95f,
+            -up,
+            out hit,
+            castDistance,
+            movementSettings.groundLayerMask,
+            QueryTriggerInteraction.Ignore);
     }
     private Vector2 ResolveDashStartDirection()
     {

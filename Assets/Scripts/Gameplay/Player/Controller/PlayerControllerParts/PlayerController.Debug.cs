@@ -69,8 +69,6 @@ public sealed partial class PlayerController
     // デバッグ表示向けのダッシュ残り時間。
     public float DashTimer => dashTimer;
 
-    // デバッグ表示向けのダッシュクールダウン残り時間。
-    public float DashCooldownTimer => dashCooldownTimer;
 
     // デバッグ表示向けのダッシュ中重力倍率。
     public float DashGravityMultiplier => movementSettings.dashGravityMultiplier;

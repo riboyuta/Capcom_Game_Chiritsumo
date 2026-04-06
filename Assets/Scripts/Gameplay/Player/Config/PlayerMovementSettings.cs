@@ -168,10 +168,6 @@ public sealed class PlayerMovementSettings
     [Tooltip("有効にすると、ダッシュ開始時の縦速度を終了時に戻します。空中ダッシュ後の落下感や上昇感を保ちたいときに使います。")]
     public bool restoreDashStartVerticalVelocity = false;
 
-    [Header("ダッシュクールダウン")]
-    [Tooltip("ダッシュを再使用できるまでの待ち時間です。短いほど連発しやすくなります。")]
-    [Min(0f)] public float dashCooldown = 0.58f;
-
     [Header("空中ダッシュを許可")]
     [Tooltip("有効にすると、空中でもダッシュを使用できます。")]
     public bool allowAirDash = true;
@@ -187,6 +183,18 @@ public sealed class PlayerMovementSettings
     [Header("ダッシュ再入力ロック時間")]
     [Tooltip("同一入力や連続判定の暴発を防ぐための最小ロック時間です。クールダウン用途ではなく再入力抑制用途です。")]
     [Min(0f)] public float dashRetryLockTime = 0.02f;
+
+    [Header("地上ダッシュ連続クールタイム")]
+    [Tooltip("地上からダッシュした直後、次の地上ダッシュを許可するまでの待機時間です。空中ダッシュの開始条件には使いません。")]
+    [Min(0f)] public float groundDashCooldownTime = 0.12f;
+
+    [Header("ダッシュ終了時の床吸着を使う")]
+    [Tooltip("有効にすると、ダッシュ終了時に短距離だけ足元の地面へ寄せて、終端の浮きを抑えます。")]
+    public bool useDashGroundSnap = true;
+
+    [Header("ダッシュ終了時の床吸着距離")]
+    [Tooltip("ダッシュ終了時に足元を探す最大距離です。短いほど自然で、長いほど吸い付きが強くなります。")]
+    [Min(0f)] public float dashGroundSnapDistance = 0.2f;
 
     [Header("ダッシュ中の方向転換を許可")]
     [Tooltip("有効にすると、ダッシュ中でも左右入力で向きや進行方向を変えられます。無効にすると開始方向を維持します。")]

@@ -34,10 +34,8 @@ public sealed partial class PlayerController
 
     // ダッシュ残り時間。
     private float dashTimer;
-
-    // ダッシュクールダウン残り時間。
-    private float dashCooldownTimer;
-
+    // 地上ダッシュ連続制限用の残り時間。
+    private float groundDashCooldownTimer;
     // 現在のダッシュ残数。
     private int currentDashCharges;
 

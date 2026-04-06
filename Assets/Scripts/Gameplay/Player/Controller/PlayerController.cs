@@ -214,6 +214,15 @@ public sealed partial class PlayerController : MonoBehaviour
         // ダッシュ残数の回復/接地遷移状態を更新する。
         UpdateDashResourceState();
 
+        // 地上ダッシュ連続制限タイマーを更新する。
+        UpdateGroundDashCooldownTimer(deltaTime);
+
+        // 空中から接地へ戻った瞬間に地上ダッシュ連続制限を解除する。
+        HandleGroundDashCooldownOnLanding();
+
+        // 次フレームの接地遷移検出用に状態を保存する。
+        wasGroundedLastFrame = isGrounded;
+
         // ダッシュの継続時間と再入力ロックを更新する。
         UpdateDashTimers(deltaTime);
 
