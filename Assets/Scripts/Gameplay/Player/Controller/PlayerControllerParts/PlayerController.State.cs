@@ -20,20 +20,20 @@ public sealed partial class PlayerController
     // 現在壁滑り中かどうか。
     private bool isWallSliding;
 
-    // 現在前ステ中かどうか。
-    private bool isStepping;
+    // 現在ダッシュ中かどうか。
+    private bool isDashing;
 
     // 現在急降下中かどうか。
     private bool isFastFalling;
 
-    // 前ステ残り時間。
-    private float stepTimer;
+    // ダッシュ残り時間。
+    private float dashTimer;
 
-    // 前ステクールダウン残り時間。
-    private float stepCooldownTimer;
+    // ダッシュクールダウン残り時間。
+    private float dashCooldownTimer;
 
-    // 前ステ開始時のY速度。
-    private float stepStartVerticalVelocity;
+    // ダッシュ開始時のY速度。
+    private float dashStartVerticalVelocity;
 
     // 最後に向いていた左右方向。(-1:left / +1:right)
     private int facing = 1;
@@ -46,18 +46,18 @@ public sealed partial class PlayerController
     // 0 が入らないよう、設定時に安全補正して扱う。
     private int fixedDeathFacing = 1;
 
-    // 前ステ開始時に固定する進行方向。(-1:left / +1:right)
-    private int stepDirection = 1;
+    // ダッシュ開始時に固定する進行方向。(-1:left / +1:right)
+    private int dashDirection = 1;
     // Update で検出したジャンプ押下を FixedUpdate まで保持する。
     // これにより物理フレームとのズレで押下を取りこぼしにくくする。
     private bool jumpRequested;
 
-    // Update で検出した前ステ押下を FixedUpdate まで保持する。
+    // Update で検出したダッシュ押下を FixedUpdate まで保持する。
     // これにより物理フレームとのズレで押下を取りこぼしにくくする。
-    private bool stepRequested;
+    private bool dashRequested;
 
-    // 着地/クールダウン解除直前の前ステ入力を保持するタイマー。
-    private float stepBufferTimer;
+    // 着地/クールダウン解除直前のダッシュ入力を保持するタイマー。
+    private float dashBufferTimer;
 
     // 見た目向け単発イベント(1物理フレームだけ true)。
     private bool justLandedThisFrame;

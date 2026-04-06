@@ -16,7 +16,7 @@ public sealed class PlayerView : MonoBehaviour
         Fall,
         WallSlide,
         WallJump,
-        Step
+        Dash
     }
 
     [Header("参照: PlayerController")]
@@ -152,11 +152,11 @@ public sealed class PlayerView : MonoBehaviour
         minimumDuration = 0.10f
     };
 
-    [Header("特殊アニメ: Step")]
-    [Tooltip("前ステップ中に最優先で再生する Clip です。現在状態ロック中でも割り込みを許可します。")]
-    // ステップ用 Clip。
+    [Header("特殊アニメ: Dash")]
+    [Tooltip("ダッシュ中に最優先で再生する Clip です。現在状態ロック中でも割り込みを許可します。")]
+    // ダッシュ用 Clip。
     [SerializeField]
-    private SpriteSequenceClip stepClip = new SpriteSequenceClip
+    private SpriteSequenceClip dashClip = new SpriteSequenceClip
     {
         fps = 0f,
         playbackMode = SpriteSequencePlaybackMode.HoldLastFrame,
@@ -342,8 +342,8 @@ public sealed class PlayerView : MonoBehaviour
 
     private bool CanInterruptDuringLock(AnimState current, AnimState desired)
     {
-        // ステップは最優先で常に割り込み可能。
-        if (desired == AnimState.Step)
+        // ダッシュは最優先で常に割り込み可能。
+        if (desired == AnimState.Dash)
         {
             return true;
         }
@@ -373,10 +373,10 @@ public sealed class PlayerView : MonoBehaviour
 
     private AnimState ResolveDesiredState(PlayerController.VisualState state)
     {
-        // ステップは最優先。
-        if (state.isStepping && IsClipEnabled(stepClip))
+        // ダッシュは最優先。
+        if (state.isDashing && IsClipEnabled(dashClip))
         {
-            return AnimState.Step;
+            return AnimState.Dash;
         }
 
         // 壁ジャンプ瞬間。
@@ -426,8 +426,8 @@ public sealed class PlayerView : MonoBehaviour
             return hasState ? currentAnimState : AnimState.Idle;
         }
 
-        // 非接地中で壁滑り / ステップでないなら落下系へ。
-        if (!state.isGrounded && !state.isWallSliding && !state.isStepping)
+        // 非接地中で壁滑り / ダッシュでないなら落下系へ。
+        if (!state.isGrounded && !state.isWallSliding && !state.isDashing)
         {
             if (IsClipEnabled(fallClip))
             {
@@ -498,8 +498,8 @@ public sealed class PlayerView : MonoBehaviour
                 return wallSlideClip;
             case AnimState.WallJump:
                 return wallJumpClip;
-            case AnimState.Step:
-                return stepClip;
+            case AnimState.Dash:
+                return dashClip;
             default:
                 return idleClip;
         }

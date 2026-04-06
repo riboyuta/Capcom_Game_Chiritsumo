@@ -386,7 +386,7 @@ public sealed partial class PlayerController
     // =====================================================================
 
     // 復帰時にプレイヤー内部状態を通常開始状態へ戻す。
-    // 体力、ノックバック、リアクション、掴み、接地、壁、ステップ、入力バッファ類をまとめて初期化する。
+    // 体力、ノックバック、リアクション、掴み、接地、壁、ダッシュ、入力バッファ類をまとめて初期化する。
     private void ResetForRespawn()
     {
         // 復帰初期化時の保険として、残留振動と音声を明示停止する。
@@ -411,14 +411,14 @@ public sealed partial class PlayerController
         wallJumpControlLockTimer = 0.0f;
         wallReattachLockTimer = 0.0f;
         isWallSliding = false;
-        isStepping = false;
+        isDashing = false;
         isFastFalling = false;
-        stepTimer = 0.0f;
-        stepCooldownTimer = 0.0f;
-        stepStartVerticalVelocity = 0.0f;
+        dashTimer = 0.0f;
+        dashCooldownTimer = 0.0f;
+        dashStartVerticalVelocity = 0.0f;
         jumpRequested = false;
-        stepRequested = false;
-        stepBufferTimer = 0.0f;
+        dashRequested = false;
+        dashBufferTimer = 0.0f;
         coyoteTimer = 0.0f;
         jumpBufferTimer = 0.0f;
         jumpHoldTimer = 0.0f;

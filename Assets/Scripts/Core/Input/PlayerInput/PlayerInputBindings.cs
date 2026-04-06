@@ -4,42 +4,38 @@ using UnityEngine.InputSystem;
 
 namespace Game.Input
 {
-    // プレイヤー入力の割り当て設定をまとめるデータクラス。
-    // PlayerController などの実行側は、このクラスから「ジャンプ」「ステップ」などの入力定義を受け取る。
     [Serializable]
     public sealed class PlayerInputBindings
     {
         [Header("入力設定: ジャンプ")]
-        [Tooltip("ジャンプ操作に割り当てる入力設定です。キーボードの主キー / 副キーと、ゲームパッドの対応ボタンをまとめて定義します。")]
-        // ジャンプ入力の割り当て設定。
-        // 例:
-        // - キーボード主キー: Space
-        // - キーボード副キー: Z
-        // - ゲームパッド: A ボタン
+        [Tooltip("ジャンプ操作に割り当てる入力設定です。Celeste寄りの配置として、キーボードはCを主キー、Spaceを副キーにしています。")]
         [SerializeField]
-        private InputActionBinding _jump =
+        private InputActionBinding jump =
             new InputActionBinding(
-                primaryKeyboardKey: Key.Space,
-                secondaryKeyboardKey: Key.Z,
+                primaryKeyboardKey: Key.C,
+                secondaryKeyboardKey: Key.Space,
                 gamepadButton: RawGamepadButton.A);
 
-        [Header("入力設定: ステップ")]
-        [Tooltip("ステップ操作に割り当てる入力設定です。キーボードの主キー / 副キーと、ゲームパッドの対応ボタンをまとめて定義します。副キーを使わない場合は None を指定します。")]
-        // ステップ入力の割り当て設定。
-        // 例:
-        // - キーボード主キー: LeftShift
-        // - キーボード副キー: なし
-        // - ゲームパッド: 右トリガー
+        [Header("入力設定: ダッシュ")]
+        [Tooltip("ダッシュ操作に割り当てる入力設定です。Celeste寄りに、押した瞬間の方向入力と組み合わせて使う前提です。")]
         [SerializeField]
-        private InputActionBinding _step =
+        private InputActionBinding dash =
             new InputActionBinding(
-                primaryKeyboardKey: Key.LeftShift,
-                secondaryKeyboardKey: Key.None,
+                primaryKeyboardKey: Key.X,
+                secondaryKeyboardKey: Key.LeftShift,
+                gamepadButton: RawGamepadButton.X);
+
+        [Header("入力設定: つかむ")]
+        [Tooltip("壁つかみ・壁登りに割り当てる入力設定です。押している間だけ有効になるホールド入力として使います。")]
+        [SerializeField]
+        private InputActionBinding grab =
+            new InputActionBinding(
+                primaryKeyboardKey: Key.Z,
+                secondaryKeyboardKey: Key.LeftCtrl,
                 gamepadButton: RawGamepadButton.RightTrigger);
 
-        // 外部公開用の読み取り専用プロパティ。
-        // 呼び出し側はこのプロパティ経由で各入力設定を参照する。
-        public InputActionBinding Jump => _jump;
-        public InputActionBinding Step => _step;
+        public InputActionBinding Jump => jump;
+        public InputActionBinding Dash => dash;
+        public InputActionBinding Grab => grab;
     }
 }
