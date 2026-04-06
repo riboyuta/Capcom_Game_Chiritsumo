@@ -785,11 +785,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 15.820001, y: 22.04, z: 0}
   m_Center: {x: 9.01, y: 11.02, z: 0}
---- !u!4 &615927180 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2564374699015845103, guid: 575adefc154a47542959edb35f24afb1, type: 3}
-  m_PrefabInstance: {fileID: 6172812202918670027}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &669143496
 GameObject:
   m_ObjectHideFlags: 0
@@ -1138,17 +1133,13 @@ MonoBehaviour:
     extraFlipY: 0
     scaleMultiplier: 1
     localOffset: {x: 0, y: 0, z: 0}
-  stepClip:
+  dashClip:
     enabled: 1
     sprites:
-    - {fileID: 1303732482, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
-    - {fileID: -1045589456, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
-    - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
-    - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
-    - {fileID: -1046398307, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+    - {fileID: 1441946917, guid: ad1e1244b7d90d740a91f7892935a8bf, type: 3}
     startFrame: 0
-    endFrame: 4
-    fps: 12
+    endFrame: 0
+    fps: 0
     playbackMode: 2
     minimumDuration: 0
     extraFlipX: 0
@@ -1710,8 +1701,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVibrationController
   playerController: {fileID: 1259927090}
-  enableGroundStep: 1
-  enableAirStep: 1
+  enableGroundDash: 1
+  enableAirDash: 1
   enableWallKick: 1
   enableWallSlide: 1
   enableNormalLanding: 1
@@ -1722,11 +1713,11 @@ MonoBehaviour:
   strongLandingMinAirTime: 0.2
   useStrongLandingMinFallHeight: 1
   strongLandingMinFallHeight: 6
-  groundStep:
+  groundDash:
     lowFrequency: 0.2
     highFrequency: 0.3
     duration: 0.06
-  airStep:
+  airDash:
     lowFrequency: 0.1
     highFrequency: 0.4
     duration: 0.05
@@ -1775,13 +1766,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   rawInputSource: {fileID: 1259927094}
   inputBindings:
-    _jump:
-      _primaryKeyboardKey: 1
-      _secondaryKeyboardKey: 40
+    jump:
+      _primaryKeyboardKey: 17
+      _secondaryKeyboardKey: 1
       _gamepadButton: 0
-    _step:
-      _primaryKeyboardKey: 51
-      _secondaryKeyboardKey: 0
+    dash:
+      _primaryKeyboardKey: 38
+      _secondaryKeyboardKey: 51
+      _gamepadButton: 2
+    grab:
+      _primaryKeyboardKey: 40
+      _secondaryKeyboardKey: 55
       _gamepadButton: 11
   movementSettings:
     moveMaxSpeed: 8.2
@@ -1820,17 +1815,21 @@ MonoBehaviour:
     wallJumpControlLockTime: 0
     wallReattachLockTime: 0.12
     wallInputThreshold: 0.12
-    useStep: 1
-    stepSpeed: 18
-    stepDuration: 0.13
-    stepGravityMultiplier: 0
-    restoreStepStartVerticalVelocity: 1
-    stepCooldown: 0.58
-    allowAirStep: 1
-    allowTurnDuringStep: 0
-    useStepBuffer: 1
-    stepBufferTime: 0.06
-    stepInvulnerable: 0
+    useDash: 1
+    dashSpeed: 18
+    dashDuration: 0.13
+    dashGravityMultiplier: 0
+    restoreDashStartVerticalVelocity: 0
+    dashCooldown: 0.58
+    allowAirDash: 1
+    allowTurnDuringDash: 1
+    useDashBuffer: 1
+    dashBufferTime: 0.06
+    dashInvulnerable: 0
+    grindSpeed: 15
+    grindJumpVerticalVelocity: 12
+    railReattachLockTime: 0.2
+    maxAttachSlopeAngle: 45
   healthSettings:
     maxHealth: 3
     invincibilityDuration: 1
@@ -1848,11 +1847,9 @@ MonoBehaviour:
   damagedStateDuration: 0.15
   grabbedStateDuration: 0.5
   smashedStateDuration: 0.35
-  grabIsInstantDeath: 1
   smashIsInstantDeath: 1
   showReactionDebugLog: 0
   killAfterGrabbedDuration: 1
-  snapToGrabAnchorImmediately: 1
 --- !u!54 &1259927091
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2126,6 +2123,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0298a361fda381948bcb9ef1e9c3ec5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazardVolume
+  targetTag: Player
 --- !u!65 &1298853718
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2791,11 +2789,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3623994831124556589, guid: 575adefc154a47542959edb35f24afb1, type: 3}
   m_PrefabInstance: {fileID: 6172812202918670027}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &6172812202918670029 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7258454203881293260, guid: 575adefc154a47542959edb35f24afb1, type: 3}
-  m_PrefabInstance: {fileID: 6172812202918670027}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &6172812202918670030 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3074269209389679572, guid: 575adefc154a47542959edb35f24afb1, type: 3}
@@ -2818,21 +2811,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a216fe2d22f60ec408135f61bfb47197, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandHeadMover
-  target: {fileID: 1259927093}
-  headRoot: {fileID: 615927180}
-  movementPlaneMode: 0
-  pauseDuration: 3
-  stepLength: 5
-  faceTargetContinuously: 1
-  wobbleAngleAmplitude: 5
-  wobbleFrequency: 5
-  showMoveDebug: 1
-  currentMoveDirectionWorld: {x: 0, y: 0, z: 0}
-  hasValidDirection: 0
-  pauseTimer: 0
-  warpedThisTick: 0
-  lastWarpFromWorld: {x: 0, y: 0, z: 0}
-  lastWarpToWorld: {x: 0, y: 0, z: 0}
 --- !u!114 &6172812202918670033
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2845,33 +2823,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc5610307bb362b43b2c05949da710e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CreepingArmAttackController
-  optionalSpawnAnchor: {fileID: 382874336}
-  headRoot: {fileID: 6172812202918670028}
-  palmSocket: {fileID: 6172812202918670029}
-  headMover: {fileID: 6172812202918670032}
-  segmentPoolRoot: {fileID: 6172812202918670028}
-  segmentPrefab: {fileID: 3746233343278457844, guid: 007f0747c8d4dca4984a97eaf2f33005, type: 3}
-  segmentLength: 1
-  maxSegmentCount: 50
-  attackScale: 1
-  attackPlaneMode: 0
-  fixedDepth: 0
-  sortingLayerName: Enemy
-  headSortingOrder: 200
-  newestSegmentSortingOrder: 199
-  sortingStepPerSegment: 1
-  autoStartOnEnable: 1
-  attackDuration: 0
-  useSpawnAnchorAsInitialPoint: 1
-  showGizmos: 1
-  logSegmentCount: 1
-  isAttacking: 1
-  attackTimer: 0
-  initialLogicPoint: {x: 0, y: 0}
-  currentPalmLogicPoint: {x: 0, y: 0}
-  debugChainPoints: []
-  runtimeSegmentViews: []
-  effectiveSegmentLength: 0.1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
