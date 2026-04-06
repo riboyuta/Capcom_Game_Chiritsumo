@@ -1,13 +1,18 @@
 using UnityEngine;
 
 // 特定エリア侵入で ShadowChaserEnemy を有効化するトリガー。
+// トリガーごとに別のスポーン位置を持てる。
+// StageResetSystem からは IRespawnResettable 経由で未使用状態へ戻される。
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider))]
-public sealed class ShadowChaserActivator : MonoBehaviour
+public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
 {
     [Header("参照")]
     [Tooltip("起動対象の ShadowChaserEnemy です。")]
     [SerializeField] private ShadowChaserEnemy targetEnemy;
+
+    [Tooltip("このトリガーから起動した時のスポーン位置です。未設定時はこのトリガー自身の Transform を使います。")]
+    [SerializeField] private Transform spawnPoint;
 
     [Header("挙動")]
     [Tooltip("一度起動したらこのトリガーを無効化するかです。")]
@@ -20,11 +25,23 @@ public sealed class ShadowChaserActivator : MonoBehaviour
     [SerializeField] private string playerTag = "Player";
 
     private Collider triggerCollider;
+    private bool hasTriggered = false;
+
+    // Respawn 用に保存する初期状態
+    private bool hasCapturedInitialState;
+    private bool initialEnabled;
+    private bool initialColliderEnabled;
+    private bool initialHasTriggered;
 
     private void Awake()
     {
         triggerCollider = GetComponent<Collider>();
         triggerCollider.isTrigger = true;
+
+        if (spawnPoint == null)
+        {
+            spawnPoint = transform;
+        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -39,7 +56,18 @@ public sealed class ShadowChaserActivator : MonoBehaviour
             return;
         }
 
-        targetEnemy.Activate();
+        if (hasTriggered && oneShot)
+        {
+            return;
+        }
+
+        hasTriggered = true;
+
+        ShadowChaserSpawnRequest request = new ShadowChaserSpawnRequest(
+            spawnPoint.position,
+            spawnPoint.rotation);
+
+        targetEnemy.Activate(request);
 
         if (oneShot)
         {
@@ -48,6 +76,56 @@ public sealed class ShadowChaserActivator : MonoBehaviour
             if (triggerCollider != null)
             {
                 triggerCollider.enabled = false;
+            }
+        }
+    }
+
+    public void CaptureInitialState()
+    {
+        if (hasCapturedInitialState)
+        {
+            return;
+        }
+
+        if (triggerCollider == null)
+        {
+            triggerCollider = GetComponent<Collider>();
+        }
+
+        initialEnabled = enabled;
+        initialColliderEnabled = triggerCollider != null && triggerCollider.enabled;
+        initialHasTriggered = hasTriggered;
+
+        hasCapturedInitialState = true;
+    }
+
+    public void ResetToRespawnState()
+    {
+        if (triggerCollider == null)
+        {
+            triggerCollider = GetComponent<Collider>();
+        }
+
+        if (hasCapturedInitialState)
+        {
+            enabled = initialEnabled;
+            hasTriggered = initialHasTriggered;
+
+            if (triggerCollider != null)
+            {
+                triggerCollider.enabled = initialColliderEnabled;
+                triggerCollider.isTrigger = true;
+            }
+        }
+        else
+        {
+            hasTriggered = false;
+            enabled = true;
+
+            if (triggerCollider != null)
+            {
+                triggerCollider.enabled = true;
+                triggerCollider.isTrigger = true;
             }
         }
     }

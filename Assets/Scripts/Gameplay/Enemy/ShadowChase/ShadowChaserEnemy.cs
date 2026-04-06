@@ -2,10 +2,11 @@ using System.Collections;
 using UnityEngine;
 
 // PlayerShadowRecorder の履歴を遅延再生してプレイヤーを追う敵。
-// 追尾開始前に、スポーン位置移動・待機・出現演出・CatchUp を挟めるようにしている。
+// 追尾開始前に、トリガーから渡された出現位置へ移動し、待機・出現演出・CatchUp を挟める。
 // 通常追尾も平滑化し、LateUpdate で見た目更新してカクつきを減らしている。
+// StageResetSystem からは IRespawnResettable 経由で初期状態へ戻される。
 [DisallowMultipleComponent]
-public sealed class ShadowChaserEnemy : MonoBehaviour
+public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
 {
     private enum ShadowChaserState
     {
@@ -49,15 +50,6 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
     [SerializeField] private bool isActiveOnStart = false;
 
     [Header("スポーン設定")]
-    [Tooltip("起動時にこの位置へ移動してからスポーンします。未設定なら現在位置を使います。")]
-    [SerializeField] private Transform spawnPoint;
-
-    [Tooltip("起動時に spawnPoint へ移動するかです。")]
-    [SerializeField] private bool moveToSpawnPointOnActivate = true;
-
-    [Tooltip("停止時に spawnPoint に戻すかです。")]
-    [SerializeField] private bool resetToSpawnPointOnDeactivate = false;
-
     [Tooltip("スポーンシーケンスを使うかです。false なら即座に追尾開始します。")]
     [SerializeField] private bool useSpawnSequence = true;
 
@@ -67,7 +59,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
     [Tooltip("出現演出の長さです。")]
     [SerializeField] private float spawnDuration = 0.35f;
 
-    [Tooltip("出現演出の開始位置オフセットです。spawnPoint からこの分ずらした位置から現れます。")]
+    [Tooltip("出現演出の開始位置オフセットです。要求されたスポーン位置からこの分ずらした位置から現れます。")]
     [SerializeField] private Vector3 spawnOffset = new Vector3(0f, -1f, 0f);
 
     [Tooltip("出現演出開始時のスケールです。")]
@@ -110,11 +102,11 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
     [Tooltip("目標位置の Gizmo 色です。")]
     [SerializeField] private Color targetGizmoColor = Color.cyan;
 
-    [Tooltip("spawnPoint を Gizmo で表示します。")]
-    [SerializeField] private bool showSpawnPointGizmo = true;
+    [Tooltip("現在の要求スポーン位置を Gizmo で表示します。")]
+    [SerializeField] private bool showRequestedSpawnGizmo = true;
 
-    [Tooltip("spawnPoint の Gizmo 色です。")]
-    [SerializeField] private Color spawnPointGizmoColor = Color.yellow;
+    [Tooltip("要求スポーン位置の Gizmo 色です。")]
+    [SerializeField] private Color requestedSpawnGizmoColor = Color.yellow;
 
     [Tooltip("CatchUp 中の現在目標位置を Gizmo で表示します。")]
     [SerializeField] private bool showCatchUpTargetGizmo = true;
@@ -139,6 +131,19 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
     private bool hasCatchUpTarget;
     private Vector3 catchUpCurrentTargetPosition;
     private Quaternion catchUpCurrentTargetRotation;
+
+    // 現在の起動要求で使うスポーン情報
+    private Vector3 currentRequestedSpawnPosition;
+    private Quaternion currentRequestedSpawnRotation;
+    private bool hasRequestedSpawn;
+
+    // Respawn 用に保存する初期状態
+    private bool hasCapturedInitialState;
+    private Vector3 initialPosition;
+    private Quaternion initialRotation;
+    private Vector3 initialVisualScale;
+    private bool initialVisibility;
+    private bool initialWasActiveOnStart;
 
     private void Awake()
     {
@@ -171,6 +176,10 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
             initializedDefaultVisualScale = true;
         }
 
+        currentRequestedSpawnPosition = defaultPosition;
+        currentRequestedSpawnRotation = defaultRotation;
+        hasRequestedSpawn = false;
+
         state = ShadowChaserState.Idle;
         SetVisible(!hideDuringSpawnDelay);
     }
@@ -179,7 +188,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
     {
         if (isActiveOnStart)
         {
-            Activate();
+            Activate(new ShadowChaserSpawnRequest(defaultPosition, defaultRotation));
         }
         else
         {
@@ -187,7 +196,6 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
         }
     }
 
-    // 物理更新やプレイヤーの状態更新が終わった後で見た目を追従させる。
     private void LateUpdate()
     {
         switch (state)
@@ -204,17 +212,97 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
         }
     }
 
-    public void Activate()
+    public void CaptureInitialState()
+    {
+        if (hasCapturedInitialState)
+        {
+            return;
+        }
+
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
+        initialVisibility = AreAnyRenderersVisible();
+        initialWasActiveOnStart = isActiveOnStart;
+
+        if (visualRoot != null)
+        {
+            initialVisualScale = visualRoot.localScale;
+        }
+        else
+        {
+            initialVisualScale = Vector3.one;
+        }
+
+        hasCapturedInitialState = true;
+    }
+
+    public void ResetToRespawnState()
+    {
+        if (spawnSequenceCoroutine != null)
+        {
+            StopCoroutine(spawnSequenceCoroutine);
+            spawnSequenceCoroutine = null;
+        }
+
+        state = ShadowChaserState.Idle;
+        hasLastAppliedSnapshot = false;
+        hasCatchUpTarget = false;
+        catchUpTimer = 0f;
+
+        currentRequestedSpawnPosition = defaultPosition;
+        currentRequestedSpawnRotation = defaultRotation;
+        hasRequestedSpawn = false;
+
+        if (hasCapturedInitialState)
+        {
+            transform.position = initialPosition;
+            transform.rotation = initialRotation;
+
+            if (visualRoot != null)
+            {
+                visualRoot.localScale = initialVisualScale;
+            }
+
+            SetVisible(initialVisibility);
+
+            if (initialWasActiveOnStart)
+            {
+                Activate(new ShadowChaserSpawnRequest(initialPosition, initialRotation));
+            }
+        }
+        else
+        {
+            transform.position = defaultPosition;
+            transform.rotation = defaultRotation;
+
+            if (visualRoot != null && initializedDefaultVisualScale)
+            {
+                visualRoot.localScale = defaultVisualScale;
+            }
+
+            if (hideDuringSpawnDelay)
+            {
+                SetVisible(false);
+            }
+            else
+            {
+                SetVisible(true);
+            }
+        }
+    }
+
+    public void Activate(ShadowChaserSpawnRequest request)
     {
         if (state != ShadowChaserState.Idle)
         {
             return;
         }
 
-        if (moveToSpawnPointOnActivate)
-        {
-            MoveToSpawnPointImmediate();
-        }
+        currentRequestedSpawnPosition = request.position;
+        currentRequestedSpawnRotation = request.rotation;
+        hasRequestedSpawn = true;
+
+        MoveToRequestedSpawnImmediate();
 
         if (!useSpawnSequence)
         {
@@ -254,11 +342,6 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
         hasCatchUpTarget = false;
         catchUpTimer = 0f;
 
-        if (resetToSpawnPointOnDeactivate)
-        {
-            MoveToSpawnPointImmediate();
-        }
-
         if (hideDuringSpawnDelay)
         {
             SetVisible(false);
@@ -274,8 +357,8 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
     {
         state = ShadowChaserState.SpawnDelay;
 
-        Vector3 targetPosition = GetSpawnBasePosition();
-        Quaternion targetRotation = GetSpawnBaseRotation();
+        Vector3 targetPosition = GetRequestedSpawnPosition();
+        Quaternion targetRotation = GetRequestedSpawnRotation();
 
         if (hideDuringSpawnDelay)
         {
@@ -521,10 +604,10 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
         targetPlayer.RequestHazardDeath();
     }
 
-    private void MoveToSpawnPointImmediate()
+    private void MoveToRequestedSpawnImmediate()
     {
-        transform.position = GetSpawnBasePosition();
-        transform.rotation = GetSpawnBaseRotation();
+        transform.position = GetRequestedSpawnPosition();
+        transform.rotation = GetRequestedSpawnRotation();
 
         if (visualRoot != null && initializedDefaultVisualScale)
         {
@@ -532,21 +615,21 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
         }
     }
 
-    private Vector3 GetSpawnBasePosition()
+    private Vector3 GetRequestedSpawnPosition()
     {
-        if (spawnPoint != null)
+        if (hasRequestedSpawn)
         {
-            return spawnPoint.position;
+            return currentRequestedSpawnPosition;
         }
 
         return defaultPosition;
     }
 
-    private Quaternion GetSpawnBaseRotation()
+    private Quaternion GetRequestedSpawnRotation()
     {
-        if (spawnPoint != null)
+        if (hasRequestedSpawn)
         {
-            return spawnPoint.rotation;
+            return currentRequestedSpawnRotation;
         }
 
         return defaultRotation;
@@ -572,6 +655,25 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
         }
     }
 
+    private bool AreAnyRenderersVisible()
+    {
+        if (controlledRenderers == null || controlledRenderers.Length == 0)
+        {
+            return true;
+        }
+
+        for (int i = 0; i < controlledRenderers.Length; ++i)
+        {
+            Renderer current = controlledRenderers[i];
+            if (current != null && current.enabled)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
@@ -583,10 +685,10 @@ public sealed class ShadowChaserEnemy : MonoBehaviour
             Gizmos.DrawSphere(lastAppliedSnapshot.position, 0.08f);
         }
 
-        if (showSpawnPointGizmo)
+        if (showRequestedSpawnGizmo)
         {
-            Vector3 spawnPosition = spawnPoint != null ? spawnPoint.position : transform.position;
-            Gizmos.color = spawnPointGizmoColor;
+            Vector3 spawnPosition = hasRequestedSpawn ? currentRequestedSpawnPosition : transform.position;
+            Gizmos.color = requestedSpawnGizmoColor;
             Gizmos.DrawWireSphere(spawnPosition, 0.15f);
             Gizmos.DrawLine(spawnPosition, spawnPosition + spawnOffset);
         }
