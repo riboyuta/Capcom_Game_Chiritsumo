@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // プレイヤーの追尾用 snapshot を一定間隔で履歴保存する。
-// 敵はこの Recorder だけを見ればよいようにする。
+// 記録は LateUpdate で行い、PlayerController 側で確定済みの
+// CurrentVisualState を取りやすくする。
+// PlayerController 本体へ記録呼び出しを追加しない構成。
 [DisallowMultipleComponent]
 public sealed class PlayerShadowRecorder : MonoBehaviour
 {
@@ -24,10 +26,21 @@ public sealed class PlayerShadowRecorder : MonoBehaviour
     [Tooltip("履歴ラインの色です。")]
     [SerializeField] private Color debugPathColor = Color.magenta;
 
+    [Header("デバッグ(Runtime)")]
+    [Tooltip("最後に記録した snapshot の時刻です。")]
+    [SerializeField] private float lastRecordedTime;
+
+    [Tooltip("現在保持している履歴数です。")]
+    [SerializeField] private int debugHistoryCount;
+
     private readonly List<PlayerShadowSnapshot> history = new List<PlayerShadowSnapshot>();
-    private float recordTimer = 0.0f;
+
+    // 次に記録可能になる時刻。
+    private float nextRecordTime = 0.0f;
 
     public IReadOnlyList<PlayerShadowSnapshot> History => history;
+
+    public PlayerController TargetPlayerController => playerController;
 
     private void Awake()
     {
@@ -45,38 +58,64 @@ public sealed class PlayerShadowRecorder : MonoBehaviour
 
         recordInterval = Mathf.Max(0.001f, recordInterval);
         maxHistoryDuration = Mathf.Max(recordInterval, maxHistoryDuration);
+
+        nextRecordTime = Time.time;
     }
 
-    private void FixedUpdate()
+    private void LateUpdate()
     {
+        if (!enabled)
+        {
+            return;
+        }
+
         if (playerController == null)
         {
             return;
         }
 
-        recordTimer += Time.fixedDeltaTime;
+        float now = Time.time;
 
-        if (recordTimer < recordInterval)
+        if (now < nextRecordTime)
         {
+            debugHistoryCount = history.Count;
             return;
         }
 
-        // 長いフレームでも極端に取りこぼさないように interval 分だけ減算する。
-        recordTimer -= recordInterval;
+        RecordSnapshot(now);
+        TrimOldHistory(now);
 
-        RecordSnapshot();
-        TrimOldHistory();
+        // 長いフレームでも極端に取りこぼしすぎないように、基準時刻を積み上げる。
+        if (nextRecordTime <= 0f)
+        {
+            nextRecordTime = now + recordInterval;
+        }
+        else
+        {
+            while (nextRecordTime <= now)
+            {
+                nextRecordTime += recordInterval;
+            }
+        }
+
+        debugHistoryCount = history.Count;
     }
 
-    private void RecordSnapshot()
+    private void RecordSnapshot(float currentTime)
     {
         PlayerShadowSnapshot snapshot = playerController.CaptureShadowSnapshot();
+
+        // snapshot 側の time は CaptureShadowSnapshot 側で入れている想定だが、
+        // 念のため現在時刻で上書きして履歴時刻を統一する。
+        snapshot.time = currentTime;
+
         history.Add(snapshot);
+        lastRecordedTime = currentTime;
     }
 
-    private void TrimOldHistory()
+    private void TrimOldHistory(float currentTime)
     {
-        float thresholdTime = Time.time - maxHistoryDuration;
+        float thresholdTime = currentTime - maxHistoryDuration;
 
         int removeCount = 0;
         int count = history.Count;
@@ -185,11 +224,14 @@ public sealed class PlayerShadowRecorder : MonoBehaviour
         result.wallSide = t < 0.5f ? a.wallSide : b.wallSide;
 
         result.isWallSliding = t < 0.5f ? a.isWallSliding : b.isWallSliding;
-        result.isStepping = t < 0.5f ? a.isStepping : b.isStepping;
+        result.isDashing = t < 0.5f ? a.isDashing : b.isDashing;
         result.isFastFalling = t < 0.5f ? a.isFastFalling : b.isFastFalling;
 
         result.isActionLocked = t < 0.5f ? a.isActionLocked : b.isActionLocked;
         result.isDead = t < 0.5f ? a.isDead : b.isDead;
+
+        // visualState は離散状態として扱い、近い方を採用する。
+        result.visualState = t < 0.5f ? a.visualState : b.visualState;
 
         return result;
     }

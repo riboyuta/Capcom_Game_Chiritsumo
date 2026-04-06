@@ -22,11 +22,14 @@ public sealed partial class PlayerController
         snapshot.wallSide = wallSide;
 
         snapshot.isWallSliding = isWallSliding;
-        snapshot.isStepping = isStepping;
+        snapshot.isDashing = isDashing;
         snapshot.isFastFalling = isFastFalling;
 
         snapshot.isActionLocked = IsActionLocked;
         snapshot.isDead = reactionState == PlayerReactionState.Dead;
+
+        // Player 側で確定済みの見た目状態をそのまま渡す。
+        snapshot.visualState = CurrentVisualState;
 
         return snapshot;
     }

@@ -18,9 +18,14 @@ public struct PlayerShadowSnapshot
     public int wallSide;
 
     public bool isWallSliding;
-    public bool isStepping;
+    public bool isDashing;
     public bool isFastFalling;
 
     public bool isActionLocked;
     public bool isDead;
+
+    // プレイヤー側で確定した見た目状態。
+    // ShadowChaserView はこれを読むことで、
+    // PlayerView に近いロジックで影の見た目を決められる。
+    public PlayerController.VisualState visualState;
 }

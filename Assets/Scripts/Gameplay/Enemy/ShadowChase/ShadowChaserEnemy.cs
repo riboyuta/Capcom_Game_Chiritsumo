@@ -145,6 +145,10 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
     private bool initialVisibility;
     private bool initialWasActiveOnStart;
 
+    // View 参照口
+    public bool HasSnapshot => hasLastAppliedSnapshot;
+    public PlayerShadowSnapshot CurrentSnapshot => lastAppliedSnapshot;
+
     private void Awake()
     {
         if (recorder == null)
