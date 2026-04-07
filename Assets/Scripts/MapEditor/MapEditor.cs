@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using static UnityEditor.Rendering.InspectorCurveEditor;
 
 [ExecuteAlways]
 public class MapEditor : MonoBehaviour
@@ -9,6 +10,14 @@ public class MapEditor : MonoBehaviour
 
     Dictionary<Vector3Int, GameObject> tiles =
         new Dictionary<Vector3Int, GameObject>();
+
+    List<TileData> copyBuffer = new List<TileData>(); 
+    Vector3Int copyOrigin;
+
+    //範囲選択用
+    bool selecting = false;
+    Vector3Int selectStart;
+    Vector3Int selectEnd;
 
     [Header("プレハブパレット")]
     [Tooltip("キー毎に割り当てられているプレハブ")]
@@ -100,6 +109,33 @@ public class MapEditor : MonoBehaviour
                 //LoadMap();
                 showLoadConfirm = true;
             }
+
+            //範囲選択処理
+            {
+                ////コピー範囲開始
+                //if (Input.GetMouseButtonDown(2)) //ホイールクリック
+                //{
+                //    selecting = true;
+                //    selectStart = GetGridPosition();
+                //}
+
+                ////ドラッグ中
+                //if (Input.GetMouseButton(2) && selecting)
+                //{
+                //    selectEnd = GetGridPosition();
+                //}
+
+                ////離したらコピー
+                //if (Input.GetMouseButtonUp(2) && selecting)
+                //{
+                //    selecting = false;
+
+                //    CopyTiles(selectStart, selectEnd);
+
+                //    Debug.Log("Copy Complete");
+                //}
+            }
+           
         }
     
         //実行外
@@ -179,31 +215,7 @@ public class MapEditor : MonoBehaviour
     }
 
 
-    void ChangeTileAll(TileTypeEnum from, TileTypeEnum to)
-    {
-        List<Vector3Int> keys = new List<Vector3Int>(tiles.Keys);
-
-        foreach (var gridPos in keys)
-        {
-            GameObject tile = tiles[gridPos];
-
-            TileType tileType = tile.GetComponent<TileType>();
-
-            if (tileType.type == from)
-            {
-                Vector3 pos = tile.transform.position;
-
-                Destroy(tile);
-
-                GameObject newTile =
-                    Instantiate(tilePrefab[(int)to], pos, Quaternion.identity);
-
-                newTile.GetComponent<TileType>().type = to;
-
-                tiles[gridPos] = newTile;
-            }
-        }
-    }
+  
 
 
     //===========================-------
@@ -233,12 +245,93 @@ public class MapEditor : MonoBehaviour
         Debug.Log("Loaded Map Cleared");
     }
 
-    [ContextMenu("ChangeTiles (Editor)")]
-    void ChangeTilesOutPlaying()
+
+
+
+    //===========================-------
+    //　　　　　 コピーシステム
+    //===========================-------
+
+    void CopyTiles(Vector3Int start, Vector3Int end)
     {
-        ChangeTileAll(changeTileContainer.target, changeTileContainer.changeTo);
-        RegisterExistingTiles();
+        copyBuffer.Clear();
+
+        int minX = Mathf.Min(start.x, end.x);
+        int maxX = Mathf.Max(start.x, end.x);
+
+        int minY = Mathf.Min(start.y, end.y);
+        int maxY = Mathf.Max(start.y, end.y);
+
+        int minZ = Mathf.Min(start.z, end.z);
+        int maxZ = Mathf.Max(start.z, end.z);
+
+        copyOrigin = new Vector3Int(minX, minY, minZ);
+
+        foreach (var tile in tiles)
+        {
+            Vector3Int pos = tile.Key;
+
+            if (pos.x >= minX && pos.x <= maxX &&
+                pos.y >= minY && pos.y <= maxY &&
+                pos.z >= minZ && pos.z <= maxZ)
+            {
+                TileType type = tile.Value.GetComponent<TileType>();
+
+                TileData data = new TileData();
+
+                data.x = pos.x - copyOrigin.x;
+                data.y = pos.y - copyOrigin.y;
+                data.z = pos.z - copyOrigin.z;
+
+                data.type = type.type;
+                data.gimmickType = type.gimmickType;
+                data.gimmickID = type.gimmickID;
+
+                copyBuffer.Add(data);
+            }
+        }
+
+        Debug.Log("Copied Tiles : " + copyBuffer.Count);
     }
+
+    //===========================-------
+    //　　　　　 ペーストシステム
+    //===========================-------
+
+    void PasteTiles(Vector3Int targetPos)
+    {
+        foreach (TileData data in copyBuffer)
+        {
+            Vector3Int gridPos = new Vector3Int(
+                targetPos.x + data.x,
+                targetPos.y + data.y,
+                targetPos.z + data.z
+            );
+
+            if (tiles.ContainsKey(gridPos))
+                continue;
+
+            Vector3 spawnPos = new Vector3(
+                gridPos.x * gridSize,
+                gridPos.y * gridSize,
+                gridPos.z * gridSize - 0.01f
+            );
+
+            GameObject tile =
+                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
+
+            TileType tileType = tile.GetComponent<TileType>();
+
+            tileType.type = data.type;
+            tileType.gimmickType = data.gimmickType;
+            tileType.gimmickID = data.gimmickID;
+
+            tiles.Add(gridPos, tile);
+        }
+
+        Debug.Log("Paste Complete");
+    }
+
 
     //===========================-------
     //　　　　　保存システム
