@@ -33,6 +33,16 @@ public sealed partial class PlayerController
 
     private void ApplyJump()
     {
+        if (IsInputBlocked(InputBlockFlags.Jump))
+        {
+            jumpRequested = false;
+            if (movementSettings.useJumpBuffer)
+            {
+                jumpBufferTimer = 0f;
+            }
+
+            return;
+        }
         // ダッシュ中はジャンプを受け付けない。
         // バッファ有効時でもここで破棄する。
         if (isDashing)
@@ -254,6 +264,11 @@ public sealed partial class PlayerController
 
         // 下入力押下時のみ急降下状態へ入る。
         if (!playerInputReader.DownPressed)
+        {
+            return;
+        }
+
+        if (IsInputBlocked(InputBlockFlags.Move))
         {
             return;
         }

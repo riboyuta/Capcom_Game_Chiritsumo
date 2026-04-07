@@ -21,6 +21,11 @@ public sealed partial class PlayerController
 
     private void ApplyHorizontalMovement(float deltaTime)
     {
+        if (IsInputBlocked(InputBlockFlags.Move))
+        {
+            return;
+        }
+
         // 移動入力の X 成分を -1 から 1 の範囲に収める。
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
 

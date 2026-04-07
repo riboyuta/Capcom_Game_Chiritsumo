@@ -8,7 +8,11 @@ public sealed partial class PlayerController
         Gimmick,
         Scripted
     }
+    // ダッシュ中かどうかを意味付きで参照する窓口。
+    public bool IsDashActive => isDashing;
 
+    // 今この瞬間にダッシュ開始可能かを返す窓口。
+    public bool CanUseDashNow => !IsInputBlocked(InputBlockFlags.Dash) && CanStartDash();
     private void UpdateDashResourceState()
     {
         // 接地/状態に応じたダッシュ回復を処理する。
@@ -211,6 +215,12 @@ public sealed partial class PlayerController
 
         // 要求がなければ何もしない。
         if (!hasDashRequest)
+        {
+            return;
+        }
+
+        // 入力禁止要求があるフレームは開始しない。
+        if (IsInputBlocked(InputBlockFlags.Dash))
         {
             return;
         }
