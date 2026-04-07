@@ -2,16 +2,6 @@ using UnityEngine;
 
 public sealed partial class PlayerController
 {
-    [System.Flags]
-    public enum InputBlockFlags
-    {
-        None = 0,
-        Move = 1 << 0,
-        Jump = 1 << 1,
-        Dash = 1 << 2,
-        Grab = 1 << 3
-    }
-
     // デバッグ表示向けの接地状態。
     public bool IsGrounded => isGrounded;
 
@@ -66,6 +56,9 @@ public sealed partial class PlayerController
 
     // デバッグ表示向けの壁再付着ロックタイマー。
     public float WallReattachLockTimer => wallReattachLockTimer;
+
+    // デバッグ表示向けの向き。(-1:left / +1:right)
+    public int Facing => facing;
 
     // デバッグ表示向けのダッシュ状態。
     public bool IsDashing => isDashing;

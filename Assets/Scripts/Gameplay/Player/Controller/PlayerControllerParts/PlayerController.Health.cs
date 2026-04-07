@@ -230,31 +230,7 @@ public sealed partial class PlayerController
         currentHealth = 0;
         OnDeath();
     }
-    // 外部コンポーネント向けの死亡要求窓口。
-    // 既存の死亡開始フローへ委譲し、damageDirection は将来の死因演出拡張に備えて受け取る。
-    public void RequestKill(Vector3 damageDirection)
-    {
-        RequestDamageDeath();
-        // TODO: damageDirection を死亡演出や復帰前挙動に反映する場合は Death 側と連携して扱う。
-    }
 
-    // 外部コンポーネント向けのノックバック要求窓口。
-    // force の向きと大きさを既存 StartKnockback へ安全に委譲する。
-    public void RequestKnockback(Vector3 force)
-    {
-        if (rb == null)
-        {
-            return;
-        }
-
-        float knockbackForce = force.magnitude;
-        if (knockbackForce <= 0f)
-        {
-            return;
-        }
-
-        StartKnockback(force.normalized, knockbackForce);
-    }
     // =====================================================================
     // ノックバック内部処理
     // =====================================================================

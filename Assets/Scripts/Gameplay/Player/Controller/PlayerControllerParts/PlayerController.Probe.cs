@@ -2,11 +2,6 @@ using UnityEngine;
 
 public sealed partial class PlayerController
 {
-    // 接地状態を意味付きで参照する窓口。
-    public bool IsGrounded => isGrounded;
-
-    // 非接地状態を意味付きで参照する窓口。
-    public bool IsAirborne => !isGrounded;
     private bool CheckGrounded()
     {
         // カプセルの上方向を取得する。

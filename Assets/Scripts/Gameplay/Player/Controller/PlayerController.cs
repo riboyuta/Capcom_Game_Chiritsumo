@@ -112,18 +112,16 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // 入力取得は Update で行う。
         // 物理フレームより高頻度で入力を取りこぼしにくくするため。
-        requestedInputBlockFlagsThisFrame = InputBlockFlags.None;
         playerInputReader.Update();
-        currentResolvedInputBlockFlags = requestedInputBlockFlagsThisFrame;
 
         // 押下エッジを物理フレームまで保持する。
         // FixedUpdate 側で安全に消費できるよう、一旦フラグへ積む。
-        if (!IsInputBlocked(InputBlockFlags.Jump) && playerInputReader.JumpPressed)
+        if (playerInputReader.JumpPressed)
         {
             jumpRequested = true;
         }
 
-        if (!IsInputBlocked(InputBlockFlags.Dash) && playerInputReader.DashPressed)
+        if (playerInputReader.DashPressed)
         {
             dashRequested = true;
         }
@@ -313,26 +311,7 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // 離脱時の速度を乗せる
         rb.linearVelocity = releaseVelocity;
-
+        
         // 直後からジャンプなどが効くようにするなどの調整があればここで行う
-    }
-
-    // 外部が「このフレームだけ」入力禁止を要求する窓口。
-    // Push/Pop の保持はせず、毎フレーム再要求されない限り自動で解除される。
-    public void RequestInputBlockThisFrame(InputBlockFlags flags)
-    {
-        if (flags == InputBlockFlags.None)
-        {
-            return;
-        }
-
-        requestedInputBlockFlagsThisFrame |= flags;
-        currentResolvedInputBlockFlags = requestedInputBlockFlagsThisFrame;
-    }
-
-    // 入力禁止フラグの参照口。
-    private bool IsInputBlocked(InputBlockFlags flags)
-    {
-        return (currentResolvedInputBlockFlags & flags) != 0;
     }
 }
