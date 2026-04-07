@@ -4,6 +4,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 using static MapEditor;
+using static UnityEditor.PlayerSettings;
 
 public class StageLoader : MonoBehaviour
 {
@@ -15,6 +16,9 @@ public class StageLoader : MonoBehaviour
     [Tooltip("現在編集しているステージの番号")]
     [SerializeField] private int stageNumber = 5;
 
+    [Header("登録されているマップルート")]
+    [Tooltip("このオブジェを親としてマップが生成されます")]
+    [SerializeField] private Transform mapRoot;
 
     private float gridSize = 1.0f;
     private readonly List<GameObject> spawnedTiles = new List<GameObject>();
@@ -83,8 +87,12 @@ folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData")
                 data.z * gridSize - 0.01f
             );
 
+
+        
+            //GameObject tile =
+            //    Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
             GameObject tile =
-                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
+                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity, mapRoot);
 
             TileType tileType = tile.GetComponent<TileType>();
 
@@ -94,7 +102,7 @@ folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData")
             spawnedTiles.Add(tile);
         }
 
-        ConnectGimmicks(spawnedTiles);
+        ConnectGimmicks(spawnedTiles); //   ギミックの接続
     }
 
 
@@ -127,8 +135,10 @@ folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData")
                 data.z * gridSize - 0.01f
             );
 
+            //GameObject tile =
+            //    Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
             GameObject tile =
-                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
+               Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity, mapRoot);
 
             TileType tileType = tile.GetComponent<TileType>();
             tileType.type = data.type;
@@ -165,8 +175,10 @@ folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData")
                 data.z * gridSize - 0.01f
             );
 
+            //GameObject tile =
+            //    Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
             GameObject tile =
-                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
+               Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity, mapRoot);
 
             TileType tileType = tile.GetComponent<TileType>();
             tileType.type = data.type;
@@ -185,14 +197,16 @@ folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData")
     // StageLoader が生成したランタイムタイルのみを明示的に破棄します。
     void ClearSpawnedTiles()
     {
-        for (int i = 0; i < spawnedTiles.Count; i++)
+  
+        for (int i = mapRoot.childCount - 1; i >= 0; i--)
         {
-            if (spawnedTiles[i] == null)
-            {
-                continue;
-            }
+            GameObject obj = mapRoot.GetChild(i).gameObject;
 
-            Destroy(spawnedTiles[i]);
+            //実行外かプレイ中かに応じて消去方法を変更する
+            if (Application.isPlaying)
+                Destroy(obj);
+            else
+                DestroyImmediate(obj);
         }
 
         spawnedTiles.Clear();
@@ -225,5 +239,27 @@ folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData")
                 }
             }
         }
+    }
+
+
+    //===========================-------
+    //　　　　　実行外関数
+    //===========================-------
+    [ContextMenu("Load Map (Editor)")]
+    void LoadMapOutPlaying()
+    {
+        Debug.Log("spawnedTiles count = " + spawnedTiles.Count);
+        ClearSpawnedTiles();
+        LoadMap();
+        Debug.Log("spawnedTiles count = " + spawnedTiles.Count);
+    }
+
+
+    [ContextMenu("Clear Loaded Map (Editor)")]
+    void ClearLoadedMapOutPlaying()
+    {
+        ClearSpawnedTiles();
+        spawnedTiles.Clear();
+        Debug.Log("Loaded Map Cleared");
     }
 }
