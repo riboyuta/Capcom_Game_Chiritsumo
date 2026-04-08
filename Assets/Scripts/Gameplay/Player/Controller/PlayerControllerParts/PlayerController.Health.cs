@@ -231,6 +231,30 @@ public sealed partial class PlayerController
         OnDeath();
     }
 
+    // 外部からの意味付き即死要求。
+    // 既存の死亡経路(Kill -> OnDeath -> RequestDeathStart)を流用する。
+    public void RequestKill(Vector3 damageDirection)
+    {
+        Kill();
+    }
+
+    // 外部からの意味付きノックバック要求。
+    // ダメージ計算を経由せず、既存の StartKnockback を使って速度だけ付与する。
+    public void RequestKnockback(Vector3 force)
+    {
+        if (rb == null)
+        {
+            return;
+        }
+
+        float magnitude = force.magnitude;
+        if (magnitude <= 0.0f)
+        {
+            return;
+        }
+
+        StartKnockback(force / magnitude, magnitude);
+    }
     // =====================================================================
     // ノックバック内部処理
     // =====================================================================

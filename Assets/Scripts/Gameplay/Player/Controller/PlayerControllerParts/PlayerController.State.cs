@@ -2,6 +2,14 @@ using UnityEngine;
 
 public sealed partial class PlayerController
 {
+    public bool IsDashActive => isDashing;
+    public bool IsGrounded => isGrounded;
+    public bool IsAirborne => !isGrounded;
+    public bool IsWallGrabbing => isWallGrabbing;
+    public int Facing => facing;
+
+    // TODO: WallGrabTimeRemaining は壁掴まり時間制限の内部データ実装後に公開する。
+
     // 現在接地中かどうか。
     private bool isGrounded;
 

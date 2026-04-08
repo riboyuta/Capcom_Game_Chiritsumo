@@ -2,8 +2,7 @@ using UnityEngine;
 
 public sealed partial class PlayerController
 {
-    // デバッグ表示向けの接地状態。
-    public bool IsGrounded => isGrounded;
+
 
     // デバッグ表示向けの現在速度。
     public Vector3 CurrentVelocity => rb != null ? rb.linearVelocity : Vector3.zero;
@@ -56,9 +55,6 @@ public sealed partial class PlayerController
 
     // デバッグ表示向けの壁再付着ロックタイマー。
     public float WallReattachLockTimer => wallReattachLockTimer;
-
-    // デバッグ表示向けの向き。(-1:left / +1:right)
-    public int Facing => facing;
 
     // デバッグ表示向けのダッシュ状態。
     public bool IsDashing => isDashing;

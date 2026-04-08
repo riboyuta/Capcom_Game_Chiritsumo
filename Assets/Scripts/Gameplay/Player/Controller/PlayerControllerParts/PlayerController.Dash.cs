@@ -8,6 +8,7 @@ public sealed partial class PlayerController
         Gimmick,
         Scripted
     }
+    public bool CanUseDashNow => CanUseDashNowInternal();
 
     private void UpdateDashResourceState()
     {
@@ -112,6 +113,16 @@ public sealed partial class PlayerController
         return true;
     }
 
+    private bool CanUseDashNowInternal()
+    {
+        if (!CanAcceptDashInput())
+        {
+            return false;
+        }
+
+        return CanStartDash();
+    }
+
     private bool TryConsumeDash()
     {
         if (!CanConsumeDash())
@@ -182,6 +193,13 @@ public sealed partial class PlayerController
 
     private void TryStartDash()
     {
+        if (!CanAcceptDashInput())
+        {
+            dashRequested = false;
+            dashBufferTimer = 0f;
+            return;
+        }
+
         // 機能が無効なら入力とバッファを破棄する。
         if (!movementSettings.useDash)
         {

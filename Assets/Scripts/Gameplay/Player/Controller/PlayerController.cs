@@ -110,18 +110,20 @@ public sealed partial class PlayerController : MonoBehaviour
             return;
         }
 
+        // 入力禁止要求は毎フレーム初期化し、このフレームに届いた要求だけを有効にする。
+        ResetInputBlockRequestsThisFrame();
         // 入力取得は Update で行う。
         // 物理フレームより高頻度で入力を取りこぼしにくくするため。
         playerInputReader.Update();
 
         // 押下エッジを物理フレームまで保持する。
         // FixedUpdate 側で安全に消費できるよう、一旦フラグへ積む。
-        if (playerInputReader.JumpPressed)
+        if (playerInputReader.JumpPressed && CanAcceptJumpInput())
         {
             jumpRequested = true;
         }
 
-        if (playerInputReader.DashPressed)
+        if (playerInputReader.DashPressed && CanAcceptDashInput())
         {
             dashRequested = true;
         }
