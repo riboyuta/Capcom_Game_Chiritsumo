@@ -8,25 +8,25 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class PlayerShadowRecorder : MonoBehaviour
 {
-    [Header("参照")]
+    [Header("オブジェクト参照")]
     [Tooltip("snapshot を生成する PlayerController です。未設定時は同一 GameObject から取得を試みます。")]
     [SerializeField] private PlayerController playerController;
 
-    [Header("記録設定")]
+    [Header("履歴記録設定")]
     [Tooltip("何秒ごとに snapshot を記録するかです。小さいほど滑らかですが履歴数は増えます。")]
     [SerializeField] private float recordInterval = 0.02f;
 
     [Tooltip("履歴を何秒分保持するかです。ShadowChaserEnemy の delayTime より長くしてください。")]
     [SerializeField] private float maxHistoryDuration = 2.0f;
 
-    [Header("デバッグ")]
+    [Header("デバッグ表示設定")]
     [Tooltip("履歴ラインを Scene 上に表示します。")]
     [SerializeField] private bool showDebugPath = true;
 
     [Tooltip("履歴ラインの色です。")]
     [SerializeField] private Color debugPathColor = Color.magenta;
 
-    [Header("デバッグ(Runtime)")]
+    [Header("実行時デバッグ情報")]
     [Tooltip("最後に記録した snapshot の時刻です。")]
     [SerializeField] private float lastRecordedTime;
 

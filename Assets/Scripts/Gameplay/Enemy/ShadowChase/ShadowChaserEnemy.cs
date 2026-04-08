@@ -17,100 +17,123 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         Following
     }
 
-    [Header("参照")]
+    [Header("プレイヤー履歴レコーダー")]
     [Tooltip("追尾元になるプレイヤー履歴です。")]
     [SerializeField] private PlayerShadowRecorder recorder;
 
+    [Header("対象プレイヤー")]
     [Tooltip("接触時に即死を要求する対象プレイヤーです。未設定時は recorder と同じ GameObject から取得を試みます。")]
     [SerializeField] private PlayerController targetPlayer;
 
+    [Header("ビジュアルルート")]
     [Tooltip("左右反転対象の見た目 root です。未設定時は自分自身を使います。")]
     [SerializeField] private Transform visualRoot;
 
+    [Header("制御対象レンダラー")]
     [Tooltip("出現時に表示・非表示を切り替える対象 Renderer 群です。未設定時は子を含めて自動取得を試みます。")]
     [SerializeField] private Renderer[] controlledRenderers;
 
-    [Header("追尾設定")]
+    [Header("遅延時間")]
     [Tooltip("何秒前のプレイヤーをなぞるかです。")]
     [SerializeField] private float delayTime = 0.4f;
 
+    [Header("補間使用")]
     [Tooltip("履歴の前後 2 点を補間して滑らかにするかです。")]
     [SerializeField] private bool useInterpolation = true;
 
+    [Header("スナップ距離")]
     [Tooltip("目標位置から大きく離れたときに即座に補正する距離です。")]
     [SerializeField] private float snapDistance = 0.3f;
 
+    [Header("滑らか追尾")]
     [Tooltip("通常追尾中も目標位置へ少し滑らかに寄せるかです。")]
     [SerializeField] private bool smoothFollow = true;
 
+    [Header("追尾平滑化強度")]
     [Tooltip("通常追尾中の吸い付き強さです。大きいほど素早く追従します。")]
     [SerializeField] private float followSmoothSharpness = 40.0f;
 
+    [Header("開始時有効化")]
     [Tooltip("開始時に有効にするかです。true ならシーン開始時にスポーンシーケンスへ入ります。")]
     [SerializeField] private bool isActiveOnStart = false;
 
-    [Header("スポーン設定")]
+    [Header("スポーンシーケンス使用")]
     [Tooltip("スポーンシーケンスを使うかです。false なら即座に追尾開始します。")]
     [SerializeField] private bool useSpawnSequence = true;
 
+    [Header("スポーン待機時間")]
     [Tooltip("起動から出現演出開始までの待機時間です。")]
     [SerializeField] private float spawnDelay = 0.2f;
 
+    [Header("スポーン演出時間")]
     [Tooltip("出現演出の長さです。")]
     [SerializeField] private float spawnDuration = 0.35f;
 
+    [Header("スポーン位置オフセット")]
     [Tooltip("出現演出の開始位置オフセットです。要求されたスポーン位置からこの分ずらした位置から現れます。")]
     [SerializeField] private Vector3 spawnOffset = new Vector3(0f, -1f, 0f);
 
+    [Header("スポーン開始スケール")]
     [Tooltip("出現演出開始時のスケールです。")]
     [SerializeField] private Vector3 spawnStartScale = new Vector3(0.6f, 0.6f, 1f);
 
+    [Header("待機中非表示")]
     [Tooltip("待機中は Renderer を非表示にするかです。")]
     [SerializeField] private bool hideDuringSpawnDelay = true;
 
+    [Header("スポーン後追尾開始")]
     [Tooltip("出現演出完了後に追尾を開始するかです。")]
     [SerializeField] private bool startFollowAfterSpawn = true;
 
-    [Header("CatchUp 設定")]
+    [Header("レール合流使用")]
     [Tooltip("スポーン後、履歴レールへ滑らかに合流する処理を使うかです。")]
     [SerializeField] private bool useCatchUp = true;
 
+    [Header("合流時間")]
     [Tooltip("CatchUp にかける最短時間です。")]
     [SerializeField] private float catchUpDuration = 0.2f;
 
+    [Header("合流追尾強度")]
     [Tooltip("CatchUp 中に現在位置から目標位置へ吸い付く強さです。大きいほど追従が強くなります。")]
     [SerializeField] private float catchUpFollowSharpness = 12.0f;
 
+    [Header("合流完了距離")]
     [Tooltip("CatchUp 完了とみなす位置差です。これ以下まで寄ったら通常追尾へ入ります。")]
     [SerializeField] private float catchUpCompleteDistance = 0.08f;
 
+    [Header("合流カーブ")]
     [Tooltip("CatchUp の進行カーブです。未設定や不正時は線形扱いになります。")]
     [SerializeField] private AnimationCurve catchUpCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-    [Header("接触設定")]
+    [Header("接触判定半径")]
     [Tooltip("この半径内にプレイヤー中心が入ったら即死扱いにします。")]
     [SerializeField] private float contactRadius = 0.4f;
 
-    [Header("見た目設定")]
+    [Header("向き反転適用")]
     [Tooltip("snapshot の facing に応じて左右反転するかです。")]
     [SerializeField] private bool applyFacingToVisual = true;
 
-    [Header("デバッグ")]
+    [Header("目標位置表示")]
     [Tooltip("参照中の目標位置を Gizmo で表示します。")]
     [SerializeField] private bool showTargetGizmo = true;
 
+    [Header("目標位置色")]
     [Tooltip("目標位置の Gizmo 色です。")]
     [SerializeField] private Color targetGizmoColor = Color.cyan;
 
+    [Header("スポーン位置表示")]
     [Tooltip("現在の要求スポーン位置を Gizmo で表示します。")]
     [SerializeField] private bool showRequestedSpawnGizmo = true;
 
+    [Header("スポーン位置色")]
     [Tooltip("要求スポーン位置の Gizmo 色です。")]
     [SerializeField] private Color requestedSpawnGizmoColor = Color.yellow;
 
+    [Header("合流目標表示")]
     [Tooltip("CatchUp 中の現在目標位置を Gizmo で表示します。")]
     [SerializeField] private bool showCatchUpTargetGizmo = true;
 
+    [Header("合流目標色")]
     [Tooltip("CatchUp 目標位置の Gizmo 色です。")]
     [SerializeField] private Color catchUpTargetGizmoColor = Color.green;
 

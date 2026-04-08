@@ -7,20 +7,23 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
 {
-    [Header("参照")]
+    [Header("起動対象の敵")]
     [Tooltip("起動対象の ShadowChaserEnemy です。")]
     [SerializeField] private ShadowChaserEnemy targetEnemy;
 
+    [Header("スポーン位置")]
     [Tooltip("このトリガーから起動した時のスポーン位置です。未設定時はこのトリガー自身の Transform を使います。")]
     [SerializeField] private Transform spawnPoint;
 
-    [Header("挙動")]
+    [Header("ワンショットモード")]
     [Tooltip("一度起動したらこのトリガーを無効化するかです。")]
     [SerializeField] private bool oneShot = true;
 
+    [Header("プレイヤータグ判定使用")]
     [Tooltip("Player タグで判定するかです。")]
     [SerializeField] private bool usePlayerTag = true;
 
+    [Header("プレイヤータグ名")]
     [Tooltip("Player タグ判定に使うタグ名です。")]
     [SerializeField] private string playerTag = "Player";
 
