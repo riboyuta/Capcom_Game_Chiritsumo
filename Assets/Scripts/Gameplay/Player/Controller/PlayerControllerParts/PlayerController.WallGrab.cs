@@ -4,6 +4,11 @@ public sealed partial class PlayerController
 {
     private bool CanEnterWallGrab()
     {
+        if (!CanAcceptGrabInput())
+        {
+            return false;
+        }
+
         // 機能が無効なら入らない。
         if (!movementSettings.useWallGrab)
         {
@@ -60,6 +65,11 @@ public sealed partial class PlayerController
     private bool ShouldExitWallGrab()
     {
         if (IsActionLocked)
+        {
+            return true;
+        }
+
+        if (!CanAcceptGrabInput())
         {
             return true;
         }
