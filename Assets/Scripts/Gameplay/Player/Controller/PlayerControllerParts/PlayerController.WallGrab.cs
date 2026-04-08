@@ -10,7 +10,7 @@ public sealed partial class PlayerController
         }
 
         // 機能が無効なら入らない。
-        if (!movementSettings.useWallGrab)
+        if (!movementSettings.Wall.UseWallGrab)
         {
             return false;
         }
@@ -106,7 +106,7 @@ public sealed partial class PlayerController
 
         Vector3 velocity = rb.linearVelocity;
         velocity.x = 0f;
-        velocity.y = Mathf.Max(velocity.y, movementSettings.wallGrabVerticalSpeed);
+        velocity.y = Mathf.Max(velocity.y, movementSettings.Wall.WallGrabVerticalSpeed);
         rb.linearVelocity = velocity;
     }
 
@@ -127,7 +127,7 @@ public sealed partial class PlayerController
 
         Vector3 velocity = rb.linearVelocity;
         velocity.x = 0f;
-        velocity.y = movementSettings.wallGrabVerticalSpeed;
+        velocity.y = movementSettings.Wall.WallGrabVerticalSpeed;
         rb.linearVelocity = velocity;
 
         isWallSliding = false;

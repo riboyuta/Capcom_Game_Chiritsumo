@@ -144,7 +144,7 @@ namespace Game.Input
         private Vector2 ResolveMove()
         {
             Vector2 gamepadMove = rawInputSource.GamepadMoveVector;
-            float deadZone = Mathf.Clamp01(settings.moveInputGamepadDeadZone);
+            float deadZone = Mathf.Clamp01(settings.InputAssist.MoveInputGamepadDeadZone);
             float deadZoneSqr = deadZone * deadZone;
 
             // ゲームパッドの入力が十分に入っているなら、そちらを採用する。
@@ -163,7 +163,7 @@ namespace Game.Input
         private Vector2 ResolveDashDirectionInput()
         {
             Vector2 gamepadMove = rawInputSource.GamepadMoveVector;
-            float deadZone = Mathf.Clamp01(settings.dashDirectionDeadZone);
+            float deadZone = Mathf.Clamp01(settings.Dash.DirectionDeadZone);
             float deadZoneSqr = deadZone * deadZone;
 
             if (gamepadMove.sqrMagnitude >= deadZoneSqr)
@@ -205,7 +205,7 @@ namespace Game.Input
                 inputAngle += 360.0f;
             }
 
-            float diagonalAssistAngle = Mathf.Clamp(settings.dashDiagonalAssistAngle, 0.0f, 22.5f);
+            float diagonalAssistAngle = Mathf.Clamp(settings.Dash.DiagonalAssistAngle, 0.0f, 22.5f);
 
             float bestScore = float.MaxValue;
             int bestDirectionIndex = 0;

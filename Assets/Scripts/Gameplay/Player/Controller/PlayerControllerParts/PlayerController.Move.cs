@@ -37,7 +37,7 @@ public sealed partial class PlayerController
 
     private void ApplyDashVelocity()
     {
-        rb.linearVelocity = dashDirection * (movementSettings.dashSpeed * resolvedLocomotionModifier.dashSpeedMultiplier);
+        rb.linearVelocity = dashDirection * (movementSettings.Dash.Speed * resolvedLocomotionModifier.dashSpeedMultiplier);
     }
 
 
@@ -63,7 +63,7 @@ public sealed partial class PlayerController
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
 
         // 入力方向に応じた目標横速度を求める。
-        float targetSpeed = inputX * (movementSettings.moveMaxSpeed * resolvedLocomotionModifier.moveSpeedMultiplier);
+        float targetSpeed = inputX * (movementSettings.Move.MaxSpeed * resolvedLocomotionModifier.moveSpeedMultiplier);
         // 移動入力があるかどうかを判定する。
         bool hasMoveInput = Mathf.Abs(inputX) > 0.01f;
 
@@ -77,21 +77,21 @@ public sealed partial class PlayerController
             if (isTurning)
             {
                 accel = isGrounded
-                    ? movementSettings.groundTurnAcceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
-                    : movementSettings.airTurnAcceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
+                    ? movementSettings.Move.GroundTurnAcceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
+                    : movementSettings.Move.AirTurnAcceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
             }
             else
             {
                 accel = isGrounded
-                    ? movementSettings.groundAcceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
-                    : movementSettings.airAcceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
+                    ? movementSettings.Move.GroundAcceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
+                    : movementSettings.Move.AirAcceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
             }
         }
         else
         {
             accel = isGrounded
-                ? movementSettings.groundDeceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
-                : movementSettings.airDeceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
+                ? movementSettings.Move.GroundDeceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
+                : movementSettings.Move.AirDeceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
         }
 
         // 壁キック直後の入力ロック中は横移動入力を受け付けない。
@@ -114,21 +114,21 @@ public sealed partial class PlayerController
         bool isFalling = velocity.y < 0f;
         bool isRising = velocity.y > 0f;
 
-        float gravityMultiplier = movementSettings.gravityScale * resolvedLocomotionModifier.gravityScaleMultiplier;
+        float gravityMultiplier = movementSettings.Jump.GravityScale * resolvedLocomotionModifier.gravityScaleMultiplier;
         // 上昇中は、長押し中かつ有効時間内のみ上昇用倍率を掛ける。
         if (isRising && playerInputReader.JumpHeld && jumpHoldTimer > 0f)
         {
-            gravityMultiplier *= movementSettings.riseGravityMultiplier;
+            gravityMultiplier *= movementSettings.Jump.RiseGravityMultiplier;
         }
 
         // 落下中は落下用の重力倍率を掛ける。
         // 急降下中なら専用倍率を優先する。
         if (isFalling)
         {
-            float fallingMultiplier = movementSettings.fallGravityMultiplier;
+            float fallingMultiplier = movementSettings.Fall.GravityMultiplier;
             if (isFastFalling)
             {
-                fallingMultiplier = movementSettings.fastFallGravityMultiplier;
+                fallingMultiplier = movementSettings.Fall.FastFallGravityMultiplier;
             }
 
             gravityMultiplier *= fallingMultiplier;
@@ -143,8 +143,8 @@ public sealed partial class PlayerController
 
         // 落下速度の下限を設定して加速しすぎを防ぐ。
         float maxFallSpeed = isFastFalling && isFalling
-            ? movementSettings.fastFallMaxSpeed
-            : movementSettings.maxFallSpeed;
+            ? movementSettings.Fall.FastFallMaxSpeed
+            : movementSettings.Fall.MaxSpeed;
         float minVelocityY = -maxFallSpeed;
         if (velocity.y < minVelocityY)
         {
@@ -167,10 +167,10 @@ public sealed partial class PlayerController
             jumpRequested = false;
             // レールの傾きに関係なくひとまず上方向にジャンプさせる
             Vector3 jumpVel = rb.linearVelocity;
-            jumpVel.y = movementSettings.grindJumpVerticalVelocity;
+            jumpVel.y = movementSettings.Rail.GrindJumpVerticalVelocity;
             
             // ジャンプ後しばらく同じレールまたは他のレールに吸着しないようにロック
-            railReattachLockTimer = movementSettings.railReattachLockTime;
+            railReattachLockTimer = movementSettings.Rail.ReattachLockTime;
             
             // 横方向の速度は保つ
             EndGrind(jumpVel);
@@ -179,7 +179,7 @@ public sealed partial class PlayerController
         }
 
         // 前進する距離
-        float moveDelta = movementSettings.grindSpeed * deltaTime;
+        float moveDelta = movementSettings.Rail.GrindSpeed * deltaTime;
 
         // レールをなぞる処理
         while (moveDelta > 0f)
@@ -209,7 +209,7 @@ public sealed partial class PlayerController
                     if (currentRailSegment >= currentRail.RailPath.Count - 1)
                     {
                         Vector3 launchDir = (endP - startP).normalized;
-                        Vector3 launchVel = launchDir * movementSettings.grindSpeed;
+                        Vector3 launchVel = launchDir * movementSettings.Rail.GrindSpeed;
                         EndGrind(launchVel);
                         return;
                     }
@@ -233,7 +233,7 @@ public sealed partial class PlayerController
                     if (currentRailSegment < 0)
                     {
                         Vector3 launchDir = (startP - endP).normalized; // 逆向き
-                        Vector3 launchVel = launchDir * movementSettings.grindSpeed;
+                        Vector3 launchVel = launchDir * movementSettings.Rail.GrindSpeed;
                         EndGrind(launchVel);
                         return;
                     }
@@ -267,7 +267,7 @@ public sealed partial class PlayerController
         targetPos.z = transform.position.z;
 
         // 次の瞬間の速度ベクトルとして疑似的にlinearVelocityを入れる
-        Vector3 moveVel = segDir * (movementSettings.grindSpeed * grindDirection);
+        Vector3 moveVel = segDir * (movementSettings.Rail.GrindSpeed * grindDirection);
         moveVel.z = 0; // z補正
 
         rb.MovePosition(targetPos);

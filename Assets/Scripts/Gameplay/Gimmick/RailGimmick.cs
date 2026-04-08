@@ -161,7 +161,7 @@ public class RailGimmick : MonoBehaviour
         // PlayerMovementSettingsの乗車可能最大角度 (例: 45度) をチェックする。
         // 空中から直接垂直の壁に乗れないようにするための制御。
         float slopeDot = Mathf.Abs(Vector3.Dot(segDir, Vector3.up)); // Sin(傾斜角)
-        float limitDot = Mathf.Sin(player.MovementSettings.maxAttachSlopeAngle * Mathf.Deg2Rad);
+        float limitDot = Mathf.Sin(player.MovementSettings.Rail.MaxAttachSlopeAngle * Mathf.Deg2Rad);
         
         if (slopeDot > limitDot)
         {

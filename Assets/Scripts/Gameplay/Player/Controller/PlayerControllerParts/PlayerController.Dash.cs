@@ -20,7 +20,7 @@ public sealed partial class PlayerController
     private void HandleGroundDashRefill()
     {
         // 接地回復が無効なら何もしない。
-        if (!movementSettings.useGroundDashRefill)
+        if (!movementSettings.Dash.UseGroundRefill)
         {
             return;
         }
@@ -38,7 +38,7 @@ public sealed partial class PlayerController
         }
 
         // 残数不足時だけ回復を試みる。
-        if (currentDashCharges < Mathf.Max(1, movementSettings.maxDashCharges))
+        if (currentDashCharges < Mathf.Max(1, movementSettings.Dash.MaxCharges))
         {
             TryRefillDash(DashRefillReason.Grounded);
         }
@@ -68,7 +68,7 @@ public sealed partial class PlayerController
     private bool CanConsumeDash()
     {
         // ダッシュ機能が無効なら消費不可。
-        if (!movementSettings.useDash)
+        if (!movementSettings.Dash.UseDash)
         {
             return false;
         }
@@ -154,7 +154,7 @@ public sealed partial class PlayerController
             return false;
         }
 
-        int maxCharges = Mathf.Max(1, movementSettings.maxDashCharges);
+        int maxCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
         if (currentDashCharges >= maxCharges)
         {
             return false;
@@ -168,7 +168,7 @@ public sealed partial class PlayerController
         isDashing = false;
         TrySnapToGroundAfterDash();
 
-        if (!movementSettings.restoreDashStartVerticalVelocity)
+        if (!movementSettings.Dash.RestoreStartVerticalVelocity)
         {
             return;
         }
@@ -181,7 +181,7 @@ public sealed partial class PlayerController
     private void UpdateDashBufferTimer(float deltaTime)
     {
         // ダッシュバッファ無効時は常に 0 にする。
-        if (!movementSettings.useDashBuffer)
+        if (!movementSettings.Dash.UseDashBuffer)
         {
             dashBufferTimer = 0f;
             return;
@@ -201,7 +201,7 @@ public sealed partial class PlayerController
         }
 
         // 機能が無効なら入力とバッファを破棄する。
-        if (!movementSettings.useDash)
+        if (!movementSettings.Dash.UseDash)
         {
             dashRequested = false;
             dashBufferTimer = 0f;
@@ -214,9 +214,9 @@ public sealed partial class PlayerController
         // 入力があった場合は、必要ならバッファ時間を開始する。
         if (immediateDashRequest)
         {
-            if (movementSettings.useDashBuffer)
+            if (movementSettings.Dash.UseDashBuffer)
             {
-                dashBufferTimer = movementSettings.dashBufferTime;
+                dashBufferTimer = movementSettings.Dash.DashBufferTime;
             }
 
             // 読み取った入力は消費済みにする。
@@ -224,7 +224,7 @@ public sealed partial class PlayerController
         }
 
         // バッファ中なら過去の入力でもダッシュ要求ありとみなす。
-        bool hasBufferedDash = movementSettings.useDashBuffer && dashBufferTimer > 0f;
+        bool hasBufferedDash = movementSettings.Dash.UseDashBuffer && dashBufferTimer > 0f;
         bool hasDashRequest = immediateDashRequest || hasBufferedDash;
 
         // 要求がなければ何もしない。
@@ -250,10 +250,10 @@ public sealed partial class PlayerController
         // ダッシュ開始状態へ入る。
         isDashing = true;
         isFastFalling = false;
-        dashTimer = movementSettings.dashDuration;
+        dashTimer = movementSettings.Dash.Duration;
         if (isGrounded)
         {
-            groundDashCooldownTimer = movementSettings.groundDashCooldownTime;
+            groundDashCooldownTimer = movementSettings.Dash.GroundCooldownTime;
         }
         dashStartVerticalVelocity = rb.linearVelocity.y;
         Vector2 dashStartVelocity = rb.linearVelocity;
@@ -277,7 +277,7 @@ public sealed partial class PlayerController
 
         // ダッシュ開始時はジャンプ要求も破棄する。
         jumpRequested = false;
-        if (movementSettings.useJumpBuffer)
+        if (movementSettings.Jump.UseJumpBuffer)
         {
             jumpBufferTimer = 0f;
         }
@@ -299,7 +299,7 @@ public sealed partial class PlayerController
 
     private bool CanSnapToGroundAfterDash()
     {
-        if (!movementSettings.useDashGroundSnap)
+        if (!movementSettings.Dash.UseGroundSnap)
         {
             return false;
         }
@@ -334,7 +334,7 @@ public sealed partial class PlayerController
         float targetPositionY = hit.point.y + (position.y - capsuleBottomY);
         float snapDeltaY = targetPositionY - position.y;
 
-        if (snapDeltaY < 0f || snapDeltaY > movementSettings.dashGroundSnapDistance)
+        if (snapDeltaY < 0f || snapDeltaY > movementSettings.Dash.GroundSnapDistance)
         {
             return;
         }
@@ -351,7 +351,7 @@ public sealed partial class PlayerController
         float halfHeight = Mathf.Max(capsuleCollider.height * 0.5f, capsuleCollider.radius);
         float worldHalfHeight = halfHeight * Mathf.Abs(transform.lossyScale.y);
         Vector3 bottomSphereCenter = worldCenter - up * (worldHalfHeight - worldRadius);
-        float castDistance = movementSettings.dashGroundSnapDistance + 0.01f;
+        float castDistance = movementSettings.Dash.GroundSnapDistance + 0.01f;
 
         return Physics.SphereCast(
             bottomSphereCenter,
@@ -359,7 +359,7 @@ public sealed partial class PlayerController
             -up,
             out hit,
             castDistance,
-            movementSettings.groundLayerMask,
+            movementSettings.Detection.GroundLayerMask,
             QueryTriggerInteraction.Ignore);
     }
     private Vector2 ResolveDashStartDirection()

@@ -21,7 +21,7 @@ public sealed partial class PlayerController
     public float JumpHoldTimer => jumpHoldTimer;
 
     // デバッグ表示向けの上昇中追加重力倍率。
-    public float RiseGravityMultiplier => movementSettings.riseGravityMultiplier;
+    public float RiseGravityMultiplier => movementSettings.Jump.RiseGravityMultiplier;
 
     // デバッグ表示向けのダッシュ要求状態。
     public bool DashRequested => dashRequested;
@@ -67,13 +67,13 @@ public sealed partial class PlayerController
 
 
     // デバッグ表示向けのダッシュ中重力倍率。
-    public float DashGravityMultiplier => movementSettings.dashGravityMultiplier;
+    public float DashGravityMultiplier => movementSettings.Dash.GravityMultiplier;
 
     // デバッグ表示向けのダッシュ開始時Y速度。
     public float DashStartVerticalVelocity => dashStartVerticalVelocity;
 
     // デバッグ表示向けのダッシュ開始時Y速度復元設定。
-    public bool RestoreDashStartVerticalVelocity => movementSettings.restoreDashStartVerticalVelocity;
+    public bool RestoreDashStartVerticalVelocity => movementSettings.Dash.RestoreStartVerticalVelocity;
 
     // デバッグ表示向けの左壁判定開始位置。
     public Vector3 LeftWallCheckOrigin => leftWallCheckOrigin;

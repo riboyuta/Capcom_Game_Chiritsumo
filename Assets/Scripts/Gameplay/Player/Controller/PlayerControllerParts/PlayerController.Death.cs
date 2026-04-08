@@ -415,7 +415,7 @@ public sealed partial class PlayerController
         isFastFalling = false;
         dashTimer = 0.0f;
         groundDashCooldownTimer = 0.0f;
-        currentDashCharges = Mathf.Max(1, movementSettings.maxDashCharges);
+        currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
         wasGroundedLastFrame = false;
         dashStartVerticalVelocity = 0.0f;
         jumpRequested = false;

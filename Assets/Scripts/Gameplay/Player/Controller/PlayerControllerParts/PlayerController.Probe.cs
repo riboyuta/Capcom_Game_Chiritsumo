@@ -28,7 +28,7 @@ public sealed partial class PlayerController
 
         // 接地判定距離に少し余裕を足す。
         // 境界付近の取りこぼしを減らすため。
-        float castDistance = movementSettings.groundCheckDistance + 0.01f;
+        float castDistance = movementSettings.Detection.GroundCheckDistance + 0.01f;
 
         // 下方向へ SphereCast して接地しているか調べる。
         bool hit = Physics.SphereCast(
@@ -37,7 +37,7 @@ public sealed partial class PlayerController
             -up,
             out _,
             castDistance,
-            movementSettings.groundLayerMask,
+            movementSettings.Detection.GroundLayerMask,
             QueryTriggerInteraction.Ignore);
 
         // デバッグ描画や確認用に今回の判定情報を保存する。
@@ -63,10 +63,10 @@ public sealed partial class PlayerController
 
         // 壁判定で使う SphereCast 半径を決める。
         // 極端に小さくならないように下限を持たせる。
-        float castRadius = Mathf.Max(0.01f, movementSettings.wallCheckRadius);
+        float castRadius = Mathf.Max(0.01f, movementSettings.Detection.WallCheckRadius);
 
         // 壁判定距離に少し余裕を足す。
-        float castDistance = movementSettings.wallCheckDistance + 0.01f;
+        float castDistance = movementSettings.Detection.WallCheckDistance + 0.01f;
 
         // デバッグ表示用に左右の判定起点と設定値を保存する。
         leftWallCheckOrigin = worldCenter;
@@ -82,7 +82,7 @@ public sealed partial class PlayerController
             -right,
             out _,
             castDistance + worldRadius,
-            movementSettings.groundLayerMask,
+            movementSettings.Detection.GroundLayerMask,
             QueryTriggerInteraction.Ignore);
 
         // 右方向へ SphereCast して右壁の接触を調べる。
@@ -92,7 +92,7 @@ public sealed partial class PlayerController
             right,
             out _,
             castDistance + worldRadius,
-            movementSettings.groundLayerMask,
+            movementSettings.Detection.GroundLayerMask,
             QueryTriggerInteraction.Ignore);
 
         leftWallCheckHit = hitLeft;

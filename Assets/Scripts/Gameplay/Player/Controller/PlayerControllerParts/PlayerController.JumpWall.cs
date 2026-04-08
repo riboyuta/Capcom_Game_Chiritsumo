@@ -13,7 +13,7 @@ public sealed partial class PlayerController
         // 無効時は 0 に固定する。
         if (isGrounded)
         {
-            coyoteTimer = movementSettings.useCoyoteTime ? movementSettings.coyoteTime : 0f;
+            coyoteTimer = movementSettings.Jump.UseCoyoteTime ? movementSettings.Jump.CoyoteTime : 0f;
         }
         // 非接地中は残り時間を減らす。
         else
@@ -22,7 +22,7 @@ public sealed partial class PlayerController
         }
 
         // ジャンプバッファ無効時は常に 0 にする。
-        if (!movementSettings.useJumpBuffer)
+        if (!movementSettings.Jump.UseJumpBuffer)
         {
             jumpBufferTimer = 0f;
         }
@@ -41,7 +41,7 @@ public sealed partial class PlayerController
         if (!CanAcceptJumpInput())
         {
             jumpRequested = false;
-            if (movementSettings.useJumpBuffer)
+            if (movementSettings.Jump.UseJumpBuffer)
             {
                 jumpBufferTimer = 0f;
             }
@@ -54,7 +54,7 @@ public sealed partial class PlayerController
         if (isDashing)
         {
             jumpRequested = false;
-            if (movementSettings.useJumpBuffer)
+            if (movementSettings.Jump.UseJumpBuffer)
             {
                 jumpBufferTimer = 0f;
             }
@@ -69,14 +69,14 @@ public sealed partial class PlayerController
 
         // ジャンプバッファ有効時は、
         // 押された瞬間に一定時間だけ要求を保持する。
-        if (requested && movementSettings.useJumpBuffer)
+        if (requested && movementSettings.Jump.UseJumpBuffer)
         {
-            jumpBufferTimer = movementSettings.jumpBufferTime;
+            jumpBufferTimer = movementSettings.Jump.JumpBufferTime;
         }
 
         // バッファ有効時はタイマーで判定する。
         // 無効時はこのフレームの入力だけを見る。
-        bool hasJumpRequest = movementSettings.useJumpBuffer ? jumpBufferTimer > 0f : requested;
+        bool hasJumpRequest = movementSettings.Jump.UseJumpBuffer ? jumpBufferTimer > 0f : requested;
         if (!hasJumpRequest)
         {
             return;
@@ -90,7 +90,7 @@ public sealed partial class PlayerController
         }
 
         // 接地中、またはコヨーテ時間内なら通常ジャンプ可能。
-        bool canJump = movementSettings.useCoyoteTime ? coyoteTimer > 0f : isGrounded;
+        bool canJump = movementSettings.Jump.UseCoyoteTime ? coyoteTimer > 0f : isGrounded;
         if (!canJump)
         {
             return;
@@ -98,14 +98,14 @@ public sealed partial class PlayerController
 
         // Y 速度をジャンプ初速へ置き換える。
         Vector3 velocity = rb.linearVelocity;
-        velocity.y = movementSettings.jumpVelocity;
+        velocity.y = movementSettings.Jump.JumpVelocity;
         rb.linearVelocity = velocity;
 
         // ジャンプ成立後は地上扱いと補助タイマーを解除する。
         isGrounded = false;
         coyoteTimer = 0f;
         jumpBufferTimer = 0f;
-        jumpHoldTimer = movementSettings.maxJumpHoldTime;
+        jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
         justJumpedThisFrame = true;
         PlayJumpSound();
     }
@@ -119,7 +119,7 @@ public sealed partial class PlayerController
         }
 
         // 機能が無効なら何もしない。
-        if (!movementSettings.useWallKick)
+        if (!movementSettings.Wall.UseWallKick)
         {
             return false;
         }
@@ -136,7 +136,7 @@ public sealed partial class PlayerController
             return false;
         }
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
-        bool hasHorizontalInput = Mathf.Abs(inputX) >= movementSettings.wallInputThreshold;
+        bool hasHorizontalInput = Mathf.Abs(inputX) >= movementSettings.Detection.WallInputThreshold;
         if (!hasHorizontalInput)
         {
             return false;
@@ -147,15 +147,15 @@ public sealed partial class PlayerController
         // 壁と反対方向へ横速度を与え、
         // 上方向には壁ジャンプ用の初速を与える。
         Vector3 velocity = rb.linearVelocity;
-        velocity.x = -wallSide * movementSettings.wallJumpHorizontalVelocity;
-        velocity.y = movementSettings.wallJumpVerticalVelocity;
+        velocity.x = -wallSide * movementSettings.Wall.WallJumpHorizontalVelocity;
+        velocity.y = movementSettings.Wall.WallJumpVerticalVelocity;
         rb.linearVelocity = velocity;
 
         // 壁ジャンプ直後は一定時間だけ横制御と再付着を制限する。
-        wallJumpControlLockTimer = movementSettings.wallJumpControlLockTime;
-        wallReattachLockTimer = movementSettings.wallReattachLockTime;
+        wallJumpControlLockTimer = movementSettings.Wall.WallJumpControlLockTime;
+        wallReattachLockTimer = movementSettings.Wall.WallReattachLockTime;
         coyoteTimer = 0f;
-        jumpHoldTimer = movementSettings.maxJumpHoldTime;
+        jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
         isGrounded = false;
         justWallJumpedThisFrame = true;
         //振動
@@ -169,7 +169,7 @@ public sealed partial class PlayerController
     private void ApplyVariableJumpCut()
     {
         // 可変ジャンプ無効なら何もしない。
-        if (!movementSettings.useVariableJump)
+        if (!movementSettings.Jump.UseVariableJump)
         {
             return;
         }
@@ -196,7 +196,7 @@ public sealed partial class PlayerController
 
         // 上向き速度を一定値まで切り詰めて、
         // 早離し時の低いジャンプを作る。
-        float cutVelocityY = movementSettings.jumpVelocity * movementSettings.jumpCutMultiplier;
+        float cutVelocityY = movementSettings.Jump.JumpVelocity * movementSettings.Jump.JumpCutMultiplier;
         velocity.y = Mathf.Min(velocity.y, cutVelocityY);
         rb.linearVelocity = velocity;
     }
@@ -208,7 +208,7 @@ public sealed partial class PlayerController
         isWallSliding = false;
 
         // 機能が無効なら何もしない。
-        if (!movementSettings.useWallSlide)
+        if (!movementSettings.Wall.UseWallSlide)
         {
             return;
         }
@@ -236,14 +236,14 @@ public sealed partial class PlayerController
         // 壁方向へ入力しているときだけ壁滑りに入る。
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
         float wallDirection = wallSide;
-        bool pushingToWall = inputX * wallDirection >= movementSettings.wallInputThreshold;
+        bool pushingToWall = inputX * wallDirection >= movementSettings.Detection.WallInputThreshold;
         if (!pushingToWall)
         {
             return;
         }
 
         // 落下速度が速すぎる場合は上限まで抑える。
-        float minVelocityY = -movementSettings.wallSlideMaxSpeed;
+        float minVelocityY = -movementSettings.Wall.WallSlideMaxSpeed;
         if (velocity.y < minVelocityY)
         {
             velocity.y = minVelocityY;
@@ -262,7 +262,7 @@ public sealed partial class PlayerController
         }
 
         // 機能が無効なら何もしない。
-        if (!movementSettings.useFastFall)
+        if (!movementSettings.Fall.UseFastFall)
         {
             return;
         }

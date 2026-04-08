@@ -98,7 +98,7 @@ public sealed partial class PlayerController : MonoBehaviour
         InitializeVibrationState();
 
         // ダッシュ残数管理の初期状態を設定する。
-        currentDashCharges = Mathf.Max(1, movementSettings.maxDashCharges);
+        currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
         wasGroundedLastFrame = false;
         requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
         resolvedLocomotionModifier = PlayerLocomotionModifierRequest.Identity;
