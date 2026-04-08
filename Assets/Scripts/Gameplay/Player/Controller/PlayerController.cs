@@ -100,6 +100,8 @@ public sealed partial class PlayerController : MonoBehaviour
         // ダッシュ残数管理の初期状態を設定する。
         currentDashCharges = Mathf.Max(1, movementSettings.maxDashCharges);
         wasGroundedLastFrame = false;
+        requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
+        resolvedLocomotionModifier = PlayerLocomotionModifierRequest.Identity;
     }
 
     private void Update()
@@ -158,6 +160,9 @@ public sealed partial class PlayerController : MonoBehaviour
 
         float deltaTime = Time.fixedDeltaTime;
         float previousVelocityY = rb != null ? rb.linearVelocity.y : 0f;
+        suppressVariableJumpCutThisTick = wasExternallyLaunchedThisFrame;
+        wasExternallyLaunchedThisFrame = false;
+        ResolveLocomotionModifiersThisTick();
 
         // 掴まれ、叩きつけ、死亡などの行動不能状態では通常移動を止める。
         // 横移動を止め、縦速度だけは物理結果を維持する。
@@ -187,16 +192,9 @@ public sealed partial class PlayerController : MonoBehaviour
         CaptureLandingSnapshot();
 
         // 接地しているなら急降下状態を解除する。
-        // 外部打ち上げ状態は、上昇中でなければ解除する。
-        // バネ床で打ち上げ直後はまだ接地判定が残ることがあるため、
-        // 上昇中（velocity.y > 0）の場合はフラグを維持する。
         if (isGrounded)
         {
             isFastFalling = false;
-            if (rb == null || rb.linearVelocity.y <= 0f)
-            {
-                isExternalLaunched = false;
-            }
         }
 
         // 物理フレームで壁接触状態を更新する。

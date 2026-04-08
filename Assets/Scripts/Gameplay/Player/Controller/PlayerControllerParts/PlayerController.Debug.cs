@@ -101,8 +101,4 @@ public sealed partial class PlayerController
 
     // 外部要因（バネ床など）で打ち上げられたことをプレイヤーに通知する。
     // 可変ジャンプカットをスキップし、着地時に自動で解除される。
-    public void NotifyExternalLaunch()
-    {
-        isExternalLaunched = true;
-    }
 }

@@ -122,13 +122,19 @@ public sealed partial class PlayerController
     private bool leftWallCheckHit;
     private bool rightWallCheckHit;
 
-    // 外部要因（バネ床など）で打ち上げられた状態。
+    // この物理フレームで外部打ち上げ通知を受けたかどうか。
     // true の間は可変ジャンプカットを適用しない。
-    // 着地時に自動で解除される。
-    private bool isExternalLaunched;
+    private bool wasExternallyLaunchedThisFrame;
+    private bool suppressVariableJumpCutThisTick;
+
+    // この physics tick で届いた移動補正 request の合算値。
+    private PlayerLocomotionModifierRequest requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
+
+    // 物理処理で実際に参照する移動補正倍率。
+    private PlayerLocomotionModifierRequest resolvedLocomotionModifier = PlayerLocomotionModifierRequest.Identity;
 
     // --- Grind Rail (レール滑走) 関連の状態 ---
-    
+
     // 現在レール上を滑らかに滑走中かどうか
     private bool isGrinding;
     

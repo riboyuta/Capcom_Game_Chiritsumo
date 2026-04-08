@@ -62,4 +62,16 @@ public sealed class PlayerFacade : MonoBehaviour
     {
         playerController.RequestKnockback(force);
     }
+
+    // 外部打ち上げが発生したことを通知する
+    public void NotifyExternalLaunch()
+    {
+        playerController.NotifyExternalLaunch();
+    }
+
+    // この physics tick の移動補正を要求する
+    public void RequestLocomotionModifierThisTick(PlayerLocomotionModifierRequest request)
+    {
+        playerController.RequestLocomotionModifierThisTick(request);
+    }
 }

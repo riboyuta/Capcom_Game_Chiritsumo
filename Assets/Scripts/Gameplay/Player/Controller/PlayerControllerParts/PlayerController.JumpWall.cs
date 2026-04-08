@@ -2,6 +2,11 @@ using UnityEngine;
 
 public sealed partial class PlayerController
 {
+    public void NotifyExternalLaunch()
+    {
+        wasExternallyLaunchedThisFrame = true;
+    }
+
     private void UpdateJumpAssistTimers(float deltaTime)
     {
         // 接地中はコヨーテタイマーを最大値へ戻す。
@@ -33,6 +38,17 @@ public sealed partial class PlayerController
 
     private void ApplyJump()
     {
+        if (!CanAcceptJumpInput())
+        {
+            jumpRequested = false;
+            if (movementSettings.useJumpBuffer)
+            {
+                jumpBufferTimer = 0f;
+            }
+
+            return;
+        }
+
         // ダッシュ中はジャンプを受け付けない。
         // バッファ有効時でもここで破棄する。
         if (isDashing)
@@ -159,7 +175,7 @@ public sealed partial class PlayerController
         }
 
         // 外部要因（バネ床など）で打ち上げられた場合はカットしない。
-        if (isExternalLaunched)
+        if (suppressVariableJumpCutThisTick)
         {
             return;
         }
@@ -240,6 +256,11 @@ public sealed partial class PlayerController
 
     private void TryStartFastFall()
     {
+        if (!CanAcceptMoveInput())
+        {
+            return;
+        }
+
         // 機能が無効なら何もしない。
         if (!movementSettings.useFastFall)
         {

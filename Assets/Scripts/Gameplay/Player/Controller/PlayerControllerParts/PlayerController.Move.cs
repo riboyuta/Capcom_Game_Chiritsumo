@@ -1,11 +1,45 @@
 using UnityEngine;
 
+public struct PlayerLocomotionModifierRequest
+{
+    public float moveSpeedMultiplier;
+    public float groundAccelerationMultiplier;
+    public float airAccelerationMultiplier;
+    public float gravityScaleMultiplier;
+    public float dashSpeedMultiplier;
+
+    public static PlayerLocomotionModifierRequest Identity => new PlayerLocomotionModifierRequest
+    {
+        moveSpeedMultiplier = 1f,
+        groundAccelerationMultiplier = 1f,
+        airAccelerationMultiplier = 1f,
+        gravityScaleMultiplier = 1f,
+        dashSpeedMultiplier = 1f
+    };
+}
+
 public sealed partial class PlayerController
 {
+    public void RequestLocomotionModifierThisTick(PlayerLocomotionModifierRequest request)
+    {
+        requestedLocomotionModifierThisTick.moveSpeedMultiplier *= request.moveSpeedMultiplier;
+        requestedLocomotionModifierThisTick.groundAccelerationMultiplier *= request.groundAccelerationMultiplier;
+        requestedLocomotionModifierThisTick.airAccelerationMultiplier *= request.airAccelerationMultiplier;
+        requestedLocomotionModifierThisTick.gravityScaleMultiplier *= request.gravityScaleMultiplier;
+        requestedLocomotionModifierThisTick.dashSpeedMultiplier *= request.dashSpeedMultiplier;
+    }
+
+    private void ResolveLocomotionModifiersThisTick()
+    {
+        resolvedLocomotionModifier = requestedLocomotionModifierThisTick;
+        requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
+    }
+
     private void ApplyDashVelocity()
     {
-        rb.linearVelocity = dashDirection * movementSettings.dashSpeed;
+        rb.linearVelocity = dashDirection * (movementSettings.dashSpeed * resolvedLocomotionModifier.dashSpeedMultiplier);
     }
+
 
     private void UpdateWallJumpLockTimer(float deltaTime)
     {
@@ -21,12 +55,15 @@ public sealed partial class PlayerController
 
     private void ApplyHorizontalMovement(float deltaTime)
     {
+        if (!CanAcceptMoveInput())
+        {
+            return;
+        }
         // 移動入力の X 成分を -1 から 1 の範囲に収める。
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
 
         // 入力方向に応じた目標横速度を求める。
-        float targetSpeed = inputX * movementSettings.moveMaxSpeed;
-
+        float targetSpeed = inputX * (movementSettings.moveMaxSpeed * resolvedLocomotionModifier.moveSpeedMultiplier);
         // 移動入力があるかどうかを判定する。
         bool hasMoveInput = Mathf.Abs(inputX) > 0.01f;
 
@@ -39,16 +76,22 @@ public sealed partial class PlayerController
             bool isTurning = rb.linearVelocity.x * inputX < 0f;
             if (isTurning)
             {
-                accel = isGrounded ? movementSettings.groundTurnAcceleration : movementSettings.airTurnAcceleration;
+                accel = isGrounded
+                    ? movementSettings.groundTurnAcceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
+                    : movementSettings.airTurnAcceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
             }
             else
             {
-                accel = isGrounded ? movementSettings.groundAcceleration : movementSettings.airAcceleration;
+                accel = isGrounded
+                    ? movementSettings.groundAcceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
+                    : movementSettings.airAcceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
             }
         }
         else
         {
-            accel = isGrounded ? movementSettings.groundDeceleration : movementSettings.airDeceleration;
+            accel = isGrounded
+                ? movementSettings.groundDeceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
+                : movementSettings.airDeceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
         }
 
         // 壁キック直後の入力ロック中は横移動入力を受け付けない。
@@ -71,8 +114,7 @@ public sealed partial class PlayerController
         bool isFalling = velocity.y < 0f;
         bool isRising = velocity.y > 0f;
 
-        float gravityMultiplier = movementSettings.gravityScale;
-
+        float gravityMultiplier = movementSettings.gravityScale * resolvedLocomotionModifier.gravityScaleMultiplier;
         // 上昇中は、長押し中かつ有効時間内のみ上昇用倍率を掛ける。
         if (isRising && playerInputReader.JumpHeld && jumpHoldTimer > 0f)
         {
