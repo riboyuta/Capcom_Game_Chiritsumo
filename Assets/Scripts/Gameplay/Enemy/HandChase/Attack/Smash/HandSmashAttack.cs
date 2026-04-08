@@ -1,8 +1,7 @@
 using System;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
-public sealed class HandSmashAttack : MonoBehaviour
+public sealed class HandSmashAttack : HandAttackBase
 {
     private enum AttackState
     {
@@ -33,7 +32,7 @@ public sealed class HandSmashAttack : MonoBehaviour
 
     [Header("References")]
     [Tooltip("叩きつけ攻撃の当たり判定")]
-    [SerializeField] private PalmHitbox palmHitbox;
+    [SerializeField] private SmashHitBox smashHitBox;
     [Tooltip("手のビジュアル表示コンポーネント")]
     [SerializeField] private HandSmashView view;
 
@@ -41,11 +40,8 @@ public sealed class HandSmashAttack : MonoBehaviour
     [Tooltip("地面に到達した時に発生させるカメラ振動のプロファイル")]
     [SerializeField] private Capcom_Game_Chiritsumo.Camera.CameraShake.CameraShakeProfile smashShakeProfile;
 
-    private Rigidbody rigidBody;
     private AttackState state = AttackState.Idle;
-
-    private Transform targetPlayer;
-    private float groundY = 0.0f;
+    private float groundY;
 
     private Vector3 spawnPosition;
     private Vector3 riseTargetPosition;
@@ -57,18 +53,14 @@ public sealed class HandSmashAttack : MonoBehaviour
     private float holdLiftElapsedTime = 0.0f;
     private float endTimer = 0.0f;
 
-    private Action onFinished;
-
     private void Awake()
     {
-        rigidBody = GetComponent<Rigidbody>();
-        rigidBody.useGravity = false;
-        rigidBody.isKinematic = true;
+        InitializeRigidbody();
 
-        if (palmHitbox != null)
+        if (smashHitBox != null)
         {
-            palmHitbox.Initialize(this);
-            palmHitbox.SetHitEnabled(false);
+            smashHitBox.Initialize(this);
+            smashHitBox.SetHitEnabled(false);
         }
     }
 
@@ -101,9 +93,9 @@ public sealed class HandSmashAttack : MonoBehaviour
         transform.position = this.spawnPosition;
         state = AttackState.Rise;
 
-        if (palmHitbox != null)
+        if (smashHitBox != null)
         {
-            palmHitbox.SetHitEnabled(false);
+            smashHitBox.SetHitEnabled(false);
         }
 
         if (view != null)
@@ -184,9 +176,9 @@ public sealed class HandSmashAttack : MonoBehaviour
             return;
         }
 
-        if (palmHitbox != null)
+        if (smashHitBox != null)
         {
-            palmHitbox.SetHitEnabled(true);
+            smashHitBox.SetHitEnabled(true);
         }
 
         state = AttackState.Smash;
@@ -211,9 +203,9 @@ public sealed class HandSmashAttack : MonoBehaviour
         {
             transform.position = smashTargetPosition;
 
-            if (palmHitbox != null)
+            if (smashHitBox != null)
             {
-                palmHitbox.SetHitEnabled(false);
+                smashHitBox.SetHitEnabled(false);
             }
 
             // カメラシェイク処理を追加 (プロファイルが設定されていれば揺らす)
@@ -270,21 +262,8 @@ public sealed class HandSmashAttack : MonoBehaviour
         return t * t * t;
     }
 
-    private void FinishAttack()
-    {
-        onFinished?.Invoke();
-        Destroy(gameObject);
-    }
-
     public void NotifyPlayerHit(GameObject playerObject)
     {
-        PlayerController playerController = playerObject.GetComponent<PlayerController>();
-        if (playerController != null)
-        {
-            playerController.RequestDamageDeath();
-            return;
-        }
-
-        Debug.LogWarning("HandSmashAttack: PlayerController が見つからないため死亡要求を送れませんでした。", playerObject);
+        RequestPlayerDeath(playerObject);
     }
 }

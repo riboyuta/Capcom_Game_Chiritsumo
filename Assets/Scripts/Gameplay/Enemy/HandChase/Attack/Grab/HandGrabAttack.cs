@@ -1,8 +1,7 @@
 using System;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
-public sealed class HandGrabAttack : MonoBehaviour
+public sealed class HandGrabAttack : HandAttackBase
 {
     private enum AttackState
     {
@@ -47,10 +46,7 @@ public sealed class HandGrabAttack : MonoBehaviour
     [Tooltip("手のビジュアル表示コンポーネント")]
     [SerializeField] private HandGrabView view;
 
-    private Rigidbody rigidBody;
     private AttackState state = AttackState.Idle;
-
-    private Transform targetPlayer;
     private Vector3 latestPlayerPosition;
     private Vector3 approachNearTargetPosition;
     private Vector3 finalGrabTargetPosition;
@@ -61,17 +57,13 @@ public sealed class HandGrabAttack : MonoBehaviour
     private float missPauseTimer = 0.0f;
     private float endTimer = 0.0f;
 
-    private Action onFinished;
-
     private PlayerController grabbedPlayerController;
     private Rigidbody grabbedPlayerRigidbody;
     private bool hasGrabbedPlayer = false;
 
     private void Awake()
     {
-        rigidBody = GetComponent<Rigidbody>();
-        rigidBody.useGravity = false;
-        rigidBody.isKinematic = true;
+        InitializeRigidbody();
     }
 
     public void StartAttack(
@@ -425,11 +417,5 @@ public sealed class HandGrabAttack : MonoBehaviour
         {
             playerController.RequestDamageDeath();
         }
-    }
-
-    private void FinishAttack()
-    {
-        onFinished?.Invoke();
-        Destroy(gameObject);
     }
 }

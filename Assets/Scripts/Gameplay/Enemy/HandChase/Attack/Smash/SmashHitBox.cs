@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(BoxCollider))]
-public sealed class PalmHitbox : MonoBehaviour
+public sealed class SmashHitBox : MonoBehaviour
 {
     private HandSmashAttack owner;
     private BoxCollider boxCollider;
