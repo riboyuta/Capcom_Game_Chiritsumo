@@ -109,7 +109,7 @@ public sealed partial class PlayerController : MonoBehaviour
             CanAcceptDashInput,
             CanAcceptGrabInput,
             () => IsActionLocked,
-            () => isGrinding,
+            () => IsExternallyControlled,
             probeSensor.GetWorldCapsuleRadius,
             PlayJumpSound,
             PlayWallKickSound,
@@ -120,6 +120,7 @@ public sealed partial class PlayerController : MonoBehaviour
             transform,
             rb,
             runtimeState,
+            frameRequests,
             () => IsActionLocked,
             () => isKnockback);
 
@@ -199,8 +200,7 @@ public sealed partial class PlayerController : MonoBehaviour
         PlayerAuthority authority = PlayerAuthorityResolver.Resolve(
             isActionLocked: IsActionLocked,
             isKnockback: isKnockback,
-            isExternallyControlled: IsExternallyControlled,
-            isGrinding: isGrinding);
+            isExternallyControlled: IsExternallyControlled);
 
         switch (authority)
         {
@@ -268,16 +268,11 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // ダッシュ入力バッファタイマーを更新する。
         locomotionSystem.UpdateDashBufferTimer(deltaTime);
-
         if (authority == PlayerAuthority.ExternalControl)
         {
             if (externalControlSystem != null && externalControlSystem.IsExternallyControlled)
             {
                 externalControlSystem.ApplyResolvedControl();
-            }
-            else if (isGrinding)
-            {
-                ApplyGrindMovement(deltaTime);
             }
 
             UpdateAudioEvents();
@@ -329,36 +324,5 @@ public sealed partial class PlayerController : MonoBehaviour
         FinalizeVisualState(previousVelocityY);
     }
 
-    // --- Grind Rail メソッド ---
-    public void StartGrind(RailGimmick rail, int segmentIndex, float distanceOnSegment, int direction)
-    {
-        if (IsActionLocked || isGrinding) return;
-        if (runtimeState.railReattachLockTimer > 0f) return;
 
-        isGrinding = true;
-        currentRail = rail;
-        currentRailSegment = segmentIndex;
-        distanceOnRailSegment = distanceOnSegment;
-        grindDirection = direction;
-
-        // レール走行開始時に縦や横の余分な重力・速度を一旦切る
-        rb.linearVelocity = Vector3.zero;
-        runtimeState.isGrounded = false;
-        runtimeState.isFastFalling = false;
-
-        Debug.Log($"Started Grinding. segment:{segmentIndex}, dir:{direction}");
-    }
-
-    private void EndGrind(Vector3 releaseVelocity)
-    {
-        if (!isGrinding) return;
-
-        isGrinding = false;
-        currentRail = null;
-
-        // 離脱時の速度を乗せる
-        rb.linearVelocity = releaseVelocity;
-
-        // 直後からジャンプなどが効くようにするなどの調整があればここで行う
-    }
 }

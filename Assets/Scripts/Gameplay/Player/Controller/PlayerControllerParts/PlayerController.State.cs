@@ -22,23 +22,5 @@ public sealed partial class PlayerController
     // 外部制御の受け皿を担当する内部システム。
     private PlayerExternalControlSystem externalControlSystem;
 
-    // --- Grind Rail (レール滑走) 関連の状態 ---
 
-    // 現在レール上を滑らかに滑走中かどうか
-    private bool isGrinding;
-
-    // 現在乗っているレールギミック
-    private RailGimmick currentRail;
-
-    // レール上で現在位置しているセグメントのインデックス
-    private int currentRailSegment;
-
-    // 現在のセグメント上での進行距離
-    private float distanceOnRailSegment;
-
-    // ウェイポイントに対する進行方向 (+1: start to end, -1: end to start)
-    private int grindDirection = 1;
-
-    // レール再吸着ロックタイマー
-    private float railReattachLockTimer;
 }

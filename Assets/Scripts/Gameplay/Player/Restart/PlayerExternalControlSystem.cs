@@ -13,7 +13,8 @@ internal sealed class PlayerExternalControlSystem
 
     // プレイヤーの継続実行時状態参照。
     private readonly PlayerRuntimeState runtimeState;
-
+    // 1フレーム/1Tick 限定の要求状態参照。
+    private readonly PlayerFrameRequests frameRequests;
     // 行動不能状態を問い合わせるコールバック。
     private readonly Func<bool> isActionLockedProvider;
 
@@ -50,6 +51,9 @@ internal sealed class PlayerExternalControlSystem
     // そのフレームだけ有効な経路姿勢要求。
     private PathPoseRequest pathPoseRequest;
 
+    // そのフレームだけ有効な射出要求。
+    private LaunchRequest launchRequest;
+
     // 直近に開始された外部制御の物理方針。
     private ExternalPhysicsPolicy currentPhysicsPolicy;
 
@@ -79,6 +83,7 @@ internal sealed class PlayerExternalControlSystem
         Transform playerTransform,
         Rigidbody playerRigidbody,
         PlayerRuntimeState runtimeState,
+        PlayerFrameRequests frameRequests,
         Func<bool> isActionLockedProvider,
         Func<bool> isKnockbackProvider)
     {
@@ -90,7 +95,8 @@ internal sealed class PlayerExternalControlSystem
 
         // RuntimeState 参照を保持する。
         this.runtimeState = runtimeState;
-
+        // FrameRequests 参照を保持する。
+        this.frameRequests = frameRequests;
         // ActionLocked 判定プロバイダを保持する。
         this.isActionLockedProvider = isActionLockedProvider;
 
@@ -245,6 +251,39 @@ internal sealed class PlayerExternalControlSystem
         // セッションが有効な場合のみ通常要求を適用する。
         RequestPathPoseThisFrame(position, rotation);
     }
+    // 指定セッションでこのフレームのジャンプ要求を消費する。
+    internal bool ConsumeJumpRequestThisFrame(int sessionId)
+    {
+        if (!IsSessionValid(sessionId))
+        {
+            return false;
+        }
+
+        if (frameRequests == null || !frameRequests.jumpRequested)
+        {
+            return false;
+        }
+
+        frameRequests.jumpRequested = false;
+        return true;
+    }
+
+    // 指定セッションから射出要求を登録する。
+    internal void RequestLaunch(int sessionId, Vector3 direction, float speed, float maxFlightDistance, LayerMask collisionLayers)
+    {
+        if (!IsSessionValid(sessionId))
+        {
+            return;
+        }
+
+        Vector3 normalizedDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.zero;
+        float clampedSpeed = Mathf.Max(0f, speed);
+
+        launchRequest.hasRequest = true;
+        launchRequest.velocity = normalizedDirection * clampedSpeed;
+        launchRequest.maxFlightDistance = maxFlightDistance; // TODO: Cannon 実装時に利用する。
+        launchRequest.collisionLayers = collisionLayers; // TODO: Cannon 実装時に利用する。
+    }
 
     // ワープ要求を登録する。
     public void RequestWarp(Vector3 targetPosition, WarpOptions options)
@@ -269,11 +308,22 @@ internal sealed class PlayerExternalControlSystem
 
         // 経路姿勢要求を消す。
         pathPoseRequest = default;
+
+        // 射出要求を消す。
+        launchRequest = default;
     }
 
     // 解決済みの外部制御要求を実体へ反映する。
     public void ApplyResolvedControl()
     {
+        // 射出要求は最優先で反映し、反映後に外部制御を終了する。
+        if (launchRequest.hasRequest)
+        {
+            ApplyLaunch(launchRequest.velocity);
+            EndControl();
+            return;
+        }
+
         // アンカー姿勢を先に反映する。
         if (anchorPoseRequest.hasRequest)
         {
@@ -409,6 +459,23 @@ internal sealed class PlayerExternalControlSystem
             ApplyFacing(options.Facing);
         }
     }
+    // 射出を反映する。
+    private void ApplyLaunch(Vector3 velocity)
+    {
+        if (playerRigidbody != null)
+        {
+            playerRigidbody.linearVelocity = velocity;
+        }
+
+        runtimeState.isGrounded = false;
+        runtimeState.isWallGrabbing = false;
+        runtimeState.isWallSliding = false;
+
+        if (frameRequests != null)
+        {
+            frameRequests.wasExternallyLaunchedThisFrame = true;
+        }
+    }
 
     // このフレームだけ有効な向き要求。
     private struct FacingRequest
@@ -457,6 +524,22 @@ internal sealed class PlayerExternalControlSystem
 
         // 要求する回。
         public Quaternion rotation;
+    }
+
+    // このフレームだけ有効な射出要求。
+    private struct LaunchRequest
+    {
+        // 要求が存在するか。
+        public bool hasRequest;
+
+        // 射出速度。
+        public Vector3 velocity;
+
+        // TODO: Cannon 実装で使う予定。
+        public float maxFlightDistance;
+
+        // TODO: Cannon 実装で使う予定。
+        public LayerMask collisionLayers;
     }
 
     // PlayerExternalControlSession へ公開する backend 実装。
@@ -532,7 +615,22 @@ internal sealed class PlayerExternalControlSystem
         // 射出要求を受け付ける。
         public void RequestLaunch(Vector3 direction, float speed, float maxFlightDistance, LayerMask collisionLayers)
         {
-            // 今回は launch 完成実装を行わないため、無効時も有効時も何もしない。
+            if (!IsValid)
+            {
+                return;
+            }
+
+            system.RequestLaunch(sessionId, direction, speed, maxFlightDistance, collisionLayers);
+        }
+
+        public bool ConsumeJumpRequestThisFrame()
+        {
+            if (!IsValid)
+            {
+                return false;
+            }
+
+            return system.ConsumeJumpRequestThisFrame(sessionId);
         }
 
         // 外部制御終了を受け付ける。
