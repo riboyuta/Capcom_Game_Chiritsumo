@@ -93,12 +93,14 @@ public sealed partial class PlayerController : MonoBehaviour
         // ここで「生入力」と「入力割り当て設定」を結び付ける。
         playerInputReader = new PlayerInputReader(rawInputSource, inputBindings, movementSettings);
 
+        // 接地/壁判定専用センサーを初期化する。
+        probeSensor = new PlayerProbeSensor(capsuleCollider, transform, movementSettings);
+
         // 通常移動システムを初期化する。
         locomotionSystem = new PlayerLocomotionSystem(
             runtimeState,
             frameRequests,
-            movementSettings,
-            rb,
+            movementSettings, rb,
             capsuleCollider,
             transform,
             playerInputReader,
@@ -108,7 +110,7 @@ public sealed partial class PlayerController : MonoBehaviour
             CanAcceptGrabInput,
             () => IsActionLocked,
             () => isGrinding,
-            GetWorldCapsuleRadius,
+            probeSensor.GetWorldCapsuleRadius,
             PlayJumpSound,
             PlayWallKickSound,
             PlayWallKickVibration);
@@ -208,7 +210,7 @@ public sealed partial class PlayerController : MonoBehaviour
         }
 
         // 物理フレームで接地状態を更新する。
-        runtimeState.isGrounded = CheckGrounded();
+        runtimeState.isGrounded = probeSensor.CheckGrounded();
 
         // ApplyJump による isGrounded 上書き前に、着地イベント用の情報を保存する。
         CaptureLandingSnapshot();
@@ -220,7 +222,10 @@ public sealed partial class PlayerController : MonoBehaviour
         }
 
         // 物理フレームで壁接触状態を更新する。
-        CheckWallContact();
+        probeSensor.CheckWallContact(
+            runtimeState.wallReattachLockTimer,
+            out runtimeState.isTouchingWall,
+            out runtimeState.wallSide);
 
         // 壁捕まり状態の進入・離脱を更新する。
         locomotionSystem.UpdateWallGrabState();

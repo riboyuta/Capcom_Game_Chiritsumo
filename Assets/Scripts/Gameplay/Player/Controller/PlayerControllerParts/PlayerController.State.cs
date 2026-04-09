@@ -16,31 +16,8 @@ public sealed partial class PlayerController
     private bool justLandedThisFrame;
     private bool justCrossedApexThisFrame;
 
-    // Ground 判定デバッグ可視化用の SphereCast 開始位置。
-    private Vector3 groundCheckOrigin;
-
-    // Ground 判定デバッグ可視化用の SphereCast 半径。
-    private float groundCheckRadius;
-
-    // Ground 判定デバッグ可視化用の SphereCast 距離。
-    private float groundCheckDistance;
-
-    // Ground 判定デバッグ可視化用のヒット結果。
-    private bool groundCheckHit;
-
-    // Wall 判定デバッグ可視化用の左右 SphereCast 開始位置。
-    private Vector3 leftWallCheckOrigin;
-    private Vector3 rightWallCheckOrigin;
-
-    // Wall 判定デバッグ可視化用の SphereCast 半径。
-    private float wallCheckRadius;
-
-    // Wall 判定デバッグ可視化用の SphereCast 距離。
-    private float wallCheckDistance;
-
-    // Wall 判定デバッグ可視化用の左右ヒット結果。
-    private bool leftWallCheckHit;
-    private bool rightWallCheckHit;
+    // 接地/壁判定を担当する専用センサー。
+    private PlayerProbeSensor probeSensor;
 
     // --- Grind Rail (レール滑走) 関連の状態 ---
 

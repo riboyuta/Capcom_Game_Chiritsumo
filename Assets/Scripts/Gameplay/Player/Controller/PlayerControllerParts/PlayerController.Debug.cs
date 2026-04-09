@@ -31,17 +31,13 @@ public sealed partial class PlayerController
     public float DashBufferTimer => locomotionSystem != null ? locomotionSystem.DashBufferTimer : 0f;
 
     // デバッグ表示向けの Ground 判定開始位置。
-    public Vector3 GroundCheckOrigin => groundCheckOrigin;
-
+    public Vector3 GroundCheckOrigin => probeSensor != null ? probeSensor.GroundCheckOrigin : Vector3.zero;
     // デバッグ表示向けの Ground 判定半径。
-    public float GroundCheckRadius => groundCheckRadius;
-
+    public float GroundCheckRadius => probeSensor != null ? probeSensor.GroundCheckRadius : 0f;
     // デバッグ表示向けの Ground 判定距離。
-    public float GroundCheckDistance => groundCheckDistance;
-
+    public float GroundCheckDistance => probeSensor != null ? probeSensor.GroundCheckDistance : 0f;
     // デバッグ表示向けの Ground 判定ヒット結果。
-    public bool GroundCheckHit => groundCheckHit;
-
+    public bool GroundCheckHit => probeSensor != null && probeSensor.GroundCheckHit;
     // デバッグ表示向けの壁接触状態。
     public bool IsTouchingWall => runtimeState.isTouchingWall;
 
@@ -77,25 +73,20 @@ public sealed partial class PlayerController
     public bool RestoreDashStartVerticalVelocity => movementSettings.Dash.RestoreStartVerticalVelocity;
 
     // デバッグ表示向けの左壁判定開始位置。
-    public Vector3 LeftWallCheckOrigin => leftWallCheckOrigin;
-
+    public Vector3 LeftWallCheckOrigin => probeSensor != null ? probeSensor.LeftWallCheckOrigin : Vector3.zero;
     // デバッグ表示向けのダッシュ中方向転換許可設定。
 
     // デバッグ表示向けの右壁判定開始位置。
-    public Vector3 RightWallCheckOrigin => rightWallCheckOrigin;
-
+    public Vector3 RightWallCheckOrigin => probeSensor != null ? probeSensor.RightWallCheckOrigin : Vector3.zero;
     // デバッグ表示向けの壁判定半径。
-    public float WallCheckRadius => wallCheckRadius;
-
+    public float WallCheckRadius => probeSensor != null ? probeSensor.WallCheckRadius : 0f;
     // デバッグ表示向けの壁判定距離。
-    public float WallCheckDistance => wallCheckDistance;
+    public float WallCheckDistance => probeSensor != null ? probeSensor.WallCheckDistance : 0f;
 
     // デバッグ表示向けの左壁判定ヒット結果。
-    public bool LeftWallCheckHit => leftWallCheckHit;
-
+    public bool LeftWallCheckHit => probeSensor != null && probeSensor.LeftWallCheckHit;
     // デバッグ表示向けの右壁判定ヒット結果。
-    public bool RightWallCheckHit => rightWallCheckHit;
-
+    public bool RightWallCheckHit => probeSensor != null && probeSensor.RightWallCheckHit;
     // 外部ギミック（一方通行床など）から参照する下入力状態。
     // スティックまたは十字キーの下方向が一定以上入力されている場合に true。
     public bool IsDownInputHeld => playerInputReader != null && playerInputReader.Move.y < -0.5f;
