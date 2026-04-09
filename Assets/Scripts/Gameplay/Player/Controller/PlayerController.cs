@@ -188,22 +188,27 @@ public sealed partial class PlayerController : MonoBehaviour
         frameRequests.wasExternallyLaunchedThisFrame = false;
         locomotionSystem.ResolveLocomotionModifiersThisTick();
 
-        // 掴まれ、叩きつけ、死亡などの行動不能状態では通常移動を止める。
-        // 横移動を止め、縦速度だけは物理結果を維持する。
-        if (IsActionLocked)
+        PlayerAuthority authority = PlayerAuthorityResolver.Resolve(
+            isActionLocked: IsActionLocked,
+            isKnockback: isKnockback,
+            isExternallyControlled: false,
+            isGrinding: isGrinding);
+
+        switch (authority)
         {
-            if (rb != null)
-            {
-                rb.linearVelocity = new Vector3(0.0f, rb.linearVelocity.y, 0.0f);
-            }
+            case PlayerAuthority.ActionLocked:
+                // 掴まれ、叩きつけ、死亡などの行動不能状態では通常移動を止める。
+                // 横移動を止め、縦速度だけは物理結果を維持する。
+                if (rb != null)
+                {
+                    rb.linearVelocity = new Vector3(0.0f, rb.linearVelocity.y, 0.0f);
+                }
 
             FinalizeVisualState(previousVelocityY);
             return;
-        }
 
-        // ノックバック中は専用速度を適用し、通常の移動処理をスキップする。
-        if (isKnockback)
-        {
+            case PlayerAuthority.Knockback:
+            // ノックバック中は専用速度を適用し、通常の移動処理をスキップする。
             ApplyKnockbackVelocity();
             FinalizeVisualState(previousVelocityY);
             return;
@@ -256,6 +261,15 @@ public sealed partial class PlayerController : MonoBehaviour
         // ダッシュ入力バッファタイマーを更新する。
         locomotionSystem.UpdateDashBufferTimer(deltaTime);
 
+        if (authority == PlayerAuthority.ExternalControl)
+        {
+            ApplyGrindMovement(deltaTime);
+            UpdateAudioEvents();
+            UpdateVibrationEvents();
+            FinalizeVisualState(previousVelocityY);
+            return;
+        }
+
         // ダッシュ開始条件を満たす場合は開始する。
         locomotionSystem.TryStartDash();
 
@@ -263,16 +277,6 @@ public sealed partial class PlayerController : MonoBehaviour
         if (runtimeState.isDashing)
         {
             locomotionSystem.ApplyDashVelocity();
-            UpdateAudioEvents();
-            UpdateVibrationEvents();
-            FinalizeVisualState(previousVelocityY);
-            return;
-        }
-
-        // 追加アクションとしてレール滑走中なら専用フローを優先する
-        if (isGrinding)
-        {
-            ApplyGrindMovement(deltaTime);
             UpdateAudioEvents();
             UpdateVibrationEvents();
             FinalizeVisualState(previousVelocityY);
