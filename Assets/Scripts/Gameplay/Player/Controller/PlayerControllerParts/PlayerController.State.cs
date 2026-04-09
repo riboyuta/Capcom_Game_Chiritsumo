@@ -19,6 +19,9 @@ public sealed partial class PlayerController
     // 接地/壁判定を担当する専用センサー。
     private PlayerProbeSensor probeSensor;
 
+    // 外部制御の受け皿を担当する内部システム。
+    private PlayerExternalControlSystem externalControlSystem;
+
     // --- Grind Rail (レール滑走) 関連の状態 ---
 
     // 現在レール上を滑らかに滑走中かどうか

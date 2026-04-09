@@ -115,6 +115,14 @@ public sealed partial class PlayerController : MonoBehaviour
             PlayWallKickSound,
             PlayWallKickVibration);
 
+        // 外部制御システムを初期化する。
+        externalControlSystem = new PlayerExternalControlSystem(
+            transform,
+            rb,
+            runtimeState,
+            () => IsActionLocked,
+            () => isKnockback);
+
         // Health と Grab システムを初期化する。
         // Health 側で ReactionState 初期化も行う想定。
         InitializeHealth();
@@ -191,7 +199,7 @@ public sealed partial class PlayerController : MonoBehaviour
         PlayerAuthority authority = PlayerAuthorityResolver.Resolve(
             isActionLocked: IsActionLocked,
             isKnockback: isKnockback,
-            isExternallyControlled: false,
+            isExternallyControlled: IsExternallyControlled,
             isGrinding: isGrinding);
 
         switch (authority)
@@ -204,14 +212,14 @@ public sealed partial class PlayerController : MonoBehaviour
                     rb.linearVelocity = new Vector3(0.0f, rb.linearVelocity.y, 0.0f);
                 }
 
-            FinalizeVisualState(previousVelocityY);
-            return;
+                FinalizeVisualState(previousVelocityY);
+                return;
 
             case PlayerAuthority.Knockback:
-            // ノックバック中は専用速度を適用し、通常の移動処理をスキップする。
-            ApplyKnockbackVelocity();
-            FinalizeVisualState(previousVelocityY);
-            return;
+                // ノックバック中は専用速度を適用し、通常の移動処理をスキップする。
+                ApplyKnockbackVelocity();
+                FinalizeVisualState(previousVelocityY);
+                return;
         }
 
         // 物理フレームで接地状態を更新する。
@@ -263,7 +271,15 @@ public sealed partial class PlayerController : MonoBehaviour
 
         if (authority == PlayerAuthority.ExternalControl)
         {
-            ApplyGrindMovement(deltaTime);
+            if (externalControlSystem != null && externalControlSystem.IsExternallyControlled)
+            {
+                externalControlSystem.ApplyResolvedControl();
+            }
+            else if (isGrinding)
+            {
+                ApplyGrindMovement(deltaTime);
+            }
+
             UpdateAudioEvents();
             UpdateVibrationEvents();
             FinalizeVisualState(previousVelocityY);

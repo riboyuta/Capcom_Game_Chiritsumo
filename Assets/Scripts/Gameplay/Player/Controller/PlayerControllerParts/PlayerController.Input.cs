@@ -19,22 +19,34 @@ public sealed partial class PlayerController
 
     private bool CanAcceptMoveInput()
     {
-        return (frameRequests.requestedInputBlockFlagsThisFrame & InputBlockFlags.Move) == 0;
+        return !IsInputBlocked(InputBlockFlags.Move);
     }
 
     private bool CanAcceptJumpInput()
     {
-        return (frameRequests.requestedInputBlockFlagsThisFrame & InputBlockFlags.Jump) == 0;
+        return !IsInputBlocked(InputBlockFlags.Jump);
     }
 
     private bool CanAcceptDashInput()
     {
-        return (frameRequests.requestedInputBlockFlagsThisFrame & InputBlockFlags.Dash) == 0;
+        return !IsInputBlocked(InputBlockFlags.Dash);
     }
 
     private bool CanAcceptGrabInput()
     {
-        return (frameRequests.requestedInputBlockFlagsThisFrame & InputBlockFlags.Grab) == 0;
+        return !IsInputBlocked(InputBlockFlags.Grab);
+    }
+
+    private bool IsInputBlocked(InputBlockFlags flags)
+    {
+        InputBlockFlags blockedFlags = frameRequests.requestedInputBlockFlagsThisFrame;
+
+        if (externalControlSystem != null)
+        {
+            blockedFlags |= externalControlSystem.PersistentInputBlockFlags;
+        }
+
+        return (blockedFlags & flags) != 0;
     }
 
     private bool ComputeIsMoveInputDiagonal()
