@@ -9,7 +9,7 @@ public sealed partial class PlayerController
 
     // デバッグ表示向けのジャンプ要求状態。
     // Update で押下された入力が次の FixedUpdate で消費されるまで true になる。
-    public bool JumpRequested => jumpRequested;
+    public bool JumpRequested => frameRequests.jumpRequested;
 
     // デバッグ表示向けのコヨーテタイマー。
     public float CoyoteTimer => coyoteTimer;
@@ -24,7 +24,7 @@ public sealed partial class PlayerController
     public float RiseGravityMultiplier => movementSettings.Jump.RiseGravityMultiplier;
 
     // デバッグ表示向けのダッシュ要求状態。
-    public bool DashRequested => dashRequested;
+    public bool DashRequested => frameRequests.dashRequested;
 
     // デバッグ表示向けのダッシュバッファタイマー。
     public float DashBufferTimer => dashBufferTimer;

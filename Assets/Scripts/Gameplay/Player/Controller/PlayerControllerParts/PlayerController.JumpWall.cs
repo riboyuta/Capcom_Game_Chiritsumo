@@ -4,7 +4,7 @@ public sealed partial class PlayerController
 {
     public void NotifyExternalLaunch()
     {
-        wasExternallyLaunchedThisFrame = true;
+        frameRequests.wasExternallyLaunchedThisFrame = true;
     }
 
     private void UpdateJumpAssistTimers(float deltaTime)
@@ -40,7 +40,7 @@ public sealed partial class PlayerController
     {
         if (!CanAcceptJumpInput())
         {
-            jumpRequested = false;
+            frameRequests.jumpRequested = false;
             if (movementSettings.Jump.UseJumpBuffer)
             {
                 jumpBufferTimer = 0f;
@@ -53,7 +53,7 @@ public sealed partial class PlayerController
         // バッファ有効時でもここで破棄する。
         if (runtimeState.isDashing)
         {
-            jumpRequested = false;
+            frameRequests.jumpRequested = false;
             if (movementSettings.Jump.UseJumpBuffer)
             {
                 jumpBufferTimer = 0f;
@@ -64,8 +64,8 @@ public sealed partial class PlayerController
 
         // 今フレームのジャンプリクエストを読み取り、
         // 読み取った後は消費済みとして false に戻す。
-        bool requested = jumpRequested;
-        jumpRequested = false;
+        bool requested = frameRequests.jumpRequested;
+        frameRequests.jumpRequested = false;
 
         // ジャンプバッファ有効時は、
         // 押された瞬間に一定時間だけ要求を保持する。

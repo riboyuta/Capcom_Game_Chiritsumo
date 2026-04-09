@@ -3,6 +3,7 @@ using UnityEngine;
 public sealed partial class PlayerController
 {
     private readonly PlayerRuntimeState runtimeState = new PlayerRuntimeState();
+    private readonly PlayerFrameRequests frameRequests = new PlayerFrameRequests();
     public bool IsDashActive => runtimeState.isDashing;
     public bool IsGrounded => runtimeState.isGrounded;
     public bool IsAirborne => !runtimeState.isGrounded;
@@ -10,14 +11,6 @@ public sealed partial class PlayerController
     public int Facing => runtimeState.facing;
 
     // TODO: WallGrabTimeRemaining は壁掴まり時間制限の内部データ実装後に公開する。
-
-    // Update で検出したジャンプ押下を FixedUpdate まで保持する。
-    // これにより物理フレームとのズレで押下を取りこぼしにくくする。
-    private bool jumpRequested;
-
-    // Update で検出したダッシュ押下を FixedUpdate まで保持する。
-    // これにより物理フレームとのズレで押下を取りこぼしにくくする。
-    private bool dashRequested;
 
     // 着地/クールダウン解除直前のダッシュ入力を保持するタイマー。
     private float dashBufferTimer;
@@ -64,13 +57,7 @@ public sealed partial class PlayerController
     private bool leftWallCheckHit;
     private bool rightWallCheckHit;
 
-    // この物理フレームで外部打ち上げ通知を受けたかどうか。
-    // true の間は可変ジャンプカットを適用しない。
-    private bool wasExternallyLaunchedThisFrame;
     private bool suppressVariableJumpCutThisTick;
-
-    // この physics tick で届いた移動補正 request の合算値。
-    private PlayerLocomotionModifierRequest requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
 
     // 物理処理で実際に参照する移動補正倍率。
     private PlayerLocomotionModifierRequest resolvedLocomotionModifier = PlayerLocomotionModifierRequest.Identity;
@@ -79,19 +66,19 @@ public sealed partial class PlayerController
 
     // 現在レール上を滑らかに滑走中かどうか
     private bool isGrinding;
-    
+
     // 現在乗っているレールギミック
     private RailGimmick currentRail;
-    
+
     // レール上で現在位置しているセグメントのインデックス
     private int currentRailSegment;
-    
+
     // 現在のセグメント上での進行距離
     private float distanceOnRailSegment;
-    
+
     // ウェイポイントに対する進行方向 (+1: start to end, -1: end to start)
     private int grindDirection = 1;
-    
+
     // レール再吸着ロックタイマー
     private float railReattachLockTimer;
 }

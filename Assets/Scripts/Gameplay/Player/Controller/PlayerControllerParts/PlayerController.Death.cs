@@ -418,8 +418,8 @@ public sealed partial class PlayerController
         runtimeState.currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
         runtimeState.wasGroundedLastFrame = false;
         runtimeState.dashStartVerticalVelocity = 0.0f;
-        jumpRequested = false;
-        dashRequested = false;
+        frameRequests.jumpRequested = false;
+        frameRequests.dashRequested = false;
         dashBufferTimer = 0.0f;
         coyoteTimer = 0.0f;
         jumpBufferTimer = 0.0f;

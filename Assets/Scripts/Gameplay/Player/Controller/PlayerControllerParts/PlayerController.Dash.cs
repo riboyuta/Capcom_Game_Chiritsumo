@@ -195,7 +195,7 @@ public sealed partial class PlayerController
     {
         if (!CanAcceptDashInput())
         {
-            dashRequested = false;
+            frameRequests.dashRequested = false;
             dashBufferTimer = 0f;
             return;
         }
@@ -203,13 +203,13 @@ public sealed partial class PlayerController
         // 機能が無効なら入力とバッファを破棄する。
         if (!movementSettings.Dash.UseDash)
         {
-            dashRequested = false;
+            frameRequests.dashRequested = false;
             dashBufferTimer = 0f;
             return;
         }
 
         // 今フレームのダッシュ要求を読み取る。
-        bool immediateDashRequest = dashRequested;
+        bool immediateDashRequest = frameRequests.dashRequested;
 
         // 入力があった場合は、必要ならバッファ時間を開始する。
         if (immediateDashRequest)
@@ -220,7 +220,7 @@ public sealed partial class PlayerController
             }
 
             // 読み取った入力は消費済みにする。
-            dashRequested = false;
+            frameRequests.dashRequested = false;
         }
 
         // バッファ中なら過去の入力でもダッシュ要求ありとみなす。
@@ -272,11 +272,11 @@ public sealed partial class PlayerController
         runtimeState.isWallSliding = false;
 
         // ダッシュ入力とバッファを消費する。
-        dashRequested = false;
+        frameRequests.dashRequested = false;
         dashBufferTimer = 0f;
 
         // ダッシュ開始時はジャンプ要求も破棄する。
-        jumpRequested = false;
+        frameRequests.jumpRequested = false;
         if (movementSettings.Jump.UseJumpBuffer)
         {
             jumpBufferTimer = 0f;

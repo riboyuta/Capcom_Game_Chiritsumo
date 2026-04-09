@@ -22,17 +22,17 @@ public sealed partial class PlayerController
 {
     public void RequestLocomotionModifierThisTick(PlayerLocomotionModifierRequest request)
     {
-        requestedLocomotionModifierThisTick.moveSpeedMultiplier *= request.moveSpeedMultiplier;
-        requestedLocomotionModifierThisTick.groundAccelerationMultiplier *= request.groundAccelerationMultiplier;
-        requestedLocomotionModifierThisTick.airAccelerationMultiplier *= request.airAccelerationMultiplier;
-        requestedLocomotionModifierThisTick.gravityScaleMultiplier *= request.gravityScaleMultiplier;
-        requestedLocomotionModifierThisTick.dashSpeedMultiplier *= request.dashSpeedMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.moveSpeedMultiplier *= request.moveSpeedMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.groundAccelerationMultiplier *= request.groundAccelerationMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.airAccelerationMultiplier *= request.airAccelerationMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.gravityScaleMultiplier *= request.gravityScaleMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.dashSpeedMultiplier *= request.dashSpeedMultiplier;
     }
 
     private void ResolveLocomotionModifiersThisTick()
     {
-        resolvedLocomotionModifier = requestedLocomotionModifierThisTick;
-        requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
+        resolvedLocomotionModifier = frameRequests.requestedLocomotionModifierThisTick;
+        frameRequests.requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
     }
 
     private void ApplyDashVelocity()
@@ -162,9 +162,9 @@ public sealed partial class PlayerController
         }
 
         // ジャンプ入力があれば離脱
-        if (jumpRequested)
+        if (frameRequests.jumpRequested)
         {
-            jumpRequested = false;
+            frameRequests.jumpRequested = false;
             // レールの傾きに関係なくひとまず上方向にジャンプさせる
             Vector3 jumpVel = rb.linearVelocity;
             jumpVel.y = movementSettings.Rail.GrindJumpVerticalVelocity;

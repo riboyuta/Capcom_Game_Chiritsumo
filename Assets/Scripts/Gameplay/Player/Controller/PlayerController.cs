@@ -100,7 +100,7 @@ public sealed partial class PlayerController : MonoBehaviour
         // ダッシュ残数管理の初期状態を設定する。
         runtimeState.currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
         runtimeState.wasGroundedLastFrame = false;
-        requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
+        frameRequests.requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
         resolvedLocomotionModifier = PlayerLocomotionModifierRequest.Identity;
     }
 
@@ -122,12 +122,12 @@ public sealed partial class PlayerController : MonoBehaviour
         // FixedUpdate 側で安全に消費できるよう、一旦フラグへ積む。
         if (playerInputReader.JumpPressed && CanAcceptJumpInput())
         {
-            jumpRequested = true;
+            frameRequests.jumpRequested = true;
         }
 
         if (playerInputReader.DashPressed && CanAcceptDashInput())
         {
-            dashRequested = true;
+            frameRequests.dashRequested = true;
         }
 
         // 横入力がしきい値を超えたときのみ向きを更新する。
@@ -142,8 +142,8 @@ public sealed partial class PlayerController : MonoBehaviour
         // 入力を保持せず、その場で打ち切る。
         if (IsActionLocked)
         {
-            jumpRequested = false;
-            dashRequested = false;
+            frameRequests.jumpRequested = false;
+            frameRequests.dashRequested = false;
             return;
         }
     }
@@ -160,8 +160,8 @@ public sealed partial class PlayerController : MonoBehaviour
 
         float deltaTime = Time.fixedDeltaTime;
         float previousVelocityY = rb != null ? rb.linearVelocity.y : 0f;
-        suppressVariableJumpCutThisTick = wasExternallyLaunchedThisFrame;
-        wasExternallyLaunchedThisFrame = false;
+        suppressVariableJumpCutThisTick = frameRequests.wasExternallyLaunchedThisFrame;
+        frameRequests.wasExternallyLaunchedThisFrame = false;
         ResolveLocomotionModifiersThisTick();
 
         // 掴まれ、叩きつけ、死亡などの行動不能状態では通常移動を止める。
