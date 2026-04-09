@@ -154,6 +154,8 @@ internal interface IPlayerExternalControlSessionBackend
     // 射出を要求する。
     void RequestLaunch(Vector3 direction, float speed, float maxFlightDistance, LayerMask collisionLayers);
 
+    // このフレームのジャンプ要求を消費する。
+    bool ConsumeJumpRequestThisFrame();
     // 外部制御を終了する。
     void EndControl();
 }
@@ -221,6 +223,13 @@ public sealed class PlayerExternalControlSession
     {
         if (!IsValid) return;
         backend.RequestLaunch(direction, speed, maxFlightDistance, collisionLayers);
+    }
+
+    // このフレームのジャンプ要求を消費する。
+    public bool ConsumeJumpRequestThisFrame()
+    {
+        if (!IsValid) return false;
+        return backend.ConsumeJumpRequestThisFrame();
     }
 
     // 外部制御を終了する。
@@ -435,6 +444,14 @@ public sealed class PlayerFacade : MonoBehaviour
     public void RequestFacing(int facing)
     {
         playerController.RequestFacing(facing);
+    }
+    // レール再吸着ロック中か。
+    public bool IsRailReattachLocked => playerController.IsRailReattachLocked;
+
+    // レール再吸着ロック時間を設定する。
+    public void SetRailReattachLock(float duration)
+    {
+        playerController.SetRailReattachLock(duration);
     }
 }
 
