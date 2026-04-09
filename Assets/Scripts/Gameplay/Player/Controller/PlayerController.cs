@@ -98,8 +98,8 @@ public sealed partial class PlayerController : MonoBehaviour
         InitializeVibrationState();
 
         // ダッシュ残数管理の初期状態を設定する。
-        currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
-        wasGroundedLastFrame = false;
+        runtimeState.currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
+        runtimeState.wasGroundedLastFrame = false;
         requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
         resolvedLocomotionModifier = PlayerLocomotionModifierRequest.Identity;
     }
@@ -186,15 +186,15 @@ public sealed partial class PlayerController : MonoBehaviour
         }
 
         // 物理フレームで接地状態を更新する。
-        isGrounded = CheckGrounded();
+        runtimeState.isGrounded = CheckGrounded();
 
         // ApplyJump による isGrounded 上書き前に、着地イベント用の情報を保存する。
         CaptureLandingSnapshot();
 
         // 接地しているなら急降下状態を解除する。
-        if (isGrounded)
+        if (runtimeState.isGrounded)
         {
-            isFastFalling = false;
+            runtimeState.isFastFalling = false;
         }
 
         // 物理フレームで壁接触状態を更新する。
@@ -221,7 +221,7 @@ public sealed partial class PlayerController : MonoBehaviour
         HandleGroundDashCooldownOnLanding();
 
         // 次フレームの接地遷移検出用に状態を保存する。
-        wasGroundedLastFrame = isGrounded;
+        runtimeState.wasGroundedLastFrame = runtimeState.isGrounded;
 
         // ダッシュの継続時間と再入力ロックを更新する。
         UpdateDashTimers(deltaTime);
@@ -233,7 +233,7 @@ public sealed partial class PlayerController : MonoBehaviour
         TryStartDash();
 
         // ダッシュ中は専用速度を最優先し、通常の縦処理を通さない。
-        if (isDashing)
+        if (runtimeState.isDashing)
         {
             ApplyDashVelocity();
             UpdateAudioEvents();
@@ -254,10 +254,10 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // 壁捕まり中は先にジャンプだけ試し、
         // まだ捕まり中なら専用移動を適用して通常移動へ入らない。
-        if (isWallGrabbing)
+        if (runtimeState.isWallGrabbing)
         {
             ApplyJump();
-            if (isWallGrabbing)
+            if (runtimeState.isWallGrabbing)
             {
                 ApplyWallGrabMovement();
                 UpdateAudioEvents();
@@ -286,7 +286,7 @@ public sealed partial class PlayerController : MonoBehaviour
     public void StartGrind(RailGimmick rail, int segmentIndex, float distanceOnSegment, int direction)
     {
         if (IsActionLocked || isGrinding) return;
-        if (railReattachLockTimer > 0f) return;
+        if (runtimeState.railReattachLockTimer > 0f) return;
 
         isGrinding = true;
         currentRail = rail;
@@ -296,8 +296,8 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // レール走行開始時に縦や横の余分な重力・速度を一旦切る
         rb.linearVelocity = Vector3.zero;
-        isGrounded = false;
-        isFastFalling = false;
+        runtimeState.isGrounded = false;
+        runtimeState.isFastFalling = false;
         
         Debug.Log($"Started Grinding. segment:{segmentIndex}, dir:{direction}");
     }

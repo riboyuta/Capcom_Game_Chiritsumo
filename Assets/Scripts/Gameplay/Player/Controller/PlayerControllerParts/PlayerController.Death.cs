@@ -405,19 +405,19 @@ public sealed partial class PlayerController
         reactionStateTimer = 0.0f;
         currentGrabAnchor = null;
 
-        isGrounded = false;
-        isTouchingWall = false;
-        wallSide = 0;
-        wallJumpControlLockTimer = 0.0f;
-        wallReattachLockTimer = 0.0f;
-        isWallSliding = false;
-        isDashing = false;
-        isFastFalling = false;
-        dashTimer = 0.0f;
-        groundDashCooldownTimer = 0.0f;
-        currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
-        wasGroundedLastFrame = false;
-        dashStartVerticalVelocity = 0.0f;
+        runtimeState.isGrounded = false;
+        runtimeState.isTouchingWall = false;
+        runtimeState.wallSide = 0;
+        runtimeState.wallJumpControlLockTimer = 0.0f;
+        runtimeState.wallReattachLockTimer = 0.0f;
+        runtimeState.isWallSliding = false;
+        runtimeState.isDashing = false;
+        runtimeState.isFastFalling = false;
+        runtimeState.dashTimer = 0.0f;
+        runtimeState.groundDashCooldownTimer = 0.0f;
+        runtimeState.currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
+        runtimeState.wasGroundedLastFrame = false;
+        runtimeState.dashStartVerticalVelocity = 0.0f;
         jumpRequested = false;
         dashRequested = false;
         dashBufferTimer = 0.0f;
@@ -438,14 +438,14 @@ public sealed partial class PlayerController
     // 0 が入る異常値にも備え、必ず -1 / +1 のどちらかへ補正する。
     private void CaptureDeathFacingForVisual()
     {
-        fixedDeathFacing = NormalizeFacingSign(facing);
-        isDeathFacingFixed = true;
+        runtimeState.fixedDeathFacing = NormalizeFacingSign(runtimeState.facing);
+        runtimeState.isDeathFacingFixed = true;
     }
 
     // 復帰時に死亡向き固定を解除し、通常の facing 反映へ戻す。
     private void ClearDeathFacingLock()
     {
-        isDeathFacingFixed = false;
+        runtimeState.isDeathFacingFixed = false;
     }
 
     // 向き値を -1 / +1 のいずれかへ補正する。

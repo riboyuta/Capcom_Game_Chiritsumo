@@ -37,20 +37,20 @@ public sealed partial class PlayerController
 
     private void ApplyDashVelocity()
     {
-        rb.linearVelocity = dashDirection * (movementSettings.Dash.Speed * resolvedLocomotionModifier.dashSpeedMultiplier);
+        rb.linearVelocity = runtimeState.dashDirection * (movementSettings.Dash.Speed * resolvedLocomotionModifier.dashSpeedMultiplier);
     }
 
 
     private void UpdateWallJumpLockTimer(float deltaTime)
     {
         // 壁キック後の入力ロック残り時間を減らす。
-        wallJumpControlLockTimer = Mathf.Max(0f, wallJumpControlLockTimer - deltaTime);
+        runtimeState.wallJumpControlLockTimer = Mathf.Max(0f, runtimeState.wallJumpControlLockTimer - deltaTime);
 
         // 壁キック後の再付着ロック残り時間を減らす。
-        wallReattachLockTimer = Mathf.Max(0f, wallReattachLockTimer - deltaTime);
+        runtimeState.wallReattachLockTimer = Mathf.Max(0f, runtimeState.wallReattachLockTimer - deltaTime);
         
         // レール再吸着ロック残り時間を減らす。
-        railReattachLockTimer = Mathf.Max(0f, railReattachLockTimer - deltaTime);
+        runtimeState.railReattachLockTimer = Mathf.Max(0f, runtimeState.railReattachLockTimer - deltaTime);
     }
 
     private void ApplyHorizontalMovement(float deltaTime)
@@ -76,26 +76,26 @@ public sealed partial class PlayerController
             bool isTurning = rb.linearVelocity.x * inputX < 0f;
             if (isTurning)
             {
-                accel = isGrounded
+                accel = runtimeState.isGrounded
                     ? movementSettings.Move.GroundTurnAcceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
                     : movementSettings.Move.AirTurnAcceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
             }
             else
             {
-                accel = isGrounded
+                accel = runtimeState.isGrounded
                     ? movementSettings.Move.GroundAcceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
                     : movementSettings.Move.AirAcceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
             }
         }
         else
         {
-            accel = isGrounded
+            accel = runtimeState.isGrounded
                 ? movementSettings.Move.GroundDeceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
                 : movementSettings.Move.AirDeceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
         }
 
         // 壁キック直後の入力ロック中は横移動入力を受け付けない。
-        if (wallJumpControlLockTimer > 0f)
+        if (runtimeState.wallJumpControlLockTimer > 0f)
         {
             return;
         }
@@ -126,7 +126,7 @@ public sealed partial class PlayerController
         if (isFalling)
         {
             float fallingMultiplier = movementSettings.Fall.GravityMultiplier;
-            if (isFastFalling)
+            if (runtimeState.isFastFalling)
             {
                 fallingMultiplier = movementSettings.Fall.FastFallGravityMultiplier;
             }
@@ -142,7 +142,7 @@ public sealed partial class PlayerController
         }
 
         // 落下速度の下限を設定して加速しすぎを防ぐ。
-        float maxFallSpeed = isFastFalling && isFalling
+        float maxFallSpeed = runtimeState.isFastFalling && isFalling
             ? movementSettings.Fall.FastFallMaxSpeed
             : movementSettings.Fall.MaxSpeed;
         float minVelocityY = -maxFallSpeed;
@@ -170,7 +170,7 @@ public sealed partial class PlayerController
             jumpVel.y = movementSettings.Rail.GrindJumpVerticalVelocity;
             
             // ジャンプ後しばらく同じレールまたは他のレールに吸着しないようにロック
-            railReattachLockTimer = movementSettings.Rail.ReattachLockTime;
+            runtimeState.railReattachLockTimer = movementSettings.Rail.ReattachLockTime;
             
             // 横方向の速度は保つ
             EndGrind(jumpVel);
@@ -274,6 +274,6 @@ public sealed partial class PlayerController
         rb.linearVelocity = moveVel; // 離脱時等に使うのでvelocityも更新しておく
         
         // 振り向き
-        facing = moveVel.x > 0 ? 1 : (moveVel.x < 0 ? -1 : facing);
+        runtimeState.facing = moveVel.x > 0 ? 1 : (moveVel.x < 0 ? -1 : runtimeState.facing);
     }
 }

@@ -64,12 +64,12 @@ public sealed partial class PlayerController
 
         int normalizedFacing = nextFacing > 0 ? 1 : -1;
 
-        if (facing == normalizedFacing)
+        if (runtimeState.facing == normalizedFacing)
         {
             return;
         }
 
-        facing = normalizedFacing;
+        runtimeState.facing = normalizedFacing;
 
         // 推測:
         // 向き変更時に見た目同期が必要なら、ここで Sprite / View / Animator 更新を呼ぶ。

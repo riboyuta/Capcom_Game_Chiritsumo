@@ -42,35 +42,35 @@ public sealed partial class PlayerController
     public bool GroundCheckHit => groundCheckHit;
 
     // デバッグ表示向けの壁接触状態。
-    public bool IsTouchingWall => isTouchingWall;
+    public bool IsTouchingWall => runtimeState.isTouchingWall;
 
     // デバッグ表示向けの壁左右情報。(-1:left / +1:right / 0:none)
-    public int WallSide => wallSide;
+    public int WallSide => runtimeState.wallSide;
 
     // デバッグ表示向けの壁滑り状態。
-    public bool IsWallSliding => isWallSliding;
+    public bool IsWallSliding => runtimeState.isWallSliding;
 
     // デバッグ表示向けの壁キック入力ロックタイマー。
-    public float WallJumpControlLockTimer => wallJumpControlLockTimer;
+    public float WallJumpControlLockTimer => runtimeState.wallJumpControlLockTimer;
 
     // デバッグ表示向けの壁再付着ロックタイマー。
-    public float WallReattachLockTimer => wallReattachLockTimer;
+    public float WallReattachLockTimer => runtimeState.wallReattachLockTimer;
 
     // デバッグ表示向けのダッシュ状態。
-    public bool IsDashing => isDashing;
+    public bool IsDashing => runtimeState.isDashing;
 
     // デバッグ表示向けの急降下状態。
-    public bool IsFastFalling => isFastFalling;
+    public bool IsFastFalling => runtimeState.isFastFalling;
 
     // デバッグ表示向けのダッシュ残り時間。
-    public float DashTimer => dashTimer;
+    public float DashTimer => runtimeState.dashTimer;
 
 
     // デバッグ表示向けのダッシュ中重力倍率。
     public float DashGravityMultiplier => movementSettings.Dash.GravityMultiplier;
 
     // デバッグ表示向けのダッシュ開始時Y速度。
-    public float DashStartVerticalVelocity => dashStartVerticalVelocity;
+    public float DashStartVerticalVelocity => runtimeState.dashStartVerticalVelocity;
 
     // デバッグ表示向けのダッシュ開始時Y速度復元設定。
     public bool RestoreDashStartVerticalVelocity => movementSettings.Dash.RestoreStartVerticalVelocity;

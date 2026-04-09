@@ -32,9 +32,9 @@ public sealed partial class PlayerController
     private void InitializeVibrationState()
     {
         // 初期比較用として、現在状態をそのまま保存しておく。
-        wasGrounded = isGrounded;
-        wasDashing = isDashing;
-        wasWallSliding = isWallSliding;
+        wasGrounded = runtimeState.isGrounded;
+        wasDashing = runtimeState.isDashing;
+        wasWallSliding = runtimeState.isWallSliding;
         airborneTimer = 0f;
         highestAirborneFootY = GetCurrentFootY();
         landingOccurredThisFrame = false;
@@ -66,12 +66,12 @@ public sealed partial class PlayerController
     private void UpdateWallSlideVibration()
     {
         // 前フレームでは壁滑りしておらず、今フレームで壁滑りに入った。
-        if (!wasWallSliding && isWallSliding)
+        if (!wasWallSliding && runtimeState.isWallSliding)
         {
             vibrationController.StartWallSlideRumble();
         }
         // 前フレームでは壁滑りしていたが、今フレームで壁滑りを抜けた。
-        else if (wasWallSliding && !isWallSliding)
+        else if (wasWallSliding && !runtimeState.isWallSliding)
         {
             vibrationController.StopWallSlideRumble();
         }
@@ -83,7 +83,7 @@ public sealed partial class PlayerController
         // 「今フレームでダッシュ開始した瞬間」だけ振動させたい。
         // すでに前フレームからダッシュ中なら鳴らさない。
         // 今フレームでダッシュしていないなら当然鳴らさない。
-        if (wasDashing || !isDashing)
+        if (wasDashing || !runtimeState.isDashing)
         {
             return;
         }
@@ -93,7 +93,7 @@ public sealed partial class PlayerController
         vibrationController.StopWallSlideRumble();
 
         // ダッシュ開始時点の接地状態で、地上用と空中用の振動を分ける。
-        if (isGrounded)
+        if (runtimeState.isGrounded)
         {
             vibrationController.PlayGroundDash();
         }
@@ -108,7 +108,7 @@ public sealed partial class PlayerController
     private void UpdateAirborneMetrics()
     {
         // 接地中は計測しない。
-        if (isGrounded)
+        if (runtimeState.isGrounded)
         {
             return;
         }
@@ -133,7 +133,7 @@ public sealed partial class PlayerController
     // 同フレームで isGrounded が false に戻っても、着地イベントを維持できる。
     private void CaptureLandingSnapshot()
     {
-        landingOccurredThisFrame = !wasGrounded && isGrounded;
+        landingOccurredThisFrame = !wasGrounded && runtimeState.isGrounded;
         justLandedThisFrame = landingOccurredThisFrame;
         if (!landingOccurredThisFrame)
         {
@@ -190,9 +190,9 @@ public sealed partial class PlayerController
     // フレーム末尾で、次回比較用の状態を保存する。
     private void CacheVibrationState()
     {
-        wasGrounded = isGrounded;
-        wasDashing = isDashing;
-        wasWallSliding = isWallSliding;
+        wasGrounded = runtimeState.isGrounded;
+        wasDashing = runtimeState.isDashing;
+        wasWallSliding = runtimeState.isWallSliding;
     }
 
     // 現在フレーム時点の足元Yを取得する。

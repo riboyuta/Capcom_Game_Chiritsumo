@@ -18,16 +18,16 @@ public sealed partial class PlayerController
         snapshot.velocity = rb != null ? rb.linearVelocity : Vector3.zero;
 
         // 向きを正規化して記録
-        snapshot.facing = NormalizeShadowFacing(facing);
+        snapshot.facing = NormalizeShadowFacing(runtimeState.facing);
 
         // 状態フラグを記録
-        snapshot.isGrounded = isGrounded;
-        snapshot.isTouchingWall = isTouchingWall;
-        snapshot.wallSide = wallSide;
+        snapshot.isGrounded = runtimeState.isGrounded;
+        snapshot.isTouchingWall = runtimeState.isTouchingWall;
+        snapshot.wallSide = runtimeState.wallSide;
 
-        snapshot.isWallSliding = isWallSliding;
-        snapshot.isDashing = isDashing;
-        snapshot.isFastFalling = isFastFalling;
+        snapshot.isWallSliding = runtimeState.isWallSliding;
+        snapshot.isDashing = runtimeState.isDashing;
+        snapshot.isFastFalling = runtimeState.isFastFalling;
 
         snapshot.isActionLocked = IsActionLocked;
         snapshot.isDead = reactionState == PlayerReactionState.Dead;

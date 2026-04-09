@@ -99,10 +99,10 @@ public sealed partial class PlayerController
         rightWallCheckHit = hitRight;
 
         // 壁キック後の再付着ロック中は壁アクション候補を無効化する。
-        if (wallReattachLockTimer > 0f)
+        if (runtimeState.wallReattachLockTimer > 0f)
         {
-            wallSide = 0;
-            isTouchingWall = false;
+            runtimeState.wallSide = 0;
+            runtimeState.isTouchingWall = false;
             return;
         }
 
@@ -110,14 +110,14 @@ public sealed partial class PlayerController
         // 壁方向を確定できないので未接触として扱う。
         if (hitLeft == hitRight)
         {
-            wallSide = 0;
-            isTouchingWall = false;
+            runtimeState.wallSide = 0;
+            runtimeState.isTouchingWall = false;
             return;
         }
 
         // 左だけヒットなら -1、右だけヒットなら 1 とする。
-        wallSide = hitLeft ? -1 : 1;
-        isTouchingWall = true;
+        runtimeState.wallSide = hitLeft ? -1 : 1;
+        runtimeState.isTouchingWall = true;
     }
 
     private float GetWorldCapsuleRadius()

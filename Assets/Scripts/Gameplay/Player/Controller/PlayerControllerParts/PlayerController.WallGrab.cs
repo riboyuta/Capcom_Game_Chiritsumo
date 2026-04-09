@@ -16,19 +16,19 @@ public sealed partial class PlayerController
         }
 
         // 行動不能中・接地中・ダッシュ中・レール滑走中は不可。
-        if (IsActionLocked || isGrounded || isDashing || isGrinding)
+        if (IsActionLocked || runtimeState.isGrounded || runtimeState.isDashing || isGrinding)
         {
             return false;
         }
 
         // 壁未接触、または壁方向が不明なときは不可。
-        if (!isTouchingWall || wallSide == 0)
+        if (!runtimeState.isTouchingWall || runtimeState.wallSide == 0)
         {
             return false;
         }
 
         // 壁再付着ロック中は不可。
-        if (wallReattachLockTimer > 0f)
+        if (runtimeState.wallReattachLockTimer > 0f)
         {
             return false;
         }
@@ -45,7 +45,7 @@ public sealed partial class PlayerController
     private void UpdateWallGrabState()
     {
         // すでに壁捕まり中なら、維持条件を満たさない時だけ抜ける。
-        if (isWallGrabbing)
+        if (runtimeState.isWallGrabbing)
         {
             if (ShouldExitWallGrab())
             {
@@ -79,17 +79,17 @@ public sealed partial class PlayerController
             return true;
         }
 
-        if (isGrounded || isDashing || isGrinding)
+        if (runtimeState.isGrounded || runtimeState.isDashing || isGrinding)
         {
             return true;
         }
 
-        if (!isTouchingWall || wallSide == 0)
+        if (!runtimeState.isTouchingWall || runtimeState.wallSide == 0)
         {
             return true;
         }
 
-        if (wallReattachLockTimer > 0f)
+        if (runtimeState.wallReattachLockTimer > 0f)
         {
             return true;
         }
@@ -99,10 +99,10 @@ public sealed partial class PlayerController
 
     private void EnterWallGrab()
     {
-        isWallGrabbing = true;
-        wallGrabSide = wallSide;
-        isWallSliding = false;
-        isFastFalling = false;
+        runtimeState.isWallGrabbing = true;
+        runtimeState.wallGrabSide = runtimeState.wallSide;
+        runtimeState.isWallSliding = false;
+        runtimeState.isFastFalling = false;
 
         Vector3 velocity = rb.linearVelocity;
         velocity.x = 0f;
@@ -112,25 +112,25 @@ public sealed partial class PlayerController
 
     private void ExitWallGrab()
     {
-        isWallGrabbing = false;
-        wallGrabSide = 0;
+        runtimeState.isWallGrabbing = false;
+        runtimeState.wallGrabSide = 0;
     }
 
     private void ApplyWallGrabMovement()
     {
-        if (!isWallGrabbing)
+        if (!runtimeState.isWallGrabbing)
         {
             return;
         }
 
-        facing = wallGrabSide;
+        runtimeState.facing = runtimeState.wallGrabSide;
 
         Vector3 velocity = rb.linearVelocity;
         velocity.x = 0f;
         velocity.y = movementSettings.Wall.WallGrabVerticalSpeed;
         rb.linearVelocity = velocity;
 
-        isWallSliding = false;
-        isFastFalling = false;
+        runtimeState.isWallSliding = false;
+        runtimeState.isFastFalling = false;
     }
 }

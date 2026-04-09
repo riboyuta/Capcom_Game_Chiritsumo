@@ -64,11 +64,11 @@ public sealed partial class PlayerController
             return;
         }
 
-        if (isDashing)
+        if (runtimeState.isDashing)
         {
             return;
         }
-        if (isWallGrabbing)
+        if (runtimeState.isWallGrabbing)
         {
             return;
         }
@@ -86,12 +86,12 @@ public sealed partial class PlayerController
         // 右入力が閾値を超えたら右向きにする。
         if (inputX > facingThreshold)
         {
-            facing = 1;
+            runtimeState.facing = 1;
         }
         // 左入力が負の閾値を下回ったら左向きにする。
         else if (inputX < -facingThreshold)
         {
-            facing = -1;
+            runtimeState.facing = -1;
         }
     }
 }

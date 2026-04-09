@@ -26,19 +26,19 @@ public sealed partial class PlayerController
         }
 
         // 接地していない間は回復しない。
-        if (!isGrounded)
+        if (!runtimeState.isGrounded)
         {
             return;
         }
 
         // レール滑走中や壁捕まり中は接地回復対象外とする。
-        if (isGrinding || isWallGrabbing)
+        if (isGrinding || runtimeState.isWallGrabbing)
         {
             return;
         }
 
         // 残数不足時だけ回復を試みる。
-        if (currentDashCharges < Mathf.Max(1, movementSettings.Dash.MaxCharges))
+        if (runtimeState.currentDashCharges < Mathf.Max(1, movementSettings.Dash.MaxCharges))
         {
             TryRefillDash(DashRefillReason.Grounded);
         }
@@ -50,17 +50,17 @@ public sealed partial class PlayerController
 
 
         // ダッシュ中でなければダッシュ時間は 0 に戻す。
-        if (!isDashing)
+        if (!runtimeState.isDashing)
         {
-            dashTimer = 0f;
+            runtimeState.dashTimer = 0f;
             return;
         }
 
         // ダッシュ中は残り時間を減らす。
-        dashTimer = Mathf.Max(0f, dashTimer - deltaTime);
+        runtimeState.dashTimer = Mathf.Max(0f, runtimeState.dashTimer - deltaTime);
 
         // 残り時間がなくなったらダッシュ終了とする。
-        if (dashTimer <= 0f)
+        if (runtimeState.dashTimer <= 0f)
         {
             EndDash();
         }
@@ -74,13 +74,13 @@ public sealed partial class PlayerController
         }
 
         // 残数がないなら消費不可。
-        if (currentDashCharges <= 0)
+        if (runtimeState.currentDashCharges <= 0)
         {
             return false;
         }
 
         // すでにダッシュ中なら消費不可。
-        if (isDashing)
+        if (runtimeState.isDashing)
         {
             return false;
         }
@@ -105,7 +105,7 @@ public sealed partial class PlayerController
 
 
         // 地上中だけ地上ダッシュ連続制限タイマーを確認する。
-        if (isGrounded && groundDashCooldownTimer > 0f)
+        if (runtimeState.isGrounded && runtimeState.groundDashCooldownTimer > 0f)
         {
             return false;
         }
@@ -130,7 +130,7 @@ public sealed partial class PlayerController
             return false;
         }
 
-        currentDashCharges = Mathf.Max(0, currentDashCharges - 1);
+        runtimeState.currentDashCharges = Mathf.Max(0, runtimeState.currentDashCharges - 1);
         return true;
     }
 
@@ -155,17 +155,17 @@ public sealed partial class PlayerController
         }
 
         int maxCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
-        if (currentDashCharges >= maxCharges)
+        if (runtimeState.currentDashCharges >= maxCharges)
         {
             return false;
         }
 
-        currentDashCharges = maxCharges;
+        runtimeState.currentDashCharges = maxCharges;
         return true;
     }
     private void EndDash()
     {
-        isDashing = false;
+        runtimeState.isDashing = false;
         TrySnapToGroundAfterDash();
 
         if (!movementSettings.Dash.RestoreStartVerticalVelocity)
@@ -174,7 +174,7 @@ public sealed partial class PlayerController
         }
 
         Vector3 velocity = rb.linearVelocity;
-        velocity.y = dashStartVerticalVelocity;
+        velocity.y = runtimeState.dashStartVerticalVelocity;
         rb.linearVelocity = velocity;
     }
 
@@ -248,28 +248,28 @@ public sealed partial class PlayerController
         // ダッシュ開始時は壁捕まり状態を解除する。
         ExitWallGrab();
         // ダッシュ開始状態へ入る。
-        isDashing = true;
-        isFastFalling = false;
-        dashTimer = movementSettings.Dash.Duration;
-        if (isGrounded)
+        runtimeState.isDashing = true;
+        runtimeState.isFastFalling = false;
+        runtimeState.dashTimer = movementSettings.Dash.Duration;
+        if (runtimeState.isGrounded)
         {
-            groundDashCooldownTimer = movementSettings.Dash.GroundCooldownTime;
+            runtimeState.groundDashCooldownTimer = movementSettings.Dash.GroundCooldownTime;
         }
-        dashStartVerticalVelocity = rb.linearVelocity.y;
+        runtimeState.dashStartVerticalVelocity = rb.linearVelocity.y;
         Vector2 dashStartVelocity = rb.linearVelocity;
 
         dashStartVelocity.y = 0f;
         rb.linearVelocity = dashStartVelocity;
-        dashDirection = ResolveDashStartDirection();
-        if (dashDirection.x > 0f)
+        runtimeState.dashDirection = ResolveDashStartDirection();
+        if (runtimeState.dashDirection.x > 0f)
         {
-            facing = 1;
+            runtimeState.facing = 1;
         }
-        else if (dashDirection.x < 0f)
+        else if (runtimeState.dashDirection.x < 0f)
         {
-            facing = -1;
+            runtimeState.facing = -1;
         }
-        isWallSliding = false;
+        runtimeState.isWallSliding = false;
 
         // ダッシュ入力とバッファを消費する。
         dashRequested = false;
@@ -285,15 +285,15 @@ public sealed partial class PlayerController
 
     private void UpdateGroundDashCooldownTimer(float deltaTime)
     {
-        groundDashCooldownTimer = Mathf.Max(0f, groundDashCooldownTimer - deltaTime);
+        runtimeState.groundDashCooldownTimer = Mathf.Max(0f, runtimeState.groundDashCooldownTimer - deltaTime);
     }
 
     private void HandleGroundDashCooldownOnLanding()
     {
         // 空中から接地へ戻った瞬間のみ地上ダッシュ連続制限を解除する。
-        if (!wasGroundedLastFrame && isGrounded)
+        if (!runtimeState.wasGroundedLastFrame && runtimeState.isGrounded)
         {
-            groundDashCooldownTimer = 0f;
+            runtimeState.groundDashCooldownTimer = 0f;
         }
     }
 
@@ -304,12 +304,12 @@ public sealed partial class PlayerController
             return false;
         }
 
-        if (isGrounded || isWallGrabbing || isGrinding)
+        if (runtimeState.isGrounded || runtimeState.isWallGrabbing || isGrinding)
         {
             return false;
         }
 
-        if (dashDirection.y > 0f)
+        if (runtimeState.dashDirection.y > 0f)
         {
             return false;
         }
@@ -340,7 +340,7 @@ public sealed partial class PlayerController
         }
 
         rb.position = new Vector3(position.x, targetPositionY, position.z);
-        isGrounded = true;
+        runtimeState.isGrounded = true;
     }
 
     private bool TryGetDashGroundSnapTarget(out RaycastHit hit)
@@ -367,7 +367,7 @@ public sealed partial class PlayerController
         Vector2 requestedDirection = playerInputReader.DashDirectionInput;
         if (requestedDirection == Vector2.zero)
         {
-            return new Vector2(facing, 0f);
+            return new Vector2(runtimeState.facing, 0f);
         }
 
         return requestedDirection.normalized;

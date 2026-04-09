@@ -11,7 +11,7 @@ public sealed partial class PlayerController
     {
         // 接地中はコヨーテタイマーを最大値へ戻す。
         // 無効時は 0 に固定する。
-        if (isGrounded)
+        if (runtimeState.isGrounded)
         {
             coyoteTimer = movementSettings.Jump.UseCoyoteTime ? movementSettings.Jump.CoyoteTime : 0f;
         }
@@ -51,7 +51,7 @@ public sealed partial class PlayerController
 
         // ダッシュ中はジャンプを受け付けない。
         // バッファ有効時でもここで破棄する。
-        if (isDashing)
+        if (runtimeState.isDashing)
         {
             jumpRequested = false;
             if (movementSettings.Jump.UseJumpBuffer)
@@ -90,7 +90,7 @@ public sealed partial class PlayerController
         }
 
         // 接地中、またはコヨーテ時間内なら通常ジャンプ可能。
-        bool canJump = movementSettings.Jump.UseCoyoteTime ? coyoteTimer > 0f : isGrounded;
+        bool canJump = movementSettings.Jump.UseCoyoteTime ? coyoteTimer > 0f : runtimeState.isGrounded;
         if (!canJump)
         {
             return;
@@ -102,7 +102,7 @@ public sealed partial class PlayerController
         rb.linearVelocity = velocity;
 
         // ジャンプ成立後は地上扱いと補助タイマーを解除する。
-        isGrounded = false;
+        runtimeState.isGrounded = false;
         coyoteTimer = 0f;
         jumpBufferTimer = 0f;
         jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
@@ -113,7 +113,7 @@ public sealed partial class PlayerController
     private bool TryApplyWallKick()
     {
         // ダッシュ中は壁キックしない。
-        if (isDashing)
+        if (runtimeState.isDashing)
         {
             return false;
         }
@@ -125,13 +125,13 @@ public sealed partial class PlayerController
         }
 
         // 接地中、壁未接触、壁方向不明のときは不可。
-        if (isGrounded || !isTouchingWall || wallSide == 0)
+        if (runtimeState.isGrounded || !runtimeState.isTouchingWall || runtimeState.wallSide == 0)
         {
             return false;
         }
 
         // 再付着ロック中は壁キック候補にしない。
-        if (wallReattachLockTimer > 0f)
+        if (runtimeState.wallReattachLockTimer > 0f)
         {
             return false;
         }
@@ -147,16 +147,16 @@ public sealed partial class PlayerController
         // 壁と反対方向へ横速度を与え、
         // 上方向には壁ジャンプ用の初速を与える。
         Vector3 velocity = rb.linearVelocity;
-        velocity.x = -wallSide * movementSettings.Wall.WallJumpHorizontalVelocity;
+        velocity.x = -runtimeState.wallSide * movementSettings.Wall.WallJumpHorizontalVelocity;
         velocity.y = movementSettings.Wall.WallJumpVerticalVelocity;
         rb.linearVelocity = velocity;
 
         // 壁ジャンプ直後は一定時間だけ横制御と再付着を制限する。
-        wallJumpControlLockTimer = movementSettings.Wall.WallJumpControlLockTime;
-        wallReattachLockTimer = movementSettings.Wall.WallReattachLockTime;
+        runtimeState.wallJumpControlLockTimer = movementSettings.Wall.WallJumpControlLockTime;
+        runtimeState.wallReattachLockTimer = movementSettings.Wall.WallReattachLockTime;
         coyoteTimer = 0f;
         jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
-        isGrounded = false;
+        runtimeState.isGrounded = false;
         justWallJumpedThisFrame = true;
         //振動
         PlayWallKickVibration();
@@ -205,7 +205,7 @@ public sealed partial class PlayerController
     {
         // 毎フレーム先に false へ戻し、
         // 条件を満たしたときだけ true にする。
-        isWallSliding = false;
+        runtimeState.isWallSliding = false;
 
         // 機能が無効なら何もしない。
         if (!movementSettings.Wall.UseWallSlide)
@@ -214,13 +214,13 @@ public sealed partial class PlayerController
         }
 
         // 再付着ロック中は壁滑りへ入れない。
-        if (wallReattachLockTimer > 0f)
+        if (runtimeState.wallReattachLockTimer > 0f)
         {
             return;
         }
 
         // 接地中、壁未接触、壁方向不明のときは不可。
-        if (isGrounded || !isTouchingWall || wallSide == 0)
+        if (runtimeState.isGrounded || !runtimeState.isTouchingWall || runtimeState.wallSide == 0)
         {
             return;
         }
@@ -235,7 +235,7 @@ public sealed partial class PlayerController
 
         // 壁方向へ入力しているときだけ壁滑りに入る。
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
-        float wallDirection = wallSide;
+        float wallDirection = runtimeState.wallSide;
         bool pushingToWall = inputX * wallDirection >= movementSettings.Detection.WallInputThreshold;
         if (!pushingToWall)
         {
@@ -250,8 +250,8 @@ public sealed partial class PlayerController
             rb.linearVelocity = velocity;
         }
 
-        isWallSliding = true;
-        isFastFalling = false;
+        runtimeState.isWallSliding = true;
+        runtimeState.isFastFalling = false;
     }
 
     private void TryStartFastFall()
@@ -268,7 +268,7 @@ public sealed partial class PlayerController
         }
 
         // 接地中・ダッシュ中・壁滑り中は開始しない。
-        if (isGrounded || isDashing || isWallSliding)
+        if (runtimeState.isGrounded || runtimeState.isDashing || runtimeState.isWallSliding)
         {
             return;
         }
@@ -279,6 +279,6 @@ public sealed partial class PlayerController
             return;
         }
 
-        isFastFalling = true;
+        runtimeState.isFastFalling = true;
     }
 }
