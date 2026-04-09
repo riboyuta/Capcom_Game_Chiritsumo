@@ -29,130 +29,6 @@ public sealed partial class PlayerController
         frameRequests.requestedLocomotionModifierThisTick.dashSpeedMultiplier *= request.dashSpeedMultiplier;
     }
 
-    private void ResolveLocomotionModifiersThisTick()
-    {
-        resolvedLocomotionModifier = frameRequests.requestedLocomotionModifierThisTick;
-        frameRequests.requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
-    }
-
-    private void ApplyDashVelocity()
-    {
-        rb.linearVelocity = runtimeState.dashDirection * (movementSettings.Dash.Speed * resolvedLocomotionModifier.dashSpeedMultiplier);
-    }
-
-
-    private void UpdateWallJumpLockTimer(float deltaTime)
-    {
-        // 壁キック後の入力ロック残り時間を減らす。
-        runtimeState.wallJumpControlLockTimer = Mathf.Max(0f, runtimeState.wallJumpControlLockTimer - deltaTime);
-
-        // 壁キック後の再付着ロック残り時間を減らす。
-        runtimeState.wallReattachLockTimer = Mathf.Max(0f, runtimeState.wallReattachLockTimer - deltaTime);
-        
-        // レール再吸着ロック残り時間を減らす。
-        runtimeState.railReattachLockTimer = Mathf.Max(0f, runtimeState.railReattachLockTimer - deltaTime);
-    }
-
-    private void ApplyHorizontalMovement(float deltaTime)
-    {
-        if (!CanAcceptMoveInput())
-        {
-            return;
-        }
-        // 移動入力の X 成分を -1 から 1 の範囲に収める。
-        float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
-
-        // 入力方向に応じた目標横速度を求める。
-        float targetSpeed = inputX * (movementSettings.Move.MaxSpeed * resolvedLocomotionModifier.moveSpeedMultiplier);
-        // 移動入力があるかどうかを判定する。
-        bool hasMoveInput = Mathf.Abs(inputX) > 0.01f;
-
-        // 入力ありなら加速、入力なしなら減速を使う。
-        // 反転入力時は専用加速度へ切り替える。
-        float accel;
-        if (hasMoveInput)
-        {
-            // 入力方向と現在速度の符号が逆なら反転中とみなす。
-            bool isTurning = rb.linearVelocity.x * inputX < 0f;
-            if (isTurning)
-            {
-                accel = runtimeState.isGrounded
-                    ? movementSettings.Move.GroundTurnAcceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
-                    : movementSettings.Move.AirTurnAcceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
-            }
-            else
-            {
-                accel = runtimeState.isGrounded
-                    ? movementSettings.Move.GroundAcceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
-                    : movementSettings.Move.AirAcceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
-            }
-        }
-        else
-        {
-            accel = runtimeState.isGrounded
-                ? movementSettings.Move.GroundDeceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
-                : movementSettings.Move.AirDeceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
-        }
-
-        // 壁キック直後の入力ロック中は横移動入力を受け付けない。
-        if (runtimeState.wallJumpControlLockTimer > 0f)
-        {
-            return;
-        }
-
-        // 現在速度を目標速度へ徐々に近づける。
-        Vector3 velocity = rb.linearVelocity;
-        velocity.x = Mathf.MoveTowards(velocity.x, targetSpeed, accel * deltaTime);
-        rb.linearVelocity = velocity;
-    }
-
-    private void ApplyCustomGravity()
-    {
-        Vector3 velocity = rb.linearVelocity;
-
-        // 下向き速度なら落下中とみなす。
-        bool isFalling = velocity.y < 0f;
-        bool isRising = velocity.y > 0f;
-
-        float gravityMultiplier = movementSettings.Jump.GravityScale * resolvedLocomotionModifier.gravityScaleMultiplier;
-        // 上昇中は、長押し中かつ有効時間内のみ上昇用倍率を掛ける。
-        if (isRising && playerInputReader.JumpHeld && jumpHoldTimer > 0f)
-        {
-            gravityMultiplier *= movementSettings.Jump.RiseGravityMultiplier;
-        }
-
-        // 落下中は落下用の重力倍率を掛ける。
-        // 急降下中なら専用倍率を優先する。
-        if (isFalling)
-        {
-            float fallingMultiplier = movementSettings.Fall.GravityMultiplier;
-            if (runtimeState.isFastFalling)
-            {
-                fallingMultiplier = movementSettings.Fall.FastFallGravityMultiplier;
-            }
-
-            gravityMultiplier *= fallingMultiplier;
-        }
-
-        // 標準重力との差分だけを追加する。
-        if (!Mathf.Approximately(gravityMultiplier, 1f))
-        {
-            Vector3 extraGravity = Physics.gravity * (gravityMultiplier - 1f);
-            rb.AddForce(extraGravity, ForceMode.Acceleration);
-        }
-
-        // 落下速度の下限を設定して加速しすぎを防ぐ。
-        float maxFallSpeed = runtimeState.isFastFalling && isFalling
-            ? movementSettings.Fall.FastFallMaxSpeed
-            : movementSettings.Fall.MaxSpeed;
-        float minVelocityY = -maxFallSpeed;
-        if (velocity.y < minVelocityY)
-        {
-            velocity.y = minVelocityY;
-            rb.linearVelocity = velocity;
-        }
-    }
-
     private void ApplyGrindMovement(float deltaTime)
     {
         if (currentRail == null || currentRail.RailPath.Count < 2)
@@ -168,10 +44,10 @@ public sealed partial class PlayerController
             // レールの傾きに関係なくひとまず上方向にジャンプさせる
             Vector3 jumpVel = rb.linearVelocity;
             jumpVel.y = movementSettings.Rail.GrindJumpVerticalVelocity;
-            
+
             // ジャンプ後しばらく同じレールまたは他のレールに吸着しないようにロック
             runtimeState.railReattachLockTimer = movementSettings.Rail.ReattachLockTime;
-            
+
             // 横方向の速度は保つ
             EndGrind(jumpVel);
             UpdateAudioEvents();
@@ -252,28 +128,25 @@ public sealed partial class PlayerController
         Vector3 finalStart = currentRail.RailPath[currentRailSegment];
         Vector3 finalEnd = currentRail.RailPath[currentRailSegment + 1];
         Vector3 segDir = (finalEnd - finalStart).normalized;
-        
+
         Vector3 targetPos = finalStart + segDir * distanceOnRailSegment;
-        
+
         // 足元がレールに接するようにオフセットを計算
         float worldHalfHeight = (capsuleCollider.height * 0.5f) * Mathf.Abs(transform.lossyScale.y);
         Vector3 centerOffset = transform.TransformVector(capsuleCollider.center);
-        Vector3 footOffset = centerOffset - Vector3.up * worldHalfHeight;
-        
-        targetPos -= footOffset;
-        
-        // Zは固定しておくか、レールに合わせるか。基本2DなのでレールのZを見る。
-        // もしプレイヤーのZが固定なら
-        targetPos.z = transform.position.z;
+        float feetOffset = worldHalfHeight - centerOffset.y;
+        targetPos.y += feetOffset;
 
-        // 次の瞬間の速度ベクトルとして疑似的にlinearVelocityを入れる
-        Vector3 moveVel = segDir * (movementSettings.Rail.GrindSpeed * grindDirection);
-        moveVel.z = 0; // z補正
-
+        // Rigidbody を直接動かす
         rb.MovePosition(targetPos);
-        rb.linearVelocity = moveVel; // 離脱時等に使うのでvelocityも更新しておく
-        
-        // 振り向き
-        runtimeState.facing = moveVel.x > 0 ? 1 : (moveVel.x < 0 ? -1 : runtimeState.facing);
+
+        // 見た目や他ロジック用に速度も更新
+        rb.linearVelocity = segDir * movementSettings.Rail.GrindSpeed * grindDirection;
+
+        // 向き更新（X成分がある場合のみ）
+        if (Mathf.Abs(segDir.x) > 0.001f)
+        {
+            runtimeState.facing = segDir.x > 0f ? 1 : -1;
+        }
     }
 }

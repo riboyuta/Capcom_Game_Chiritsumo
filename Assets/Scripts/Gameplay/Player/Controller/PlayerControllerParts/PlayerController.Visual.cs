@@ -22,8 +22,7 @@ public sealed partial class PlayerController
     private void ResetVisualOneShotFlags()
     {
         justLandedThisFrame = false;
-        justJumpedThisFrame = false;
-        justWallJumpedThisFrame = false;
+        locomotionSystem?.ResetOneShotFlags();
         justCrossedApexThisFrame = false;
     }
 
@@ -58,8 +57,8 @@ public sealed partial class PlayerController
             runtimeState.isDashing,
             runtimeState.isFastFalling,
             justLandedThisFrame,
-            justJumpedThisFrame,
-            justWallJumpedThisFrame,
+            locomotionSystem != null && locomotionSystem.JustJumpedThisFrame,
+            locomotionSystem != null && locomotionSystem.JustWallJumpedThisFrame,
             justCrossedApexThisFrame,
             runtimeState.wallSide,
             visualFacing,

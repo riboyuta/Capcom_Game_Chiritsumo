@@ -12,24 +12,9 @@ public sealed partial class PlayerController
 
     // TODO: WallGrabTimeRemaining は壁掴まり時間制限の内部データ実装後に公開する。
 
-    // 着地/クールダウン解除直前のダッシュ入力を保持するタイマー。
-    private float dashBufferTimer;
-
     // 見た目向け単発イベント(1物理フレームだけ true)。
     private bool justLandedThisFrame;
-    private bool justJumpedThisFrame;
-    private bool justWallJumpedThisFrame;
     private bool justCrossedApexThisFrame;
-
-    // 床離れ直後でもジャンプ可能にする猶予タイマー。
-    private float coyoteTimer;
-
-
-    // 着地直前のジャンプ入力を保持するタイマー。
-    private float jumpBufferTimer;
-
-    // ジャンプ上昇維持の残り時間。
-    private float jumpHoldTimer;
 
     // Ground 判定デバッグ可視化用の SphereCast 開始位置。
     private Vector3 groundCheckOrigin;
@@ -56,11 +41,6 @@ public sealed partial class PlayerController
     // Wall 判定デバッグ可視化用の左右ヒット結果。
     private bool leftWallCheckHit;
     private bool rightWallCheckHit;
-
-    private bool suppressVariableJumpCutThisTick;
-
-    // 物理処理で実際に参照する移動補正倍率。
-    private PlayerLocomotionModifierRequest resolvedLocomotionModifier = PlayerLocomotionModifierRequest.Identity;
 
     // --- Grind Rail (レール滑走) 関連の状態 ---
 

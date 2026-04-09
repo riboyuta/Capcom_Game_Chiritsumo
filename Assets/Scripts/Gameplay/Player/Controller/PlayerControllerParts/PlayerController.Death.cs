@@ -420,14 +420,9 @@ public sealed partial class PlayerController
         runtimeState.dashStartVerticalVelocity = 0.0f;
         frameRequests.jumpRequested = false;
         frameRequests.dashRequested = false;
-        dashBufferTimer = 0.0f;
-        coyoteTimer = 0.0f;
-        jumpBufferTimer = 0.0f;
-        jumpHoldTimer = 0.0f;
         justLandedThisFrame = false;
-        justJumpedThisFrame = false;
-        justWallJumpedThisFrame = false;
         justCrossedApexThisFrame = false;
+        locomotionSystem?.ResetRuntimeTimers();
 
         ResetDamageDeathPresentation();
         // 復帰後は通常どおり facing 更新を使うため、死亡向き固定を解除する。

@@ -50,6 +50,9 @@ public sealed partial class PlayerController : MonoBehaviour
     // 「押された瞬間」「押し続け」「離された」などの判定をここで扱う。
     private PlayerInputReader playerInputReader;
 
+    // 通常移動を担当する内部システム。
+    private PlayerLocomotionSystem locomotionSystem;
+
     private void Awake()
     {
         // 必須コンポーネントを取得する。
@@ -90,6 +93,26 @@ public sealed partial class PlayerController : MonoBehaviour
         // ここで「生入力」と「入力割り当て設定」を結び付ける。
         playerInputReader = new PlayerInputReader(rawInputSource, inputBindings, movementSettings);
 
+        // 通常移動システムを初期化する。
+        locomotionSystem = new PlayerLocomotionSystem(
+            runtimeState,
+            frameRequests,
+            movementSettings,
+            rb,
+            capsuleCollider,
+            transform,
+            playerInputReader,
+            CanAcceptMoveInput,
+            CanAcceptJumpInput,
+            CanAcceptDashInput,
+            CanAcceptGrabInput,
+            () => IsActionLocked,
+            () => isGrinding,
+            GetWorldCapsuleRadius,
+            PlayJumpSound,
+            PlayWallKickSound,
+            PlayWallKickVibration);
+
         // Health と Grab システムを初期化する。
         // Health 側で ReactionState 初期化も行う想定。
         InitializeHealth();
@@ -101,7 +124,6 @@ public sealed partial class PlayerController : MonoBehaviour
         runtimeState.currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
         runtimeState.wasGroundedLastFrame = false;
         frameRequests.requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
-        resolvedLocomotionModifier = PlayerLocomotionModifierRequest.Identity;
     }
 
     private void Update()
@@ -160,9 +182,9 @@ public sealed partial class PlayerController : MonoBehaviour
 
         float deltaTime = Time.fixedDeltaTime;
         float previousVelocityY = rb != null ? rb.linearVelocity.y : 0f;
-        suppressVariableJumpCutThisTick = frameRequests.wasExternallyLaunchedThisFrame;
+        locomotionSystem.SetSuppressVariableJumpCutThisTick(frameRequests.wasExternallyLaunchedThisFrame);
         frameRequests.wasExternallyLaunchedThisFrame = false;
-        ResolveLocomotionModifiersThisTick();
+        locomotionSystem.ResolveLocomotionModifiersThisTick();
 
         // 掴まれ、叩きつけ、死亡などの行動不能状態では通常移動を止める。
         // 横移動を止め、縦速度だけは物理結果を維持する。
@@ -201,41 +223,41 @@ public sealed partial class PlayerController : MonoBehaviour
         CheckWallContact();
 
         // 壁捕まり状態の進入・離脱を更新する。
-        UpdateWallGrabState();
+        locomotionSystem.UpdateWallGrabState();
 
         // ジャンプ補助タイマーを更新する。
         // 例: コヨーテタイム、ジャンプバッファなど。
-        UpdateJumpAssistTimers(deltaTime);
+        locomotionSystem.UpdateJumpAssistTimers(deltaTime);
 
 
         // 壁キック入力ロックタイマーを減算する。
-        UpdateWallJumpLockTimer(deltaTime);
+        locomotionSystem.UpdateWallJumpLockTimer(deltaTime);
 
         // ダッシュ残数の回復/接地遷移状態を更新する。
-        UpdateDashResourceState();
+        locomotionSystem.UpdateDashResourceState();
 
         // 地上ダッシュ連続制限タイマーを更新する。
-        UpdateGroundDashCooldownTimer(deltaTime);
+        locomotionSystem.UpdateGroundDashCooldownTimer(deltaTime);
 
         // 空中から接地へ戻った瞬間に地上ダッシュ連続制限を解除する。
-        HandleGroundDashCooldownOnLanding();
+        locomotionSystem.HandleGroundDashCooldownOnLanding();
 
         // 次フレームの接地遷移検出用に状態を保存する。
         runtimeState.wasGroundedLastFrame = runtimeState.isGrounded;
 
         // ダッシュの継続時間と再入力ロックを更新する。
-        UpdateDashTimers(deltaTime);
+        locomotionSystem.UpdateDashTimers(deltaTime);
 
         // ダッシュ入力バッファタイマーを更新する。
-        UpdateDashBufferTimer(deltaTime);
+        locomotionSystem.UpdateDashBufferTimer(deltaTime);
 
         // ダッシュ開始条件を満たす場合は開始する。
-        TryStartDash();
+        locomotionSystem.TryStartDash();
 
         // ダッシュ中は専用速度を最優先し、通常の縦処理を通さない。
         if (runtimeState.isDashing)
         {
-            ApplyDashVelocity();
+            locomotionSystem.ApplyDashVelocity();
             UpdateAudioEvents();
             UpdateVibrationEvents();
             FinalizeVisualState(previousVelocityY);
@@ -256,10 +278,10 @@ public sealed partial class PlayerController : MonoBehaviour
         // まだ捕まり中なら専用移動を適用して通常移動へ入らない。
         if (runtimeState.isWallGrabbing)
         {
-            ApplyJump();
+            locomotionSystem.ApplyJump();
             if (runtimeState.isWallGrabbing)
             {
-                ApplyWallGrabMovement();
+                locomotionSystem.ApplyWallGrabMovement();
                 UpdateAudioEvents();
                 UpdateVibrationEvents();
                 FinalizeVisualState(previousVelocityY);
@@ -269,12 +291,12 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // 通常移動フロー。
         // 横移動、ジャンプ、可変ジャンプ、急降下、壁滑り、追加重力を順に適用する。
-        ApplyHorizontalMovement(deltaTime);
-        ApplyJump();
-        ApplyVariableJumpCut();
-        TryStartFastFall();
-        ApplyWallSlide();
-        ApplyCustomGravity();
+        locomotionSystem.ApplyHorizontalMovement(deltaTime);
+        locomotionSystem.ApplyJump();
+        locomotionSystem.ApplyVariableJumpCut();
+        locomotionSystem.TryStartFastFall();
+        locomotionSystem.ApplyWallSlide();
+        locomotionSystem.ApplyCustomGravity();
 
         // 状態変化が確定したあとで振動イベントを通知する。
         UpdateAudioEvents();
@@ -298,7 +320,7 @@ public sealed partial class PlayerController : MonoBehaviour
         rb.linearVelocity = Vector3.zero;
         runtimeState.isGrounded = false;
         runtimeState.isFastFalling = false;
-        
+
         Debug.Log($"Started Grinding. segment:{segmentIndex}, dir:{direction}");
     }
 
@@ -311,7 +333,7 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // 離脱時の速度を乗せる
         rb.linearVelocity = releaseVelocity;
-        
+
         // 直後からジャンプなどが効くようにするなどの調整があればここで行う
     }
 }

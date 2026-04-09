@@ -1,3 +1,4 @@
+using Game.Input;
 using UnityEngine;
 
 public sealed partial class PlayerController
@@ -12,13 +13,13 @@ public sealed partial class PlayerController
     public bool JumpRequested => frameRequests.jumpRequested;
 
     // デバッグ表示向けのコヨーテタイマー。
-    public float CoyoteTimer => coyoteTimer;
+    public float CoyoteTimer => locomotionSystem != null ? locomotionSystem.CoyoteTimer : 0f;
 
     // デバッグ表示向けのジャンプバッファタイマー。
-    public float JumpBufferTimer => jumpBufferTimer;
+    public float JumpBufferTimer => locomotionSystem != null ? locomotionSystem.JumpBufferTimer : 0f;
 
     // デバッグ表示向けのジャンプ上昇維持タイマー。
-    public float JumpHoldTimer => jumpHoldTimer;
+    public float JumpHoldTimer => locomotionSystem != null ? locomotionSystem.JumpHoldTimer : 0f;
 
     // デバッグ表示向けの上昇中追加重力倍率。
     public float RiseGravityMultiplier => movementSettings.Jump.RiseGravityMultiplier;
@@ -27,7 +28,7 @@ public sealed partial class PlayerController
     public bool DashRequested => frameRequests.dashRequested;
 
     // デバッグ表示向けのダッシュバッファタイマー。
-    public float DashBufferTimer => dashBufferTimer;
+    public float DashBufferTimer => locomotionSystem != null ? locomotionSystem.DashBufferTimer : 0f;
 
     // デバッグ表示向けの Ground 判定開始位置。
     public Vector3 GroundCheckOrigin => groundCheckOrigin;
