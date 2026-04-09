@@ -28,6 +28,13 @@ internal sealed class PlayerExternalControlSystem
 
     // 現在の制御 owner。
     private UnityEngine.Object currentOwner;
+
+    // 現在アクティブなセッション識別子。
+    private int currentSessionId;
+
+    // 次回採番するセッション識別子。
+    private int nextSessionId;
+
     // 外部制御開始時に確定する継続入力ブロック。
     private PlayerController.InputBlockFlags persistentInputBlockFlags;
 
@@ -52,9 +59,6 @@ internal sealed class PlayerExternalControlSystem
     // 直近に開始された外部制御の見た目方針。
     private ExternalVisualPolicy currentVisualPolicy;
 
-    // 外部セッションに公開する backend 実体。
-    private readonly SessionBackend sessionBackend;
-
     // 現在、外部制御中かを返す。
     public bool IsExternallyControlled => isExternallyControlled;
 
@@ -63,6 +67,12 @@ internal sealed class PlayerExternalControlSystem
 
     // 開始時に保持した継続入力ブロックを返す。
     public PlayerController.InputBlockFlags PersistentInputBlockFlags => persistentInputBlockFlags;
+
+    // 現在アクティブなセッション識別子を返す。
+    internal int CurrentSessionId => currentSessionId;
+
+    // 現在の owner を返す。
+    internal UnityEngine.Object CurrentOwner => currentOwner;
 
     // 外部制御受け皿を構築する。
     public PlayerExternalControlSystem(
@@ -87,8 +97,9 @@ internal sealed class PlayerExternalControlSystem
         // Knockback 判定プロバイダを保持する。
         this.isKnockbackProvider = isKnockbackProvider;
 
-        // セッション backend を初期化する。
-        sessionBackend = new SessionBackend(this);
+        // セッション識別子採番を初期化する。
+        currentSessionId = 0;
+        nextSessionId = 1;
 
         // 内部状態を初期化する。
         EndControl();
@@ -154,7 +165,12 @@ internal sealed class PlayerExternalControlSystem
         currentGravityPolicy = request.GravityPolicy;
         currentVisualPolicy = request.VisualPolicy;
 
+        // 新しいセッション識別子を採番してアクティブ化する。
+        currentSessionId = nextSessionId;
+        nextSessionId++;
+
         // セッションを返す。
+        SessionBackend sessionBackend = new SessionBackend(this, currentSessionId, currentOwner);
         session = new PlayerExternalControlSession(sessionBackend);
         return true;
     }
@@ -173,6 +189,19 @@ internal sealed class PlayerExternalControlSystem
         facingRequest.facing = facing;
     }
 
+    // 指定セッションからこのフレームだけ向き要求を登録する。
+    internal void RequestFacingThisFrame(int sessionId, int facing)
+    {
+        // stale session からの要無視する。
+        if (!IsSessionValid(sessionId))
+        {
+            return;
+        }
+
+        // セッションが有効な場合のみ通常要求を適用する。
+        RequestFacingThisFrame(facing);
+    }
+
     // このフレームだけアンカー姿勢要求を登録する。
     public void RequestAnchorPoseThisFrame(Vector3 position, Quaternion rotation)
     {
@@ -182,6 +211,19 @@ internal sealed class PlayerExternalControlSystem
         anchorPoseRequest.rotation = rotation;
     }
 
+    // 指定セッションからこのフレームだけアンカー姿勢要求を登録する。
+    internal void RequestAnchorPoseThisFrame(int sessionId, Vector3 position, Quaternion rotation)
+    {
+        // stale session からの要求は無視する。
+        if (!IsSessionValid(sessionId))
+        {
+            return;
+        }
+
+        // セッションが有効な場合のみ通常要求を適用する。
+        RequestAnchorPoseThisFrame(position, rotation);
+    }
+
     // このフレームだけ経路姿勢要求を登録する。
     public void RequestPathPoseThisFrame(Vector3 position, Quaternion rotation)
     {
@@ -189,6 +231,19 @@ internal sealed class PlayerExternalControlSystem
         pathPoseRequest.hasRequest = true;
         pathPoseRequest.position = position;
         pathPoseRequest.rotation = rotation;
+    }
+
+    // 指定セッションからこのフレームだけ経路姿勢要求を登録する。
+    internal void RequestPathPoseThisFrame(int sessionId, Vector3 position, Quaternion rotation)
+    {
+        // stale session からの要求は無視する。
+        if (!IsSessionValid(sessionId))
+        {
+            return;
+        }
+
+        // セッションが有効な場合のみ通常要求を適用する。
+        RequestPathPoseThisFrame(position, rotation);
     }
 
     // ワープ要求を登録する。
@@ -259,6 +314,9 @@ internal sealed class PlayerExternalControlSystem
         // owner を解除する。
         currentOwner = null;
 
+        // アクティブセッション識別子を解除する。
+        currentSessionId = 0;
+
         // 継続入力ブロックを解除する。
         persistentInputBlockFlags = PlayerController.InputBlockFlags.None;
 
@@ -269,6 +327,29 @@ internal sealed class PlayerExternalControlSystem
 
         // 1フレーム要求を消す。
         ResetPerFrameRequests();
+    }
+
+    // 指定セッションが現在も有効かを返す。
+    internal bool IsSessionValid(int sessionId)
+    {
+        return
+            sessionId != 0 &&
+            isExternallyControlled &&
+            currentSessionId == sessionId;
+    }
+
+    // 指定セッションからの終了要求を試みる。
+    internal bool TryEndControl(int sessionId)
+    {
+        // stale session からの終了要求は無視する。
+        if (!IsSessionValid(sessionId))
+        {
+            return false;
+        }
+
+        // 現在セッションのみ終了を許可する。
+        EndControl();
+        return true;
     }
 
     // 向き更新を反映する。
@@ -374,7 +455,7 @@ internal sealed class PlayerExternalControlSystem
         // 要求する座標。
         public Vector3 position;
 
-        // 要求する回転。
+        // 要求する回。
         public Quaternion rotation;
     }
 
@@ -384,15 +465,30 @@ internal sealed class PlayerExternalControlSystem
         // 親システム参照。
         private readonly PlayerExternalControlSystem system;
 
+        // この backend が所属するセッション識別子。
+        private readonly int sessionId;
+
+        // 開始時 owner のスナップショット。
+        private readonly UnityEngine.Object ownerSnapshot;
+
         // backend を構築する。
-        public SessionBackend(PlayerExternalControlSystem system)
+        public SessionBackend(PlayerExternalControlSystem system, int sessionId, UnityEngine.Object ownerSnapshot)
         {
             // 親参照を保持する。
             this.system = system;
+
+            // セッション識別子を保持する。
+            this.sessionId = sessionId;
+
+            // owner スナップショットを保持する。
+            this.ownerSnapshot = ownerSnapshot;
         }
 
         // backend が有効かを返す。
-        public bool IsValid => system != null && system.IsExternallyControlled;
+        public bool IsValid =>
+            system != null &&
+            system.IsSessionValid(sessionId) &&
+            system.CurrentOwner == ownerSnapshot;
 
         // このフレームのアンカー姿勢要求を受け付ける。
         public void RequestAnchorPoseThisFrame(Vector3 position, Quaternion rotation)
@@ -404,7 +500,7 @@ internal sealed class PlayerExternalControlSystem
             }
 
             // 親システムへ要求を中継する。
-            system.RequestAnchorPoseThisFrame(position, rotation);
+            system.RequestAnchorPoseThisFrame(sessionId, position, rotation);
         }
 
         // このフレームの経路姿勢要求を受け付ける。
@@ -417,7 +513,7 @@ internal sealed class PlayerExternalControlSystem
             }
 
             // 親システムへ要求を中継する。
-            system.RequestPathPoseThisFrame(position, rotation);
+            system.RequestPathPoseThisFrame(sessionId, position, rotation);
         }
 
         // このフレームの向き要求を受け付ける。
@@ -430,7 +526,7 @@ internal sealed class PlayerExternalControlSystem
             }
 
             // 親システムへ要求を中継する。
-            system.RequestFacingThisFrame(facing);
+            system.RequestFacingThisFrame(sessionId, facing);
         }
 
         // 射出要求を受け付ける。
@@ -449,7 +545,7 @@ internal sealed class PlayerExternalControlSystem
             }
 
             // 親システムで終了処理を実行する。
-            system.EndControl();
+            system.TryEndControl(sessionId);
         }
     }
 }
