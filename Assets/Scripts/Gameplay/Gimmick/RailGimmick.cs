@@ -43,29 +43,7 @@ public class RailGimmick : MonoBehaviour
 
     // 生成されたスプライン上の全座標（ワールド座標）
     private List<Vector3> railPath = new List<Vector3>();
-    // 現在このレールで保持中の外部制御セッション。
-    private PlayerExternalControlSession activeSession = PlayerExternalControlSession.Invalid;
 
-    // 現在乗車中のプレイヤー窓口。
-    private PlayerFacade activePlayerFacade;
-
-    // 現在乗車中のプレイヤー本体。
-    private PlayerController activePlayerController;
-
-    // 現在乗車中のプレイヤー Rigidbody。
-    private Rigidbody activePlayerRigidbody;
-
-    // 現在乗車中プレイヤーのカプセル。
-    private CapsuleCollider activePlayerCapsule;
-
-    // レール上の現在セグメント。
-    private int activeSegmentIndex;
-
-    // 現在セグメント上の進行距離。
-    private float distanceOnSegment;
-
-    // 進行方向 (+1 / -1)。
-    private int grindDirection = 1;
     // 外部から補間ポイント群を参照するためのプロパティ
     public IReadOnlyList<Vector3> RailPath => railPath;
 
@@ -74,27 +52,6 @@ public class RailGimmick : MonoBehaviour
         GenerateSpline();
         GenerateVisual();
         GenerateColliders();
-    }
-
-    private void FixedUpdate()
-    {
-        if (!activeSession.IsValid)
-        {
-            ClearRideState();
-            return;
-        }
-
-        UpdateActiveRide(Time.fixedDeltaTime);
-    }
-
-    private void OnDisable()
-    {
-        if (activeSession.IsValid)
-        {
-            activeSession.EndControl();
-        }
-
-        ClearRideState();
     }
 
     public List<Vector3> GetWorldSplinePath()
@@ -196,40 +153,14 @@ public class RailGimmick : MonoBehaviour
 
     public void OnPlayerEnterRail(PlayerController player, int segmentIndex)
     {
-
-        if (player == null || railPath.Count < 2)
-        {
-            return;
-        }
-
-        if (activeSession.IsValid)
-        {
-            return;
-        }
-
-        if (segmentIndex < 0 || segmentIndex >= railPath.Count - 1)
-        {
-            return;
-        }
-
-        PlayerFacade facade = player.GetComponent<PlayerFacade>();
-        if (facade == null)
-        {
-            return;
-        }
-
-        if (facade.IsRailReattachLocked)
-        {
-            return;
-        }
-
-
         Vector3 startP = railPath[segmentIndex];
         Vector3 endP = railPath[segmentIndex + 1];
         Vector3 segDir = (endP - startP).normalized;
 
-        // レール乗車に対する傾き制限。
-        float slopeDot = Mathf.Abs(Vector3.Dot(segDir, Vector3.up));
+        // 【新機能】レール乗車に対する傾き制限
+        // PlayerMovementSettingsの乗車可能最大角度 (例: 45度) をチェックする。
+        // 空中から直接垂直の壁に乗れないようにするための制御。
+        float slopeDot = Mathf.Abs(Vector3.Dot(segDir, Vector3.up)); // Sin(傾斜角)
         float limitDot = Mathf.Sin(player.MovementSettings.Rail.MaxAttachSlopeAngle * Mathf.Deg2Rad);
         
         if (slopeDot > limitDot)
@@ -239,194 +170,15 @@ public class RailGimmick : MonoBehaviour
         }
 
         Vector3 toPlayer = player.transform.position - startP;
-        float initialDistance = Mathf.Clamp(Vector3.Dot(toPlayer, segDir), 0f, Vector3.Distance(startP, endP));
+        float distanceOnSegment = Vector3.Dot(toPlayer, segDir);
+        distanceOnSegment = Mathf.Clamp(distanceOnSegment, 0f, Vector3.Distance(startP, endP));
 
-        Rigidbody rb = player.GetComponent<Rigidbody>();
-        if (rb == null)
-        {
-            return;
-        }
+        float dotVelocity = Vector3.Dot(player.GetComponent<Rigidbody>().linearVelocity.normalized, segDir);
+        int direction = dotVelocity >= 0 ? 1 : -1;
 
-        float dotVelocity = Vector3.Dot(rb.linearVelocity.normalized, segDir);
-        int initialDirection = dotVelocity >= 0 ? 1 : -1;
-
-        PlayerExternalControlRequest request = new PlayerExternalControlRequest
-        {
-            Owner = this,
-            Mode = ExternalControlMode.PathDriven,
-            InputBlockFlags = PlayerController.InputBlockFlags.Move | PlayerController.InputBlockFlags.Dash | PlayerController.InputBlockFlags.Grab,
-            PhysicsPolicy = ExternalPhysicsPolicy.ExternalDriven,
-            GravityPolicy = ExternalGravityPolicy.ForceOff,
-            VisualPolicy = ExternalVisualPolicy.Keep
-        };
-
-        if (!facade.CanAcceptExternalControl(request))
-        {
-            return;
-        }
-
-        if (!facade.TryBeginExternalControl(request, out PlayerExternalControlSession session) || !session.IsValid)
-        {
-            return;
-        }
-
-        activeSession = session;
-        activePlayerFacade = facade;
-        activePlayerController = player;
-        activePlayerRigidbody = rb;
-        activePlayerCapsule = player.GetComponent<CapsuleCollider>();
-        activeSegmentIndex = segmentIndex;
-        distanceOnSegment = initialDistance;
-        grindDirection = initialDirection;
-
-        // レール搭乗開始時は余分な慣性を切る。
-        activePlayerRigidbody.linearVelocity = Vector3.zero;
+        player.StartGrind(this, segmentIndex, distanceOnSegment, direction);
     }
-
-    private void UpdateActiveRide(float deltaTime)
-    {
-        if (!activeSession.IsValid || activePlayerController == null || activePlayerFacade == null)
-        {
-            ClearRideState();
-            return;
-        }
-
-        if (activePlayerRigidbody == null || railPath.Count < 2)
-        {
-            ExitRideWithoutLaunch();
-            return;
-        }
-
-        if (activeSession.ConsumeJumpRequestThisFrame())
-        {
-            Vector3 tangent = GetCurrentSegmentDirection();
-            Vector3 jumpVelocity = tangent * activePlayerController.MovementSettings.Rail.GrindSpeed
-                + Vector3.up * activePlayerController.MovementSettings.Rail.GrindJumpVerticalVelocity;
-            activePlayerFacade.SetRailReattachLock(activePlayerController.MovementSettings.Rail.ReattachLockTime);
-            ExitRideWithLaunch(jumpVelocity);
-            return;
-        }
-
-        float moveDelta = activePlayerController.MovementSettings.Rail.GrindSpeed * deltaTime;
-        while (moveDelta > 0f)
-        {
-            Vector3 startP = railPath[activeSegmentIndex];
-            Vector3 endP = railPath[activeSegmentIndex + 1];
-            float segmentLength = Vector3.Distance(startP, endP);
-
-            if (grindDirection > 0)
-            {
-                float remaining = segmentLength - distanceOnSegment;
-                if (moveDelta <= remaining)
-                {
-                    distanceOnSegment += moveDelta;
-                    moveDelta = 0f;
-                }
-                else
-                {
-                    moveDelta -= remaining;
-                    activeSegmentIndex++;
-                    distanceOnSegment = 0f;
-
-                    if (activeSegmentIndex >= railPath.Count - 1)
-                    {
-                        Vector3 releaseVelocity = (endP - startP).normalized * activePlayerController.MovementSettings.Rail.GrindSpeed;
-                        ExitRideWithLaunch(releaseVelocity);
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                float remaining = distanceOnSegment;
-                if (moveDelta <= remaining)
-                {
-                    distanceOnSegment -= moveDelta;
-                    moveDelta = 0f;
-                }
-                else
-                {
-                    moveDelta -= remaining;
-                    activeSegmentIndex--;
-
-                    if (activeSegmentIndex < 0)
-                    {
-                        Vector3 releaseVelocity = (startP - endP).normalized * activePlayerController.MovementSettings.Rail.GrindSpeed;
-                        ExitRideWithLaunch(releaseVelocity);
-                        return;
-                    }
-
-                    Vector3 nextStart = railPath[activeSegmentIndex];
-                    Vector3 nextEnd = railPath[activeSegmentIndex + 1];
-                    distanceOnSegment = Vector3.Distance(nextStart, nextEnd);
-                }
-            }
-        }
-
-        Vector3 finalStart = railPath[activeSegmentIndex];
-        Vector3 finalEnd = railPath[activeSegmentIndex + 1];
-        Vector3 segDir = (finalEnd - finalStart).normalized;
-        Vector3 targetPos = finalStart + segDir * distanceOnSegment;
-        targetPos += Vector3.up * GetFeetOffset();
-
-        Quaternion rotation = Quaternion.LookRotation(Vector3.forward, Vector3.up);
-        activeSession.RequestPathPoseThisFrame(targetPos, rotation);
-        activeSession.RequestFacingThisFrame(segDir.x >= 0f ? 1 : -1);
-    }
-
-    private Vector3 GetCurrentSegmentDirection()
-    {
-        int segment = Mathf.Clamp(activeSegmentIndex, 0, railPath.Count - 2);
-        Vector3 start = railPath[segment];
-        Vector3 end = railPath[segment + 1];
-        return (end - start).normalized * grindDirection;
-    }
-
-    private float GetFeetOffset()
-    {
-        if (activePlayerCapsule == null || activePlayerController == null)
-        {
-            return 0f;
-        }
-        float worldHalfHeight = (activePlayerCapsule.height * 0.5f) * Mathf.Abs(activePlayerController.transform.lossyScale.y);
-        Vector3 centerOffset = activePlayerController.transform.TransformVector(activePlayerCapsule.center);
-        return worldHalfHeight - centerOffset.y;
-    }
-
-    private void ExitRideWithLaunch(Vector3 releaseVelocity)
-    {
-        if (activeSession.IsValid)
-        {
-            float speed = releaseVelocity.magnitude;
-            Vector3 direction = speed > 0.0001f ? releaseVelocity / speed : Vector3.zero;
-            activeSession.RequestLaunch(direction, speed, 0f, default);
-        }
-
-        ClearRideState();
-    }
-
-    private void ExitRideWithoutLaunch()
-    {
-        if (activeSession.IsValid)
-        {
-            activeSession.EndControl();
-        }
-
-        ClearRideState();
-    }
-
-    private void ClearRideState()
-    {
-        activeSession = PlayerExternalControlSession.Invalid;
-        activePlayerFacade = null;
-        activePlayerController = null;
-        activePlayerRigidbody = null;
-        activePlayerCapsule = null;
-        activeSegmentIndex = 0;
-        distanceOnSegment = 0f;
-        grindDirection = 1;
-    }
-
+    
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {

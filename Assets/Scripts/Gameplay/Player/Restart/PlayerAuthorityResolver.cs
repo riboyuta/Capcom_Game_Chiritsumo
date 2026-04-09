@@ -21,8 +21,8 @@ internal static class PlayerAuthorityResolver
     internal static PlayerAuthority Resolve(
         bool isActionLocked,
         bool isKnockback,
-        bool isExternallyControlled
-       )
+        bool isExternallyControlled,
+        bool isGrinding)
     {
         if (isActionLocked)
         {
@@ -35,7 +35,7 @@ internal static class PlayerAuthorityResolver
         }
 
         // 現状は Grind を暫定的に ExternalControl 扱いにする。
-        if (isExternallyControlled)
+        if (isExternallyControlled || isGrinding)
         {
             return PlayerAuthority.ExternalControl;
         }
