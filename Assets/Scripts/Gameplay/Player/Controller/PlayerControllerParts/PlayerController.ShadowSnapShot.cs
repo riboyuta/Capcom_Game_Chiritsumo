@@ -30,7 +30,7 @@ public sealed partial class PlayerController
         snapshot.isFastFalling = runtimeState.isFastFalling;
 
         snapshot.isActionLocked = IsActionLocked;
-        snapshot.isDead = reactionState == PlayerReactionState.Dead;
+        snapshot.isDead = IsHealthReactionDead;
 
         // Player 側で確定済みの見た目状態をそのまま渡す。
         snapshot.visualState = CurrentVisualState;

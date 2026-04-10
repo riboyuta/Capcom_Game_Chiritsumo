@@ -122,7 +122,26 @@ public sealed partial class PlayerController : MonoBehaviour
             runtimeState,
             frameRequests,
             () => IsActionLocked,
-            () => isKnockback);
+            () => IsKnockback);
+
+        // Health / Reaction システムを初期化する。
+        healthReactionSystem = new PlayerHealthReactionSystem(
+            runtimeState,
+            healthSettings,
+            rb,
+            transform,
+            () => IsGrabbed,
+            () => IsReactionActionLocked,
+            () => ReactionState,
+            InitializeReactionState,
+            UpdateReactionState,
+            ForceReleaseGrab,
+            ChangeReactionState,
+            RequestDeathStart,
+            LogHealth,
+            () => knockbackResistance,
+            () => knockbackDuration,
+            () => decayKnockbackOverTime);
 
         // Health と Grab システムを初期化する。
         // Health 側で ReactionState 初期化も行う想定。
@@ -199,7 +218,7 @@ public sealed partial class PlayerController : MonoBehaviour
 
         PlayerAuthority authority = PlayerAuthorityResolver.Resolve(
             isActionLocked: IsActionLocked,
-            isKnockback: isKnockback,
+            isKnockback: IsKnockback,
             isExternallyControlled: IsExternallyControlled);
 
         switch (authority)

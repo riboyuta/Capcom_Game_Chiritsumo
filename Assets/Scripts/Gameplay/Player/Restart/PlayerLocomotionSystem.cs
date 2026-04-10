@@ -41,8 +41,9 @@ internal sealed class PlayerLocomotionSystem
     // 行動不能状態判定デリゲート。
     private readonly Func<bool> isActionLocked;
 
-    // レール滑走中判定デリゲート。
-    private readonly Func<bool> isGrinding;
+    // 外部制御中判定デリゲート。
+    private readonly Func<bool> isExternallyControlled;
+
 
     // カプセル半径のワールド値取得デリゲート。
     private readonly Func<float> getWorldCapsuleRadius;
@@ -112,7 +113,7 @@ internal sealed class PlayerLocomotionSystem
         Func<bool> canAcceptDashInput,
         Func<bool> canAcceptGrabInput,
         Func<bool> isActionLocked,
-        Func<bool> isGrinding,
+        Func<bool> isExternallyControlled,
         Func<float> getWorldCapsuleRadius,
         Action playJumpSound,
         Action playWallKickSound,
@@ -131,7 +132,7 @@ internal sealed class PlayerLocomotionSystem
         this.canAcceptDashInput = canAcceptDashInput;
         this.canAcceptGrabInput = canAcceptGrabInput;
         this.isActionLocked = isActionLocked;
-        this.isGrinding = isGrinding;
+        this.isExternallyControlled = isExternallyControlled;
         this.getWorldCapsuleRadius = getWorldCapsuleRadius;
         this.playJumpSound = playJumpSound;
         this.playWallKickSound = playWallKickSound;
@@ -534,7 +535,7 @@ internal sealed class PlayerLocomotionSystem
             return false;
         }
 
-        if (isActionLocked() || runtimeState.isGrounded || runtimeState.isDashing || isGrinding())
+        if (isActionLocked() || runtimeState.isGrounded || runtimeState.isDashing || isExternallyControlled())
         {
             return false;
         }
@@ -575,7 +576,7 @@ internal sealed class PlayerLocomotionSystem
             return true;
         }
 
-        if (runtimeState.isGrounded || runtimeState.isDashing || isGrinding())
+        if (runtimeState.isGrounded || runtimeState.isDashing || isExternallyControlled())
         {
             return true;
         }
@@ -652,7 +653,7 @@ internal sealed class PlayerLocomotionSystem
             return;
         }
 
-        if (isGrinding() || runtimeState.isWallGrabbing)
+        if (isExternallyControlled() || runtimeState.isWallGrabbing)
         {
             return;
         }
@@ -697,7 +698,7 @@ internal sealed class PlayerLocomotionSystem
             return false;
         }
 
-        if (isGrinding())
+        if (isExternallyControlled())
         {
             return false;
         }
@@ -905,7 +906,7 @@ internal sealed class PlayerLocomotionSystem
             return false;
         }
 
-        if (runtimeState.isGrounded || runtimeState.isWallGrabbing || isGrinding())
+        if (runtimeState.isGrounded || runtimeState.isWallGrabbing || isExternallyControlled())
         {
             return false;
         }

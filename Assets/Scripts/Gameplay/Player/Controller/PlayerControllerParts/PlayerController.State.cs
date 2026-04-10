@@ -22,5 +22,7 @@ public sealed partial class PlayerController
     // 外部制御の受け皿を担当する内部システム。
     private PlayerExternalControlSystem externalControlSystem;
 
+    // Health / Reaction を担当する内部システム。
+    private PlayerHealthReactionSystem healthReactionSystem;
 
 }

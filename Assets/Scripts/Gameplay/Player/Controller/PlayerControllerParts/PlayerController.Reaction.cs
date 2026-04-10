@@ -62,11 +62,13 @@ public sealed partial class PlayerController
 
     // 入力禁止に使えるプロパティ。
     // Grabbed, Smashed, Dead のいずれかの状態なら true を返す。
-    public bool IsActionLocked =>
+    private bool IsReactionActionLocked =>
         reactionState == PlayerReactionState.Grabbed ||
         reactionState == PlayerReactionState.Smashed ||
         reactionState == PlayerReactionState.Dead;
-
+    // 入力禁止の公開判定。
+    // HealthReactionSystem が初期化済みなら system 側を情報源にし、未初期化時は Reaction 判定へフォールバックする。
+    public bool IsActionLocked => healthReactionSystem != null ? healthReactionSystem.IsActionLocked : IsReactionActionLocked;
     // リアクション状態を初期化する。
     // ゲーム開始時またはリスポーン時に呼び出す。
     private void InitializeReactionState()

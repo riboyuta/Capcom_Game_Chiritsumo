@@ -58,11 +58,6 @@ public sealed partial class PlayerController
     // =====================================================================
     // 実行時状態
     // =====================================================================
-
-    // 死亡シーケンス開始済みかどうか。
-    // true の間は追加の死亡開始要求を無視し、二重発火を防ぐ。
-    private bool isDeathSequencePlaying = false;
-
     // 最後に受理した死因。
     // デバッグ確認と、将来の死因別演出分岐の参照元として保持する。
     private DeathCause lastDeathCause = DeathCause.Damage;
@@ -98,13 +93,13 @@ public sealed partial class PlayerController
     // 初回の要求だけを受理し、死因保存・Dead 状態遷移・復帰シーケンス開始までをまとめて行う。
     private bool RequestDeathStart(DeathCause cause)
     {
-        if (isDeathSequencePlaying)
+        if (healthReactionSystem != null && healthReactionSystem.IsDeathSequencePlaying)
         {
             LogHealth("Death request ignored: already processing");
             return false;
         }
 
-        isDeathSequencePlaying = true;
+        healthReactionSystem?.BeginDeathSequence();
         lastDeathCause = cause;
         // 死亡開始時点の向きを固定し、死亡演出中の見た目反転を防ぐ。
         CaptureDeathFacingForVisual();
@@ -259,7 +254,7 @@ public sealed partial class PlayerController
             LogRespawn("Death transition reset");
         }
 
-        isDeathSequencePlaying = false;
+        healthReactionSystem?.MarkRespawnReady();
         respawnSequenceCoroutine = null;
     }
 
@@ -393,17 +388,7 @@ public sealed partial class PlayerController
         vibrationController?.StopAllRumble();
         audioController?.StopAllSounds();
 
-        currentHealth = MaxHealth;
-        invincibilityTimer = 0.0f;
-
-        isKnockback = false;
-        knockbackTimer = 0.0f;
-        knockbackInitialVelocity = Vector3.zero;
-        knockbackVelocity = Vector3.zero;
-
-        reactionState = PlayerReactionState.Normal;
-        reactionStateTimer = 0.0f;
-        currentGrabAnchor = null;
+        healthReactionSystem?.ResetForRespawn();
 
         runtimeState.isGrounded = false;
         runtimeState.isTouchingWall = false;
