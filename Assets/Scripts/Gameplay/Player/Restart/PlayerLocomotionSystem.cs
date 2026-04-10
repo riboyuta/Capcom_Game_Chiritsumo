@@ -196,6 +196,36 @@ internal sealed class PlayerLocomotionSystem
         jumpHoldTimer = Mathf.Max(0f, jumpHoldTimer - deltaTime);
     }
 
+    // 移動入力から向きを更新する。
+    internal void UpdateFacingFromMoveInput()
+    {
+        if (isActionLocked())
+        {
+            return;
+        }
+
+        if (runtimeState.isDashing || runtimeState.isWallGrabbing)
+        {
+            return;
+        }
+
+        if (!canAcceptMoveInput())
+        {
+            return;
+        }
+
+        float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
+        const float facingThreshold = 0.1f;
+
+        if (inputX > facingThreshold)
+        {
+            runtimeState.facing = 1;
+        }
+        else if (inputX < -facingThreshold)
+        {
+            runtimeState.facing = -1;
+        }
+    }
     // ジャンプ入力を処理して速度へ反映する。
     internal void ApplyJump()
     {
@@ -659,7 +689,7 @@ internal sealed class PlayerLocomotionSystem
 
         if (runtimeState.currentDashCharges < Mathf.Max(1, movementSettings.Dash.MaxCharges))
         {
-            TryRefillDash(PlayerController.DashRefillReason.Grounded);
+            TryRefillDash(DashRefillReason.Grounded);
         }
     }
 
@@ -745,20 +775,20 @@ internal sealed class PlayerLocomotionSystem
     }
 
     // 指定理由でダッシュ回復可能か判定する。
-    internal bool CanRefillDash(PlayerController.DashRefillReason reason)
+    internal bool CanRefillDash(DashRefillReason reason)
     {
         switch (reason)
         {
-            case PlayerController.DashRefillReason.Grounded:
-            case PlayerController.DashRefillReason.Gimmick:
-            case PlayerController.DashRefillReason.Scripted:
+            case DashRefillReason.Grounded:
+            case DashRefillReason.Gimmick:
+            case DashRefillReason.Scripted:
             default:
                 return true;
         }
     }
 
     // 指定理由でダッシュ回復を試みる。
-    internal bool TryRefillDash(PlayerController.DashRefillReason reason)
+    internal bool TryRefillDash(DashRefillReason reason)
     {
         if (!CanRefillDash(reason))
         {

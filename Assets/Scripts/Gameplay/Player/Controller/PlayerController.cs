@@ -60,6 +60,13 @@ public sealed partial class PlayerController : MonoBehaviour
     internal bool IsAirborne => !runtimeState.isGrounded;
     internal bool IsWallGrabbing => runtimeState.isWallGrabbing;
     internal int Facing => runtimeState.facing;
+    internal PlayerInputReader InputReader => playerInputReader;
+    internal PlayerLocomotionSystem LocomotionSystem => locomotionSystem;
+    internal PlayerExternalControlSystem ExternalControlSystem => externalControlSystem;
+    internal PlayerFrameRequests FrameRequests => frameRequests;
+    internal PlayerRuntimeState RuntimeState => runtimeState;
+    internal Rigidbody Rigidbody => rb;
+    internal bool IsExternallyControlled => externalControlSystem != null && externalControlSystem.IsExternallyControlled;
 
     // TODO: WallGrabTimeRemaining は壁掴まり時間制限の内部データ実装後に公開する。
 
@@ -166,7 +173,7 @@ public sealed partial class PlayerController : MonoBehaviour
             () => smashIsInstantDeath);
 
         // Health と Reaction システムを初期化する。
-        InitializeHealth();
+        healthReactionSystem?.Initialize();
 
         // 振動関連の比較用状態を初期化する。
         InitializeVibrationState();
@@ -227,11 +234,12 @@ public sealed partial class PlayerController : MonoBehaviour
         }
 
         // 横入力がしきい値を超えたときのみ向きを更新する。
-        UpdateFacingFromMoveInput();
+        locomotionSystem?.UpdateFacingFromMoveInput();
 
         // Health と Reaction システムを更新する。
         float deltaTime = Time.deltaTime;
-        UpdateHealth(deltaTime);
+        healthReactionSystem?.Tick(deltaTime);
+        healthReactionSystem?.ConsumeDebugDeathRequest();
 
         // 掴まれ、叩きつけ、死亡などの行動不能状態では
         // 入力を保持せず、その場で打ち切る。
