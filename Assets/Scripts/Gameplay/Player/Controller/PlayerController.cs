@@ -174,11 +174,34 @@ public sealed partial class PlayerController : MonoBehaviour
         InitializeVibrationState();
 
         // ダッシュ残数管理の初期状態を設定する。
+        // ダッシュ残数管理の初期状態を設定する。
         runtimeState.currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
         runtimeState.wasGroundedLastFrame = false;
         frameRequests.requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
-    }
 
+        deathCoordinator = new PlayerDeathCoordinator(
+            this,
+            healthReactionSystem,
+            checkpointSystem,
+            stageResetSystem,
+            playerDeathView,
+            playerCameraController,
+            rb,
+            transform,
+            runtimeState,
+            frameRequests,
+            locomotionSystem,
+            movementSettings,
+            () => vibrationController?.StopAllRumble(),
+            () => audioController?.StopAllSounds(),
+            () =>
+            {
+                justLandedThisFrame = false;
+                justCrossedApexThisFrame = false;
+            },
+            LogRespawn,
+            LogRespawnWarning);
+    }
     private void Update()
     {
         // 初期化失敗時の防御。
