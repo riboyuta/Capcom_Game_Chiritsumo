@@ -2,13 +2,6 @@ using UnityEngine;
 
 public sealed partial class PlayerController
 {
-    public bool IsRailReattachLocked => runtimeState.railReattachLockTimer > 0f;
-
-    public void SetRailReattachLock(float duration)
-    {
-        runtimeState.railReattachLockTimer = Mathf.Max(runtimeState.railReattachLockTimer, duration);
-    }
-
     public void NotifyExternalLaunch()
     {
         frameRequests.wasExternallyLaunchedThisFrame = true;

@@ -445,14 +445,7 @@ public sealed class PlayerFacade : MonoBehaviour
     {
         playerController.RequestFacing(facing);
     }
-    // レール再吸着ロック中か。
-    public bool IsRailReattachLocked => playerController.IsRailReattachLocked;
 
-    // レール再吸着ロック時間を設定する。
-    public void SetRailReattachLock(float duration)
-    {
-        playerController.SetRailReattachLock(duration);
-    }
 }
 
 #endregion

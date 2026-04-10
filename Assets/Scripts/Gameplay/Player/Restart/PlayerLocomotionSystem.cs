@@ -413,7 +413,6 @@ internal sealed class PlayerLocomotionSystem
     {
         runtimeState.wallJumpControlLockTimer = Mathf.Max(0f, runtimeState.wallJumpControlLockTimer - deltaTime);
         runtimeState.wallReattachLockTimer = Mathf.Max(0f, runtimeState.wallReattachLockTimer - deltaTime);
-        runtimeState.railReattachLockTimer = Mathf.Max(0f, runtimeState.railReattachLockTimer - deltaTime);
     }
 
     // 通常の横移動速度を更新する。

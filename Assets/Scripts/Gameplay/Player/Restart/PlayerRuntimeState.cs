@@ -73,6 +73,4 @@ internal sealed class PlayerRuntimeState
     // ジャンプ上昇維持の残り時間。
     public float jumpHoldTimer;
 
-    // レール再吸着ロックタイマー。
-    public float railReattachLockTimer;
 }

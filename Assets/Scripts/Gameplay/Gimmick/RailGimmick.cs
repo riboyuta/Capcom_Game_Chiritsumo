@@ -66,6 +66,10 @@ public class RailGimmick : MonoBehaviour
 
     // 進行方向 (+1 / -1)。
     private int grindDirection = 1;
+
+    // レール離脱後の再搭乗クールダウンタイマー。
+    private float reattachCooldownTimer;
+
     // 外部から補間ポイント群を参照するためのプロパティ
     public IReadOnlyList<Vector3> RailPath => railPath;
 
@@ -78,6 +82,11 @@ public class RailGimmick : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (reattachCooldownTimer > 0f)
+        {
+            reattachCooldownTimer = Mathf.Max(0f, reattachCooldownTimer - Time.fixedDeltaTime);
+        }
+
         if (!activeSession.IsValid)
         {
             ClearRideState();
@@ -218,7 +227,7 @@ public class RailGimmick : MonoBehaviour
             return;
         }
 
-        if (facade.IsRailReattachLocked)
+        if (IsReattachCooldownActive())
         {
             return;
         }
@@ -302,7 +311,6 @@ public class RailGimmick : MonoBehaviour
             Vector3 tangent = GetCurrentSegmentDirection();
             Vector3 jumpVelocity = tangent * activePlayerController.MovementSettings.Rail.GrindSpeed
                 + Vector3.up * activePlayerController.MovementSettings.Rail.GrindJumpVerticalVelocity;
-            activePlayerFacade.SetRailReattachLock(activePlayerController.MovementSettings.Rail.ReattachLockTime);
             ExitRideWithLaunch(jumpVelocity);
             return;
         }
@@ -395,6 +403,9 @@ public class RailGimmick : MonoBehaviour
 
     private void ExitRideWithLaunch(Vector3 releaseVelocity)
     {
+
+        StartReattachCooldown(activePlayerController);
+
         if (activeSession.IsValid)
         {
             float speed = releaseVelocity.magnitude;
@@ -425,6 +436,21 @@ public class RailGimmick : MonoBehaviour
         activeSegmentIndex = 0;
         distanceOnSegment = 0f;
         grindDirection = 1;
+    }
+    private bool IsReattachCooldownActive()
+    {
+        return reattachCooldownTimer > 0f;
+    }
+
+    private void StartReattachCooldown(PlayerController player)
+    {
+        if (player == null || player.MovementSettings == null)
+        {
+            return;
+        }
+
+        float cooldown = player.MovementSettings.Rail.ReattachLockTime;
+        reattachCooldownTimer = Mathf.Max(reattachCooldownTimer, cooldown);
     }
 
 #if UNITY_EDITOR
