@@ -96,14 +96,14 @@ public sealed partial class PlayerController
         healthReactionSystem?.RequestKill(Vector3.zero);
     }
     // 外部からの意味付き即死要求。
-    internal void RequestKill(Vector3 damageDirection)
+    public void RequestKill(Vector3 damageDirection)
     {
         healthReactionSystem?.RequestKill(damageDirection);
     }
 
     // ノックバック状態を終了する。
     // 内部速度状態をリセットし、Rigidbody の X 速度だけを止めて横方向の吹き飛びを終了させる。
-    internal void RequestKnockback(Vector3 force)
+    public void RequestKnockback(Vector3 force)
     {
         healthReactionSystem?.RequestKnockback(force);
     }

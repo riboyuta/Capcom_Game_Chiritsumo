@@ -4,10 +4,10 @@ public sealed partial class PlayerController
 {
     private const float DiagonalInputThreshold = 0.5f;
 
-    internal Vector2 MoveInputDirection => playerInputReader != null ? playerInputReader.Move : Vector2.zero;
-    internal bool IsMoveInputDiagonal => ComputeIsMoveInputDiagonal();
+    public Vector2 MoveInputDirection => playerInputReader != null ? playerInputReader.Move : Vector2.zero;
+    public bool IsMoveInputDiagonal => ComputeIsMoveInputDiagonal();
 
-    internal void RequestInputBlockThisFrame(InputBlockFlags flags)
+    public void RequestInputBlockThisFrame(InputBlockFlags flags)
     {
         frameRequests.requestedInputBlockFlagsThisFrame |= flags;
     }

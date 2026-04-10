@@ -55,11 +55,11 @@ public sealed partial class PlayerController : MonoBehaviour
 
     private readonly PlayerRuntimeState runtimeState = new PlayerRuntimeState();
     private readonly PlayerFrameRequests frameRequests = new PlayerFrameRequests();
-    internal bool IsDashActive => runtimeState.isDashing;
-    internal bool IsGrounded => runtimeState.isGrounded;
-    internal bool IsAirborne => !runtimeState.isGrounded;
-    internal bool IsWallGrabbing => runtimeState.isWallGrabbing;
-    internal int Facing => runtimeState.facing;
+    public bool IsDashActive => runtimeState.isDashing;
+    public bool IsGrounded => runtimeState.isGrounded;
+    public bool IsAirborne => !runtimeState.isGrounded;
+    public bool IsWallGrabbing => runtimeState.isWallGrabbing;
+    public int Facing => runtimeState.facing;
 
     // TODO: WallGrabTimeRemaining は壁掴まり時間制限の内部データ実装後に公開する。
 

@@ -33,13 +33,15 @@ public sealed partial class PlayerController
     private PlayerDeathCoordinator deathCoordinator;
 
     // 外部コンポーネント向けの環境死入口。
-    internal bool RequestHazardDeath()
+    // 内部の死亡統一入口へ Hazard で委譲する。
+    public bool RequestHazardDeath()
     {
         return RequestDeathStart(DeathCause.Hazard);
     }
 
     // 外部コンポーネント向けのダメージ死入口。
-    internal bool RequestDamageDeath()
+    // 内部の死亡統一入口へ Damage で委譲する。
+    public bool RequestDamageDeath()
     {
         return RequestDeathStart(DeathCause.Damage);
     }

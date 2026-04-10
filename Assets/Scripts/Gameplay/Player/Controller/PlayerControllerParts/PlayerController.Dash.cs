@@ -25,14 +25,14 @@ public sealed partial class PlayerController
         Scripted
     }
 
-    internal bool CanUseDashNow => locomotionSystem != null && locomotionSystem.CanUseDashNowInternal();
+    public bool CanUseDashNow => locomotionSystem != null && locomotionSystem.CanUseDashNowInternal();
 
-    internal bool TryRefillDash(DashRefillReason reason)
+    public bool TryRefillDash(DashRefillReason reason)
     {
         return locomotionSystem != null && locomotionSystem.TryRefillDash(reason);
     }
 
-    internal void RequestLocomotionModifierThisTick(PlayerLocomotionModifierRequest request)
+    public void RequestLocomotionModifierThisTick(PlayerLocomotionModifierRequest request)
     {
         frameRequests.requestedLocomotionModifierThisTick.moveSpeedMultiplier *= request.moveSpeedMultiplier;
         frameRequests.requestedLocomotionModifierThisTick.groundAccelerationMultiplier *= request.groundAccelerationMultiplier;
