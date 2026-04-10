@@ -30,7 +30,22 @@ public class RailGimmick : MonoBehaviour
     [Header("Spline Resolution")]
     [Tooltip("節点間の分割数。大きいほど滑らかな曲線になります。")]
     [Range(2, 20)] public int resolution = 10;
-    
+
+    [Header("レール挙動設定")]
+    [Tooltip("レール滑走とレールジャンプ関連の設定です。")]
+    [Min(0f)]
+    [SerializeField] private float grindSpeed = 15f;
+
+    [Tooltip("レールジャンプ時に与える上方向速度です。")]
+    [SerializeField] private float grindJumpVerticalVelocity = 12f;
+
+    [Tooltip("レール離脱後に再搭乗できるまでのロック時間です。")]
+    [Min(0f)]
+    [SerializeField] private float reattachLockTime = 0.2f;
+
+    [Tooltip("レール搭乗を許可する最大傾斜角度です。")]
+    [Range(0f, 90f)]
+    [SerializeField] private float maxAttachSlopeAngle = 45f;
 
 
     [Header("Visual")]
@@ -239,8 +254,8 @@ public class RailGimmick : MonoBehaviour
 
         // レール乗車に対する傾き制限。
         float slopeDot = Mathf.Abs(Vector3.Dot(segDir, Vector3.up));
-        float limitDot = Mathf.Sin(player.MovementSettings.Rail.MaxAttachSlopeAngle * Mathf.Deg2Rad);
-        
+        float limitDot = Mathf.Sin(maxAttachSlopeAngle * Mathf.Deg2Rad);
+
         if (slopeDot > limitDot)
         {
             // 垂直よりすぎるので弾く
@@ -309,13 +324,13 @@ public class RailGimmick : MonoBehaviour
         if (activeSession.ConsumeJumpRequestThisFrame())
         {
             Vector3 tangent = GetCurrentSegmentDirection();
-            Vector3 jumpVelocity = tangent * activePlayerController.MovementSettings.Rail.GrindSpeed
-                + Vector3.up * activePlayerController.MovementSettings.Rail.GrindJumpVerticalVelocity;
+            Vector3 jumpVelocity = tangent * grindSpeed
+                + Vector3.up * grindJumpVerticalVelocity;
             ExitRideWithLaunch(jumpVelocity);
             return;
         }
 
-        float moveDelta = activePlayerController.MovementSettings.Rail.GrindSpeed * deltaTime;
+        float moveDelta = grindSpeed * deltaTime;
         while (moveDelta > 0f)
         {
             Vector3 startP = railPath[activeSegmentIndex];
@@ -338,7 +353,7 @@ public class RailGimmick : MonoBehaviour
 
                     if (activeSegmentIndex >= railPath.Count - 1)
                     {
-                        Vector3 releaseVelocity = (endP - startP).normalized * activePlayerController.MovementSettings.Rail.GrindSpeed;
+                        Vector3 releaseVelocity = (endP - startP).normalized * grindSpeed;
                         ExitRideWithLaunch(releaseVelocity);
                         return;
                     }
@@ -359,7 +374,7 @@ public class RailGimmick : MonoBehaviour
 
                     if (activeSegmentIndex < 0)
                     {
-                        Vector3 releaseVelocity = (startP - endP).normalized * activePlayerController.MovementSettings.Rail.GrindSpeed;
+                        Vector3 releaseVelocity = (startP - endP).normalized * grindSpeed;
                         ExitRideWithLaunch(releaseVelocity);
                         return;
                     }
@@ -444,12 +459,12 @@ public class RailGimmick : MonoBehaviour
 
     private void StartReattachCooldown(PlayerController player)
     {
-        if (player == null || player.MovementSettings == null)
+        if (player == null)
         {
             return;
         }
 
-        float cooldown = player.MovementSettings.Rail.ReattachLockTime;
+        float cooldown = reattachLockTime;
         reattachCooldownTimer = Mathf.Max(reattachCooldownTimer, cooldown);
     }
 

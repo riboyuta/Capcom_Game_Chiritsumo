@@ -28,10 +28,6 @@ public sealed class PlayerMovementSettings
     [Tooltip("ダッシュの速度、時間、残数、入力補助などダッシュ関連設定です。")]
     [SerializeField] DashSettings dash = new();
 
-    [Header("レール設定")]
-    [Tooltip("レール滑走とレールジャンプ関連の設定です。")]
-    [SerializeField] RailSettings rail = new();
-
     [Header("入力補助設定")]
     [Tooltip("通常移動や方向入力のデッドゾーンなど、入力補助に関する設定です。")]
     [SerializeField] InputAssistSettings inputAssist = new();
@@ -42,7 +38,6 @@ public sealed class PlayerMovementSettings
     public DetectionSettings Detection => detection;
     public WallSettings Wall => wall;
     public DashSettings Dash => dash;
-    public RailSettings Rail => rail;
     public InputAssistSettings InputAssist => inputAssist;
 }
 
@@ -384,34 +379,6 @@ public sealed class DashSettings
     public bool UseEightWayInput => useEightWayInput;
     public float DirectionDeadZone => directionDeadZone;
     public float DiagonalAssistAngle => diagonalAssistAngle;
-}
-
-[Serializable]
-public sealed class RailSettings
-{
-    [Header("レール滑走速度")]
-    [Tooltip("レール上を滑る速度です。大きいほど速くレール上を移動します。")]
-    [Min(0f)]
-    [SerializeField] float grindSpeed = 15f;
-
-    [Header("レールジャンプ上速度")]
-    [Tooltip("レールからジャンプ離脱する際の上方向の初速です。")]
-    [SerializeField] float grindJumpVerticalVelocity = 12f;
-
-    [Header("レール再吸着ロック時間")]
-    [Tooltip("レールジャンプ直後に再びレールに吸着してしまうのを防ぐための無効化時間です。")]
-    [Min(0f)]
-    [SerializeField] float reattachLockTime = 0.2f;
-
-    [Header("レール乗車制限角度")]
-    [Tooltip("空中から直接レールに飛び乗る際、レールの傾きがこれ以上（垂直寄り）だと乗れずに弾かれる角度です（度）。")]
-    [Range(0f, 90f)]
-    [SerializeField] float maxAttachSlopeAngle = 45f;
-
-    public float GrindSpeed => grindSpeed;
-    public float GrindJumpVerticalVelocity => grindJumpVerticalVelocity;
-    public float ReattachLockTime => reattachLockTime;
-    public float MaxAttachSlopeAngle => maxAttachSlopeAngle;
 }
 
 [Serializable]
