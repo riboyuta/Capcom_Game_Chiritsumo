@@ -77,14 +77,14 @@ public sealed partial class PlayerController
 
     // 外部コンポーネント向けの環境死入口。
     // 内部の死亡統一入口へ Hazard で委譲する。
-    public bool RequestHazardDeath()
+    internal bool RequestHazardDeath()
     {
         return RequestDeathStart(DeathCause.Hazard);
     }
 
     // 外部コンポーネント向けのダメージ死入口。
     // 内部の死亡統一入口へ Damage で委譲する。
-    public bool RequestDamageDeath()
+    internal bool RequestDamageDeath()
     {
         return RequestDeathStart(DeathCause.Damage);
     }
