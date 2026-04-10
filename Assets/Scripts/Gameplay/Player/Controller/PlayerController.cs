@@ -55,11 +55,11 @@ public sealed partial class PlayerController : MonoBehaviour
 
     private readonly PlayerRuntimeState runtimeState = new PlayerRuntimeState();
     private readonly PlayerFrameRequests frameRequests = new PlayerFrameRequests();
-    public bool IsDashActive => runtimeState.isDashing;
-    public bool IsGrounded => runtimeState.isGrounded;
-    public bool IsAirborne => !runtimeState.isGrounded;
-    public bool IsWallGrabbing => runtimeState.isWallGrabbing;
-    public int Facing => runtimeState.facing;
+    internal bool IsDashActive => runtimeState.isDashing;
+    internal bool IsGrounded => runtimeState.isGrounded;
+    internal bool IsAirborne => !runtimeState.isGrounded;
+    internal bool IsWallGrabbing => runtimeState.isWallGrabbing;
+    internal int Facing => runtimeState.facing;
 
     // TODO: WallGrabTimeRemaining は壁掴まり時間制限の内部データ実装後に公開する。
 
@@ -153,21 +153,19 @@ public sealed partial class PlayerController : MonoBehaviour
             healthSettings,
             rb,
             transform,
-            () => IsGrabbed,
-            () => IsReactionActionLocked,
-            () => ReactionState,
-            InitializeReactionState,
-            UpdateReactionState,
-            ForceReleaseGrab,
-            ChangeReactionState,
             RequestDeathStart,
             LogHealth,
+            LogReaction,
             () => knockbackResistance,
             () => knockbackDuration,
-            () => decayKnockbackOverTime);
+            () => decayKnockbackOverTime,
+            () => damagedStateDuration,
+            () => grabbedStateDuration,
+            () => smashedStateDuration,
+            () => killAfterGrabbedDuration,
+            () => smashIsInstantDeath);
 
-        // Health と Grab システムを初期化する。
-        // Health 側で ReactionState 初期化も行う想定。
+        // Health と Reaction システムを初期化する。
         InitializeHealth();
 
         // 振動関連の比較用状態を初期化する。
@@ -231,8 +229,7 @@ public sealed partial class PlayerController : MonoBehaviour
         // 横入力がしきい値を超えたときのみ向きを更新する。
         UpdateFacingFromMoveInput();
 
-        // Health と Grab システムを更新する。
-        // Health 側で ReactionState 更新も行う想定。
+        // Health と Reaction システムを更新する。
         float deltaTime = Time.deltaTime;
         UpdateHealth(deltaTime);
 

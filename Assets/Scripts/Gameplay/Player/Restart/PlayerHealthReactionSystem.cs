@@ -13,31 +13,28 @@ internal sealed class PlayerHealthReactionSystem
     private readonly Rigidbody rb;
     // 拘束追従などで使う Transform。
     private readonly Transform playerTransform;
-    // 掴み中判定の参照口。
-    private readonly Func<bool> isGrabbedProvider;
-    // Health/Death 以外の ActionLocked 判定の参照口。
-    private readonly Func<bool> additionalActionLockedProvider;
-    // リアクション状態を参照する口。
-    private readonly Func<PlayerController.PlayerReactionState> reactionStateProvider;
-    // リアクション初期化の委譲口。
-    private readonly Action initializeReactionState;
-    // リアクション更新の委譲口。
-    private readonly Action<float> updateReactionState;
-    // 掴み解除の委譲口
-    private readonly Action forceReleaseGrab;
-    // リアクション状態遷移の委譲口。
-    private readonly Action<PlayerController.PlayerReactionState> changeReactionState;
     // 死亡開始要求の委譲口。
     private readonly Func<PlayerController.DeathCause, bool> requestDeathStart;
     // 体力ログ出力の委譲口。
     private readonly Action<string> logHealth;
+    // リアクションログ出力の委譲口。
+    private readonly Action<string> logReaction;
     // ノックバック耐性倍率の参照口。
     private readonly Func<float> knockbackResistanceProvider;
     // ノックバック継続時間の参照口。
     private readonly Func<float> knockbackDurationProvider;
     // ノックバック減衰有効フラグの参照口。
     private readonly Func<bool> decayKnockbackOverTimeProvider;
-
+    // Damaged 継続時間の参照口。
+    private readonly Func<float> damagedStateDurationProvider;
+    // Grabbed 継続時間の参照口。
+    private readonly Func<float> grabbedStateDurationProvider;
+    // Smashed 継続時間の参照口。
+    private readonly Func<float> smashedStateDurationProvider;
+    // Grabbed 後の即死設定参照口。
+    private readonly Func<bool> killAfterGrabbedDurationProvider;
+    // Smash 即死設定参照口。
+    private readonly Func<bool> smashIsInstantDeathProvider;
     // 現在 HP。
     private int currentHealth;
     // 無敵残り時間。
@@ -58,15 +55,20 @@ internal sealed class PlayerHealthReactionSystem
     private bool isRespawnReady;
     // 死亡シーケンス中かどうか。
     private bool isDeathSequencePlaying;
-    // reaction 処理中かどうかのフラグ。
-    private bool isReactionProcessing;
+
+    // reaction の現在状態。
+    private PlayerController.PlayerReactionState reactionState;
+    // 現在 reaction 状態に入ってからの経過時間。
+    private float reactionStateTimer;
+    // 掴まれ中に追従する先。
+    private Transform currentGrabAnchor;
 
     // 現在 HP の公開参照口。
     internal int CurrentHealth => currentHealth;
     // 最大 HP の公開参照口。
     internal int MaxHealth => Mathf.Max(1, healthSettings != null ? healthSettings.maxHealth : 1);
     // 無敵判定の公開参照口。
-    internal bool IsInvincible => (healthSettings != null && healthSettings.invincible) || invincibilityTimer > 0f || isGrabbedProvider();
+    internal bool IsInvincible => (healthSettings != null && healthSettings.invincible) || invincibilityTimer > 0f || IsGrabbed;
     // ノックバック判定の公開参照口。
     internal bool IsKnockback => isKnockback;
     // 死亡判定の公開参照口。
@@ -75,46 +77,54 @@ internal sealed class PlayerHealthReactionSystem
     internal bool IsDeathSequencePlaying => isDeathSequencePlaying;
     // 復帰可能判定の公開参照口。
     internal bool IsRespawnReady => isRespawnReady;
+    // リアクション状態参照口。
+    internal PlayerController.PlayerReactionState ReactionState => reactionState;
+    // Grabbed 判定参照口。
+    internal bool IsGrabbed => reactionState == PlayerController.PlayerReactionState.Grabbed;
+    // Smashed 判定参照口。
+    internal bool IsSmashed => reactionState == PlayerController.PlayerReactionState.Smashed;
+    // Dead 判定参照口。
+    internal bool IsDeadState => reactionState == PlayerController.PlayerReactionState.Dead;
     // ActionLocked 判定の公開参照口。
-    internal bool IsActionLocked => isDead || additionalActionLockedProvider();
-    // リアクション処理中判定の公開参照口。
-    internal bool IsReactionProcessing => isReactionProcessing;
-
+    internal bool IsActionLocked =>
+        reactionState == PlayerController.PlayerReactionState.Grabbed ||
+        reactionState == PlayerController.PlayerReactionState.Smashed ||
+        reactionState == PlayerController.PlayerReactionState.Dead ||
+        isDead;    // リアクション処理中判定の公開参照口。
+    internal bool IsReactionProcessing => reactionState != PlayerController.PlayerReactionState.Normal;
     // Health / Reaction システムを構築する。
     internal PlayerHealthReactionSystem(
         PlayerRuntimeState runtimeState,
         PlayerHealthSettings healthSettings,
         Rigidbody rb,
         Transform playerTransform,
-        Func<bool> isGrabbedProvider,
-        Func<bool> additionalActionLockedProvider,
-        Func<PlayerController.PlayerReactionState> reactionStateProvider,
-        Action initializeReactionState,
-        Action<float> updateReactionState,
-        Action forceReleaseGrab,
-        Action<PlayerController.PlayerReactionState> changeReactionState,
         Func<PlayerController.DeathCause, bool> requestDeathStart,
         Action<string> logHealth,
+        Action<string> logReaction,
         Func<float> knockbackResistanceProvider,
         Func<float> knockbackDurationProvider,
-        Func<bool> decayKnockbackOverTimeProvider)
+        Func<bool> decayKnockbackOverTimeProvider,
+        Func<float> damagedStateDurationProvider,
+        Func<float> grabbedStateDurationProvider,
+        Func<float> smashedStateDurationProvider,
+        Func<bool> killAfterGrabbedDurationProvider,
+        Func<bool> smashIsInstantDeathProvider)
     {
         this.runtimeState = runtimeState;
         this.healthSettings = healthSettings;
         this.rb = rb;
         this.playerTransform = playerTransform;
-        this.isGrabbedProvider = isGrabbedProvider;
-        this.additionalActionLockedProvider = additionalActionLockedProvider;
-        this.reactionStateProvider = reactionStateProvider;
-        this.initializeReactionState = initializeReactionState;
-        this.updateReactionState = updateReactionState;
-        this.forceReleaseGrab = forceReleaseGrab;
-        this.changeReactionState = changeReactionState;
         this.requestDeathStart = requestDeathStart;
         this.logHealth = logHealth;
+        this.logReaction = logReaction;
         this.knockbackResistanceProvider = knockbackResistanceProvider;
         this.knockbackDurationProvider = knockbackDurationProvider;
         this.decayKnockbackOverTimeProvider = decayKnockbackOverTimeProvider;
+        this.damagedStateDurationProvider = damagedStateDurationProvider;
+        this.grabbedStateDurationProvider = grabbedStateDurationProvider;
+        this.smashedStateDurationProvider = smashedStateDurationProvider;
+        this.killAfterGrabbedDurationProvider = killAfterGrabbedDurationProvider;
+        this.smashIsInstantDeathProvider = smashIsInstantDeathProvider;
     }
 
     // 初期化処理。
@@ -130,8 +140,7 @@ internal sealed class PlayerHealthReactionSystem
         deathRespawnTimer = 0f;
         isRespawnReady = false;
         isDeathSequencePlaying = false;
-        isReactionProcessing = false;
-        initializeReactionState?.Invoke();
+        InitializeReactionState();
     }
 
     // 毎フレーム更新処理。
@@ -165,8 +174,7 @@ internal sealed class PlayerHealthReactionSystem
             }
         }
 
-        isReactionProcessing = reactionStateProvider() != PlayerController.PlayerReactionState.Normal;
-        updateReactionState?.Invoke(deltaTime);
+        UpdateReactionState(deltaTime);
     }
 
     // 物理フレーム更新処理。
@@ -196,9 +204,9 @@ internal sealed class PlayerHealthReactionSystem
 
         invincibilityTimer = Mathf.Max(0f, healthSettings != null ? healthSettings.invincibilityDuration : 0f);
 
-        if (reactionStateProvider() == PlayerController.PlayerReactionState.Normal)
+        if (reactionState == PlayerController.PlayerReactionState.Normal)
         {
-            changeReactionState?.Invoke(PlayerController.PlayerReactionState.Damaged);
+            ChangeReactionState(PlayerController.PlayerReactionState.Damaged);
         }
 
         if (currentHealth <= 0)
@@ -297,6 +305,7 @@ internal sealed class PlayerHealthReactionSystem
         isDeathSequencePlaying = true;
         deathRespawnTimer = 0f;
         isRespawnReady = false;
+        ChangeReactionState(PlayerController.PlayerReactionState.Dead);
     }
 
     // 復帰待機時間を設定する。
@@ -326,8 +335,97 @@ internal sealed class PlayerHealthReactionSystem
         deathRespawnTimer = 0f;
         isRespawnReady = false;
         isDeathSequencePlaying = false;
-        isReactionProcessing = false;
-        initializeReactionState?.Invoke();
+        InitializeReactionState();
+    }
+
+    // 掴み追従先を設定し、Grabbed 状態へ遷移する。
+    internal void StartGrab(Transform grabAnchor)
+    {
+        currentGrabAnchor = grabAnchor;
+        ChangeReactionState(PlayerController.PlayerReactionState.Grabbed);
+    }
+
+    // 掴みを強制解放する。
+    internal void ForceReleaseGrab()
+    {
+        currentGrabAnchor = null;
+
+        if (reactionState == PlayerController.PlayerReactionState.Grabbed)
+        {
+            ChangeReactionState(PlayerController.PlayerReactionState.Normal);
+        }
+    }
+
+    // 外部からリアクション状態を変更する入口。
+    internal void ChangeReactionState(PlayerController.PlayerReactionState nextState)
+    {
+        reactionState = nextState;
+        reactionStateTimer = 0f;
+
+        if (reactionState != PlayerController.PlayerReactionState.Grabbed)
+        {
+            currentGrabAnchor = null;
+        }
+
+        LogReaction($"Reaction state changed: {reactionState}");
+    }
+
+    // リアクション状態を初期化する。
+    private void InitializeReactionState()
+    {
+        reactionState = PlayerController.PlayerReactionState.Normal;
+        reactionStateTimer = 0f;
+        currentGrabAnchor = null;
+    }
+
+    // リアクション状態の更新処理。
+    private void UpdateReactionState(float deltaTime)
+    {
+        reactionStateTimer += deltaTime;
+
+        switch (reactionState)
+        {
+            case PlayerController.PlayerReactionState.Normal:
+                break;
+
+            case PlayerController.PlayerReactionState.Damaged:
+                if (reactionStateTimer >= Mathf.Max(0f, damagedStateDurationProvider()))
+                {
+                    ChangeReactionState(PlayerController.PlayerReactionState.Normal);
+                }
+                break;
+
+            case PlayerController.PlayerReactionState.Grabbed:
+                if (currentGrabAnchor != null && playerTransform != null)
+                {
+                    Vector3 target = currentGrabAnchor.position;
+                    target.z = playerTransform.position.z;
+                    playerTransform.position = Vector3.Lerp(playerTransform.position, target, deltaTime * 15f);
+                }
+
+                if (reactionStateTimer >= Mathf.Max(0f, grabbedStateDurationProvider()))
+                {
+                    if (killAfterGrabbedDurationProvider())
+                    {
+                        TakeDamage(999, Vector3.zero, 0f);
+                    }
+                    else
+                    {
+                        ForceReleaseGrab();
+                    }
+                }
+                break;
+
+            case PlayerController.PlayerReactionState.Smashed:
+                if (!smashIsInstantDeathProvider() && reactionStateTimer >= Mathf.Max(0f, smashedStateDurationProvider()))
+                {
+                    ChangeReactionState(PlayerController.PlayerReactionState.Normal);
+                }
+                break;
+
+            case PlayerController.PlayerReactionState.Dead:
+                break;
+        }
     }
 
     // ノックバックを開始する。
@@ -365,9 +463,9 @@ internal sealed class PlayerHealthReactionSystem
     {
         logHealth?.Invoke("Player died!");
 
-        if (isGrabbedProvider())
+        if (IsGrabbed)
         {
-            forceReleaseGrab?.Invoke();
+            ForceReleaseGrab();
         }
 
         if (isKnockback)
@@ -381,14 +479,13 @@ internal sealed class PlayerHealthReactionSystem
     // 死亡開始要求を行う。
     private void RequestDeathSequence(PlayerController.DeathCause cause)
     {
-        if (requestDeathStart == null)
-        {
-            return;
-        }
-
-        if (requestDeathStart(cause))
-        {
-            BeginDeathSequence();
-        }
+        requestDeathStart?.Invoke(cause);
     }
+    // リアクションログを出力する。
+    private void LogReaction(string message)
+    {
+        logReaction?.Invoke(message);
+    }
+
 }
+
