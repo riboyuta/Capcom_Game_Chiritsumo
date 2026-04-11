@@ -1,5 +1,4 @@
 using UnityEngine;
-using System;
 
 [RequireComponent(typeof(Rigidbody))]
 public class CannonFlightMonitor : MonoBehaviour
@@ -8,8 +7,6 @@ public class CannonFlightMonitor : MonoBehaviour
     private float flightSpeed;
     private float maxDistance;
     private LayerMask collisionLayers;
-    private Action onFlightEnded;
-    private Renderer[] hiddenRenderers;
     private Collider myCollider;
     private Collider cannonCollider;
 
@@ -19,14 +16,12 @@ public class CannonFlightMonitor : MonoBehaviour
     private Vector3 lastPos;
     private float stuckTimer = 0f;
 
-    public void Initialize(Vector3 direction, float speed, float distance, LayerMask layerMask, Renderer[] renderersToRestore, Collider playerCol, Collider sourceCannonCol, Action onEnded)
+    public void Initialize(Vector3 direction, float speed, float distance, LayerMask layerMask, Collider playerCol, Collider sourceCannonCol)
     {
         flightDirection = direction.normalized;
         flightSpeed = speed;
         maxDistance = distance;
         collisionLayers = layerMask;
-        onFlightEnded = onEnded;
-        hiddenRenderers = renderersToRestore;
         myCollider = playerCol;
         cannonCollider = sourceCannonCol;
 
@@ -91,29 +86,15 @@ public class CannonFlightMonitor : MonoBehaviour
         if (isEnded) return;
         isEnded = true;
 
-        // 発射後は速度をゼロにし、PlayerController への引き継ぎによって自然落下させる
+        // 発射後は速度をゼロにし、通常の物理挙動（重力あり）に戻す
         rb.linearVelocity = Vector3.zero;
-        
-        // レンダラーを通して透明状態から復帰させる
-        if (hiddenRenderers != null)
-        {
-            foreach (var r in hiddenRenderers)
-            {
-                if (r != null)
-                {
-                    r.enabled = true;
-                }
-            }
-        }
+        rb.useGravity = true;
 
         // 大砲との衝突無視を解除する
         if (myCollider != null && cannonCollider != null)
         {
             Physics.IgnoreCollision(myCollider, cannonCollider, false);
         }
-
-        // 大砲ギミック側からのコールバックを呼んで PlayerController をオンに戻す
-        onFlightEnded?.Invoke();
 
         // 飛行監視スクリプト自身の役目を終えたため削除する
         Destroy(this);

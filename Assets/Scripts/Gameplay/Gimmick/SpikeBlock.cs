@@ -32,13 +32,13 @@ public sealed class SpikeBlock : MonoBehaviour
 
     private void TryKillPlayer(Collider other)
     {
-        PlayerController player = other.GetComponentInParent<PlayerController>();
-        if (player == null)
+        PlayerFacade facade = other.GetComponentInParent<PlayerFacade>();
+        if (facade == null)
         {
-            Debug.LogWarning($"[SpikeBlock] PlayerController not found for: {other.name}", this);
+            Debug.LogWarning($"[SpikeBlock] PlayerFacade not found for: {other.name}", this);
             return;
         }
 
-        player.RequestHazardDeath();
+        facade.RequestHazardDeath();
     }
 }

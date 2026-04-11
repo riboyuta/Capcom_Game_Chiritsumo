@@ -22,7 +22,7 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
     private Collider platformCollider;
     private Collider playerCollider;
     private Rigidbody playerRb;
-    private PlayerController playerController;
+    private PlayerFacade playerFacade;
     private float dropThroughTimer;
     private bool hasCapturedInitialState;
 
@@ -101,7 +101,7 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
 
         // 落下入力によるすり抜け判定。
         // プレイヤーが床の上にいて、下入力を入れている場合にすり抜けを開始する。
-        if (allowDropThrough && playerAbove && playerController != null && playerController.IsDownInputHeld)
+        if (allowDropThrough && playerAbove && playerFacade != null && playerFacade.IsDownInputHeld)
         {
             dropThroughTimer = dropThroughDuration;
             Physics.IgnoreCollision(playerCollider, platformCollider, true);
@@ -120,15 +120,15 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
 
     private void TryFindPlayer()
     {
-        // シーン内から PlayerController を検索する。
-        PlayerController[] players = FindObjectsByType<PlayerController>(
+        // シーン内から PlayerFacade を検索する。
+        PlayerFacade[] facades = FindObjectsByType<PlayerFacade>(
             FindObjectsInactive.Exclude,
             FindObjectsSortMode.None);
 
-        if (players.Length == 0) return;
+        if (facades.Length == 0) return;
 
-        playerController = players[0];
-        playerRb = playerController.GetComponent<Rigidbody>();
-        playerCollider = playerController.GetComponent<Collider>();
+        playerFacade = facades[0];
+        playerRb = playerFacade.GetComponent<Rigidbody>();
+        playerCollider = playerFacade.GetComponent<Collider>();
     }
 }
