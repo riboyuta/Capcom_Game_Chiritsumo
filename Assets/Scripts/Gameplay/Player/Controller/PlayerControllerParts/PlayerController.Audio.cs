@@ -35,12 +35,12 @@ public sealed partial class PlayerController
     private void UpdateWallSlideSound()
     {
         // 前フレームでは壁滑りしておらず、今フレームで壁滑りに入った。
-        if (!wasWallSliding && isWallSliding)
+        if (!wasWallSliding && runtimeState.isWallSliding)
         {
             audioController.StartWallSlideSound();
         }
         // 前フレームでは壁滑りしていたが、今フレームで壁滑りを抜けた。
-        else if (wasWallSliding && !isWallSliding)
+        else if (wasWallSliding && !runtimeState.isWallSliding)
         {
             audioController.StopWallSlideSound();
         }
@@ -52,7 +52,7 @@ public sealed partial class PlayerController
     private void UpdateDashSound()
     {
         // 「今フレームでダッシュ開始した瞬間」だけ鳴らしたい。
-        if (wasDashing || !isDashing)
+        if (wasDashing || !runtimeState.isDashing)
         {
             return;
         }
@@ -61,7 +61,7 @@ public sealed partial class PlayerController
         audioController.StopWallSlideSound();
 
         // ダッシュ開始時点の接地状態で、地上用と空中用の音声を分ける。
-        if (isGrounded)
+        if (runtimeState.isGrounded)
         {
             audioController.PlayGroundDash();
         }

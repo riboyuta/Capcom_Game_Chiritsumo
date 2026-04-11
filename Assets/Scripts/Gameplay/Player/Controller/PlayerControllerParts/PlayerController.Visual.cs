@@ -22,8 +22,7 @@ public sealed partial class PlayerController
     private void ResetVisualOneShotFlags()
     {
         justLandedThisFrame = false;
-        justJumpedThisFrame = false;
-        justWallJumpedThisFrame = false;
+        locomotionSystem?.ResetOneShotFlags();
         justCrossedApexThisFrame = false;
     }
 
@@ -41,27 +40,27 @@ public sealed partial class PlayerController
         float currentVelocityY = rb != null ? rb.linearVelocity.y : 0f;
         float currentVelocityX = rb != null ? rb.linearVelocity.x : 0f;
         // 死亡演出中は開始時点で固定した向きを使い、入力で見た目が反転しないようにする。
-        int visualFacing = isDeathFacingFixed ? fixedDeathFacing : facing;
+        int visualFacing = runtimeState.isDeathFacingFixed ? runtimeState.fixedDeathFacing : runtimeState.facing;
         // 非接地中に、Y速度が
         //   前フレーム/更新前: 正(上昇中)
         //   今フレーム終端  : 0以下(下降開始)
         // へ変わったら「ジャンプ頂点を越えた瞬間」とみなす。
-        if (!isGrounded && previousVelocityY > 0f && currentVelocityY <= 0f)
+        if (!runtimeState.isGrounded && previousVelocityY > 0f && currentVelocityY <= 0f)
         {
             justCrossedApexThisFrame = true;
         }
 
         // View が読みやすい形で、その物理フレームの見た目状態を 1 つの値に固める。
         visualState = new VisualState(
-            isGrounded,
-            isWallSliding,
-            isDashing,
-            isFastFalling,
+            runtimeState.isGrounded,
+            runtimeState.isWallSliding,
+            runtimeState.isDashing,
+            runtimeState.isFastFalling,
             justLandedThisFrame,
-            justJumpedThisFrame,
-            justWallJumpedThisFrame,
+            locomotionSystem != null && locomotionSystem.JustJumpedThisFrame,
+            locomotionSystem != null && locomotionSystem.JustWallJumpedThisFrame,
             justCrossedApexThisFrame,
-            wallSide,
+            runtimeState.wallSide,
             visualFacing,
             currentVelocityX,
             currentVelocityY

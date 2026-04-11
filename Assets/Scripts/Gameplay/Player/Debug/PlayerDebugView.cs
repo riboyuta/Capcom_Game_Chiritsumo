@@ -64,7 +64,6 @@ public sealed class PlayerDebugView : MonoBehaviour
         DrawLine($"向き: {playerController.Facing}", startX, ref y, lineHeight);
         DrawLine($"ダッシュ中: {playerController.IsDashing}", startX, ref y, lineHeight);
         DrawLine($"ダッシュタイマー: {playerController.DashTimer:F3}", startX, ref y, lineHeight);
-        DrawLine($"ダッシュクールダウン: {playerController.DashCooldownTimer:F3}", startX, ref y, lineHeight);
         DrawLine($"Dash Gravity Multiplier: {playerController.DashGravityMultiplier:F3}", startX, ref y, lineHeight);
         if (playerController.RestoreDashStartVerticalVelocity || playerController.IsDashing)
         {
