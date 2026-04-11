@@ -55,8 +55,10 @@ public sealed class HandSmashAttack : HandAttackBase
 
     private void Awake()
     {
+        // RigidbodyをKinematicに設定
         InitializeRigidbody();
 
+        // ヒットボックスを初期化（初期状態では無効）
         if (smashHitBox != null)
         {
             smashHitBox.Initialize(this);
@@ -71,25 +73,30 @@ public sealed class HandSmashAttack : HandAttackBase
         Action onFinished
     )
     {
+        // 初期化
         this.spawnPosition = spawnPosition;
         this.targetPlayer = targetPlayer;
         this.groundY = groundY;
         this.onFinished = onFinished;
 
+        // プレイヤーの現在位置を取得
         Vector3 currentTargetPosition = targetPlayer != null ? targetPlayer.position : spawnPosition;
 
+        // 上昇目標位置を設定
         riseTargetPosition = new Vector3(
             currentTargetPosition.x,
             currentTargetPosition.y + riseHeight,
             currentTargetPosition.z
         );
 
+        // 叩きつけ目標位置を設定
         smashTargetPosition = new Vector3(
             currentTargetPosition.x,
             groundY,
             currentTargetPosition.z
         );
 
+        // 初期位置を設定して上昇状態を開始
         transform.position = this.spawnPosition;
         state = AttackState.Rise;
 
@@ -106,6 +113,7 @@ public sealed class HandSmashAttack : HandAttackBase
 
     private void Update()
     {
+        // 現在の状態に応じた処理を実行
         switch (state)
         {
             case AttackState.Idle:
@@ -129,8 +137,10 @@ public sealed class HandSmashAttack : HandAttackBase
         }
     }
 
+    // 上昇フェーズ：プレイヤーの上空へ移動
     private void TickRise()
     {
+        // 上昇中はプレイヤーの移動を追跡
         UpdateTargetsWhileRising();
 
         Vector3 next = Vector3.MoveTowards(
@@ -141,6 +151,7 @@ public sealed class HandSmashAttack : HandAttackBase
 
         transform.position = next;
 
+        // 目標位置に到達したらHold状態へ遷移
         if (Vector3.Distance(transform.position, riseTargetPosition) <= reachThreshold)
         {
             transform.position = riseTargetPosition;
@@ -159,10 +170,12 @@ public sealed class HandSmashAttack : HandAttackBase
         }
     }
 
+    // 待機フェーズ：少し上昇しながら叩きつけまで待つ
     private void TickHold()
     {
         holdLiftElapsedTime += Time.deltaTime;
 
+        // 少しずつ上昇する（イージング付き）
         float duration = holdLiftHeight / holdLiftSpeed;
         float t = Mathf.Clamp01(holdLiftElapsedTime / duration);
 
@@ -170,12 +183,14 @@ public sealed class HandSmashAttack : HandAttackBase
 
         transform.position = Vector3.Lerp(holdStartPosition, holdLiftTargetPosition, easedT);
 
+        // 待機時間が終わったらSmash状態へ遷移
         holdTimer -= Time.deltaTime;
         if (holdTimer > 0.0f)
         {
             return;
         }
 
+        // 当たり判定を有効化
         if (smashHitBox != null)
         {
             smashHitBox.SetHitEnabled(true);
@@ -189,6 +204,7 @@ public sealed class HandSmashAttack : HandAttackBase
         }
     }
 
+    // 叩きつけフェーズ：地面に向かって高速落下
     private void TickSmash()
     {
         Vector3 next = Vector3.MoveTowards(
@@ -199,10 +215,12 @@ public sealed class HandSmashAttack : HandAttackBase
 
         transform.position = next;
 
+        // 地面に到達したら終了処理
         if (Vector3.Distance(transform.position, smashTargetPosition) <= reachThreshold)
         {
             transform.position = smashTargetPosition;
 
+            // 当たり判定を無効化
             if (smashHitBox != null)
             {
                 smashHitBox.SetHitEnabled(false);
@@ -224,9 +242,11 @@ public sealed class HandSmashAttack : HandAttackBase
         }
     }
 
+    // 終了フェーズ：一定時間待ってからオブジェクトを破棄
     private void TickEnd()
     {
         endTimer -= Time.deltaTime;
+        // タイマーが終了したら攻撃を終了
         if (endTimer > 0.0f)
         {
             return;
@@ -235,6 +255,7 @@ public sealed class HandSmashAttack : HandAttackBase
         FinishAttack();
     }
 
+    // 上昇中にプレイヤーの移動を追跡して目標位置を更新
     private void UpdateTargetsWhileRising()
     {
         if (targetPlayer == null)
@@ -244,12 +265,14 @@ public sealed class HandSmashAttack : HandAttackBase
 
         Vector3 currentTargetPosition = targetPlayer.position;
 
+        // 上昇目標位置をプレイヤーの現在地に合わせて更新
         riseTargetPosition = new Vector3(
             currentTargetPosition.x,
             currentTargetPosition.y + riseHeight,
             currentTargetPosition.z
         );
 
+        // 叩きつけ目標位置も同様に更新
         smashTargetPosition = new Vector3(
             currentTargetPosition.x,
             groundY,
@@ -257,11 +280,13 @@ public sealed class HandSmashAttack : HandAttackBase
         );
     }
 
+    // 3乗のイージング関数（緊張感を演出）
     private float EaseInCubic(float t)
     {
         return t * t * t;
     }
 
+    // ヒットボックスがプレイヤーを検出したときに呼ばれる
     public void NotifyPlayerHit(GameObject playerObject)
     {
         RequestPlayerDeath(playerObject);

@@ -1,12 +1,10 @@
 using UnityEngine;
 
-/// <summary>
-/// HandChaser敵の出現情報。
-/// トリガーごとに異なる出現位置を指定できる。
-/// </summary>
 public struct HandChaserSpawnRequest
 {
+    // 出現位置
     public Vector3 position;
+    // 出現時の回転
     public Quaternion rotation;
 
     public HandChaserSpawnRequest(Vector3 position, Quaternion rotation)

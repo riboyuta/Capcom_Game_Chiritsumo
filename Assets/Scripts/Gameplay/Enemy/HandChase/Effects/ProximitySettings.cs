@@ -1,8 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// プレイヤー接近時のエフェクト設定データ。
-/// </summary>
 [System.Serializable]
 public sealed class ProximitySettings
 {
@@ -26,6 +23,7 @@ public sealed class ProximitySettings
     [Tooltip("接近時の最大高周波振動強度")]
     [Range(0f, 1f)] public float maxHighFrequency = 0.5f;
 
+    // 設定値を検証して不正な値を修正
     public void Validate()
     {
         maxShakeDistance = Mathf.Max(0f, maxShakeDistance);

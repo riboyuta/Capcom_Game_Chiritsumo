@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// 特定エリア侵入で HandChaserEnemy を有効化するトリガー。
-/// トリガーごとに別のスポーン位置を持てる。
-/// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider))]
 public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
@@ -38,9 +34,11 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
 
     private void Awake()
     {
+        // Colliderを取得してトリガーとして設定
         triggerCollider = GetComponent<Collider>();
         triggerCollider.isTrigger = true;
 
+        // スポーン位置が未設定なら自分自身の位置を使用
         if (spawnPoint == null)
         {
             spawnPoint = transform;
@@ -49,16 +47,19 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
 
     private void OnTriggerEnter(Collider other)
     {
+        // 対象の敵が未設定なら何もしない
         if (targetEnemy == null)
         {
             return;
         }
 
+        // プレイヤー以外は反応しない
         if (!other.CompareTag(playerTag))
         {
             return;
         }
 
+        // 一度だけ発動する設定の場合、既に発動済みならスキップ
         if (hasTriggered && triggerOnlyOnce)
         {
             return;
@@ -89,16 +90,19 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
 
     public void CaptureInitialState()
     {
+        // 既にキャプチャ済みなら何もしない
         if (hasCapturedInitialState)
         {
             return;
         }
 
+        // Colliderが未取得なら取得
         if (triggerCollider == null)
         {
             triggerCollider = GetComponent<Collider>();
         }
 
+        // 現在の状態を保存
         initialEnabled = enabled;
         initialColliderEnabled = triggerCollider != null && triggerCollider.enabled;
         initialHasTriggered = hasTriggered;
@@ -113,6 +117,7 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
             triggerCollider = GetComponent<Collider>();
         }
 
+        // 初期状態が保存されていればそれに従う
         if (hasCapturedInitialState)
         {
             enabled = initialEnabled;
@@ -126,6 +131,7 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         }
         else
         {
+            // 初期状態がなければデフォルトにリセット
             hasTriggered = false;
             enabled = true;
 
@@ -136,6 +142,7 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
             }
         }
 
+        // 敵もリセット
         if (targetEnemy != null)
         {
             targetEnemy.ResetEncounterForRespawn();

@@ -1,10 +1,6 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// HandChaser敵の攻撃制御を管理するコンポーネント。
-/// 攻撃タイプの選択、クールダウン管理、攻撃インスタンスの生成を行う。
-/// </summary>
 public sealed class HandChaserAttackController : MonoBehaviour
 {
     private enum AttackType
@@ -55,6 +51,7 @@ public sealed class HandChaserAttackController : MonoBehaviour
 
     private void OnValidate()
     {
+        // インスペクターで設定値が変更されたときに範囲を制限
         smashAttackRangeX = Mathf.Max(0f, smashAttackRangeX);
         grabAttackRangeX = Mathf.Max(0f, grabAttackRangeX);
         attackCooldown = Mathf.Max(0f, attackCooldown);
@@ -62,11 +59,13 @@ public sealed class HandChaserAttackController : MonoBehaviour
 
     private void Update()
     {
+        // クールダウンタイマーを減少
         if (attackCooldownTimer > 0.0f)
         {
             attackCooldownTimer -= Time.deltaTime;
         }
 
+        // デバッグ用：スペースキーで攻撃を手動トリガー
         if (debugTriggerWithSpace && Input.GetKeyDown(KeyCode.Space))
         {
             TryStartRandomAttack();
@@ -75,21 +74,26 @@ public sealed class HandChaserAttackController : MonoBehaviour
 
     public void SetPlayerTarget(Transform player)
     {
+        // プレイヤーの参照を保持（攻撃位置の計算に使用）
         playerTransform = player;
     }
 
     public void TryStartRandomAttack()
     {
+        // 攻撃中、クールダウン中、またはプレイヤーがいない場合はスキップ
         if (isHandActive || attackCooldownTimer > 0.0f || playerTransform == null)
         {
             return;
         }
 
+        // プレイヤーとの距離を計算
         float dx = Mathf.Abs(playerTransform.position.x - transform.position.x);
 
+        // 使用可能な攻撃タイプを判定
         bool canUseSmash = handSmashPrefab != null && dx <= smashAttackRangeX;
         bool canUseGrab = handGrabPrefab != null && dx <= grabAttackRangeX;
 
+        // どちらも使用不可ならスキップ
         if (!canUseSmash && !canUseGrab)
         {
             return;
@@ -97,6 +101,7 @@ public sealed class HandChaserAttackController : MonoBehaviour
 
         AttackType selectedType;
 
+        // 使用可能な攻撃タイプを選択
         if (canUseSmash && !canUseGrab)
         {
             selectedType = AttackType.Smash;
@@ -107,9 +112,11 @@ public sealed class HandChaserAttackController : MonoBehaviour
         }
         else
         {
+            // 両方使用可能ならランダム選択
             selectedType = SelectNextAttackType();
         }
 
+        // 選択した攻撃を実行
         bool success = selectedType == AttackType.Smash
             ? TryStartSmashAttack()
             : TryStartGrabAttack();
@@ -120,6 +127,7 @@ public sealed class HandChaserAttackController : MonoBehaviour
         }
     }
 
+    // 次の攻撃タイプを選択（同じ攻撃の連続を防ぐ）
     private AttackType SelectNextAttackType()
     {
         // 同じ攻撃が2回連続したら、次は別の攻撃を使う
@@ -128,16 +136,20 @@ public sealed class HandChaserAttackController : MonoBehaviour
             return GetOppositeAttackType(lastAttackType);
         }
 
+        // ランダムに選択
         return UnityEngine.Random.value < 0.5f ? AttackType.Smash : AttackType.Grab;
     }
 
+    // 指定した攻撃タイプの逆を返す
     private AttackType GetOppositeAttackType(AttackType attackType)
     {
         return attackType == AttackType.Smash ? AttackType.Grab : AttackType.Smash;
     }
 
+    // 攻撃タイプを記録して連続回数をカウント
     private void RecordAttackType(AttackType attackType)
     {
+        // 初回記録
         if (sameAttackStreakCount == 0)
         {
             lastAttackType = attackType;
@@ -145,12 +157,14 @@ public sealed class HandChaserAttackController : MonoBehaviour
             return;
         }
 
+        // 前回と同じ攻撃ならカウンタを増やす
         if (attackType == lastAttackType)
         {
             sameAttackStreakCount++;
         }
         else
         {
+            // 違う攻撃ならリセット
             lastAttackType = attackType;
             sameAttackStreakCount = 1;
         }
@@ -164,14 +178,17 @@ public sealed class HandChaserAttackController : MonoBehaviour
             return false;
         }
 
+        // 攻撃の出現位置を計算
         Vector3 spawnPosition = transform.position + handSpawnOffset;
 
+        // Smash攻撃を生成
         HandSmashAttack handInstance = Instantiate(handSmashPrefab, spawnPosition, Quaternion.identity);
 
         activeHandInstance = handInstance.gameObject;
         isHandActive = true;
         attackCooldownTimer = attackCooldown;
 
+        // 攻撃を開始
         handInstance.StartAttack(spawnPosition, playerTransform, groundY, OnHandAttackFinished);
 
         if (enableDebugLog)

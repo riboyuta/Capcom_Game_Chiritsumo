@@ -63,6 +63,7 @@ public sealed class HandGrabAttack : HandAttackBase
 
     private void Awake()
     {
+        // RigidbodyをKinematicに設定
         InitializeRigidbody();
     }
 
@@ -72,15 +73,18 @@ public sealed class HandGrabAttack : HandAttackBase
         Action onFinished
     )
     {
+        // 初期位置を設定
         transform.position = spawnPosition;
 
         this.targetPlayer = targetPlayer;
         this.onFinished = onFinished;
 
+        // プレイヤー位置を記録
         latestPlayerPosition = targetPlayer != null ? targetPlayer.position : GetAnchorWorldPosition();
         approachNearTargetPosition = CalculateApproachNearTarget(GetAnchorWorldPosition(), latestPlayerPosition);
         finalGrabTargetPosition = latestPlayerPosition;
 
+        // 状態をリセット
         hasGrabbedPlayer = false;
         grabbedPlayerController = null;
         grabbedPlayerRigidbody = null;
@@ -91,6 +95,7 @@ public sealed class HandGrabAttack : HandAttackBase
         missPauseTimer = 0.0f;
         endTimer = 0.0f;
 
+        // 接近状態を開始
         state = AttackState.ApproachNear;
 
         if (view != null)
@@ -102,6 +107,7 @@ public sealed class HandGrabAttack : HandAttackBase
 
     private void Update()
     {
+        // 現在の状態に応じた処理を実行
         switch (state)
         {
             case AttackState.Idle:
@@ -135,14 +141,17 @@ public sealed class HandGrabAttack : HandAttackBase
 
     private void LateUpdate()
     {
+        // 掌み中はプレイヤーの位置を手に固定
         if (state == AttackState.HoldPlayer)
         {
             UpdateGrabbedPlayerPosition();
         }
     }
 
+    // 接近フェーズ：プレイヤーの近くに移動
     private void TickApproachNear()
     {
+        // プレイヤー位置を追跡
         UpdateTrackedPlayerPosition();
 
         Vector3 currentAnchorPosition = GetAnchorWorldPosition();
@@ -158,6 +167,7 @@ public sealed class HandGrabAttack : HandAttackBase
 
         transform.position = next;
 
+        // 目標位置に到達したら追跡フェーズへ遷移
         if (Vector3.Distance(GetAnchorWorldPosition(), approachNearTargetPosition) <= reachThreshold)
         {
             trackTimer = preGrabTrackDuration;
@@ -171,16 +181,19 @@ public sealed class HandGrabAttack : HandAttackBase
         }
     }
 
+    // 追跡フェーズ：掌み前にプレイヤーを追い続ける
     private void TickTrackBeforeGrab()
     {
         trackedElapsedTime += Time.deltaTime;
 
+        // 一定時間はプレイヤー位置を更新
         if (trackedElapsedTime <= trackUpdateDuration)
         {
             UpdateTrackedPlayerPosition();
             finalGrabTargetPosition = latestPlayerPosition;
         }
 
+        // 待機時間が終わったら掌み開始
         trackTimer -= Time.deltaTime;
         if (trackTimer > 0.0f)
         {
@@ -195,6 +208,7 @@ public sealed class HandGrabAttack : HandAttackBase
         }
     }
 
+    // 掌みフェーズ：目標地点に突進してプレイヤーを掌む
     private void TickGrabStart()
     {
         Vector3 rootTargetPosition = GetRootPositionForAnchorTarget(finalGrabTargetPosition);
@@ -207,16 +221,19 @@ public sealed class HandGrabAttack : HandAttackBase
 
         transform.position = next;
 
+        // 目標地点に到達したら当たり判定
         if (Vector3.Distance(GetAnchorWorldPosition(), finalGrabTargetPosition) <= reachThreshold)
         {
             transform.position = rootTargetPosition;
 
+            // ヒットボックス内にプレイヤーがいるか確認
             GameObject playerObject = grabHitbox != null ? grabHitbox.FindPlayerInGrabArea() : null;
             if (playerObject != null)
             {
                 TryStartGrab(playerObject);
             }
 
+            // 掌み成功か失敗かで次の状態を分岐
             if (hasGrabbedPlayer)
             {
                 holdTimer = holdDuration;
@@ -241,17 +258,21 @@ public sealed class HandGrabAttack : HandAttackBase
         }
     }
 
+    // 掌み保持フェーズ：プレイヤーを一定時間掌んでから殺す
     private void TickHoldPlayer()
     {
         holdTimer -= Time.deltaTime;
 
+        // プレイヤーの位置を更新
         UpdateGrabbedPlayerPosition();
 
+        // まだ保持時間が残っていれば続ける
         if (holdTimer > 0.0f)
         {
             return;
         }
 
+        // 時間が終了したらプレイヤーを解放して殺す
         ReleaseGrabbedPlayerAndKill();
 
         if (view != null)
@@ -268,9 +289,11 @@ public sealed class HandGrabAttack : HandAttackBase
         }
     }
 
+    // 掌み失敗フェーズ：少し間を置いてから終了
     private void TickMissPause()
     {
         missPauseTimer -= Time.deltaTime;
+        // まだ待機時間が残っていれば続ける
         if (missPauseTimer > 0.0f)
         {
             return;
@@ -290,6 +313,7 @@ public sealed class HandGrabAttack : HandAttackBase
         }
     }
 
+    // 終了フェーズ：一定時間待ってからオブジェクトを破棄
     private void TickEnd()
     {
         endTimer -= Time.deltaTime;
@@ -301,6 +325,7 @@ public sealed class HandGrabAttack : HandAttackBase
         FinishAttack();
     }
 
+    // プレイヤーの現在位置を記録
     private void UpdateTrackedPlayerPosition()
     {
         if (targetPlayer == null)
@@ -311,25 +336,29 @@ public sealed class HandGrabAttack : HandAttackBase
         latestPlayerPosition = targetPlayer.position;
     }
 
+    // プレイヤーの近くの接近目標位置を計算
     private Vector3 CalculateApproachNearTarget(Vector3 fromPosition, Vector3 playerPosition)
     {
         Vector3 toPlayer = playerPosition - fromPosition;
         float distance = toPlayer.magnitude;
 
+        // 距離がほぼ0ならプレイヤーの上に配置
         if (distance <= 0.0001f)
         {
             return playerPosition + Vector3.up * nearHeightOffset;
         }
 
+        // プレイヤーから一定距離離れた位置を計算
         Vector3 direction = toPlayer / distance;
         float offsetDistance = Mathf.Min(nearDistance, distance);
 
         Vector3 baseTarget = playerPosition - direction * offsetDistance;
-        baseTarget += Vector3.up * nearHeightOffset;
+        baseTarget += Vector3.up * nearHeightOffset;  // 高さオフセットを追加
 
         return baseTarget;
     }
 
+    // 掌みアンカーのワールド位置を取得
     private Vector3 GetAnchorWorldPosition()
     {
         if (grabAnchor != null)
@@ -337,27 +366,34 @@ public sealed class HandGrabAttack : HandAttackBase
             return grabAnchor.position;
         }
 
+        // アンカーがない場合はルートの位置を使用
         return transform.position;
     }
 
+    // アンカーが目標位置に来るためのルート位置を逆算
     private Vector3 GetRootPositionForAnchorTarget(Vector3 anchorTargetPosition)
     {
+        // アンカーがない場合はそのまま返す
         if (grabAnchor == null)
         {
             return anchorTargetPosition;
         }
 
+        // アンカーのオフセットを考慮してルート位置を計算
         Vector3 anchorOffset = grabAnchor.position - transform.position;
         return anchorTargetPosition - anchorOffset;
     }
 
+    // プレイヤーを掌む処理を開始
     private void TryStartGrab(GameObject playerObject)
     {
+        // 既に掌んでいる場合は何もしない
         if (hasGrabbedPlayer)
         {
             return;
         }
 
+        // PlayerControllerを取得
         PlayerController playerController = playerObject.GetComponent<PlayerController>();
         if (playerController == null)
         {
@@ -365,6 +401,7 @@ public sealed class HandGrabAttack : HandAttackBase
             return;
         }
 
+        // Rigidbodyを取得（位置固定に必要）
         Rigidbody playerRb = playerObject.GetComponent<Rigidbody>();
         if (playerRb == null)
         {
@@ -372,6 +409,7 @@ public sealed class HandGrabAttack : HandAttackBase
             return;
         }
 
+        // 掌み状態を記録
         grabbedPlayerController = playerController;
         grabbedPlayerRigidbody = playerRb;
         hasGrabbedPlayer = true;

@@ -1,9 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// プレイヤー接近時のエフェクト（カメラシェイク・Vignette・コントローラー振動）を制御するコンポーネント。
-/// </summary>
 public sealed class ProximityEffectController : MonoBehaviour
 {
     [Header("設定")]
@@ -15,12 +12,14 @@ public sealed class ProximityEffectController : MonoBehaviour
     private bool isProximityRumbling;
     private bool isActive;
 
+    // エフェクト全体の有効/無効を制御
     public bool IsActive
     {
         get => isActive;
         set
         {
             isActive = value;
+            // 無効化時は振動を停止
             if (!isActive)
             {
                 StopProximityRumbleIfNeeded();
@@ -35,23 +34,28 @@ public sealed class ProximityEffectController : MonoBehaviour
 
     private void Update()
     {
+        // 無効状態ならエフェクトを停止して終了
         if (!isActive)
         {
             StopProximityRumbleIfNeeded();
             return;
         }
 
+        // エフェクトを毎フレーム更新
         UpdateEffects();
     }
 
     private void OnDisable()
     {
+        // コンポーネント無効化時に振動を確実に停止
         StopProximityRumbleIfNeeded();
     }
 
     public void SetPlayerTarget(Transform player)
     {
+        // プレイヤーの参照を設定
         playerTransform = player;
+        // プレイヤーが変わったのでキャッシュをクリア
         cachedPlayerController = null;
     }
 
@@ -63,6 +67,7 @@ public sealed class ProximityEffectController : MonoBehaviour
             return;
         }
 
+        // プレイヤーとの距離から強度を計算
         float dx = Mathf.Abs(playerTransform.position.x - transform.position.x);
         float intensity = CalculateIntensity(dx);
 
@@ -79,18 +84,22 @@ public sealed class ProximityEffectController : MonoBehaviour
         UpdateProximityRumble(intensity);
     }
 
+    // 距離から接近エフェクトの強度を計算（0.0～1.0）
     private float CalculateIntensity(float distance)
     {
+        // 最小距離より遠ければ効果なし
         if (distance > settings.minShakeDistance)
         {
             return 0f;
         }
 
+        // 距離に応じて強度を線形補間
         return 1.0f - Mathf.InverseLerp(settings.maxShakeDistance, settings.minShakeDistance, distance);
     }
 
     private void UpdateProximityRumble(float intensity)
     {
+        // 振動が無効、またはゲームパッドが接続されていない場合は停止
         if (!settings.enableRumble || Gamepad.current == null)
         {
             StopProximityRumbleIfNeeded();
@@ -109,12 +118,14 @@ public sealed class ProximityEffectController : MonoBehaviour
             return;
         }
 
+        // 強度が低すぎる場合は停止
         if (intensity <= 0.01f)
         {
             StopProximityRumbleIfNeeded();
             return;
         }
 
+        // 強度に応じた振動を設定
         float low = settings.maxLowFrequency * intensity;
         float high = settings.maxHighFrequency * intensity;
         Gamepad.current.SetMotorSpeeds(low, high);
@@ -123,6 +134,7 @@ public sealed class ProximityEffectController : MonoBehaviour
 
     private void StopProximityRumbleIfNeeded()
     {
+        // 振動中で、かつゲームパッドが接続されている場合のみ停止
         if (isProximityRumbling && Gamepad.current != null)
         {
             Gamepad.current.ResetHaptics();

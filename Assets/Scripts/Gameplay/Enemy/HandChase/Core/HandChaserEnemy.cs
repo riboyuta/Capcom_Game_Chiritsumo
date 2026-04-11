@@ -1,10 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// HandChaser敵のメインコントローラー。
-/// Movement, AttackController, View, ProximityEffectsを統合し、
-/// 起動・リスポーン・プレイヤー接触判定を管理する。
-/// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Rigidbody))]
 public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
@@ -70,6 +65,7 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
 
     private void Awake()
     {
+        // Rigidbodyの初期設定
         rb = GetComponent<Rigidbody>();
         if (rb != null)
         {
@@ -77,15 +73,19 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             rb.useGravity = false;
         }
 
+        // 各コンポーネントをキャッシュ
         cachedCollider = GetComponent<Collider>();
         cachedRenderers = GetComponentsInChildren<Renderer>(true);
 
+        // 初期位置を保存
         initialPosition = transform.position;
         initialRotation = transform.rotation;
 
+        // 必要なコンポーネントを取得
         TryGetComponents();
         ResolvePlayerIfNeeded();
 
+        // 起動状態を設定
         isActivated = startActive;
         ApplyActivationVisualState();
 
@@ -106,12 +106,13 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
 
     private void Update()
     {
+        // 無効化されているか、まだ起動していない場合は処理をスキップ
         if (isDisabled || !isActivated)
         {
             return;
         }
 
-        // 攻撃をトリガー
+        // 攻撃コントローラーに攻撃開始を試みる
         if (attackController != null)
         {
             attackController.TryStartRandomAttack();
@@ -120,12 +121,13 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
 
     private void LateUpdate()
     {
+        // 無効化されているか、まだ起動していない場合は処理をスキップ
         if (isDisabled || !isActivated)
         {
             return;
         }
 
-        // 移動とエフェクトの状態を同期
+        // 移動コンポーネントに攻撃状態を同期（攻撃中は速度が低下する）
         if (movement != null && attackController != null)
         {
             movement.IsAttacking = attackController.IsAttacking;
@@ -134,16 +136,19 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
 
     private void OnTriggerEnter(Collider other)
     {
+        // 無効状態、または起動していない場合はスキップ
         if (isDisabled || !isActivated || !killPlayerOnContact)
         {
             return;
         }
 
+        // プレイヤー以外は無視
         if (!other.CompareTag(playerTag))
         {
             return;
         }
 
+        // PlayerControllerを取得
         PlayerController playerController = other.GetComponent<PlayerController>();
         if (playerController == null)
         {
@@ -156,6 +161,7 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             return;
         }
 
+        // プレイヤーに死亡ダメージを与える
         bool accepted = playerController.RequestDamageDeath();
 
         if (enableDebugLog)
@@ -163,6 +169,7 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             Debug.Log($"[HandChaserEnemy] Hit player '{other.name}', RequestDamageDeath accepted={accepted}", this);
         }
 
+        // プレイヤーを殺した後、敵を無効化する設定なら無効化
         if (accepted && disableAfterKill)
         {
             DisableSelf();
@@ -171,6 +178,7 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
 
     public void BeginChase()
     {
+        // 既に起動済みならスキップ
         if (isActivated)
         {
             Debug.LogWarning("[HandChaserEnemy] Already activated!", this);
@@ -179,6 +187,7 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
 
         Debug.Log($"[HandChaserEnemy] BeginChase start. movement={(movement != null ? movement.name : "NULL")}", this);
 
+        // スポーン位置を使用する設定ならワープ
         if (useSpawnPositionOnActivate)
         {
             if (rb != null)
@@ -191,9 +200,11 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             }
         }
 
+        // 敵を有効化
         isActivated = true;
         ApplyActivationVisualState();
 
+        // 移動を有効化
         if (movement != null)
         {
             movement.IsActive = true;
@@ -209,6 +220,7 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             Debug.LogError("[HandChaserEnemy] Movement component is NULL!", this);
         }
 
+        // 接近エフェクトを有効化
         if (proximityEffects != null)
         {
             proximityEffects.IsActive = true;
@@ -222,11 +234,13 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
 
     public void CaptureInitialState()
     {
+        // 既にキャプチャ済みなら何もしない
         if (hasCapturedInitialState)
         {
             return;
         }
 
+        // 現在の位置と回転を初期状態として保存
         initialPosition = transform.position;
         initialRotation = transform.rotation;
         hasCapturedInitialState = true;
@@ -239,12 +253,14 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
 
     public void ResetEncounterForRespawn()
     {
+        // 位置と回転を初期状態に戻す
         transform.position = initialPosition;
         transform.rotation = initialRotation;
 
         isDisabled = false;
         isActivated = startActive;
 
+        // Rigidbodyの速度をリセット
         if (rb != null)
         {
             // Kinematic Rigidbody を一時的に非 Kinematic にして速度をリセット
@@ -255,6 +271,7 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             rb.isKinematic = wasKinematic;
         }
 
+        // 各コンポーネントをリセット
         if (movement != null)
         {
             movement.IsActive = isActivated;
@@ -271,6 +288,7 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             proximityEffects.IsActive = isActivated;
         }
 
+        // 表示状態を更新
         ApplyActivationVisualState();
 
         if (!gameObject.activeSelf)
@@ -281,13 +299,16 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
 
     private void ApplyActivationVisualState()
     {
+        // 起動済み、または非表示設定が無効なら表示
         bool visible = isActivated || !hideUntilActivated;
 
+        // Colliderは起動済みの時だけ有効
         if (cachedCollider != null)
         {
             cachedCollider.enabled = isActivated;
         }
 
+        // 全てのRendererの表示状態を設定
         if (cachedRenderers != null)
         {
             for (int i = 0; i < cachedRenderers.Length; i++)

@@ -1,8 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// HandChaser敵の見た目（アニメーション・レイアウト）を制御するコンポーネント。
-/// </summary>
 public sealed class HandChaserView : MonoBehaviour
 {
     [Header("見た目参照")]
@@ -50,18 +47,22 @@ public sealed class HandChaserView : MonoBehaviour
 
     private void Awake()
     {
+        // ルートが未設定なら自分自身を使用
         if (visualRoot == null)
         {
             visualRoot = transform;
         }
 
+        // Rendererを自動取得試行
         TryAutoAssignRenderers();
     }
 
     private void OnValidate()
     {
+        // FPSを正の値に制限
         animationFps = Mathf.Max(0f, animationFps);
 
+        // スケールが0の軸があれば1に修正（非表示防止）
         if (visualRootLocalScale.x == 0f) visualRootLocalScale.x = 1f;
         if (visualRootLocalScale.y == 0f) visualRootLocalScale.y = 1f;
         if (visualRootLocalScale.z == 0f) visualRootLocalScale.z = 1f;
@@ -84,12 +85,15 @@ public sealed class HandChaserView : MonoBehaviour
 
     private void Update()
     {
+        // アニメーションとレイアウトを毎フレーム更新
         UpdateAnimation();
         ApplyVisualLayout();
     }
 
+    // スプライトアニメーションを更新
     private void UpdateAnimation()
     {
+        // FPSが0以下なら最初のフレームを表示
         if (animationFps <= 0f)
         {
             ApplyFrame(armRenderer, armFrames, 0);
@@ -97,29 +101,36 @@ public sealed class HandChaserView : MonoBehaviour
             return;
         }
 
+        // タイマーを進める
         animationTimer += Time.deltaTime;
 
+        // ループ再生するフレームインデックスを計算
         int armIndex = GetLoopFrameIndex(armFrames, animationTimer, animationFps);
         int palmIndex = GetLoopFrameIndex(palmFrames, animationTimer, animationFps);
 
+        // フレームを適用
         ApplyFrame(armRenderer, armFrames, armIndex);
         ApplyFrame(palmRenderer, palmFrames, palmIndex);
     }
 
+    // 視覚的レイアウト（位置とスケール）を適用
     private void ApplyVisualLayout()
     {
+        // ルートの位置とスケールを設定
         if (visualRoot != null && visualRoot != transform)
         {
             visualRoot.localPosition = visualRootLocalOffset;
             visualRoot.localScale = visualRootLocalScale;
         }
 
+        // 腕の位置とスケールを設定
         if (armRenderer != null)
         {
             armRenderer.transform.localPosition = armLocalOffset;
             armRenderer.transform.localScale = armLocalScale;
         }
 
+        // 手の平の位置とスケールを設定
         if (palmRenderer != null)
         {
             palmRenderer.transform.localPosition = palmLocalOffset;
@@ -127,37 +138,45 @@ public sealed class HandChaserView : MonoBehaviour
         }
     }
 
+    // 時間とFPSからループ再生するフレームインデックスを計算
     private static int GetLoopFrameIndex(Sprite[] frames, float time, float fps)
     {
+        // フレームがない場合は-1を返す
         if (frames == null || frames.Length == 0)
         {
             return -1;
         }
 
+        // 現在の時間からフレームインデックスを計算し、フレーム数で剰余を取ってループ
         int index = Mathf.FloorToInt(time * fps) % frames.Length;
         if (index < 0)
         {
-            index += frames.Length;
+            index += frames.Length;  // 負の値の場合は正に変換
         }
 
         return index;
     }
 
+    // 指定したインデックスのスプライトをRendererに適用
     private static void ApplyFrame(SpriteRenderer target, Sprite[] frames, int index)
     {
+        // 対象がない、またはフレームがない場合は何もしない
         if (target == null || frames == null || frames.Length == 0)
         {
             return;
         }
 
+        // インデックスが範囲外なら何もしない
         if (index < 0 || index >= frames.Length)
         {
             return;
         }
 
+        // スプライトを適用
         target.sprite = frames[index];
     }
 
+    // 子オブジェクトからRendererを自動取得試行
     private void TryAutoAssignRenderers()
     {
         if (visualRoot == null)
@@ -165,11 +184,13 @@ public sealed class HandChaserView : MonoBehaviour
             return;
         }
 
+        // "ArmRenderer"という名前の子オブジェクトから腕のRendererを取得
         if (armRenderer == null)
         {
             armRenderer = visualRoot.Find("ArmRenderer")?.GetComponent<SpriteRenderer>();
         }
 
+        // "PalmRenderer"という名前の子オブジェクトから手の平のRendererを取得
         if (palmRenderer == null)
         {
             palmRenderer = visualRoot.Find("PalmRenderer")?.GetComponent<SpriteRenderer>();

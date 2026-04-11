@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// HandChaser敵の移動を制御するコンポーネント。
-/// プレイヤーとの距離に応じた速度調整、攻撃中の速度減衰などを処理する。
-/// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public sealed class HandChaserMovement : MonoBehaviour
 {
@@ -56,16 +52,18 @@ public sealed class HandChaserMovement : MonoBehaviour
 
     private void Awake()
     {
+        // Rigidbodyを取得してKinematicに設定
         rb = GetComponent<Rigidbody>();
         if (rb != null)
         {
-            rb.isKinematic = true;
-            rb.useGravity = false;
+            rb.isKinematic = true;  // MovePositionで移動するためKinematic
+            rb.useGravity = false;  // 重力は使わない
         }
     }
 
     private void OnValidate()
     {
+        // 各パラメータを有効な範囲に制限
         moveSpeed = Mathf.Max(0f, moveSpeed);
         minMoveSpeed = Mathf.Max(0f, minMoveSpeed);
         maxMoveSpeed = Mathf.Max(0f, maxMoveSpeed);
@@ -73,16 +71,19 @@ public sealed class HandChaserMovement : MonoBehaviour
         distanceForMinSpeed = Mathf.Max(0f, distanceForMinSpeed);
         speedMultiplierWhileAttacking = Mathf.Clamp01(speedMultiplierWhileAttacking);
 
+        // 最大速度が最小速度より小さい場合は修正
         if (maxMoveSpeed < minMoveSpeed)
         {
             maxMoveSpeed = minMoveSpeed;
         }
 
+        // 最小距離が最大距離より大きい場合は修正
         if (distanceForMinSpeed > distanceForMaxSpeed)
         {
             distanceForMinSpeed = distanceForMaxSpeed;
         }
 
+        // 移動軸を正規化
         if (moveAxis.sqrMagnitude > 0f)
         {
             moveAxis = moveAxis.normalized;
@@ -93,6 +94,7 @@ public sealed class HandChaserMovement : MonoBehaviour
     {
         Debug.Log($"[HandChaserMovement] FixedUpdate enabled={enabled} isActive={isActive}", this);
 
+        // 非アクティブなら移動しない
         if (!isActive)
         {
             Debug.Log("[HandChaserMovement] isActive false", this);
@@ -105,12 +107,14 @@ public sealed class HandChaserMovement : MonoBehaviour
             return;
         }
 
+        // 現在の移動速度を計算
         float currentSpeed = GetCurrentMoveSpeed();
         Vector3 before = rb.position;
         Vector3 next = rb.position + moveAxis * (currentSpeed * Time.fixedDeltaTime);
 
         Debug.Log($"[HandChaserMovement] before={before} next={next} axis={moveAxis} speed={currentSpeed} isKinematic={rb.isKinematic}", this);
 
+        // Rigidbodyを移動
         rb.MovePosition(next);
 
         Debug.Log($"[HandChaserMovement] after MovePosition rb.position={rb.position} transform.position={transform.position}", this);
@@ -118,13 +122,16 @@ public sealed class HandChaserMovement : MonoBehaviour
 
     public void SetPlayerTarget(Transform player)
     {
+        // プレイヤーの参照を保持（距離ベースの速度調整に使用）
         playerTransform = player;
     }
 
+    // 現在の移動速度を取得（攻撃中の減速も考慮）
     public float GetCurrentMoveSpeed()
     {
         float baseSpeed = CalculateBaseSpeed();
 
+        // 攻撃中は移動速度を下げる
         if (isAttacking)
         {
             baseSpeed *= speedMultiplierWhileAttacking;
@@ -133,20 +140,25 @@ public sealed class HandChaserMovement : MonoBehaviour
         return baseSpeed;
     }
 
+    // プレイヤーとの距離に応じた基本移動速度を計算
     private float CalculateBaseSpeed()
     {
+        // 距離ベースの速度調整が無効、またはプレイヤーがいない場合は固定速度
         if (!useDistanceBasedSpeed || playerTransform == null)
         {
             return moveSpeed;
         }
 
+        // X軸での距離を計算
         float dx = Mathf.Abs(playerTransform.position.x - transform.position.x);
 
+        // 最小距離以下なら最低速度
         if (dx <= distanceForMinSpeed)
         {
             return minMoveSpeed;
         }
 
+        // 距離に応じて速度を補間
         float t = Mathf.InverseLerp(distanceForMinSpeed, distanceForMaxSpeed, dx);
         return Mathf.Lerp(minMoveSpeed, maxMoveSpeed, t);
     }

@@ -1,10 +1,6 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// Hand系攻撃の共通基底クラス。
-/// Rigidbody初期化、完了処理、キャンセル処理などの共通ロジックを提供する。
-/// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public abstract class HandAttackBase : MonoBehaviour, IHandAttack
 {
@@ -15,6 +11,7 @@ public abstract class HandAttackBase : MonoBehaviour, IHandAttack
 
     public bool IsFinished => isFinished;
 
+    // Rigidbodyの初期設定（重力無し、Kinematic）
     protected void InitializeRigidbody()
     {
         rb = GetComponent<Rigidbody>();
@@ -25,6 +22,7 @@ public abstract class HandAttackBase : MonoBehaviour, IHandAttack
         }
     }
 
+    // 攻撃を強制的にキャンセル
     public virtual void Cancel()
     {
         if (isFinished)
@@ -37,6 +35,7 @@ public abstract class HandAttackBase : MonoBehaviour, IHandAttack
         Destroy(gameObject);
     }
 
+    // 攻撃を正常終了
     protected void FinishAttack()
     {
         if (isFinished)
@@ -49,6 +48,7 @@ public abstract class HandAttackBase : MonoBehaviour, IHandAttack
         Destroy(gameObject);
     }
 
+    // プレイヤーに死亡ダメージを要求
     protected void RequestPlayerDeath(GameObject playerObject)
     {
         if (playerObject == null)
@@ -56,6 +56,7 @@ public abstract class HandAttackBase : MonoBehaviour, IHandAttack
             return;
         }
 
+        // PlayerControllerを取得して死亡をリクエスト
         PlayerController playerController = playerObject.GetComponent<PlayerController>();
         if (playerController != null)
         {

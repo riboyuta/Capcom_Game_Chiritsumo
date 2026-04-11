@@ -7,10 +7,12 @@ public sealed class GrabHitbox : MonoBehaviour
 
     private void Awake()
     {
+        // BoxColliderを取得してトリガーに設定
         boxCollider = GetComponent<BoxCollider>();
         boxCollider.isTrigger = true;
     }
 
+    // 掌み範囲内にプレイヤーがいるかチェック
     public GameObject FindPlayerInGrabArea()
     {
         if (boxCollider == null)
@@ -18,18 +20,21 @@ public sealed class GrabHitbox : MonoBehaviour
             return null;
         }
 
+        // BoxColliderのワールド空間の位置とサイズを計算
         Vector3 worldCenter = transform.TransformPoint(boxCollider.center);
         Vector3 halfExtents = Vector3.Scale(boxCollider.size * 0.5f, transform.lossyScale);
         Quaternion orientation = transform.rotation;
 
+        // OverlapBoxでヒットした全てのColliderを取得
         Collider[] hits = Physics.OverlapBox(
             worldCenter,
             halfExtents,
             orientation,
-            ~0,
+            ~0,  // 全レイヤー
             QueryTriggerInteraction.Collide
         );
 
+        // ヒットしたColliderからプレイヤーを探す
         for (int i = 0; i < hits.Length; i++)
         {
             Collider hit = hits[i];
@@ -38,6 +43,7 @@ public sealed class GrabHitbox : MonoBehaviour
                 continue;
             }
 
+            // "Player"タグを持つオブジェクトを返す
             if (!hit.CompareTag("Player"))
             {
                 continue;
