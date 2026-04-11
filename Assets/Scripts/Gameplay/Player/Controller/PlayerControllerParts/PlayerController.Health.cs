@@ -24,6 +24,31 @@ public sealed partial class PlayerController
     [Tooltip("体力・ダメージ関連のデバッグログを出すかどうかです。TakeDamage、Heal、死亡、ノックバック開始終了の観測に使います。調整用ではなく確認用で、有効にすると Console の情報量が増えます。")]
     [SerializeField] private bool showHealthDebugLog = false;
 
+    [Header("Reaction")]
+    [Header("Damaged継続時間")]
+    [Tooltip("被弾状態が継続する時間です。この間は短い無敵時間が適用されます。")]
+    [SerializeField] private float damagedStateDuration = 0.15f;
+
+    [Header("Grabbed継続時間")]
+    [Tooltip("敵に掴まれている状態が継続する時間です。この時間後に即死または解放されます。")]
+    [SerializeField] private float grabbedStateDuration = 0.5f;
+
+    [Header("Smashed継続時間")]
+    [Tooltip("敵に叩きつけられた状態が継続する時間です。")]
+    [SerializeField] private float smashedStateDuration = 0.35f;
+
+    [Header("Smash即死判定")]
+    [Tooltip("Smash攻撃を受けた瞬間に即死するかどうかを設定します。")]
+    [SerializeField] private bool smashIsInstantDeath = true;
+
+    [Header("デバッグログ表示")]
+    [Tooltip("リアクション状態の変化をデバッグログに出力するかどうかを設定します。")]
+    [SerializeField] private bool showReactionDebugLog = false;
+
+    [Header("Grab演出")]
+    [Header("拘束後即死")]
+    [Tooltip("Grabbed状態の継続時間終了後に即死級ダメージを与えるかどうかを設定します。")]
+    [SerializeField] private bool killAfterGrabbedDuration = true;
     // =====================================================================
     // 公開プロパティ
     // =====================================================================
@@ -38,8 +63,13 @@ public sealed partial class PlayerController
         ? healthReactionSystem.IsInvincible
         : (healthSettings != null && healthSettings.invincible) || IsGrabbed;
 
-    // ノックバック中かどうかの参照口。
     public bool IsKnockback => healthReactionSystem != null && healthReactionSystem.IsKnockback;
+    public PlayerReactionState ReactionState =>
+        healthReactionSystem != null ? healthReactionSystem.ReactionState : PlayerReactionState.Normal;
+    public bool IsGrabbed => healthReactionSystem != null && healthReactionSystem.IsGrabbed;
+    public bool IsSmashed => healthReactionSystem != null && healthReactionSystem.IsSmashed;
+    public bool IsDeadState => healthReactionSystem != null && healthReactionSystem.IsDeadState;
+    public bool IsActionLocked => healthReactionSystem != null && healthReactionSystem.IsActionLocked;
 
     // Health/Reaction 起因の ActionLocked 判定。
     public bool IsHealthReactionActionLocked => healthReactionSystem != null && healthReactionSystem.IsActionLocked;
@@ -120,6 +150,11 @@ public sealed partial class PlayerController
         healthReactionSystem?.Heal(amount);
     }
 
+    public void ForceReleaseGrab()
+    {
+        healthReactionSystem?.ForceReleaseGrab();
+    }
+
 
     // 体力関連のログ出力。
     private void LogHealth(string message)
@@ -130,5 +165,14 @@ public sealed partial class PlayerController
         }
 
         Debug.Log($"[PlayerHealth] {message}");
+    }
+    private void LogReaction(string message)
+    {
+        if (!showReactionDebugLog)
+        {
+            return;
+        }
+
+        Debug.Log($"[PlayerReaction] {message}");
     }
 }

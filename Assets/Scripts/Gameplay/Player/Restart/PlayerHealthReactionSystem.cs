@@ -1,6 +1,13 @@
 using System;
 using UnityEngine;
-
+public enum PlayerReactionState
+{
+    Normal,
+    Damaged,
+    Grabbed,
+    Smashed,
+    Dead
+}
 // プレイヤーの Health / Reaction 系ルールを担当する内部システム。
 // 被弾、無敵、ノックバック、死亡遷移、復帰待機情報を保持する。
 internal sealed class PlayerHealthReactionSystem
@@ -57,7 +64,7 @@ internal sealed class PlayerHealthReactionSystem
     private bool isDeathSequencePlaying;
 
     // reaction の現在状態。
-    private PlayerController.PlayerReactionState reactionState;
+    private PlayerReactionState reactionState;
     // 現在 reaction 状態に入ってからの経過時間。
     private float reactionStateTimer;
     // 掴まれ中に追従する先。
@@ -78,20 +85,20 @@ internal sealed class PlayerHealthReactionSystem
     // 復帰可能判定の公開参照口。
     internal bool IsRespawnReady => isRespawnReady;
     // リアクション状態参照口。
-    internal PlayerController.PlayerReactionState ReactionState => reactionState;
+    internal PlayerReactionState ReactionState => reactionState;
     // Grabbed 判定参照口。
-    internal bool IsGrabbed => reactionState == PlayerController.PlayerReactionState.Grabbed;
+    internal bool IsGrabbed => reactionState == PlayerReactionState.Grabbed;
     // Smashed 判定参照口。
-    internal bool IsSmashed => reactionState == PlayerController.PlayerReactionState.Smashed;
+    internal bool IsSmashed => reactionState == PlayerReactionState.Smashed;
     // Dead 判定参照口。
-    internal bool IsDeadState => reactionState == PlayerController.PlayerReactionState.Dead;
+    internal bool IsDeadState => reactionState == PlayerReactionState.Dead;
     // ActionLocked 判定の公開参照口。
     internal bool IsActionLocked =>
-        reactionState == PlayerController.PlayerReactionState.Grabbed ||
-        reactionState == PlayerController.PlayerReactionState.Smashed ||
-        reactionState == PlayerController.PlayerReactionState.Dead ||
+        reactionState == PlayerReactionState.Grabbed ||
+        reactionState == PlayerReactionState.Smashed ||
+        reactionState == PlayerReactionState.Dead ||
         isDead;    // リアクション処理中判定の公開参照口。
-    internal bool IsReactionProcessing => reactionState != PlayerController.PlayerReactionState.Normal;
+    internal bool IsReactionProcessing => reactionState != PlayerReactionState.Normal;
     // Health / Reaction システムを構築する。
     internal PlayerHealthReactionSystem(
         PlayerRuntimeState runtimeState,
@@ -204,9 +211,9 @@ internal sealed class PlayerHealthReactionSystem
 
         invincibilityTimer = Mathf.Max(0f, healthSettings != null ? healthSettings.invincibilityDuration : 0f);
 
-        if (reactionState == PlayerController.PlayerReactionState.Normal)
+        if (reactionState == PlayerReactionState.Normal)
         {
-            ChangeReactionState(PlayerController.PlayerReactionState.Damaged);
+            ChangeReactionState(PlayerReactionState.Damaged);
         }
 
         if (currentHealth <= 0)
@@ -305,7 +312,7 @@ internal sealed class PlayerHealthReactionSystem
         isDeathSequencePlaying = true;
         deathRespawnTimer = 0f;
         isRespawnReady = false;
-        ChangeReactionState(PlayerController.PlayerReactionState.Dead);
+        ChangeReactionState(PlayerReactionState.Dead);
     }
 
     // 復帰待機時間を設定する。
@@ -342,7 +349,7 @@ internal sealed class PlayerHealthReactionSystem
     internal void StartGrab(Transform grabAnchor)
     {
         currentGrabAnchor = grabAnchor;
-        ChangeReactionState(PlayerController.PlayerReactionState.Grabbed);
+        ChangeReactionState(PlayerReactionState.Grabbed);
     }
 
     // 掴みを強制解放する。
@@ -350,19 +357,19 @@ internal sealed class PlayerHealthReactionSystem
     {
         currentGrabAnchor = null;
 
-        if (reactionState == PlayerController.PlayerReactionState.Grabbed)
+        if (reactionState == PlayerReactionState.Grabbed)
         {
-            ChangeReactionState(PlayerController.PlayerReactionState.Normal);
+            ChangeReactionState(PlayerReactionState.Normal);
         }
     }
 
     // 外部からリアクション状態を変更する入口。
-    internal void ChangeReactionState(PlayerController.PlayerReactionState nextState)
+    private void ChangeReactionState(PlayerReactionState nextState)
     {
         reactionState = nextState;
         reactionStateTimer = 0f;
 
-        if (reactionState != PlayerController.PlayerReactionState.Grabbed)
+        if (reactionState != PlayerReactionState.Grabbed)
         {
             currentGrabAnchor = null;
         }
@@ -373,7 +380,7 @@ internal sealed class PlayerHealthReactionSystem
     // リアクション状態を初期化する。
     private void InitializeReactionState()
     {
-        reactionState = PlayerController.PlayerReactionState.Normal;
+        reactionState = PlayerReactionState.Normal;
         reactionStateTimer = 0f;
         currentGrabAnchor = null;
     }
@@ -385,17 +392,17 @@ internal sealed class PlayerHealthReactionSystem
 
         switch (reactionState)
         {
-            case PlayerController.PlayerReactionState.Normal:
+            case PlayerReactionState.Normal:
                 break;
 
-            case PlayerController.PlayerReactionState.Damaged:
+            case PlayerReactionState.Damaged:
                 if (reactionStateTimer >= Mathf.Max(0f, damagedStateDurationProvider()))
                 {
-                    ChangeReactionState(PlayerController.PlayerReactionState.Normal);
+                    ChangeReactionState(PlayerReactionState.Normal);
                 }
                 break;
 
-            case PlayerController.PlayerReactionState.Grabbed:
+            case PlayerReactionState.Grabbed:
                 if (currentGrabAnchor != null && playerTransform != null)
                 {
                     Vector3 target = currentGrabAnchor.position;
@@ -416,14 +423,14 @@ internal sealed class PlayerHealthReactionSystem
                 }
                 break;
 
-            case PlayerController.PlayerReactionState.Smashed:
+            case PlayerReactionState.Smashed:
                 if (!smashIsInstantDeathProvider() && reactionStateTimer >= Mathf.Max(0f, smashedStateDurationProvider()))
                 {
-                    ChangeReactionState(PlayerController.PlayerReactionState.Normal);
+                    ChangeReactionState(PlayerReactionState.Normal);
                 }
                 break;
 
-            case PlayerController.PlayerReactionState.Dead:
+            case PlayerReactionState.Dead:
                 break;
         }
     }

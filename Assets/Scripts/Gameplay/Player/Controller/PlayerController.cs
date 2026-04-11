@@ -12,7 +12,16 @@ using UnityEngine;
 [RequireComponent(typeof(CapsuleCollider))]
 public sealed partial class PlayerController : MonoBehaviour
 {
-    [Header("入力: 生入力ソース")]
+
+        public enum DeathCause
+        {
+            Damage,
+            Hazard
+        }
+
+        private const float DiagonalInputThreshold = 0.5f;
+
+        [Header("入力: 生入力ソース")]
     [Tooltip("キーボードやゲームパッドなどの生入力を供給するコンポーネントです。未設定時は Awake で同一 GameObject から取得を試みます。")]
     // 生入力の供給元。
     // 未設定なら Awake で同一 GameObject から取得を試みる。
@@ -34,7 +43,22 @@ public sealed partial class PlayerController : MonoBehaviour
     [Header("体力: パラメータ設定")]
     [Tooltip("体力、無敵時間、死亡後復帰待機、デバッグ死亡トリガーをまとめた設定です。")]
     [SerializeField] private PlayerHealthSettings healthSettings = new PlayerHealthSettings();
+    
+    [Header("参照: CheckpointSystem")]
+    [Tooltip("同一シーン内の復帰地点を解決するシステムです。未設定時は実行時に探索を試みます。")]
+    [SerializeField] private CheckpointSystem checkpointSystem;
 
+    [Header("参照: StageResetSystem")]
+    [Tooltip("死亡復帰時にステージ上の敵やギミックを初期状態へ戻すシステムです。未設定時は実行時に探索を試みます。")]
+    [SerializeField] private StageResetSystem stageResetSystem;
+
+    [Header("参照: PlayerCameraController")]
+    [Tooltip("復帰時に標準カメラ状態へ戻すためのカメラ制御コンポーネントです。未設定時は実行時に探索を試みます。")]
+    [SerializeField] private PlayerCameraController playerCameraController;
+
+    [Header("参照: PlayerDeathView")]
+    [Tooltip("死亡時の倒れ演出と黒フェード制御を行う見た目コンポーネントです。未設定時は実行時に探索を試みます。")]
+    [SerializeField] private PlayerDeathView playerDeathView;
     // 外部（ギミック等）からの参照用プロパティ
     public PlayerMovementSettings MovementSettings => movementSettings;
 
@@ -69,7 +93,8 @@ public sealed partial class PlayerController : MonoBehaviour
     internal bool IsExternallyControlled => externalControlSystem != null && externalControlSystem.IsExternallyControlled;
     internal ExternalControlMode CurrentExternalControlMode =>
         externalControlSystem != null ? externalControlSystem.CurrentExternalControlMode : ExternalControlMode.None;
-
+    internal Vector2 MoveInputDirection => playerInputReader != null ? playerInputReader.Move : Vector2.zero;
+    internal bool IsMoveInputDiagonal => ComputeIsMoveInputDiagonal();
     // TODO: WallGrabTimeRemaining は壁掴まり時間制限の内部データ実装後に公開する。
 
     // Facade 向け最小 bridge: 現在ダッシュ開始可能か。
@@ -160,6 +185,88 @@ public sealed partial class PlayerController : MonoBehaviour
 
         runtimeState.facing = facing > 0 ? 1 : -1;
     }
+
+    internal void RequestInputBlockThisFrame(InputBlockFlags flags)
+    {
+        frameRequests.requestedInputBlockFlagsThisFrame |= flags;
+    }
+
+    internal bool RequestHazardDeath()
+    {
+        return RequestDeathStart(DeathCause.Hazard);
+    }
+
+    internal bool RequestDamageDeath()
+    {
+        return RequestDeathStart(DeathCause.Damage);
+    }
+
+    private bool RequestDeathStart(DeathCause cause)
+    {
+        if (healthReactionSystem != null && healthReactionSystem.IsDeathSequencePlaying)
+        {
+            LogHealth("Death request ignored: already processing");
+            return false;
+        }
+
+        healthReactionSystem?.BeginDeathSequence();
+        LogHealth($"Death requested: {cause}");
+
+        if (healthReactionSystem != null && healthReactionSystem.IsDeadState)
+        {
+            LogHealth("Death state entered");
+        }
+
+        PlayDeathVibration(cause);
+        PlayDeathSound(cause);
+        deathCoordinator?.StartRespawnSequence(cause);
+        return true;
+    }
+
+    private void ResetInputBlockRequestsThisFrame()
+    {
+        frameRequests.ResetPerFrameRequests();
+    }
+
+    private bool CanAcceptMoveInput()
+    {
+        return !IsInputBlocked(InputBlockFlags.Move);
+    }
+
+    private bool CanAcceptJumpInput()
+    {
+        return !IsInputBlocked(InputBlockFlags.Jump);
+    }
+
+    private bool CanAcceptDashInput()
+    {
+        return !IsInputBlocked(InputBlockFlags.Dash);
+    }
+
+    private bool CanAcceptGrabInput()
+    {
+        return !IsInputBlocked(InputBlockFlags.Grab);
+    }
+
+    private bool IsInputBlocked(InputBlockFlags flags)
+    {
+        InputBlockFlags blockedFlags = frameRequests.requestedInputBlockFlagsThisFrame;
+
+        if (externalControlSystem != null)
+        {
+            blockedFlags |= externalControlSystem.PersistentInputBlockFlags;
+        }
+
+        return (blockedFlags & flags) != 0;
+    }
+
+    private bool ComputeIsMoveInputDiagonal()
+    {
+        Vector2 move = MoveInputDirection;
+        return Mathf.Abs(move.x) >= DiagonalInputThreshold
+            && Mathf.Abs(move.y) >= DiagonalInputThreshold;
+    }
+
     // 見た目向け単発イベント(1物理フレームだけ true)。
     private bool justLandedThisFrame;
     private bool justCrossedApexThisFrame;
@@ -484,5 +591,13 @@ public sealed partial class PlayerController : MonoBehaviour
         FinalizeVisualState(previousVelocityY);
     }
 
+    private void LogRespawn(string message)
+    {
+        Debug.Log($"[PlayerRespawn] {message}", this);
+    }
 
+    private void LogRespawnWarning(string message)
+    {
+        Debug.LogWarning($"[PlayerRespawn] {message}", this);
+    }
 }
