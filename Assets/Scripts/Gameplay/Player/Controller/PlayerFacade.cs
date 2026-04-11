@@ -312,6 +312,25 @@ public sealed class PlayerFacade : MonoBehaviour
     {
         get { return playerController.IsMoveInputDiagonal; }
     }
+
+    // 下入力を保持しているか。
+    // 用途例:
+    // - すり抜け床の落下判定
+    // - 下入力長押しを使うギミック条件判定
+    public bool IsDownInputHeld => playerController.DownInputHeldForFacade;
+
+    // 現在速度ベクトル。
+    // 用途例:
+    // - 速度依存のギミック判定
+    // - デバッグ表示やログ出力
+    public Vector3 CurrentVelocity => playerController.CurrentVelocityForFacade;
+
+    // 現在速度スカラー。
+    // 用途例:
+    // - 一定速度以上で反応するオブジェクト判定
+    // - 速度条件の簡易チェック
+    public float CurrentSpeed => playerController.CurrentSpeedForFacade;
+
     // 現在、外部制御中か。
     // 用途例:
     // - すでに別ギミックに拘束されているかの確認
@@ -443,7 +462,25 @@ public sealed class PlayerFacade : MonoBehaviour
     {
         playerController.RequestFacing(facing);
     }
+    // ハザード由来の死亡を要求する。
+    // 用途例:
+    // - トゲ
+    // - 落下穴
+    public bool RequestHazardDeath()
+    {
+        return playerController.RequestHazardDeath();
+    }
 
+    // 被ダメージ由来の死亡を要求する。
+    // 用途例:
+    // - 敵攻撃
+    // - ダメージ床
+    public bool RequestDamageDeath()
+    {
+        return playerController.RequestDamageDeath();
+    }
 }
+
+
 
 #endregion

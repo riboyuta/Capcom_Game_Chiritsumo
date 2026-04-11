@@ -59,9 +59,6 @@ public sealed partial class PlayerController : MonoBehaviour
     [Header("参照: PlayerDeathView")]
     [Tooltip("死亡時の倒れ演出と黒フェード制御を行う見た目コンポーネントです。未設定時は実行時に探索を試みます。")]
     [SerializeField] private PlayerDeathView playerDeathView;
-    // 外部（ギミック等）からの参照用プロパティ
-    public PlayerMovementSettings MovementSettings => movementSettings;
-
     // 物理移動本体。
     // 速度変更、物理拘束、重力挙動などに使う。
     private Rigidbody rb;
@@ -95,6 +92,12 @@ public sealed partial class PlayerController : MonoBehaviour
         externalControlSystem != null ? externalControlSystem.CurrentExternalControlMode : ExternalControlMode.None;
     internal Vector2 MoveInputDirection => playerInputReader != null ? playerInputReader.Move : Vector2.zero;
     internal bool IsMoveInputDiagonal => ComputeIsMoveInputDiagonal();
+    // Facade 向け最小 bridge: 下入力を保持しているか。
+    internal bool DownInputHeldForFacade => IsDownInputHeld;
+    // Facade 向け最小 bridge: 現在速度ベクトル。
+    internal Vector3 CurrentVelocityForFacade => CurrentVelocity;
+    // Facade 向け最小 bridge: 現在速度スカラー。
+    internal float CurrentSpeedForFacade => CurrentVelocityForFacade.magnitude;
     // TODO: WallGrabTimeRemaining は壁掴まり時間制限の内部データ実装後に公開する。
 
     // Facade 向け最小 bridge: 現在ダッシュ開始可能か。
