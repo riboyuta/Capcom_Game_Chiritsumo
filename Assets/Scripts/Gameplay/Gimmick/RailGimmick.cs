@@ -12,10 +12,11 @@ public class RailTriggerNode : MonoBehaviour
     {
         if (rail == null) return;
 
-        var player = other.GetComponent<PlayerController>();
-        if (player != null)
+        var playerFacade = other.GetComponentInParent<PlayerFacade>();
+        if (playerFacade != null)
         {
-            rail.OnPlayerEnterRail(player, segmentIndex);
+
+            rail.OnPlayerEnterRail(playerFacade, segmentIndex);
         }
     }
 }
@@ -64,9 +65,6 @@ public class RailGimmick : MonoBehaviour
     // 現在乗車中のプレイヤー窓口。
     private PlayerFacade activePlayerFacade;
 
-    // 現在乗車中のプレイヤー本体。
-    private PlayerController activePlayerController;
-
     // 現在乗車中のプレイヤー Rigidbody。
     private Rigidbody activePlayerRigidbody;
 
@@ -90,6 +88,7 @@ public class RailGimmick : MonoBehaviour
 
     private void Awake()
     {
+
         GenerateSpline();
         GenerateVisual();
         GenerateColliders();
@@ -218,10 +217,10 @@ public class RailGimmick : MonoBehaviour
         return 0.5f * (a + (b * t) + (c * t * t) + (d * t * t * t));
     }
 
-    public void OnPlayerEnterRail(PlayerController player, int segmentIndex)
+    public void OnPlayerEnterRail(PlayerFacade facade, int segmentIndex)
     {
 
-        if (player == null || railPath.Count < 2)
+        if (facade == null || railPath.Count < 2)
         {
             return;
         }
@@ -236,17 +235,12 @@ public class RailGimmick : MonoBehaviour
             return;
         }
 
-        PlayerFacade facade = player.GetComponent<PlayerFacade>();
-        if (facade == null)
-        {
-            return;
-        }
-
         if (IsReattachCooldownActive())
         {
             return;
         }
 
+        Transform playerTransform = facade.transform;
 
         Vector3 startP = railPath[segmentIndex];
         Vector3 endP = railPath[segmentIndex + 1];
@@ -262,10 +256,10 @@ public class RailGimmick : MonoBehaviour
             return;
         }
 
-        Vector3 toPlayer = player.transform.position - startP;
+        Vector3 toPlayer = playerTransform.position - startP;
         float initialDistance = Mathf.Clamp(Vector3.Dot(toPlayer, segDir), 0f, Vector3.Distance(startP, endP));
 
-        Rigidbody rb = player.GetComponent<Rigidbody>();
+        Rigidbody rb = facade.GetComponent<Rigidbody>();
         if (rb == null)
         {
             return;
@@ -296,9 +290,8 @@ public class RailGimmick : MonoBehaviour
 
         activeSession = session;
         activePlayerFacade = facade;
-        activePlayerController = player;
         activePlayerRigidbody = rb;
-        activePlayerCapsule = player.GetComponent<CapsuleCollider>();
+        activePlayerCapsule = facade.GetComponent<CapsuleCollider>();
         activeSegmentIndex = segmentIndex;
         distanceOnSegment = initialDistance;
         grindDirection = initialDirection;
@@ -309,7 +302,7 @@ public class RailGimmick : MonoBehaviour
 
     private void UpdateActiveRide(float deltaTime)
     {
-        if (!activeSession.IsValid || activePlayerController == null || activePlayerFacade == null)
+        if (!activeSession.IsValid || activePlayerFacade == null)
         {
             ClearRideState();
             return;
@@ -407,19 +400,19 @@ public class RailGimmick : MonoBehaviour
 
     private float GetFeetOffset()
     {
-        if (activePlayerCapsule == null || activePlayerController == null)
+        if (activePlayerCapsule == null || activePlayerFacade == null)
         {
             return 0f;
         }
-        float worldHalfHeight = (activePlayerCapsule.height * 0.5f) * Mathf.Abs(activePlayerController.transform.lossyScale.y);
-        Vector3 centerOffset = activePlayerController.transform.TransformVector(activePlayerCapsule.center);
+        float worldHalfHeight = (activePlayerCapsule.height * 0.5f) * Mathf.Abs(activePlayerFacade.transform.lossyScale.y);
+        Vector3 centerOffset = activePlayerFacade.transform.TransformVector(activePlayerCapsule.center);
         return worldHalfHeight - centerOffset.y;
     }
 
     private void ExitRideWithLaunch(Vector3 releaseVelocity)
     {
 
-        StartReattachCooldown(activePlayerController);
+        StartReattachCooldown(activePlayerFacade);
 
         if (activeSession.IsValid)
         {
@@ -445,7 +438,6 @@ public class RailGimmick : MonoBehaviour
     {
         activeSession = PlayerExternalControlSession.Invalid;
         activePlayerFacade = null;
-        activePlayerController = null;
         activePlayerRigidbody = null;
         activePlayerCapsule = null;
         activeSegmentIndex = 0;
@@ -457,9 +449,9 @@ public class RailGimmick : MonoBehaviour
         return reattachCooldownTimer > 0f;
     }
 
-    private void StartReattachCooldown(PlayerController player)
+    private void StartReattachCooldown(PlayerFacade playerFacade)
     {
-        if (player == null)
+        if (playerFacade == null)
         {
             return;
         }
