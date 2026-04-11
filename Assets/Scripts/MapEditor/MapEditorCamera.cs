@@ -24,7 +24,7 @@ public class CameraController : MonoBehaviour
         //if (Input.GetKey(KeyCode.W)) y = 1;
         //if (Input.GetKey(KeyCode.S)) y = -1;
 
-        if (Input.GetKey(KeyCode.Space))
+        if (Input.GetKey(KeyCode.RightShift) && (Input.GetKey(KeyCode.LeftShift)))
         {
             transform.position = new Vector3(0, 1, -10);
         }
