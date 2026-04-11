@@ -279,6 +279,8 @@ public sealed partial class PlayerController : MonoBehaviour
 
     // Health / Reaction を担当する内部システム。
     private PlayerHealthReactionSystem healthReactionSystem;
+    // 死亡進行と復帰シーケンスを担当する内部 coordinator。
+    private PlayerDeathCoordinator deathCoordinator;
 
     private void Awake()
     {

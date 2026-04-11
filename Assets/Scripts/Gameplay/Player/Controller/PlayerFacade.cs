@@ -303,7 +303,7 @@ public sealed class PlayerFacade : MonoBehaviour
     // 用途例:
     // - 8方向入力チュートリアル
     // - 入力方向に応じて挙動を変えるギミック
-    public Vector2 MoveInputDirection => MoveInputDirection;
+    public Vector2 MoveInputDirection => playerController.MoveInputDirection;
     // 現在の移動入力が斜めか。
     // 用途例:
     // - 斜め入力の可視化
