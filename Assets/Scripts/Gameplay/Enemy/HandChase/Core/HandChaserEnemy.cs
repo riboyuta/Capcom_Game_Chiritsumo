@@ -4,47 +4,51 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
 {
-    [Header("コンポーネント参照")]
+    [Header("移動制御")]
     [Tooltip("移動制御コンポーネントです。未設定時は自動取得します。")]
     [SerializeField] private HandChaserMovement movement;
 
-    [Tooltip("攻撃制御コンポーネントです。未設定時は自動取得します。")]
-    [SerializeField] private HandChaserAttackController attackController;
-
+    [Header("見た目制御")]
     [Tooltip("見た目制御コンポーネントです。未設定時は自動取得します。")]
     [SerializeField] private HandChaserView view;
 
+    [Header("接近エフェクト")]
     [Tooltip("接近エフェクト制御コンポーネントです。未設定時は自動取得します。")]
     [SerializeField] private ProximityEffectController proximityEffects;
 
-    [Header("プレイヤー参照")]
+    [Header("プレイヤー")]
     [Tooltip("追跡対象のプレイヤーです。未設定時はタグから自動取得します。")]
     [SerializeField] private Transform player;
 
+    [Header("プレイヤータグ")]
     [Tooltip("プレイヤー検索に使用するタグ名です。")]
     [SerializeField] private string playerTag = "Player";
 
-    [Header("起動制御")]
+    [Header("開始時有効化")]
     [Tooltip("シーン開始時に自動で有効化するかどうかです。")]
     [SerializeField] private bool startActive = false;
 
+    [Header("起動前非表示")]
     [Tooltip("有効化されるまで見た目を非表示にするかどうかです。")]
     [SerializeField] private bool hideUntilActivated = true;
 
+    [Header("起動時ワープ使用")]
     [Tooltip("有効化時に指定位置へワープするかどうかです。")]
     [SerializeField] private bool useSpawnPositionOnActivate = false;
 
+    [Header("起動時ワープ位置")]
     [Tooltip("有効化時のワープ位置です。")]
     [SerializeField] private Vector3 spawnPositionOnActivate;
 
-    [Header("プレイヤー接触判定")]
+    [Header("接触時即死")]
     [Tooltip("プレイヤーと接触した時に即死させるかどうかです。")]
     [SerializeField] private bool killPlayerOnContact = true;
 
+    [Header("即死後無効化")]
     [Tooltip("プレイヤーを即死させた後、敵を無効化するかどうかです。")]
     [SerializeField] private bool disableAfterKill = false;
 
-    [Header("デバッグ")]
+    [Header("デバッグログ")]
     [Tooltip("デバッグログを有効にします。")]
     [SerializeField] private bool enableDebugLog;
 
@@ -101,36 +105,6 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             {
                 proximityEffects.IsActive = true;
             }
-        }
-    }
-
-    private void Update()
-    {
-        // 無効化されているか、まだ起動していない場合は処理をスキップ
-        if (isDisabled || !isActivated)
-        {
-            return;
-        }
-
-        // 攻撃コントローラーに攻撃開始を試みる
-        if (attackController != null)
-        {
-            attackController.TryStartRandomAttack();
-        }
-    }
-
-    private void LateUpdate()
-    {
-        // 無効化されているか、まだ起動していない場合は処理をスキップ
-        if (isDisabled || !isActivated)
-        {
-            return;
-        }
-
-        // 移動コンポーネントに攻撃状態を同期（攻撃中は速度が低下する）
-        if (movement != null && attackController != null)
-        {
-            movement.IsAttacking = attackController.IsAttacking;
         }
     }
 
@@ -275,12 +249,6 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         if (movement != null)
         {
             movement.IsActive = isActivated;
-            movement.IsAttacking = false;
-        }
-
-        if (attackController != null)
-        {
-            attackController.ResetAttackState();
         }
 
         if (proximityEffects != null)
@@ -350,11 +318,6 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             movement = GetComponent<HandChaserMovement>();
         }
 
-        if (attackController == null)
-        {
-            attackController = GetComponent<HandChaserAttackController>();
-        }
-
         if (view == null)
         {
             view = GetComponent<HandChaserView>();
@@ -387,11 +350,6 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         if (movement != null)
         {
             movement.SetPlayerTarget(target);
-        }
-
-        if (attackController != null)
-        {
-            attackController.SetPlayerTarget(target);
         }
 
         if (proximityEffects != null)

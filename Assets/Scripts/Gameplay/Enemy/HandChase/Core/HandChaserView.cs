@@ -2,44 +2,51 @@ using UnityEngine;
 
 public sealed class HandChaserView : MonoBehaviour
 {
-    [Header("見た目参照")]
+    [Header("見た目ルート")]
     [Tooltip("見た目のルートTransformです。")]
     [SerializeField] private Transform visualRoot;
 
+    [Header("腕レンダラー")]
     [Tooltip("腕のSpriteRendererです。")]
     [SerializeField] private SpriteRenderer armRenderer;
 
+    [Header("手のひらレンダラー")]
     [Tooltip("手のひらのSpriteRendererです。")]
     [SerializeField] private SpriteRenderer palmRenderer;
 
-    [Header("見た目: 全体調整")]
+    [Header("ルート位置オフセット")]
     [Tooltip("visualRoot のローカル位置オフセットです。")]
     [SerializeField] private Vector3 visualRootLocalOffset = Vector3.zero;
 
+    [Header("ルートスケール")]
     [Tooltip("visualRoot のローカルスケールです。")]
     [SerializeField] private Vector3 visualRootLocalScale = Vector3.one;
 
-    [Header("見た目: 腕調整")]
+    [Header("腕位置オフセット")]
     [Tooltip("armRenderer のローカル位置オフセットです。")]
     [SerializeField] private Vector3 armLocalOffset = Vector3.zero;
 
+    [Header("腕スケール")]
     [Tooltip("armRenderer のローカルスケールです。")]
     [SerializeField] private Vector3 armLocalScale = Vector3.one;
 
-    [Header("見た目: 手の平調整")]
+    [Header("手のひら位置オフセット")]
     [Tooltip("palmRenderer のローカル位置オフセットです。")]
     [SerializeField] private Vector3 palmLocalOffset = Vector3.zero;
 
+    [Header("手のひらスケール")]
     [Tooltip("palmRenderer のローカルスケールです。")]
     [SerializeField] private Vector3 palmLocalScale = Vector3.one;
 
-    [Header("アニメーション")]
+    [Header("腕フレーム")]
     [Tooltip("腕のスプライトフレーム配列です。")]
     [SerializeField] private Sprite[] armFrames;
 
+    [Header("手のひらフレーム")]
     [Tooltip("手のひらのスプライトフレーム配列です。")]
     [SerializeField] private Sprite[] palmFrames;
 
+    [Header("アニメーションFPS")]
     [Tooltip("アニメーションのFPSです。")]
     [SerializeField, Min(0f)] private float animationFps = 8.0f;
 

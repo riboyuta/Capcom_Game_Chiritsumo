@@ -3,51 +3,46 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public sealed class HandChaserMovement : MonoBehaviour
 {
-    [Header("基本移動")]
+    [Header("基準移動速度")]
     [Tooltip("基準となる移動速度です。")]
     [SerializeField, Min(0f)] private float moveSpeed = 2.0f;
 
+    [Header("移動方向")]
     [Tooltip("移動方向です。正規化されます。")]
     [SerializeField] private Vector3 moveAxis = Vector3.right;
 
-    [Header("距離追従")]
+    [Header("距離ベース速度使用")]
     [Tooltip("true のとき、プレイヤーとの距離に応じて移動速度を変化させます。")]
     [SerializeField] private bool useDistanceBasedSpeed = true;
 
+    [Header("最低移動速度")]
     [Tooltip("プレイヤーに十分近いときの最低移動速度です。")]
     [SerializeField, Min(0f)] private float minMoveSpeed = 1.5f;
 
+    [Header("最大移動速度")]
     [Tooltip("プレイヤーから十分離れているときの最大移動速度です。")]
     [SerializeField, Min(0f)] private float maxMoveSpeed = 4.5f;
 
+    [Header("最大速度距離")]
     [Tooltip("この X 距離以上で最大移動速度になります。")]
     [SerializeField, Min(0.01f)] private float distanceForMaxSpeed = 10.0f;
 
+    [Header("最低速度距離")]
     [Tooltip("この X 距離以下では最低移動速度のままにします。")]
     [SerializeField, Min(0f)] private float distanceForMinSpeed = 1.5f;
 
-    [Tooltip("攻撃中に本体移動速度を落とす倍率です。1=通常、0=停止。")]
-    [SerializeField, Range(0f, 1f)] private float speedMultiplierWhileAttacking = 0.5f;
-
-    [Header("デバッグ表示")]
+    [Header("Gizmo表示")]
     [Tooltip("移動速度範囲をGizmoで表示します。")]
     [SerializeField] private bool showSpeedRangeGizmos = true;
 
     private Rigidbody rb;
     private Transform playerTransform;
-    private bool isAttacking;
     private bool isActive;
 
     public bool IsActive
     {
         get => isActive;
         set => isActive = value;
-    }
-
-    public bool IsAttacking
-    {
-        get => isAttacking;
-        set => isAttacking = value;
     }
 
     private void Awake()
@@ -69,7 +64,6 @@ public sealed class HandChaserMovement : MonoBehaviour
         maxMoveSpeed = Mathf.Max(0f, maxMoveSpeed);
         distanceForMaxSpeed = Mathf.Max(0.01f, distanceForMaxSpeed);
         distanceForMinSpeed = Mathf.Max(0f, distanceForMinSpeed);
-        speedMultiplierWhileAttacking = Mathf.Clamp01(speedMultiplierWhileAttacking);
 
         // 最大速度が最小速度より小さい場合は修正
         if (maxMoveSpeed < minMoveSpeed)
@@ -126,18 +120,10 @@ public sealed class HandChaserMovement : MonoBehaviour
         playerTransform = player;
     }
 
-    // 現在の移動速度を取得（攻撃中の減速も考慮）
+    // 現在の移動速度を取得
     public float GetCurrentMoveSpeed()
     {
-        float baseSpeed = CalculateBaseSpeed();
-
-        // 攻撃中は移動速度を下げる
-        if (isAttacking)
-        {
-            baseSpeed *= speedMultiplierWhileAttacking;
-        }
-
-        return baseSpeed;
+        return CalculateBaseSpeed();
     }
 
     // プレイヤーとの距離に応じた基本移動速度を計算

@@ -8,10 +8,6 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
     [Tooltip("起動対象の HandChaserEnemy です。")]
     [SerializeField] private HandChaserEnemy targetEnemy;
 
-    [Header("スポーン位置")]
-    [Tooltip("このトリガーから起動した時のスポーン位置です。未設定時はこのトリガー自身の Transform を使います。")]
-    [SerializeField] private Transform spawnPoint;
-
     [Header("ゲーム進行")]
     [Tooltip("初回有効発動時に経過時間計測の開始通知を送る GameRoot です。")]
     [SerializeField] private GameRoot gameRoot;
@@ -37,12 +33,6 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         // Colliderを取得してトリガーとして設定
         triggerCollider = GetComponent<Collider>();
         triggerCollider.isTrigger = true;
-
-        // スポーン位置が未設定なら自分自身の位置を使用
-        if (spawnPoint == null)
-        {
-            spawnPoint = transform;
-        }
     }
 
     private void OnTriggerEnter(Collider other)
