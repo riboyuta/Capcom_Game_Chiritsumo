@@ -65,12 +65,12 @@ internal sealed class PlayerRuntimeState
     public Vector2 dashDirection = Vector2.right;
 
     // 床離れ直後でもジャンプ可能にする猶予タイマー。
-    public float coyoteTimer;
+    public float coyoteTimer = 0f;
 
     // 着地直前のジャンプ入力を保持するタイマー。
-    public float jumpBufferTimer;
+    public float jumpBufferTimer = 0f;
 
     // ジャンプ上昇維持の残り時間。
-    public float jumpHoldTimer;
+    public float jumpHoldTimer = 0f;
 
 }

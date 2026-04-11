@@ -375,16 +375,6 @@ public sealed class PlayerFacade : MonoBehaviour
         playerController.RequestKill(damageDirection);
     }
 
-    // ノックバックを要求する。
-    // 用途例:
-    // - 敵接触時の弾き飛ばし
-    // - 爆風
-    // - 強風トラップや衝突ギミック
-    public void RequestKnockback(Vector3 force)
-    {
-        playerController.RequestKnockback(force);
-    }
-
     // 外部打ち上げが発生したことを通知する。
     // 用途例:
     // - バネ床

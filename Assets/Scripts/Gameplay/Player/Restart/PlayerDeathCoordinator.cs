@@ -5,7 +5,6 @@ using UnityEngine;
 internal sealed class PlayerDeathCoordinator
 {
     private readonly MonoBehaviour coroutineRunner;
-    private readonly PlayerHealthReactionSystem healthReactionSystem;
     private readonly Rigidbody rb;
     private readonly Transform playerTransform;
     private readonly PlayerRuntimeState runtimeState;
@@ -25,9 +24,15 @@ internal sealed class PlayerDeathCoordinator
     private PlayerController.DeathCause lastDeathCause = PlayerController.DeathCause.Damage;
     private Coroutine respawnSequenceCoroutine;
 
+    private bool isDead;
+    private bool isDeathSequencePlaying;
+
+    internal bool IsDead => isDead;
+    internal bool IsDeadState => isDead;
+    internal bool IsDeathSequencePlaying => isDeathSequencePlaying;
+
     internal PlayerDeathCoordinator(
         MonoBehaviour coroutineRunner,
-        PlayerHealthReactionSystem healthReactionSystem,
         CheckpointSystem checkpointSystem,
         StageResetSystem stageResetSystem,
         PlayerDeathView playerDeathView,
@@ -45,7 +50,6 @@ internal sealed class PlayerDeathCoordinator
         Action<string> logRespawnWarning)
     {
         this.coroutineRunner = coroutineRunner;
-        this.healthReactionSystem = healthReactionSystem;
         this.checkpointSystem = checkpointSystem;
         this.stageResetSystem = stageResetSystem;
         this.playerDeathView = playerDeathView;
@@ -65,6 +69,8 @@ internal sealed class PlayerDeathCoordinator
 
     internal void StartRespawnSequence(PlayerController.DeathCause deathCause)
     {
+        isDead = true;
+        isDeathSequencePlaying = true;
         lastDeathCause = deathCause;
         CaptureDeathFacingForVisual();
 
@@ -190,8 +196,9 @@ internal sealed class PlayerDeathCoordinator
             LogRespawn("Death transition reset");
         }
 
-        healthReactionSystem?.MarkRespawnReady();
         respawnSequenceCoroutine = null;
+        isDead = false;
+        isDeathSequencePlaying = false;
     }
 
     private void ResetCameraToWorldDefaults()
@@ -306,7 +313,8 @@ internal sealed class PlayerDeathCoordinator
         stopAllRumble?.Invoke();
         stopAllSounds?.Invoke();
 
-        healthReactionSystem?.ResetForRespawn();
+        isDead = false;
+        isDeathSequencePlaying = false;
 
         runtimeState.isGrounded = false;
         runtimeState.isTouchingWall = false;

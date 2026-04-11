@@ -92,6 +92,13 @@ public sealed partial class PlayerController : MonoBehaviour
         externalControlSystem != null ? externalControlSystem.CurrentExternalControlMode : ExternalControlMode.None;
     internal Vector2 MoveInputDirection => playerInputReader != null ? playerInputReader.Move : Vector2.zero;
     internal bool IsMoveInputDiagonal => ComputeIsMoveInputDiagonal();
+
+    // 死亡状態プロパティ
+    public bool IsDeadState => deathCoordinator != null && deathCoordinator.IsDeadState;
+    public bool IsDeathSequencePlaying => deathCoordinator != null && deathCoordinator.IsDeathSequencePlaying;
+    public bool IsActionLocked => IsDeadState;
+    public bool IsKnockback => false; // 一撃死仕様でノックバックなし
+
     // Facade 向け最小 bridge: 下入力を保持しているか。
     internal bool DownInputHeldForFacade => IsDownInputHeld;
     // Facade 向け最小 bridge: 現在速度ベクトル。
@@ -204,21 +211,20 @@ public sealed partial class PlayerController : MonoBehaviour
         return RequestDeathStart(DeathCause.Damage);
     }
 
+    internal void RequestKill(Vector3 damageDirection)
+    {
+        RequestDeathStart(DeathCause.Damage);
+    }
+
     private bool RequestDeathStart(DeathCause cause)
     {
-        if (healthReactionSystem != null && healthReactionSystem.IsDeathSequencePlaying)
+        if (deathCoordinator != null && deathCoordinator.IsDeathSequencePlaying)
         {
-            LogHealth("Death request ignored: already processing");
+            Debug.Log("[PlayerDeath] Death request ignored: already processing");
             return false;
         }
 
-        healthReactionSystem?.BeginDeathSequence();
-        LogHealth($"Death requested: {cause}");
-
-        if (healthReactionSystem != null && healthReactionSystem.IsDeadState)
-        {
-            LogHealth("Death state entered");
-        }
+        Debug.Log($"[PlayerDeath] Death requested: {cause}");
 
         PlayDeathVibration(cause);
         PlayDeathSound(cause);
@@ -280,8 +286,6 @@ public sealed partial class PlayerController : MonoBehaviour
     // 外部制御の受け皿を担当する内部システム。
     private PlayerExternalControlSystem externalControlSystem;
 
-    // Health / Reaction を担当する内部システム。
-    private PlayerHealthReactionSystem healthReactionSystem;
     // 死亡進行と復帰シーケンスを担当する内部 coordinator。
     private PlayerDeathCoordinator deathCoordinator;
 
@@ -356,31 +360,9 @@ public sealed partial class PlayerController : MonoBehaviour
             () => IsActionLocked,
             () => IsKnockback);
 
-        // Health / Reaction システムを初期化する。
-        healthReactionSystem = new PlayerHealthReactionSystem(
-            runtimeState,
-            healthSettings,
-            rb,
-            transform,
-            RequestDeathStart,
-            LogHealth,
-            LogReaction,
-            () => knockbackResistance,
-            () => knockbackDuration,
-            () => decayKnockbackOverTime,
-            () => damagedStateDuration,
-            () => grabbedStateDuration,
-            () => smashedStateDuration,
-            () => killAfterGrabbedDuration,
-            () => smashIsInstantDeath);
-
-        // Health と Reaction システムを初期化する。
-        healthReactionSystem?.Initialize();
-
         // 振動関連の比較用状態を初期化する。
         InitializeVibrationState();
 
-        // ダッシュ残数管理の初期状態を設定する。
         // ダッシュ残数管理の初期状態を設定する。
         runtimeState.currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
         runtimeState.wasGroundedLastFrame = false;
@@ -388,7 +370,6 @@ public sealed partial class PlayerController : MonoBehaviour
 
         deathCoordinator = new PlayerDeathCoordinator(
             this,
-            healthReactionSystem,
             checkpointSystem,
             stageResetSystem,
             playerDeathView,
@@ -438,12 +419,7 @@ public sealed partial class PlayerController : MonoBehaviour
         // 横入力がしきい値を超えたときのみ向きを更新する。
         locomotionSystem?.UpdateFacingFromMoveInput();
 
-        // Health と Reaction システムを更新する。
-        float deltaTime = Time.deltaTime;
-        healthReactionSystem?.Tick(deltaTime);
-        healthReactionSystem?.ConsumeDebugDeathRequest();
-
-        // 掴まれ、叩きつけ、死亡などの行動不能状態では
+        // 死亡などの行動不能状態では
         // 入力を保持せず、その場で打ち切る。
         if (IsActionLocked)
         {
@@ -484,12 +460,6 @@ public sealed partial class PlayerController : MonoBehaviour
                     rb.linearVelocity = new Vector3(0.0f, rb.linearVelocity.y, 0.0f);
                 }
 
-                FinalizeVisualState(previousVelocityY);
-                return;
-
-            case PlayerAuthority.Knockback:
-                // ノックバック中は専用速度を適用し、通常の移動処理をスキップする。
-                ApplyKnockbackVelocity();
                 FinalizeVisualState(previousVelocityY);
                 return;
         }
