@@ -72,19 +72,19 @@ public class SpeedBreakableGimmick : MonoBehaviour, IRespawnResettable
         // Player タグが付いていないオブジェクトは無視する
         if (!other.CompareTag("Player")) return;
 
-        // プレイヤーかどうかを判定し、ダッシュ状態や現在の速度を直接取得する
-        PlayerController player = other.GetComponentInParent<PlayerController>();
-        if (player != null)
+        // プレイヤーかどうかを判定し、ダッシュ状態や現在の速度を取得する
+        PlayerFacade facade = other.GetComponentInParent<PlayerFacade>();
+        if (facade != null)
         {
-            // IsDashing（ダッシュ状態）が true なら速度に関わらず確実に破壊する
-            if (player.IsDashing || player.CurrentVelocity.magnitude >= breakSpeedThreshold)
+            // IsDashActive（ダッシュ状態）が true なら速度に関わらず確実に破壊する
+            if (facade.IsDashActive || facade.CurrentSpeed >= breakSpeedThreshold)
             {
                 BreakGimmick();
                 return;
             }
         }
 
-        // PlayerController が取得できなかった場合でも Rigidbody の速度で判定する
+        // PlayerFacade が取得できなかった場合でも Rigidbody の速度で判定する
         Rigidbody targetRb = other.attachedRigidbody;
         if (targetRb != null)
         {

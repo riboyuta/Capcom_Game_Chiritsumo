@@ -76,10 +76,10 @@ public sealed class SpringPad : MonoBehaviour
 
         // プレイヤーに外部打ち上げを通知する。
         // 可変ジャンプカットによる速度削減を防ぐ。
-        PlayerController player = targetRb.GetComponent<PlayerController>();
-        if (player != null)
+        PlayerFacade facade = targetRb.GetComponent<PlayerFacade>();
+        if (facade != null)
         {
-            //player.NotifyExternalLaunch();
+            facade.NotifyExternalLaunch();
         }
 
         ApplyBounce(targetRb);
