@@ -67,9 +67,99 @@ public sealed partial class PlayerController : MonoBehaviour
     internal PlayerRuntimeState RuntimeState => runtimeState;
     internal Rigidbody Rigidbody => rb;
     internal bool IsExternallyControlled => externalControlSystem != null && externalControlSystem.IsExternallyControlled;
+    internal ExternalControlMode CurrentExternalControlMode =>
+        externalControlSystem != null ? externalControlSystem.CurrentExternalControlMode : ExternalControlMode.None;
 
     // TODO: WallGrabTimeRemaining は壁掴まり時間制限の内部データ実装後に公開する。
 
+    // Facade 向け最小 bridge: 現在ダッシュ開始可能か。
+    internal bool CanUseDashNow()
+    {
+        return locomotionSystem != null && locomotionSystem.CanUseDashNowInternal();
+    }
+
+    // Facade 向け最小 bridge: ダッシュ補充要求。
+    internal bool TryRefillDash(DashRefillReason reason)
+    {
+        return locomotionSystem != null && locomotionSystem.TryRefillDash(reason);
+    }
+
+    // Facade 向け最小 bridge: 外部制御受理可否。
+    internal bool CanAcceptExternalControl(in PlayerExternalControlRequest request)
+    {
+        return externalControlSystem != null && externalControlSystem.CanAcceptExternalControl(request);
+    }
+
+    // Facade 向け最小 bridge: 外部制御開始。
+    internal bool TryBeginExternalControl(
+        in PlayerExternalControlRequest request,
+        out PlayerExternalControlSession session)
+    {
+        if (externalControlSystem == null)
+        {
+            session = PlayerExternalControlSession.Invalid;
+            return false;
+        }
+
+        return externalControlSystem.TryBeginExternalControl(request, out session);
+    }
+
+    // Facade 向け最小 bridge: 外部打ち上げ通知。
+    internal void NotifyExternalLaunch()
+    {
+        frameRequests.wasExternallyLaunchedThisFrame = true;
+    }
+
+    // Facade 向け最小 bridge: この tick の移動補正要求。
+    internal void RequestLocomotionModifierThisTick(PlayerLocomotionModifierRequest request)
+    {
+        frameRequests.requestedLocomotionModifierThisTick.moveSpeedMultiplier *= request.moveSpeedMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.groundAccelerationMultiplier *= request.groundAccelerationMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.airAccelerationMultiplier *= request.airAccelerationMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.gravityScaleMultiplier *= request.gravityScaleMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.dashSpeedMultiplier *= request.dashSpeedMultiplier;
+    }
+
+    // Facade 向け最小 bridge: 単発ワープ要求。
+    internal void RequestWarp(Vector3 targetPosition, WarpOptions options = default)
+    {
+        if (externalControlSystem != null)
+        {
+            externalControlSystem.RequestWarp(targetPosition, options);
+            externalControlSystem.ApplyResolvedControl();
+            return;
+        }
+
+        transform.position = targetPosition;
+
+        if (rb != null && options.ClearVelocity)
+        {
+            rb.linearVelocity = Vector3.zero;
+        }
+
+        if (options.UpdateFacing && options.Facing != 0)
+        {
+            runtimeState.facing = options.Facing > 0 ? 1 : -1;
+        }
+    }
+
+    // Facade 向け最小 bridge: 単発向き要求。
+    internal void RequestFacing(int facing)
+    {
+        if (externalControlSystem != null)
+        {
+            externalControlSystem.RequestFacingThisFrame(facing);
+            externalControlSystem.ApplyResolvedControl();
+            return;
+        }
+
+        if (facing == 0)
+        {
+            return;
+        }
+
+        runtimeState.facing = facing > 0 ? 1 : -1;
+    }
     // 見た目向け単発イベント(1物理フレームだけ true)。
     private bool justLandedThisFrame;
     private bool justCrossedApexThisFrame;

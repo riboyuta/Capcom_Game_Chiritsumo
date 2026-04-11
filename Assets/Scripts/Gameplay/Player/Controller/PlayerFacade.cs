@@ -273,7 +273,7 @@ public sealed class PlayerFacade : MonoBehaviour
     // 用途例:
     // - ダッシュ回復ギミックが「回復が必要か」を見る
     // - UI やチュートリアルで現在ダッシュ可能かを表示する
-    public bool CanUseDashNow => playerController.LocomotionSystem != null && playerController.LocomotionSystem.CanUseDashNowInternal();
+    public bool CanUseDashNow => playerController.CanUseDashNow();
     // 壁掴み中か。
     // 用途例:
     // - 壁掴み中だけ反応する壁ギミック
@@ -310,27 +310,19 @@ public sealed class PlayerFacade : MonoBehaviour
     // - 斜め入力時のみ反応するギミック
     public bool IsMoveInputDiagonal
     {
-        get
-        {
-            Vector2 move = MoveInputDirection;
-            const float diagonalInputThreshold = 0.5f;
-            return Mathf.Abs(move.x) >= diagonalInputThreshold && Mathf.Abs(move.y) >= diagonalInputThreshold;
-        }
+        get { return playerController.IsMoveInputDiagonal; }
     }
     // 現在、外部制御中か。
     // 用途例:
     // - すでに別ギミックに拘束されているかの確認
     // - 二重搭乗や二重拘束の防止
-    public bool IsExternallyControlled => playerController.ExternalControlSystem != null && playerController.ExternalControlSystem.IsExternallyControlled;
+    public bool IsExternallyControlled => playerController.IsExternallyControlled;
     // 現在の外部制御モード。
     // 用途例:
     // - いま固定中なのか、レール移動中なのか、射出中なのかの診断
     // 注意:
     // - これは「何を止めているか」ではなく、「どう移動を外部が支配しているか」を表す
-    public ExternalControlMode CurrentExternalControlMode =>
-        playerController.ExternalControlSystem != null
-            ? playerController.ExternalControlSystem.CurrentExternalControlMode
-            : ExternalControlMode.None;
+    public ExternalControlMode CurrentExternalControlMode => playerController.CurrentExternalControlMode;
     // ダッシュ回復を試みる。
     // 用途例:
     // - ダッシュ回復クリスタル
@@ -339,7 +331,7 @@ public sealed class PlayerFacade : MonoBehaviour
     // - 残数や内部 state を直接触らず、この窓口経由で回復させる
     public bool TryRefillDash(DashRefillReason reason)
     {
-        return playerController.LocomotionSystem != null && playerController.LocomotionSystem.TryRefillDash(reason);
+        return playerController.TryRefillDash(reason);
     }
 
     // このフレームだけ入力ブロックを要求する。
@@ -351,10 +343,7 @@ public sealed class PlayerFacade : MonoBehaviour
     // - 呼ばなくなれば自動解除される
     public void RequestInputBlockThisFrame(InputBlockFlags flags)
     {
-        if (playerController.FrameRequests != null)
-        {
-            playerController.FrameRequests.requestedInputBlockFlagsThisFrame |= flags;
-        }
+        playerController.RequestInputBlockThisFrame(flags);
     }
 
     // 死亡を要求する。
@@ -386,10 +375,7 @@ public sealed class PlayerFacade : MonoBehaviour
     // - 速度そのものを変える窓口ではなく、「外部 launch が起きた」という通知
     public void NotifyExternalLaunch()
     {
-        if (playerController.FrameRequests != null)
-        {
-            playerController.FrameRequests.wasExternallyLaunchedThisFrame = true;
-        }
+        playerController.NotifyExternalLaunch();
     }
 
     // この physics tick の移動補正を要求する。
@@ -402,16 +388,7 @@ public sealed class PlayerFacade : MonoBehaviour
     // - 複数ギミックが同時に存在しても、Player 側で最終値を解決する
     public void RequestLocomotionModifierThisTick(PlayerLocomotionModifierRequest request)
     {
-        if (playerController.FrameRequests == null)
-        {
-            return;
-        }
-
-        playerController.FrameRequests.requestedLocomotionModifierThisTick.moveSpeedMultiplier *= request.moveSpeedMultiplier;
-        playerController.FrameRequests.requestedLocomotionModifierThisTick.groundAccelerationMultiplier *= request.groundAccelerationMultiplier;
-        playerController.FrameRequests.requestedLocomotionModifierThisTick.airAccelerationMultiplier *= request.airAccelerationMultiplier;
-        playerController.FrameRequests.requestedLocomotionModifierThisTick.gravityScaleMultiplier *= request.gravityScaleMultiplier;
-        playerController.FrameRequests.requestedLocomotionModifierThisTick.dashSpeedMultiplier *= request.dashSpeedMultiplier;
+        playerController.RequestLocomotionModifierThisTick(request);
     }
 
     // 指定した外部制御要求を、今この瞬間に受け入れ可能かを判定する。
@@ -423,7 +400,7 @@ public sealed class PlayerFacade : MonoBehaviour
     // - ギミック側は「たぶんいける」と決め打ちしない
     public bool CanAcceptExternalControl(in PlayerExternalControlRequest request)
     {
-        return playerController.ExternalControlSystem != null && playerController.ExternalControlSystem.CanAcceptExternalControl(request);
+        return playerController.CanAcceptExternalControl(request);
     }
 
     // 外部制御を開始し、成功時は制御セッションを返す。
@@ -439,13 +416,7 @@ public sealed class PlayerFacade : MonoBehaviour
         in PlayerExternalControlRequest request,
         out PlayerExternalControlSession session)
     {
-        if (playerController.ExternalControlSystem == null)
-        {
-            session = PlayerExternalControlSession.Invalid;
-            return false;
-        }
-
-        return playerController.ExternalControlSystem.TryBeginExternalControl(request, out session);
+        return playerController.TryBeginExternalControl(request, out session);
     }
 
     // プレイヤーを指定位置へワープさせることを要求する。
@@ -457,25 +428,7 @@ public sealed class PlayerFacade : MonoBehaviour
     // - 壁埋まり対策や速度維持有無は WarpOptions 側で指定する
     public void RequestWarp(Vector3 targetPosition, WarpOptions options = default)
     {
-        if (playerController.ExternalControlSystem == null)
-        {
-            playerController.transform.position = targetPosition;
-
-            if (playerController.Rigidbody != null && options.ClearVelocity)
-            {
-                playerController.Rigidbody.linearVelocity = Vector3.zero;
-            }
-
-            if (options.UpdateFacing && options.Facing != 0)
-            {
-                playerController.RuntimeState.facing = options.Facing > 0 ? 1 : -1;
-            }
-
-            return;
-        }
-
-        playerController.ExternalControlSystem.RequestWarp(targetPosition, options);
-        playerController.ExternalControlSystem.ApplyResolvedControl();
+        playerController.RequestWarp(targetPosition, options);
     }
 
     // プレイヤーの向き変更を要求する。
@@ -488,19 +441,7 @@ public sealed class PlayerFacade : MonoBehaviour
     // - 制御中ずっと向きを固定したい場合は session 側の要求を使う
     public void RequestFacing(int facing)
     {
-        if (playerController.ExternalControlSystem == null)
-        {
-            if (facing == 0)
-            {
-                return;
-            }
-
-            playerController.RuntimeState.facing = facing > 0 ? 1 : -1;
-            return;
-        }
-
-        playerController.ExternalControlSystem.RequestFacingThisFrame(facing);
-        playerController.ExternalControlSystem.ApplyResolvedControl();
+        playerController.RequestFacing(facing);
     }
 
 }
