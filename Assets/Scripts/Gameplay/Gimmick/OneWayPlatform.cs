@@ -86,7 +86,7 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         float playerBottom = playerCollider.bounds.min.y;
         bool playerFallingOrStill = playerRb == null || playerRb.linearVelocity.y <= 0.01f;
 
-        // 【修正点】急降下など高速落下時のすっぽ抜け（トンネリング）対策
+        // 急降下など高速落下時のすっぽ抜け（トンネリング）対策
         // 落下速度が速い場合、1物理フレームで移動する距離が tolerance を超えてしまい
         // 「床の下にいる」と誤認されて衝突判定が外れるのを防ぎます。
         float currentTolerance = tolerance;
