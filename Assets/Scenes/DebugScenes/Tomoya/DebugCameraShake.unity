@@ -901,13 +901,12 @@ MonoBehaviour:
     extraFlipY: 0
     scaleMultiplier: 1
     localOffset: {x: 0, y: 0, z: 0}
-  stepClip:
+  dashClip:
     enabled: 1
-    sprites:
-    - {fileID: 1441946917, guid: ad1e1244b7d90d740a91f7892935a8bf, type: 3}
+    sprites: []
     startFrame: 0
-    endFrame: 4
-    fps: 12
+    endFrame: 0
+    fps: 0
     playbackMode: 2
     minimumDuration: 0
     extraFlipX: 0
@@ -1379,6 +1378,7 @@ MonoBehaviour:
   - {fileID: 5409637655077809295, guid: 42bf8138dc9c58a4cae9f73d44cb557a, type: 3}
   - {fileID: 3699133495810676906, guid: 00f69c8dc354a9044993c6947a803638, type: 3}
   stageNumber: 5
+  mapRoot: {fileID: 861842949}
 --- !u!4 &861842949
 Transform:
   m_ObjectHideFlags: 0
@@ -1770,8 +1770,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVibrationController
   playerController: {fileID: 1189614811}
-  enableGroundStep: 1
-  enableAirStep: 1
+  enableGroundDash: 1
+  enableAirDash: 1
   enableWallKick: 1
   enableWallSlide: 1
   enableNormalLanding: 1
@@ -1782,11 +1782,11 @@ MonoBehaviour:
   strongLandingMinAirTime: 0.2
   useStrongLandingMinFallHeight: 1
   strongLandingMinFallHeight: 6
-  groundStep:
+  groundDash:
     lowFrequency: 0.2
     highFrequency: 0.3
     duration: 0.06
-  airStep:
+  airDash:
     lowFrequency: 0.1
     highFrequency: 0.4
     duration: 0.05
@@ -1835,62 +1835,89 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   rawInputSource: {fileID: 1189614809}
   inputBindings:
-    _jump:
-      _primaryKeyboardKey: 1
-      _secondaryKeyboardKey: 40
+    jump:
+      _primaryKeyboardKey: 17
+      _secondaryKeyboardKey: 1
       _gamepadButton: 0
-    _step:
-      _primaryKeyboardKey: 51
-      _secondaryKeyboardKey: 0
+    dash:
+      _primaryKeyboardKey: 38
+      _secondaryKeyboardKey: 51
+      _gamepadButton: 2
+    grab:
+      _primaryKeyboardKey: 40
+      _secondaryKeyboardKey: 55
       _gamepadButton: 11
   movementSettings:
-    moveMaxSpeed: 8.2
-    groundAcceleration: 78
-    groundTurnAcceleration: 108
-    groundDeceleration: 92
-    airAcceleration: 28
-    airTurnAcceleration: 40
-    airDeceleration: 12
-    jumpVelocity: 14
-    gravityScale: 3
-    useVariableJump: 1
-    maxJumpHoldTime: 0.12
-    riseGravityMultiplier: 1
-    jumpCutMultiplier: 0.5
-    useCoyoteTime: 1
-    coyoteTime: 0.1
-    useJumpBuffer: 1
-    jumpBufferTime: 0.1
-    fallGravityMultiplier: 1.75
-    maxFallSpeed: 20
-    useFastFall: 1
-    fastFallGravityMultiplier: 2.6
-    fastFallMaxSpeed: 28
-    groundCheckDistance: 0.1
-    groundLayerMask:
-      serializedVersion: 2
-      m_Bits: 4294967295
-    useWallSlide: 1
-    wallCheckDistance: 0.15
-    wallCheckRadius: 0.2
-    wallSlideMaxSpeed: 3
-    useWallKick: 1
-    wallJumpHorizontalVelocity: 8
-    wallJumpVerticalVelocity: 10.5
-    wallJumpControlLockTime: 0.09
-    wallReattachLockTime: 0.12
-    wallInputThreshold: 0.12
-    useStep: 1
-    stepSpeed: 18
-    stepDuration: 0.13
-    stepGravityMultiplier: 0
-    restoreStepStartVerticalVelocity: 1
-    stepCooldown: 0.58
-    allowAirStep: 1
-    allowTurnDuringStep: 0
-    useStepBuffer: 1
-    stepBufferTime: 0.06
-    stepInvulnerable: 0
+    move:
+      maxSpeed: 8.2
+      groundAcceleration: 78
+      groundTurnAcceleration: 108
+      groundDeceleration: 92
+      airAcceleration: 28
+      airTurnAcceleration: 40
+      airDeceleration: 12
+    jump:
+      jumpVelocity: 14
+      gravityScale: 3
+      useVariableJump: 1
+      maxJumpHoldTime: 0.12
+      riseGravityMultiplier: 1
+      jumpCutMultiplier: 0.5
+      useCoyoteTime: 1
+      coyoteTime: 0.1
+      useJumpBuffer: 1
+      jumpBufferTime: 0.1
+    fall:
+      gravityMultiplier: 1.75
+      maxSpeed: 20
+      useFastFall: 1
+      fastFallGravityMultiplier: 2.6
+      fastFallMaxSpeed: 28
+    detection:
+      groundCheckDistance: 0.1
+      groundLayerMask:
+        serializedVersion: 2
+        m_Bits: 4294967295
+      wallCheckDistance: 0.15
+      wallCheckRadius: 0.2
+      wallInputThreshold: 0.12
+    wall:
+      useWallSlide: 1
+      wallSlideMaxSpeed: 3
+      useWallGrab: 1
+      wallGrabVerticalSpeed: 0
+      useWallKick: 1
+      wallJumpHorizontalVelocity: 8
+      wallJumpVerticalVelocity: 10.5
+      wallJumpControlLockTime: 0.09
+      wallReattachLockTime: 0.12
+    dash:
+      useDash: 1
+      speed: 18
+      duration: 0.13
+      gravityMultiplier: 0
+      restoreStartVerticalVelocity: 0
+      allowAirDash: 1
+      maxCharges: 1
+      useGroundRefill: 1
+      retryLockTime: 0.02
+      groundCooldownTime: 0.12
+      useGroundSnap: 1
+      groundSnapDistance: 0.2
+      allowTurnDuringDash: 1
+      useDashBuffer: 1
+      dashBufferTime: 0.06
+      invulnerable: 0
+      useEightWayInput: 1
+      directionDeadZone: 0.25
+      diagonalAssistAngle: 8
+    rail:
+      grindSpeed: 15
+      grindJumpVerticalVelocity: 12
+      reattachLockTime: 0.2
+      maxAttachSlopeAngle: 45
+    inputAssist:
+      moveInputGamepadDeadZone: 0.2
   healthSettings:
     maxHealth: 3
     invincibilityDuration: 1
@@ -1996,8 +2023,8 @@ MonoBehaviour:
   enableNormalLanding: 1
   enableStrongLanding: 1
   enableWallSlide: 1
-  enableGroundStep: 1
-  enableAirStep: 1
+  enableGroundDash: 1
+  enableAirDash: 1
   enableDamageDeath: 1
   enableHazardDeath: 1
   jumpAudioId: SFX_player_jump
@@ -2005,8 +2032,8 @@ MonoBehaviour:
   normalLandingAudioId: SFX_player_land
   strongLandingAudioId: SFX_player_land
   wallSlideAudioId: SFX_player_wallslide
-  groundStepAudioId: SFX_player_step
-  airStepAudioId: SFX_player_step
+  groundDashAudioId: 
+  airDashAudioId: 
   damageDeathAudioId: SFX_game_over
   hazardDeathAudioId: SFX_game_over
   useStrongLandingMinAirTime: 1

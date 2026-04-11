@@ -12,10 +12,11 @@ public class RailTriggerNode : MonoBehaviour
     {
         if (rail == null) return;
 
-        var player = other.GetComponent<PlayerController>();
-        if (player != null)
+        var playerFacade = other.GetComponentInParent<PlayerFacade>();
+        if (playerFacade != null)
         {
-            rail.OnPlayerEnterRail(player, segmentIndex);
+
+            rail.OnPlayerEnterRail(playerFacade, segmentIndex);
         }
     }
 }
@@ -30,7 +31,22 @@ public class RailGimmick : MonoBehaviour
     [Header("Spline Resolution")]
     [Tooltip("節点間の分割数。大きいほど滑らかな曲線になります。")]
     [Range(2, 20)] public int resolution = 10;
-    
+
+    [Header("レール挙動設定")]
+    [Tooltip("レール滑走とレールジャンプ関連の設定です。")]
+    [Min(0f)]
+    [SerializeField] private float grindSpeed = 15f;
+
+    [Tooltip("レールジャンプ時に与える上方向速度です。")]
+    [SerializeField] private float grindJumpVerticalVelocity = 12f;
+
+    [Tooltip("レール離脱後に再搭乗できるまでのロック時間です。")]
+    [Min(0f)]
+    [SerializeField] private float reattachLockTime = 0.2f;
+
+    [Tooltip("レール搭乗を許可する最大傾斜角度です。")]
+    [Range(0f, 90f)]
+    [SerializeField] private float maxAttachSlopeAngle = 45f;
 
 
     [Header("Visual")]
@@ -43,15 +59,65 @@ public class RailGimmick : MonoBehaviour
 
     // 生成されたスプライン上の全座標（ワールド座標）
     private List<Vector3> railPath = new List<Vector3>();
+    // 現在このレールで保持中の外部制御セッション。
+    private PlayerExternalControlSession activeSession = PlayerExternalControlSession.Invalid;
+
+    // 現在乗車中のプレイヤー窓口。
+    private PlayerFacade activePlayerFacade;
+
+    // 現在乗車中のプレイヤー Rigidbody。
+    private Rigidbody activePlayerRigidbody;
+
+    // 現在乗車中プレイヤーのカプセル。
+    private CapsuleCollider activePlayerCapsule;
+
+    // レール上の現在セグメント。
+    private int activeSegmentIndex;
+
+    // 現在セグメント上の進行距離。
+    private float distanceOnSegment;
+
+    // 進行方向 (+1 / -1)。
+    private int grindDirection = 1;
+
+    // レール離脱後の再搭乗クールダウンタイマー。
+    private float reattachCooldownTimer;
 
     // 外部から補間ポイント群を参照するためのプロパティ
     public IReadOnlyList<Vector3> RailPath => railPath;
 
     private void Awake()
     {
+
         GenerateSpline();
         GenerateVisual();
         GenerateColliders();
+    }
+
+    private void FixedUpdate()
+    {
+        if (reattachCooldownTimer > 0f)
+        {
+            reattachCooldownTimer = Mathf.Max(0f, reattachCooldownTimer - Time.fixedDeltaTime);
+        }
+
+        if (!activeSession.IsValid)
+        {
+            ClearRideState();
+            return;
+        }
+
+        UpdateActiveRide(Time.fixedDeltaTime);
+    }
+
+    private void OnDisable()
+    {
+        if (activeSession.IsValid)
+        {
+            activeSession.EndControl();
+        }
+
+        ClearRideState();
     }
 
     public List<Vector3> GetWorldSplinePath()
@@ -151,34 +217,249 @@ public class RailGimmick : MonoBehaviour
         return 0.5f * (a + (b * t) + (c * t * t) + (d * t * t * t));
     }
 
-    public void OnPlayerEnterRail(PlayerController player, int segmentIndex)
+    public void OnPlayerEnterRail(PlayerFacade facade, int segmentIndex)
     {
+
+        if (facade == null || railPath.Count < 2)
+        {
+            return;
+        }
+
+        if (activeSession.IsValid)
+        {
+            return;
+        }
+
+        if (segmentIndex < 0 || segmentIndex >= railPath.Count - 1)
+        {
+            return;
+        }
+
+        if (IsReattachCooldownActive())
+        {
+            return;
+        }
+
+        Transform playerTransform = facade.transform;
+
         Vector3 startP = railPath[segmentIndex];
         Vector3 endP = railPath[segmentIndex + 1];
         Vector3 segDir = (endP - startP).normalized;
 
-        // 【新機能】レール乗車に対する傾き制限
-        // PlayerMovementSettingsの乗車可能最大角度 (例: 45度) をチェックする。
-        // 空中から直接垂直の壁に乗れないようにするための制御。
-        float slopeDot = Mathf.Abs(Vector3.Dot(segDir, Vector3.up)); // Sin(傾斜角)
-        float limitDot = Mathf.Sin(player.MovementSettings.maxAttachSlopeAngle * Mathf.Deg2Rad);
-        
+        // レール乗車に対する傾き制限。
+        float slopeDot = Mathf.Abs(Vector3.Dot(segDir, Vector3.up));
+        float limitDot = Mathf.Sin(maxAttachSlopeAngle * Mathf.Deg2Rad);
+
         if (slopeDot > limitDot)
         {
             // 垂直よりすぎるので弾く
             return;
         }
 
-        Vector3 toPlayer = player.transform.position - startP;
-        float distanceOnSegment = Vector3.Dot(toPlayer, segDir);
-        distanceOnSegment = Mathf.Clamp(distanceOnSegment, 0f, Vector3.Distance(startP, endP));
+        Vector3 toPlayer = playerTransform.position - startP;
+        float initialDistance = Mathf.Clamp(Vector3.Dot(toPlayer, segDir), 0f, Vector3.Distance(startP, endP));
 
-        float dotVelocity = Vector3.Dot(player.GetComponent<Rigidbody>().linearVelocity.normalized, segDir);
-        int direction = dotVelocity >= 0 ? 1 : -1;
+        Rigidbody rb = facade.GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            return;
+        }
 
-        player.StartGrind(this, segmentIndex, distanceOnSegment, direction);
+        float dotVelocity = Vector3.Dot(rb.linearVelocity.normalized, segDir);
+        int initialDirection = dotVelocity >= 0 ? 1 : -1;
+
+        PlayerExternalControlRequest request = new PlayerExternalControlRequest
+        {
+            Owner = this,
+            Mode = ExternalControlMode.PathDriven,
+            InputBlockFlags = PlayerController.InputBlockFlags.Move | PlayerController.InputBlockFlags.Dash | PlayerController.InputBlockFlags.Grab,
+            PhysicsPolicy = ExternalPhysicsPolicy.ExternalDriven,
+            GravityPolicy = ExternalGravityPolicy.ForceOff,
+            VisualPolicy = ExternalVisualPolicy.Keep
+        };
+
+        if (!facade.CanAcceptExternalControl(request))
+        {
+            return;
+        }
+
+        if (!facade.TryBeginExternalControl(request, out PlayerExternalControlSession session) || !session.IsValid)
+        {
+            return;
+        }
+
+        activeSession = session;
+        activePlayerFacade = facade;
+        activePlayerRigidbody = rb;
+        activePlayerCapsule = facade.GetComponent<CapsuleCollider>();
+        activeSegmentIndex = segmentIndex;
+        distanceOnSegment = initialDistance;
+        grindDirection = initialDirection;
+
+        // レール搭乗開始時は余分な慣性を切る。
+        activePlayerRigidbody.linearVelocity = Vector3.zero;
     }
-    
+
+    private void UpdateActiveRide(float deltaTime)
+    {
+        if (!activeSession.IsValid || activePlayerFacade == null)
+        {
+            ClearRideState();
+            return;
+        }
+
+        if (activePlayerRigidbody == null || railPath.Count < 2)
+        {
+            ExitRideWithoutLaunch();
+            return;
+        }
+
+        if (activeSession.ConsumeJumpRequestThisFrame())
+        {
+            Vector3 tangent = GetCurrentSegmentDirection();
+            Vector3 jumpVelocity = tangent * grindSpeed
+                + Vector3.up * grindJumpVerticalVelocity;
+            ExitRideWithLaunch(jumpVelocity);
+            return;
+        }
+
+        float moveDelta = grindSpeed * deltaTime;
+        while (moveDelta > 0f)
+        {
+            Vector3 startP = railPath[activeSegmentIndex];
+            Vector3 endP = railPath[activeSegmentIndex + 1];
+            float segmentLength = Vector3.Distance(startP, endP);
+
+            if (grindDirection > 0)
+            {
+                float remaining = segmentLength - distanceOnSegment;
+                if (moveDelta <= remaining)
+                {
+                    distanceOnSegment += moveDelta;
+                    moveDelta = 0f;
+                }
+                else
+                {
+                    moveDelta -= remaining;
+                    activeSegmentIndex++;
+                    distanceOnSegment = 0f;
+
+                    if (activeSegmentIndex >= railPath.Count - 1)
+                    {
+                        Vector3 releaseVelocity = (endP - startP).normalized * grindSpeed;
+                        ExitRideWithLaunch(releaseVelocity);
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                float remaining = distanceOnSegment;
+                if (moveDelta <= remaining)
+                {
+                    distanceOnSegment -= moveDelta;
+                    moveDelta = 0f;
+                }
+                else
+                {
+                    moveDelta -= remaining;
+                    activeSegmentIndex--;
+
+                    if (activeSegmentIndex < 0)
+                    {
+                        Vector3 releaseVelocity = (startP - endP).normalized * grindSpeed;
+                        ExitRideWithLaunch(releaseVelocity);
+                        return;
+                    }
+
+                    Vector3 nextStart = railPath[activeSegmentIndex];
+                    Vector3 nextEnd = railPath[activeSegmentIndex + 1];
+                    distanceOnSegment = Vector3.Distance(nextStart, nextEnd);
+                }
+            }
+        }
+
+        Vector3 finalStart = railPath[activeSegmentIndex];
+        Vector3 finalEnd = railPath[activeSegmentIndex + 1];
+        Vector3 segDir = (finalEnd - finalStart).normalized;
+        Vector3 targetPos = finalStart + segDir * distanceOnSegment;
+        targetPos += Vector3.up * GetFeetOffset();
+
+        Quaternion rotation = Quaternion.LookRotation(Vector3.forward, Vector3.up);
+        activeSession.RequestPathPoseThisFrame(targetPos, rotation);
+        activeSession.RequestFacingThisFrame(segDir.x >= 0f ? 1 : -1);
+    }
+
+    private Vector3 GetCurrentSegmentDirection()
+    {
+        int segment = Mathf.Clamp(activeSegmentIndex, 0, railPath.Count - 2);
+        Vector3 start = railPath[segment];
+        Vector3 end = railPath[segment + 1];
+        return (end - start).normalized * grindDirection;
+    }
+
+    private float GetFeetOffset()
+    {
+        if (activePlayerCapsule == null || activePlayerFacade == null)
+        {
+            return 0f;
+        }
+        float worldHalfHeight = (activePlayerCapsule.height * 0.5f) * Mathf.Abs(activePlayerFacade.transform.lossyScale.y);
+        Vector3 centerOffset = activePlayerFacade.transform.TransformVector(activePlayerCapsule.center);
+        return worldHalfHeight - centerOffset.y;
+    }
+
+    private void ExitRideWithLaunch(Vector3 releaseVelocity)
+    {
+
+        StartReattachCooldown(activePlayerFacade);
+
+        if (activeSession.IsValid)
+        {
+            float speed = releaseVelocity.magnitude;
+            Vector3 direction = speed > 0.0001f ? releaseVelocity / speed : Vector3.zero;
+            activeSession.RequestLaunch(direction, speed, 0f, default);
+        }
+
+        ClearRideState();
+    }
+
+    private void ExitRideWithoutLaunch()
+    {
+        if (activeSession.IsValid)
+        {
+            activeSession.EndControl();
+        }
+
+        ClearRideState();
+    }
+
+    private void ClearRideState()
+    {
+        activeSession = PlayerExternalControlSession.Invalid;
+        activePlayerFacade = null;
+        activePlayerRigidbody = null;
+        activePlayerCapsule = null;
+        activeSegmentIndex = 0;
+        distanceOnSegment = 0f;
+        grindDirection = 1;
+    }
+    private bool IsReattachCooldownActive()
+    {
+        return reattachCooldownTimer > 0f;
+    }
+
+    private void StartReattachCooldown(PlayerFacade playerFacade)
+    {
+        if (playerFacade == null)
+        {
+            return;
+        }
+
+        float cooldown = reattachLockTime;
+        reattachCooldownTimer = Mathf.Max(reattachCooldownTimer, cooldown);
+    }
+
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {

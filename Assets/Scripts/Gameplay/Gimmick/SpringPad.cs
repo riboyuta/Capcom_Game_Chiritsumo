@@ -79,7 +79,7 @@ public sealed class SpringPad : MonoBehaviour
         PlayerController player = targetRb.GetComponent<PlayerController>();
         if (player != null)
         {
-            player.NotifyExternalLaunch();
+            //player.NotifyExternalLaunch();
         }
 
         ApplyBounce(targetRb);

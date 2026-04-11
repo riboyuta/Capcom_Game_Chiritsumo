@@ -12,7 +12,16 @@ using UnityEngine;
 [RequireComponent(typeof(CapsuleCollider))]
 public sealed partial class PlayerController : MonoBehaviour
 {
-    [Header("入力: 生入力ソース")]
+
+        public enum DeathCause
+        {
+            Damage,
+            Hazard
+        }
+
+        private const float DiagonalInputThreshold = 0.5f;
+
+        [Header("入力: 生入力ソース")]
     [Tooltip("キーボードやゲームパッドなどの生入力を供給するコンポーネントです。未設定時は Awake で同一 GameObject から取得を試みます。")]
     // 生入力の供給元。
     // 未設定なら Awake で同一 GameObject から取得を試みる。
@@ -34,10 +43,22 @@ public sealed partial class PlayerController : MonoBehaviour
     [Header("体力: パラメータ設定")]
     [Tooltip("体力、無敵時間、死亡後復帰待機、デバッグ死亡トリガーをまとめた設定です。")]
     [SerializeField] private PlayerHealthSettings healthSettings = new PlayerHealthSettings();
+    
+    [Header("参照: CheckpointSystem")]
+    [Tooltip("同一シーン内の復帰地点を解決するシステムです。未設定時は実行時に探索を試みます。")]
+    [SerializeField] private CheckpointSystem checkpointSystem;
 
-    // 外部（ギミック等）からの参照用プロパティ
-    public PlayerMovementSettings MovementSettings => movementSettings;
+    [Header("参照: StageResetSystem")]
+    [Tooltip("死亡復帰時にステージ上の敵やギミックを初期状態へ戻すシステムです。未設定時は実行時に探索を試みます。")]
+    [SerializeField] private StageResetSystem stageResetSystem;
 
+    [Header("参照: PlayerCameraController")]
+    [Tooltip("復帰時に標準カメラ状態へ戻すためのカメラ制御コンポーネントです。未設定時は実行時に探索を試みます。")]
+    [SerializeField] private PlayerCameraController playerCameraController;
+
+    [Header("参照: PlayerDeathView")]
+    [Tooltip("死亡時の倒れ演出と黒フェード制御を行う見た目コンポーネントです。未設定時は実行時に探索を試みます。")]
+    [SerializeField] private PlayerDeathView playerDeathView;
     // 物理移動本体。
     // 速度変更、物理拘束、重力挙動などに使う。
     private Rigidbody rb;
@@ -49,6 +70,220 @@ public sealed partial class PlayerController : MonoBehaviour
     // 生入力をゲーム用の状態へ変換する入力リーダー。
     // 「押された瞬間」「押し続け」「離された」などの判定をここで扱う。
     private PlayerInputReader playerInputReader;
+
+    // 通常移動を担当する内部システム。
+    private PlayerLocomotionSystem locomotionSystem;
+
+    private readonly PlayerRuntimeState runtimeState = new PlayerRuntimeState();
+    private readonly PlayerFrameRequests frameRequests = new PlayerFrameRequests();
+    internal bool IsDashActive => runtimeState.isDashing;
+    internal bool IsGrounded => runtimeState.isGrounded;
+    internal bool IsAirborne => !runtimeState.isGrounded;
+    internal bool IsWallGrabbing => runtimeState.isWallGrabbing;
+    internal int Facing => runtimeState.facing;
+    internal PlayerInputReader InputReader => playerInputReader;
+    internal PlayerLocomotionSystem LocomotionSystem => locomotionSystem;
+    internal PlayerExternalControlSystem ExternalControlSystem => externalControlSystem;
+    internal PlayerFrameRequests FrameRequests => frameRequests;
+    internal PlayerRuntimeState RuntimeState => runtimeState;
+    internal Rigidbody Rigidbody => rb;
+    internal bool IsExternallyControlled => externalControlSystem != null && externalControlSystem.IsExternallyControlled;
+    internal ExternalControlMode CurrentExternalControlMode =>
+        externalControlSystem != null ? externalControlSystem.CurrentExternalControlMode : ExternalControlMode.None;
+    internal Vector2 MoveInputDirection => playerInputReader != null ? playerInputReader.Move : Vector2.zero;
+    internal bool IsMoveInputDiagonal => ComputeIsMoveInputDiagonal();
+    // Facade 向け最小 bridge: 下入力を保持しているか。
+    internal bool DownInputHeldForFacade => IsDownInputHeld;
+    // Facade 向け最小 bridge: 現在速度ベクトル。
+    internal Vector3 CurrentVelocityForFacade => CurrentVelocity;
+    // Facade 向け最小 bridge: 現在速度スカラー。
+    internal float CurrentSpeedForFacade => CurrentVelocityForFacade.magnitude;
+    // TODO: WallGrabTimeRemaining は壁掴まり時間制限の内部データ実装後に公開する。
+
+    // Facade 向け最小 bridge: 現在ダッシュ開始可能か。
+    internal bool CanUseDashNow()
+    {
+        return locomotionSystem != null && locomotionSystem.CanUseDashNowInternal();
+    }
+
+    // Facade 向け最小 bridge: ダッシュ補充要求。
+    internal bool TryRefillDash(DashRefillReason reason)
+    {
+        return locomotionSystem != null && locomotionSystem.TryRefillDash(reason);
+    }
+
+    // Facade 向け最小 bridge: 外部制御受理可否。
+    internal bool CanAcceptExternalControl(in PlayerExternalControlRequest request)
+    {
+        return externalControlSystem != null && externalControlSystem.CanAcceptExternalControl(request);
+    }
+
+    // Facade 向け最小 bridge: 外部制御開始。
+    internal bool TryBeginExternalControl(
+        in PlayerExternalControlRequest request,
+        out PlayerExternalControlSession session)
+    {
+        if (externalControlSystem == null)
+        {
+            session = PlayerExternalControlSession.Invalid;
+            return false;
+        }
+
+        return externalControlSystem.TryBeginExternalControl(request, out session);
+    }
+
+    // Facade 向け最小 bridge: 外部打ち上げ通知。
+    internal void NotifyExternalLaunch()
+    {
+        frameRequests.wasExternallyLaunchedThisFrame = true;
+    }
+
+    // Facade 向け最小 bridge: この tick の移動補正要求。
+    internal void RequestLocomotionModifierThisTick(PlayerLocomotionModifierRequest request)
+    {
+        frameRequests.requestedLocomotionModifierThisTick.moveSpeedMultiplier *= request.moveSpeedMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.groundAccelerationMultiplier *= request.groundAccelerationMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.airAccelerationMultiplier *= request.airAccelerationMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.gravityScaleMultiplier *= request.gravityScaleMultiplier;
+        frameRequests.requestedLocomotionModifierThisTick.dashSpeedMultiplier *= request.dashSpeedMultiplier;
+    }
+
+    // Facade 向け最小 bridge: 単発ワープ要求。
+    internal void RequestWarp(Vector3 targetPosition, WarpOptions options = default)
+    {
+        if (externalControlSystem != null)
+        {
+            externalControlSystem.RequestWarp(targetPosition, options);
+            externalControlSystem.ApplyResolvedControl();
+            return;
+        }
+
+        transform.position = targetPosition;
+
+        if (rb != null && options.ClearVelocity)
+        {
+            rb.linearVelocity = Vector3.zero;
+        }
+
+        if (options.UpdateFacing && options.Facing != 0)
+        {
+            runtimeState.facing = options.Facing > 0 ? 1 : -1;
+        }
+    }
+
+    // Facade 向け最小 bridge: 単発向き要求。
+    internal void RequestFacing(int facing)
+    {
+        if (externalControlSystem != null)
+        {
+            externalControlSystem.RequestFacingThisFrame(facing);
+            externalControlSystem.ApplyResolvedControl();
+            return;
+        }
+
+        if (facing == 0)
+        {
+            return;
+        }
+
+        runtimeState.facing = facing > 0 ? 1 : -1;
+    }
+
+    internal void RequestInputBlockThisFrame(InputBlockFlags flags)
+    {
+        frameRequests.requestedInputBlockFlagsThisFrame |= flags;
+    }
+
+    internal bool RequestHazardDeath()
+    {
+        return RequestDeathStart(DeathCause.Hazard);
+    }
+
+    internal bool RequestDamageDeath()
+    {
+        return RequestDeathStart(DeathCause.Damage);
+    }
+
+    private bool RequestDeathStart(DeathCause cause)
+    {
+        if (healthReactionSystem != null && healthReactionSystem.IsDeathSequencePlaying)
+        {
+            LogHealth("Death request ignored: already processing");
+            return false;
+        }
+
+        healthReactionSystem?.BeginDeathSequence();
+        LogHealth($"Death requested: {cause}");
+
+        if (healthReactionSystem != null && healthReactionSystem.IsDeadState)
+        {
+            LogHealth("Death state entered");
+        }
+
+        PlayDeathVibration(cause);
+        PlayDeathSound(cause);
+        deathCoordinator?.StartRespawnSequence(cause);
+        return true;
+    }
+
+    private void ResetInputBlockRequestsThisFrame()
+    {
+        frameRequests.ResetPerFrameRequests();
+    }
+
+    private bool CanAcceptMoveInput()
+    {
+        return !IsInputBlocked(InputBlockFlags.Move);
+    }
+
+    private bool CanAcceptJumpInput()
+    {
+        return !IsInputBlocked(InputBlockFlags.Jump);
+    }
+
+    private bool CanAcceptDashInput()
+    {
+        return !IsInputBlocked(InputBlockFlags.Dash);
+    }
+
+    private bool CanAcceptGrabInput()
+    {
+        return !IsInputBlocked(InputBlockFlags.Grab);
+    }
+
+    private bool IsInputBlocked(InputBlockFlags flags)
+    {
+        InputBlockFlags blockedFlags = frameRequests.requestedInputBlockFlagsThisFrame;
+
+        if (externalControlSystem != null)
+        {
+            blockedFlags |= externalControlSystem.PersistentInputBlockFlags;
+        }
+
+        return (blockedFlags & flags) != 0;
+    }
+
+    private bool ComputeIsMoveInputDiagonal()
+    {
+        Vector2 move = MoveInputDirection;
+        return Mathf.Abs(move.x) >= DiagonalInputThreshold
+            && Mathf.Abs(move.y) >= DiagonalInputThreshold;
+    }
+
+    // 見た目向け単発イベント(1物理フレームだけ true)。
+    private bool justLandedThisFrame;
+    private bool justCrossedApexThisFrame;
+
+    // 接地/壁判定を担当する専用センサー。
+    private PlayerProbeSensor probeSensor;
+
+    // 外部制御の受け皿を担当する内部システム。
+    private PlayerExternalControlSystem externalControlSystem;
+
+    // Health / Reaction を担当する内部システム。
+    private PlayerHealthReactionSystem healthReactionSystem;
+    // 死亡進行と復帰シーケンスを担当する内部 coordinator。
+    private PlayerDeathCoordinator deathCoordinator;
 
     private void Awake()
     {
@@ -88,16 +323,92 @@ public sealed partial class PlayerController : MonoBehaviour
         }
         // 入力リーダーを生成する。
         // ここで「生入力」と「入力割り当て設定」を結び付ける。
-        playerInputReader = new PlayerInputReader(rawInputSource, inputBindings);
+        playerInputReader = new PlayerInputReader(rawInputSource, inputBindings, movementSettings);
 
-        // Health と Grab システムを初期化する。
-        // Health 側で ReactionState 初期化も行う想定。
-        InitializeHealth();
+        // 接地/壁判定専用センサーを初期化する。
+        probeSensor = new PlayerProbeSensor(capsuleCollider, transform, movementSettings);
+
+        // 通常移動システムを初期化する。
+        locomotionSystem = new PlayerLocomotionSystem(
+            runtimeState,
+            frameRequests,
+            movementSettings, rb,
+            capsuleCollider,
+            transform,
+            playerInputReader,
+            CanAcceptMoveInput,
+            CanAcceptJumpInput,
+            CanAcceptDashInput,
+            CanAcceptGrabInput,
+            () => IsActionLocked,
+            () => IsExternallyControlled,
+            probeSensor.GetWorldCapsuleRadius,
+            PlayJumpSound,
+            PlayWallKickSound,
+            PlayWallKickVibration);
+
+        // 外部制御システムを初期化する。
+        externalControlSystem = new PlayerExternalControlSystem(
+            transform,
+            rb,
+            runtimeState,
+            frameRequests,
+            () => IsActionLocked,
+            () => IsKnockback);
+
+        // Health / Reaction システムを初期化する。
+        healthReactionSystem = new PlayerHealthReactionSystem(
+            runtimeState,
+            healthSettings,
+            rb,
+            transform,
+            RequestDeathStart,
+            LogHealth,
+            LogReaction,
+            () => knockbackResistance,
+            () => knockbackDuration,
+            () => decayKnockbackOverTime,
+            () => damagedStateDuration,
+            () => grabbedStateDuration,
+            () => smashedStateDuration,
+            () => killAfterGrabbedDuration,
+            () => smashIsInstantDeath);
+
+        // Health と Reaction システムを初期化する。
+        healthReactionSystem?.Initialize();
 
         // 振動関連の比較用状態を初期化する。
         InitializeVibrationState();
-    }
 
+        // ダッシュ残数管理の初期状態を設定する。
+        // ダッシュ残数管理の初期状態を設定する。
+        runtimeState.currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
+        runtimeState.wasGroundedLastFrame = false;
+        frameRequests.requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
+
+        deathCoordinator = new PlayerDeathCoordinator(
+            this,
+            healthReactionSystem,
+            checkpointSystem,
+            stageResetSystem,
+            playerDeathView,
+            playerCameraController,
+            rb,
+            transform,
+            runtimeState,
+            frameRequests,
+            locomotionSystem,
+            movementSettings,
+            () => vibrationController?.StopAllRumble(),
+            () => audioController?.StopAllSounds(),
+            () =>
+            {
+                justLandedThisFrame = false;
+                justCrossedApexThisFrame = false;
+            },
+            LogRespawn,
+            LogRespawnWarning);
+    }
     private void Update()
     {
         // 初期化失敗時の防御。
@@ -106,36 +417,38 @@ public sealed partial class PlayerController : MonoBehaviour
             return;
         }
 
+        // 入力禁止要求は毎フレーム初期化し、このフレームに届いた要求だけを有効にする。
+        ResetInputBlockRequestsThisFrame();
         // 入力取得は Update で行う。
         // 物理フレームより高頻度で入力を取りこぼしにくくするため。
         playerInputReader.Update();
 
         // 押下エッジを物理フレームまで保持する。
         // FixedUpdate 側で安全に消費できるよう、一旦フラグへ積む。
-        if (playerInputReader.JumpPressed)
+        if (playerInputReader.JumpPressed && CanAcceptJumpInput())
         {
-            jumpRequested = true;
+            frameRequests.jumpRequested = true;
         }
 
-        if (playerInputReader.DashPressed)
+        if (playerInputReader.DashPressed && CanAcceptDashInput())
         {
-            dashRequested = true;
+            frameRequests.dashRequested = true;
         }
 
         // 横入力がしきい値を超えたときのみ向きを更新する。
-        UpdateFacingFromMoveInput();
+        locomotionSystem?.UpdateFacingFromMoveInput();
 
-        // Health と Grab システムを更新する。
-        // Health 側で ReactionState 更新も行う想定。
+        // Health と Reaction システムを更新する。
         float deltaTime = Time.deltaTime;
-        UpdateHealth(deltaTime);
+        healthReactionSystem?.Tick(deltaTime);
+        healthReactionSystem?.ConsumeDebugDeathRequest();
 
         // 掴まれ、叩きつけ、死亡などの行動不能状態では
         // 入力を保持せず、その場で打ち切る。
         if (IsActionLocked)
         {
-            jumpRequested = false;
-            dashRequested = false;
+            frameRequests.jumpRequested = false;
+            frameRequests.dashRequested = false;
             return;
         }
     }
@@ -152,94 +465,130 @@ public sealed partial class PlayerController : MonoBehaviour
 
         float deltaTime = Time.fixedDeltaTime;
         float previousVelocityY = rb != null ? rb.linearVelocity.y : 0f;
+        locomotionSystem.SetSuppressVariableJumpCutThisTick(frameRequests.wasExternallyLaunchedThisFrame);
+        frameRequests.wasExternallyLaunchedThisFrame = false;
+        locomotionSystem.ResolveLocomotionModifiersThisTick();
 
-        // 掴まれ、叩きつけ、死亡などの行動不能状態では通常移動を止める。
-        // 横移動を止め、縦速度だけは物理結果を維持する。
-        if (IsActionLocked)
+        PlayerAuthority authority = PlayerAuthorityResolver.Resolve(
+            isActionLocked: IsActionLocked,
+            isKnockback: IsKnockback,
+            isExternallyControlled: IsExternallyControlled);
+
+        switch (authority)
         {
-            if (rb != null)
-            {
-                rb.linearVelocity = new Vector3(0.0f, rb.linearVelocity.y, 0.0f);
-            }
+            case PlayerAuthority.ActionLocked:
+                // 掴まれ、叩きつけ、死亡などの行動不能状態では通常移動を止める。
+                // 横移動を止め、縦速度だけは物理結果を維持する。
+                if (rb != null)
+                {
+                    rb.linearVelocity = new Vector3(0.0f, rb.linearVelocity.y, 0.0f);
+                }
 
-            FinalizeVisualState(previousVelocityY);
-            return;
-        }
+                FinalizeVisualState(previousVelocityY);
+                return;
 
-        // ノックバック中は専用速度を適用し、通常の移動処理をスキップする。
-        if (isKnockback)
-        {
-            ApplyKnockbackVelocity();
-            FinalizeVisualState(previousVelocityY);
-            return;
+            case PlayerAuthority.Knockback:
+                // ノックバック中は専用速度を適用し、通常の移動処理をスキップする。
+                ApplyKnockbackVelocity();
+                FinalizeVisualState(previousVelocityY);
+                return;
         }
 
         // 物理フレームで接地状態を更新する。
-        isGrounded = CheckGrounded();
+        runtimeState.isGrounded = probeSensor.CheckGrounded();
 
         // ApplyJump による isGrounded 上書き前に、着地イベント用の情報を保存する。
         CaptureLandingSnapshot();
 
         // 接地しているなら急降下状態を解除する。
-        // 外部打ち上げ状態は、上昇中でなければ解除する。
-        // バネ床で打ち上げ直後はまだ接地判定が残ることがあるため、
-        // 上昇中（velocity.y > 0）の場合はフラグを維持する。
-        if (isGrounded)
+        if (runtimeState.isGrounded)
         {
-            isFastFalling = false;
-            if (rb == null || rb.linearVelocity.y <= 0f)
-            {
-                isExternalLaunched = false;
-            }
+            runtimeState.isFastFalling = false;
         }
 
         // 物理フレームで壁接触状態を更新する。
-        CheckWallContact();
+        probeSensor.CheckWallContact(
+            runtimeState.wallReattachLockTimer,
+            out runtimeState.isTouchingWall,
+            out runtimeState.wallSide);
+
+        // 壁捕まり状態の進入・離脱を更新する。
+        locomotionSystem.UpdateWallGrabState();
 
         // ジャンプ補助タイマーを更新する。
         // 例: コヨーテタイム、ジャンプバッファなど。
-        UpdateJumpAssistTimers(deltaTime);
+        locomotionSystem.UpdateJumpAssistTimers(deltaTime);
+
 
         // 壁キック入力ロックタイマーを減算する。
-        UpdateWallJumpLockTimer(deltaTime);
+        locomotionSystem.UpdateWallJumpLockTimer(deltaTime);
 
-        // ダッシュの継続時間とクールダウンを更新する。
-        UpdateDashTimers(deltaTime);
+        // ダッシュ残数の回復/接地遷移状態を更新する。
+        locomotionSystem.UpdateDashResourceState();
+
+        // 地上ダッシュ連続制限タイマーを更新する。
+        locomotionSystem.UpdateGroundDashCooldownTimer(deltaTime);
+
+        // 空中から接地へ戻った瞬間に地上ダッシュ連続制限を解除する。
+        locomotionSystem.HandleGroundDashCooldownOnLanding();
+
+        // 次フレームの接地遷移検出用に状態を保存する。
+        runtimeState.wasGroundedLastFrame = runtimeState.isGrounded;
+
+        // ダッシュの継続時間と再入力ロックを更新する。
+        locomotionSystem.UpdateDashTimers(deltaTime);
 
         // ダッシュ入力バッファタイマーを更新する。
-        UpdateDashBufferTimer(deltaTime);
-
-        // ダッシュ開始条件を満たす場合は開始する。
-        TryStartDash();
-
-        // ダッシュ中は専用速度を最優先し、通常の縦処理を通さない。
-        if (isDashing)
+        locomotionSystem.UpdateDashBufferTimer(deltaTime);
+        if (authority == PlayerAuthority.ExternalControl)
         {
-            ApplyDashVelocity();
+            if (externalControlSystem != null && externalControlSystem.IsExternallyControlled)
+            {
+                externalControlSystem.ApplyResolvedControl();
+            }
+
             UpdateAudioEvents();
             UpdateVibrationEvents();
             FinalizeVisualState(previousVelocityY);
             return;
         }
 
-        // 追加アクションとしてレール滑走中なら専用フローを優先する
-        if (isGrinding)
+        // ダッシュ開始条件を満たす場合は開始する。
+        locomotionSystem.TryStartDash();
+
+        // ダッシュ中は専用速度を最優先し、通常の縦処理を通さない。
+        if (runtimeState.isDashing)
         {
-            ApplyGrindMovement(deltaTime);
+            locomotionSystem.ApplyDashVelocity();
             UpdateAudioEvents();
             UpdateVibrationEvents();
             FinalizeVisualState(previousVelocityY);
             return;
+        }
+
+        // 壁捕まり中は先にジャンプだけ試し、
+        // まだ捕まり中なら専用移動を適用して通常移動へ入らない。
+        if (runtimeState.isWallGrabbing)
+        {
+            locomotionSystem.ApplyJump();
+            if (runtimeState.isWallGrabbing)
+            {
+                locomotionSystem.ApplyWallGrabMovement();
+                UpdateAudioEvents();
+                UpdateVibrationEvents();
+                FinalizeVisualState(previousVelocityY);
+                return;
+            }
         }
 
         // 通常移動フロー。
         // 横移動、ジャンプ、可変ジャンプ、急降下、壁滑り、追加重力を順に適用する。
-        ApplyHorizontalMovement(deltaTime);
-        ApplyJump();
-        ApplyVariableJumpCut();
-        TryStartFastFall();
-        ApplyWallSlide();
-        ApplyCustomGravity();
+        locomotionSystem.ApplyHorizontalMovement(deltaTime);
+        locomotionSystem.ApplyJump();
+        locomotionSystem.ApplyVariableJumpCut();
+        locomotionSystem.TryStartFastFall();
+        locomotionSystem.ApplyWallSlide();
+        locomotionSystem.ApplyCustomGravity();
 
         // 状態変化が確定したあとで振動イベントを通知する。
         UpdateAudioEvents();
@@ -247,36 +596,13 @@ public sealed partial class PlayerController : MonoBehaviour
         FinalizeVisualState(previousVelocityY);
     }
 
-    // --- Grind Rail メソッド ---
-    public void StartGrind(RailGimmick rail, int segmentIndex, float distanceOnSegment, int direction)
+    private void LogRespawn(string message)
     {
-        if (IsActionLocked || isGrinding) return;
-        if (railReattachLockTimer > 0f) return;
-
-        isGrinding = true;
-        currentRail = rail;
-        currentRailSegment = segmentIndex;
-        distanceOnRailSegment = distanceOnSegment;
-        grindDirection = direction;
-
-        // レール走行開始時に縦や横の余分な重力・速度を一旦切る
-        rb.linearVelocity = Vector3.zero;
-        isGrounded = false;
-        isFastFalling = false;
-        
-        Debug.Log($"Started Grinding. segment:{segmentIndex}, dir:{direction}");
+        Debug.Log($"[PlayerRespawn] {message}", this);
     }
 
-    private void EndGrind(Vector3 releaseVelocity)
+    private void LogRespawnWarning(string message)
     {
-        if (!isGrinding) return;
-
-        isGrinding = false;
-        currentRail = null;
-
-        // 離脱時の速度を乗せる
-        rb.linearVelocity = releaseVelocity;
-        
-        // 直後からジャンプなどが効くようにするなどの調整があればここで行う
+        Debug.LogWarning($"[PlayerRespawn] {message}", this);
     }
 }
