@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 1923890647421372328}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -10.6, y: 18.9, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 11, y: 11, z: 11}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -59,7 +59,7 @@ Transform:
   m_GameObject: {fileID: 2210536961890077483}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0.36370695, w: 0.9315135}
-  m_LocalPosition: {x: -6.3, y: 14.5, z: 0}
+  m_LocalPosition: {x: 4.11, y: -4.2, z: 0}
   m_LocalScale: {x: 32.455658, y: 7.900983, z: 1.3146791}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -186,10 +186,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 54845863021831391}
-  - component: {fileID: 7451033984243787979}
   - component: {fileID: 3166458492546859069}
+  - component: {fileID: 231848241931794671}
+  - component: {fileID: 2411249658003863423}
+  - component: {fileID: 6671750570475710838}
+  - component: {fileID: 937989432220714875}
+  - component: {fileID: 6117174634471341912}
   m_Layer: 0
-  m_Name: EnemySimpleHand3D
+  m_Name: HandEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -212,57 +216,6 @@ Transform:
   - {fileID: 3315255634804718948}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7451033984243787979
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3268368376347136408}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bb0efa252678a6b43bb577b182aff4e1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemySimpleHand3D
-  moveSpeed: 3
-  moveAxis: {x: 1, y: 0, z: 0}
-  useDistanceBasedSpeed: 1
-  minMoveSpeed: 4
-  maxMoveSpeed: 8
-  distanceForMaxSpeed: 60
-  distanceForMinSpeed: 20
-  speedMultiplierWhileAttacking: 1
-  playerTag: Player
-  disableAfterHit: 0
-  startActive: 0
-  hideUntilActivated: 1
-  spawnPositionOnActivate: {x: 0, y: 0, z: 0}
-  useSpawnPositionOnActivate: 0
-  player: {fileID: 0}
-  handSmashPrefab: {fileID: 7987207932610904844, guid: ea966305bed4f37429175f8b895b5d11, type: 3}
-  handGrabPrefab: {fileID: 2321828064626340005, guid: 435d8c79af265d14380212c7c9e22c23, type: 3}
-  handSpawnOffset: {x: 2, y: 1, z: 0}
-  smashAttackRangeX: 70
-  grabAttackRangeX: 50
-  attackCooldown: 2.5
-  groundY: 0
-  debugTriggerWithSpace: 0
-  visualRoot: {fileID: 7296045331812786607}
-  armRenderer: {fileID: 8753026961955578720}
-  palmRenderer: {fileID: 8817927017108179465}
-  visualRootLocalOffset: {x: -10, y: 18.5, z: 0}
-  visualRootLocalScale: {x: 11, y: 11, z: 11}
-  armLocalOffset: {x: -0.588, y: 0.713, z: 0}
-  armLocalScale: {x: 1, y: 1, z: 1}
-  palmLocalOffset: {x: 0, y: 0, z: 0}
-  palmLocalScale: {x: 1, y: 1, z: 1}
-  armFrames:
-  - {fileID: 1802195152, guid: 03c2324985d8e214eb3a9815e598851c, type: 3}
-  palmFrames:
-  - {fileID: 1211668051, guid: 317786e0ea164bc4ba8c2fc4be6e2413, type: 3}
-  animationFps: 8
-  enableDebugLog: 0
-  logMissingReferences: 0
 --- !u!54 &3166458492546859069
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -286,10 +239,120 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 0
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &231848241931794671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3268368376347136408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9c0dd60151bd6247b1744826606d689, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandChaserEnemy
+  movement: {fileID: 2411249658003863423}
+  attackController: {fileID: 6671750570475710838}
+  view: {fileID: 937989432220714875}
+  proximityEffects: {fileID: 6117174634471341912}
+  player: {fileID: 0}
+  playerTag: Player
+  startActive: 1
+  hideUntilActivated: 1
+  useSpawnPositionOnActivate: 1
+  spawnPositionOnActivate: {x: -71, y: 22, z: 0}
+  killPlayerOnContact: 1
+  disableAfterKill: 0
+  enableDebugLog: 0
+--- !u!114 &2411249658003863423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3268368376347136408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57c460482ac48f1478b7eca46fa618c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandChaserMovement
+  moveSpeed: 5
+  moveAxis: {x: 1, y: 0, z: 0}
+  useDistanceBasedSpeed: 1
+  minMoveSpeed: 5
+  maxMoveSpeed: 20
+  distanceForMaxSpeed: 60
+  distanceForMinSpeed: 20
+  speedMultiplierWhileAttacking: 0.5
+  showSpeedRangeGizmos: 1
+--- !u!114 &6671750570475710838
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3268368376347136408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07160840d3554fb47b884090533838dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandChaserAttackController
+  handSmashPrefab: {fileID: 0}
+  handGrabPrefab: {fileID: 0}
+  handSpawnOffset: {x: 2, y: 1, z: 0}
+  smashAttackRangeX: 8
+  grabAttackRangeX: 3
+  attackCooldown: 2.5
+  groundY: 0
+  debugTriggerWithSpace: 0
+  enableDebugLog: 0
+--- !u!114 &937989432220714875
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3268368376347136408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b13ed4035abf354f8f047c41d8b1c5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandChaserView
+  visualRoot: {fileID: 54845863021831391}
+  armRenderer: {fileID: 8753026961955578720}
+  palmRenderer: {fileID: 8817927017108179465}
+  visualRootLocalOffset: {x: 0, y: 0, z: 0}
+  visualRootLocalScale: {x: 1, y: 1, z: 1}
+  armLocalOffset: {x: 0, y: 0, z: 0}
+  armLocalScale: {x: 1, y: 1, z: 1}
+  palmLocalOffset: {x: 0, y: 0, z: 0}
+  palmLocalScale: {x: 1, y: 1, z: 1}
+  armFrames: []
+  palmFrames: []
+  animationFps: 8
+--- !u!114 &6117174634471341912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3268368376347136408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5edbb4984468f0438def09be37da8ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProximityEffectController
+  settings:
+    shakeProfile: {fileID: 11400000, guid: 61c0ef45a736cd64592a04e117fd58c8, type: 2}
+    maxShakeDistance: 2
+    minShakeDistance: 10
+    enableRumble: 1
+    maxLowFrequency: 0.5
+    maxHighFrequency: 0.5
 --- !u!1 &4119112838642931143
 GameObject:
   m_ObjectHideFlags: 0
