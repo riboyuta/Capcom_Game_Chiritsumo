@@ -22,6 +22,7 @@ public class CannonGimmick : MonoBehaviour
     [Tooltip("任意発射(Arbitrary)か、強制発射(Forced)かを選択")]
     public CannonType type = CannonType.Arbitrary;
 
+    [Header("発射設定")]
     [Tooltip("発射方向（自身の上方向ローカルY軸）に向けて撃ち出す速度")]
     public float fireSpeed = 25f;
     
@@ -35,6 +36,7 @@ public class CannonGimmick : MonoBehaviour
     [Tooltip("Continuous: 常に回転, Stepped: 一定角度ずつカクカク回転")]
     public RotationMode rotationMode = RotationMode.Continuous;
 
+    [Header("回転方向")]
     [Tooltip("時計回りに回転するかどうか（オフなら反時計回り）")]
     public bool isClockwise = false;
 
@@ -43,6 +45,7 @@ public class CannonGimmick : MonoBehaviour
         return isClockwise ? -1 : 1;
     }
 
+    [Header("Continuous回転設定")]
     [Tooltip("Continuous時の回転速度 (度/秒) Z軸中心")]
     public float rotationSpeed = 60f;
 
@@ -74,15 +77,19 @@ public class CannonGimmick : MonoBehaviour
 
     private bool hasPlayer = false;
     private GameObject storedPlayer;
-    private PlayerController storedPlayerController;
+    private PlayerFacade storedPlayerFacade;
     private Rigidbody storedPlayerRb;
     // プレイヤーの透明化状態を復帰するためのリスト
+    // VisualPolicy.Hide がプレイヤー側で未実装のため、大砲側で手動管理する
     private List<Renderer> storedRenderers = new List<Renderer>();
     
     private float fireTimer = 0f;
     private RawInputSource rawInputSource;
 
     private Collider myCollider;
+
+    // PlayerFacade 外部制御セッション
+    private PlayerExternalControlSession activeSession = PlayerExternalControlSession.Invalid;
 
     private enum SteppedState { Waiting, Rotating }
     private SteppedState currentRotState = SteppedState.Waiting;
@@ -121,8 +128,11 @@ public class CannonGimmick : MonoBehaviour
 
         if (hasPlayer && storedPlayer != null)
         {
-            // プレイヤーを大砲の中心位置に固定しておく
-            storedPlayer.transform.position = transform.position;
+            // セッション経由でプレイヤーを大砲の中心位置に固定する
+            if (activeSession.IsValid)
+            {
+                activeSession.RequestAnchorPoseThisFrame(transform.position, Quaternion.identity);
+            }
 
             if (type == CannonType.Arbitrary)
             {
@@ -280,52 +290,77 @@ public class CannonGimmick : MonoBehaviour
 
     private void HandlePlayerEnter(GameObject playerObj, Rigidbody playerRb, Collider playerCol)
     {
-        var playerCtrl = playerObj.GetComponent<PlayerController>();
-        if (playerCtrl != null)
+        // PlayerFacade を取得する
+        var facade = playerObj.GetComponent<PlayerFacade>();
+        if (facade == null) return;
+
+        // 外部制御セッションの要求を構築する
+        var request = new PlayerExternalControlRequest
         {
-            hasPlayer = true;
-            storedPlayer = playerObj;
-            storedPlayerController = playerCtrl;
-            storedPlayerRb = playerRb;
-            storedPlayerCollider = playerCol;
+            Owner = this,
+            Mode = ExternalControlMode.Anchored,
+            InputBlockFlags = PlayerController.InputBlockFlags.Move
+                | PlayerController.InputBlockFlags.Jump
+                | PlayerController.InputBlockFlags.Dash
+                | PlayerController.InputBlockFlags.Grab,
+            PhysicsPolicy = ExternalPhysicsPolicy.Suspend,
+            GravityPolicy = ExternalGravityPolicy.ForceOff,
+            VisualPolicy = ExternalVisualPolicy.Hide
+        };
 
-            // 互いの当たり判定を無視してガタつき（物理演算の反発）を防ぐ
-            if (myCollider != null && storedPlayerCollider != null)
+        // 外部制御を受け入れ可能か確認する
+        if (!facade.CanAcceptExternalControl(request)) return;
+
+        // 外部制御セッションを開始する
+        if (!facade.TryBeginExternalControl(request, out PlayerExternalControlSession session) || !session.IsValid)
+        {
+            return;
+        }
+
+        hasPlayer = true;
+        storedPlayer = playerObj;
+        storedPlayerFacade = facade;
+        storedPlayerRb = playerRb;
+        storedPlayerCollider = playerCol;
+        activeSession = session;
+
+        // 互いの当たり判定を無視してガタつき（物理演算の反発）を防ぐ
+        if (myCollider != null && storedPlayerCollider != null)
+        {
+            Physics.IgnoreCollision(myCollider, storedPlayerCollider, true);
+        }
+
+        // 物理挙動を停止する（重力で落ちないようにする）
+        // PhysicsPolicy.Suspend を指定しているが、プレイヤー側で Rigidbody の
+        // isKinematic 制御が未実装のため、大砲側で直接設定する
+        if (storedPlayerRb != null)
+        {
+            storedPlayerRb.linearVelocity = Vector3.zero;
+            storedPlayerRb.isKinematic = true;
+        }
+
+        // 見た目を透明にする
+        // VisualPolicy.Hide を指定しているが、プレイヤー側で Renderer ON/OFF が
+        // 未実装のため、大砲側で手動管理する
+        storedRenderers.Clear();
+        var renderers = storedPlayer.GetComponentsInChildren<Renderer>();
+        foreach (var r in renderers)
+        {
+            // もともと有効なレンダラーだけオフにし、対象として覚える
+            if (r.enabled)
             {
-                Physics.IgnoreCollision(myCollider, storedPlayerCollider, true);
+                storedRenderers.Add(r);
+                r.enabled = false;
             }
+        }
 
-            // 1. プレイヤーの操作(PlayerController)を無効化
-            storedPlayerController.enabled = false;
+        fireTimer = forcedFireDelay;
 
-            // 2. 物理挙動を無効化(重力で落ちないようにする)
-            if (storedPlayerRb != null)
-            {
-                storedPlayerRb.linearVelocity = Vector3.zero;
-                storedPlayerRb.isKinematic = true;
-            }
-
-            // 3. 見た目を透明にする
-            storedRenderers.Clear();
-            var renderers = storedPlayer.GetComponentsInChildren<Renderer>();
-            foreach (var r in renderers)
-            {
-                // もともと有効なレンダラーだけオフにし、対象として覚える
-                if (r.enabled)
-                {
-                    storedRenderers.Add(r);
-                    r.enabled = false;
-                }
-            }
-
-            fireTimer = forcedFireDelay;
-
-            // 入力判定用に RawInputSource を探す
-            if (rawInputSource == null)
-            {
-                // プレイヤーに付いている前提で取得
-                rawInputSource = storedPlayer.GetComponent<RawInputSource>();
-            }
+        // 入力判定用に RawInputSource を探す
+        if (rawInputSource == null)
+        {
+            // プレイヤーに付いている前提で取得
+            rawInputSource = storedPlayer.GetComponent<RawInputSource>();
         }
     }
 
@@ -337,7 +372,14 @@ public class CannonGimmick : MonoBehaviour
 
         if (storedPlayer != null)
         {
-            // 回転や移動の固定解除のため、ここで元の物理設定に戻す準備をする
+            // 外部制御セッションを終了し、PlayerController の通常制御を復帰させる
+            if (activeSession.IsValid)
+            {
+                activeSession.EndControl();
+            }
+            activeSession = PlayerExternalControlSession.Invalid;
+
+            // 物理挙動を復帰する
             if (storedPlayerRb != null)
             {
                 storedPlayerRb.isKinematic = false;
@@ -353,9 +395,6 @@ public class CannonGimmick : MonoBehaviour
                 }
             }
 
-            // コールバック内で null にされたインスタンス変数を参照しないようにローカル変数に退避する
-            var ctrlToRestore = storedPlayerController;
-
             // フライト監視用の一時的なスクリプトをアタッチして飛ばす
             var monitor = storedPlayer.AddComponent<CannonFlightMonitor>();
             monitor.Initialize(
@@ -363,25 +402,56 @@ public class CannonGimmick : MonoBehaviour
                 fireSpeed, 
                 maxFlightDistance, 
                 collisionLayers, 
-                null, // 発射時に既に復帰させたためnullを渡す
                 storedPlayerCollider,
-                myCollider,
-                () => {
-                    // 飛行終了時にプレイヤーのコントロールを復帰
-                    if (ctrlToRestore != null)
-                    {
-                        ctrlToRestore.enabled = true;
-                    }
-                }
+                myCollider
             );
 
             // 参照のクリア処理
             storedPlayer = null;
-            storedPlayerController = null;
+            storedPlayerFacade = null;
             storedPlayerRb = null;
             storedPlayerCollider = null;
             storedRenderers.Clear();
         }
+    }
+
+    private void OnDisable()
+    {
+        // 大砲が無効化された場合、外部制御を安全に復帰させる
+        if (activeSession.IsValid)
+        {
+            activeSession.EndControl();
+            activeSession = PlayerExternalControlSession.Invalid;
+        }
+
+        // プレイヤーを保持中なら見た目と物理を復帰する
+        if (hasPlayer && storedPlayer != null)
+        {
+            if (storedPlayerRb != null)
+            {
+                storedPlayerRb.isKinematic = false;
+            }
+
+            foreach (var r in storedRenderers)
+            {
+                if (r != null)
+                {
+                    r.enabled = true;
+                }
+            }
+
+            if (myCollider != null && storedPlayerCollider != null)
+            {
+                Physics.IgnoreCollision(myCollider, storedPlayerCollider, false);
+            }
+        }
+
+        hasPlayer = false;
+        storedPlayer = null;
+        storedPlayerFacade = null;
+        storedPlayerRb = null;
+        storedPlayerCollider = null;
+        storedRenderers.Clear();
     }
 
     private void OnDrawGizmos()

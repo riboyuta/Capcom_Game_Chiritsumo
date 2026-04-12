@@ -298,6 +298,9 @@ public class RailGimmick : MonoBehaviour
 
         // レール搭乗開始時は余分な慣性を切る。
         activePlayerRigidbody.linearVelocity = Vector3.zero;
+
+        // 物理干渉を排除するため kinematic 化する。
+        activePlayerRigidbody.isKinematic = true;
     }
 
     private void UpdateActiveRide(float deltaTime)
@@ -385,8 +388,8 @@ public class RailGimmick : MonoBehaviour
         Vector3 targetPos = finalStart + segDir * distanceOnSegment;
         targetPos += Vector3.up * GetFeetOffset();
 
-        Quaternion rotation = Quaternion.LookRotation(Vector3.forward, Vector3.up);
-        activeSession.RequestPathPoseThisFrame(targetPos, rotation);
+        // kinematic の Rigidbody に直接位置を反映する。
+        activePlayerRigidbody.MovePosition(targetPos);
         activeSession.RequestFacingThisFrame(segDir.x >= 0f ? 1 : -1);
     }
 
@@ -436,6 +439,12 @@ public class RailGimmick : MonoBehaviour
 
     private void ClearRideState()
     {
+        // kinematic を元に戻す。
+        if (activePlayerRigidbody != null)
+        {
+            activePlayerRigidbody.isKinematic = false;
+        }
+
         activeSession = PlayerExternalControlSession.Invalid;
         activePlayerFacade = null;
         activePlayerRigidbody = null;

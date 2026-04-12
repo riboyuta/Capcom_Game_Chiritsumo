@@ -11,8 +11,13 @@ public class MapEditor : MonoBehaviour
     Dictionary<Vector3Int, GameObject> tiles =
         new Dictionary<Vector3Int, GameObject>();
 
-    List<TileData> copyBuffer = new List<TileData>(); 
+    List<TileData> copyBuffer = new List<TileData>(); //コピーバッファ
     Vector3Int copyOrigin;
+
+    List<TileData> temporaryBuffer = new List<TileData>(); //範囲選択用の一時保存バッファ
+    Vector3Int temporaryOrigin;
+
+    Stack<MapData> undoStack = new Stack<MapData>(); //変更履歴のスタック
 
     //範囲選択用
     bool selecting = false;
@@ -71,6 +76,7 @@ public class MapEditor : MonoBehaviour
         // プレイ中
         if (Application.isPlaying)
         {
+
             if (showSaveConfirm || showLoadConfirm) { return; } //セーブorロード選択中はエディット操作できない
 
             //数字キーで使うタイルを変える
@@ -85,57 +91,190 @@ public class MapEditor : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Alpha8) || Input.GetKeyDown(KeyCode.Keypad8)) currentTile = 8;
             if (Input.GetKeyDown(KeyCode.Alpha9) || Input.GetKeyDown(KeyCode.Keypad9)) currentTile = 9;
 
-
+            //タイル配置
             if (Input.GetMouseButton(0))
             {
                 PlaceTile();
             }
 
+            //タイル削除
             if (Input.GetMouseButton(1))
             {
                 RemoveTile();
             }
 
+            //セーブ
             if (Input.GetKeyDown(KeyCode.S))
             {
                 //SaveMap();
                 showSaveConfirm = true;
             }
 
-
-
+            //ロード
             if (Input.GetKeyDown(KeyCode.L))
             {
                 //LoadMap();
                 showLoadConfirm = true;
             }
 
-            //範囲選択処理
+            //取り消し
+            if (Input.GetKeyDown(KeyCode.Z))
             {
-                ////コピー範囲開始
-                //if (Input.GetMouseButtonDown(2)) //ホイールクリック
-                //{
-                //    selecting = true;
-                //    selectStart = GetGridPosition();
-                //}
-
-                ////ドラッグ中
-                //if (Input.GetMouseButton(2) && selecting)
-                //{
-                //    selectEnd = GetGridPosition();
-                //}
-
-                ////離したらコピー
-                //if (Input.GetMouseButtonUp(2) && selecting)
-                //{
-                //    selecting = false;
-
-                //    CopyTiles(selectStart, selectEnd);
-
-                //    Debug.Log("Copy Complete");
-                //}
+                Undo();
             }
-           
+
+
+         
+
+
+            //範囲選択処理
+            
+                //コピー範囲開始
+                if ((Input.GetKeyDown(KeyCode.Space))) 
+                {
+                    selecting = true;
+                    selectStart = GetGridPosition();
+                Debug.Log("範囲選択開始");
+
+                //一時保存バッファをクリア
+                temporaryBuffer.Clear();
+                }
+
+                //ドラッグ中
+                else if ((Input.GetKey(KeyCode.Space)) && selecting)
+                {
+                    selectEnd = GetGridPosition();
+                Debug.Log("範囲選択中");
+            }
+
+                //離したらコピー
+                else if (Input.GetKeyUp(KeyCode.Space) && selecting)
+                {
+                    selecting = false;
+
+                    CopyTilesTemporary(selectStart, selectEnd);
+
+                    Debug.Log("一時保存が完了しました");
+                }
+            
+
+
+            //範囲選択消去処理
+            if (Input.GetKeyDown(KeyCode.Backspace))
+            {
+
+                //一時保存バッファになにも存在しない場合
+                if (temporaryBuffer.Count <= 0)
+                {
+                    Debug.Log("範囲消去に失敗しました：一時保存されていません");
+                    return;
+                }
+
+                //selectingがtrueの場合
+                if (selecting)
+                {
+                    Debug.Log("範囲選択に失敗しました：選択中です！");
+                    return;
+                }
+
+                //まずは履歴に保存
+                SaveUndo();
+
+                // 　範囲選択を削除する
+                foreach (TileData data in temporaryBuffer)
+                {
+                    Vector3Int gridPos = new Vector3Int(
+                        temporaryOrigin.x + data.x,
+                        temporaryOrigin.y + data.y,
+                        temporaryOrigin.z + data.z
+                    );
+
+                    if (!tiles.ContainsKey(gridPos))
+                        continue;
+
+                    GameObject tile = tiles[gridPos];
+
+                    if (Application.isPlaying)
+                        Destroy(tile);
+                    else
+                        DestroyImmediate(tile);
+
+                    tiles.Remove(gridPos);
+                }
+
+                temporaryBuffer.Clear();
+                Debug.Log("範囲削除完了");
+
+                
+
+            }
+
+
+            //コピー処理
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+
+                //一時保存バッファになにも存在しない場合
+                if (temporaryBuffer.Count <= 0)
+                {
+                    Debug.Log("コピーに失敗しました：一時保存されていません");
+                    return;
+                }
+
+                //selectingがtrueの場合
+                if (selecting)
+                {
+                    Debug.Log("コピーに失敗しました：選択中です！");
+                    return;
+                }
+
+                //まずは履歴に保存
+                SaveUndo();
+
+                //一時保存をコピーする
+                copyBuffer.Clear();
+                copyBuffer.AddRange(temporaryBuffer);
+
+                copyOrigin = temporaryOrigin;
+
+                Debug.Log("コピーしました");
+
+            }
+
+
+
+            //ペースト処理
+            if (Input.GetKeyDown(KeyCode.V))
+            {
+
+                //コピーバッファになにも存在しない場合
+                if (copyBuffer.Count <= 0)
+                {
+                    Debug.Log("ペーストに失敗しました：コピーがされていません");
+                    return;
+                }
+
+                //selectingがtrueの場合
+                if (selecting)
+                {
+                    Debug.Log("コピーに失敗しました：選択中です！");
+                    return;
+                }
+
+                //まずは履歴に保存
+                SaveUndo();
+
+                //コピーをペーストする
+                PasteTiles(GetGridPosition());
+
+            }
+
+
+        
+
+         
+
+
         }
     
         //実行外
@@ -177,6 +316,13 @@ public class MapEditor : MonoBehaviour
 
         if (tiles.ContainsKey(gridPos)) return;
 
+
+        //キーを押された直後ならUndoスタックをセーブ
+        if (Input.GetMouseButtonDown(0))
+        {
+            SaveUndo();
+        }
+
         Vector3 spawnPos = new Vector3(
             gridPos.x * gridSize,
             gridPos.y * gridSize,
@@ -187,6 +333,8 @@ public class MapEditor : MonoBehaviour
             Instantiate(tilePrefab[currentTile], spawnPos, Quaternion.identity);
 
         tiles.Add(gridPos, tile);
+
+       
     }
 
 
@@ -194,12 +342,21 @@ public class MapEditor : MonoBehaviour
 
     void RemoveTile()
     {
+
         Vector3Int gridPos = GetGridPosition();
 
         if (!tiles.ContainsKey(gridPos)) return;
 
+        //キーを押された直後ならUndoスタックをセーブ
+        if (Input.GetMouseButtonDown(1))
+        {
+            SaveUndo();
+        }
+
         Destroy(tiles[gridPos]);
         tiles.Remove(gridPos);
+
+      
     }
 
 
@@ -246,10 +403,89 @@ public class MapEditor : MonoBehaviour
     }
 
 
+    [ContextMenu("Clear Undo (Editor)")]
+    void ClearUndoOutPlaying()
+    {
+        undoStack.Clear();
+    }
+
+    //===========================-------
+    //　　　　　 履歴システム
+    //===========================-------
+
+    void SaveUndo()
+    {
+        MapData snapshot = new MapData();
+
+        foreach (var tile in tiles)
+        {
+            TileData data = new TileData();
+
+            data.x = tile.Key.x;
+            data.y = tile.Key.y;
+            data.z = tile.Key.z;
+
+            TileType type = tile.Value.GetComponent<TileType>();
+
+            data.type = type.type;
+            data.gimmickType = type.gimmickType;
+            data.gimmickID = type.gimmickID;
+
+            snapshot.tiles.Add(data);
+        }
+
+        undoStack.Push(snapshot);
+
+    }
+
+
+
+    void Undo()
+    {
+        if (undoStack.Count == 0)
+        {
+            Debug.Log("Undoできません");
+            return;
+        }
+
+        MapData mapData = undoStack.Pop();
+
+        foreach (var tile in tiles)
+        {
+            Destroy(tile.Value);
+        }
+
+        tiles.Clear();
+
+        foreach (TileData data in mapData.tiles)
+        {
+            Vector3Int gridPos = new Vector3Int(data.x, data.y, data.z);
+
+            Vector3 spawnPos = new Vector3(
+                data.x * gridSize,
+                data.y * gridSize,
+                data.z * gridSize - 0.01f
+            );
+
+            GameObject tile =
+                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
+
+            TileType tileType = tile.GetComponent<TileType>();
+
+            tileType.type = data.type;
+            tileType.gimmickType = data.gimmickType;
+            tileType.gimmickID = data.gimmickID;
+
+            tiles.Add(gridPos, tile);
+        }
+
+        Debug.Log("Undoしました");
+    }
+
 
 
     //===========================-------
-    //　　　　　 コピーシステム
+    //　　　　　 コピーシステム (現在この関数は未使用)
     //===========================-------
 
     void CopyTiles(Vector3Int start, Vector3Int end)
@@ -331,6 +567,56 @@ public class MapEditor : MonoBehaviour
 
         Debug.Log("Paste Complete");
     }
+
+
+
+
+    //===========================-------
+    //　　　　　 一時コピーシステム
+    //===========================-------
+
+    void CopyTilesTemporary(Vector3Int start, Vector3Int end)
+    {
+        temporaryBuffer.Clear();
+
+        int minX = Mathf.Min(start.x, end.x);
+        int maxX = Mathf.Max(start.x, end.x);
+
+        int minY = Mathf.Min(start.y, end.y);
+        int maxY = Mathf.Max(start.y, end.y);
+
+        int minZ = Mathf.Min(start.z, end.z);
+        int maxZ = Mathf.Max(start.z, end.z);
+
+        temporaryOrigin = new Vector3Int(minX, minY, minZ);
+
+        foreach (var tile in tiles)
+        {
+            Vector3Int pos = tile.Key;
+
+            if (pos.x >= minX && pos.x <= maxX &&
+                pos.y >= minY && pos.y <= maxY &&
+                pos.z >= minZ && pos.z <= maxZ)
+            {
+                TileType type = tile.Value.GetComponent<TileType>();
+
+                TileData data = new TileData();
+
+                data.x = pos.x - temporaryOrigin.x;
+                data.y = pos.y - temporaryOrigin.y;
+                data.z = pos.z - temporaryOrigin.z;
+
+                data.type = type.type;
+                data.gimmickType = type.gimmickType;
+                data.gimmickID = type.gimmickID;
+
+                temporaryBuffer.Add(data);
+            }
+        }
+
+        Debug.Log("Temporary Copied Tiles : " + temporaryBuffer.Count);
+    }
+
 
 
     //===========================-------
@@ -550,6 +836,20 @@ public class MapEditor : MonoBehaviour
             );
 
             Gizmos.DrawWireCube(pos, Vector3.one * gridSize);
+        }
+
+        if (selecting)
+        {
+            Gizmos.color = Color.yellow;
+
+            Vector3 center = ((Vector3)selectStart + (Vector3)selectEnd) / 2f * gridSize;
+            Vector3 size = new Vector3(
+                Mathf.Abs(selectEnd.x - selectStart.x) + 1,
+                Mathf.Abs(selectEnd.y - selectStart.y) + 1,
+                Mathf.Abs(selectEnd.z - selectStart.z) + 1
+            ) * gridSize;
+
+            Gizmos.DrawWireCube(center, size);
         }
     }
 
