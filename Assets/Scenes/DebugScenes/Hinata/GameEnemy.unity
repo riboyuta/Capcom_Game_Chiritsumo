@@ -136,7 +136,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &31727795
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -271,37 +271,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1175559814}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &44723791
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 44723792}
-  m_Layer: 0
-  m_Name: HandEnemySpawn
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &44723792
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 44723791}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -77.46, y: -0, z: 320.25293}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &82181428
 GameObject:
@@ -455,7 +424,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandChaserActivator
   targetEnemy: {fileID: 881113320}
-  spawnPoint: {fileID: 44723792}
   gameRoot: {fileID: 1603009781}
   playerTag: Player
   triggerOnlyOnce: 1
@@ -1907,57 +1875,84 @@ MonoBehaviour:
       _secondaryKeyboardKey: 55
       _gamepadButton: 11
   movementSettings:
-    moveMaxSpeed: 8.2
-    groundAcceleration: 78
-    groundTurnAcceleration: 108
-    groundDeceleration: 92
-    airAcceleration: 28
-    airTurnAcceleration: 40
-    airDeceleration: 12
-    jumpVelocity: 14
-    gravityScale: 3
-    useVariableJump: 1
-    maxJumpHoldTime: 0.12
-    riseGravityMultiplier: 1
-    jumpCutMultiplier: 0.5
-    useCoyoteTime: 1
-    coyoteTime: 0.1
-    useJumpBuffer: 1
-    jumpBufferTime: 0.1
-    fallGravityMultiplier: 1.75
-    maxFallSpeed: 20
-    useFastFall: 1
-    fastFallGravityMultiplier: 2.6
-    fastFallMaxSpeed: 28
-    groundCheckDistance: 0.1
-    groundLayerMask:
-      serializedVersion: 2
-      m_Bits: 4294967295
-    useWallSlide: 1
-    wallCheckDistance: 0.15
-    wallCheckRadius: 0.2
-    wallSlideMaxSpeed: 3
-    useWallKick: 1
-    wallJumpHorizontalVelocity: 8
-    wallJumpVerticalVelocity: 10.5
-    wallJumpControlLockTime: 0.09
-    wallReattachLockTime: 0.12
-    wallInputThreshold: 0.12
-    useDash: 1
-    dashSpeed: 18
-    dashDuration: 0.13
-    dashGravityMultiplier: 0
-    restoreDashStartVerticalVelocity: 0
-    dashCooldown: 0.58
-    allowAirDash: 1
-    allowTurnDuringDash: 1
-    useDashBuffer: 1
-    dashBufferTime: 0.06
-    dashInvulnerable: 0
-    grindSpeed: 15
-    grindJumpVerticalVelocity: 12
-    railReattachLockTime: 0.2
-    maxAttachSlopeAngle: 45
+    move:
+      maxSpeed: 8.2
+      groundAcceleration: 78
+      groundTurnAcceleration: 108
+      groundDeceleration: 92
+      airAcceleration: 28
+      airTurnAcceleration: 40
+      airDeceleration: 12
+    jump:
+      jumpVelocity: 14
+      gravityScale: 3
+      useVariableJump: 1
+      maxJumpHoldTime: 0.12
+      riseGravityMultiplier: 1
+      jumpCutMultiplier: 0.5
+      useCoyoteTime: 1
+      coyoteTime: 0.1
+      useJumpBuffer: 1
+      jumpBufferTime: 0.1
+    fall:
+      gravityMultiplier: 1.75
+      maxSpeed: 20
+      useFastFall: 1
+      fastFallGravityMultiplier: 2.6
+      fastFallMaxSpeed: 28
+    detection:
+      groundCheckDistance: 0.1
+      groundLayerMask:
+        serializedVersion: 2
+        m_Bits: 4294967295
+      wallCheckDistance: 0.15
+      wallCheckRadius: 0.2
+      wallInputThreshold: 0.12
+    wall:
+      useWallSlide: 1
+      wallSlideMaxSpeed: 3
+      useWallGrab: 1
+      wallGrabVerticalSpeed: 0
+      wallGrabEnterDistance: 0.04
+      wallGrabExitDistance: 0.06
+      wallClimbUpSpeed: 3
+      wallClimbDownSpeed: 2.5
+      wallClimbInputThreshold: 0.1
+      useLedgeClimb: 1
+      ledgeClimbDuration: 0.6
+      ledgeClimbLiftHeight: 0.35
+      ledgeClimbInnerInset: 0.18
+      ledgeClimbControlForwardInset: 0.05
+      ledgeClimbUpInputThreshold: 0.1
+      ledgeClimbForwardCheckDistance: 0.08
+      ledgeClimbTopDownCheckDistance: 1
+      useWallKick: 1
+      wallJumpHorizontalVelocity: 8
+      wallJumpVerticalVelocity: 10.5
+      wallJumpControlLockTime: 0.09
+      wallReattachLockTime: 0.12
+    dash:
+      useDash: 1
+      speed: 18
+      duration: 0.13
+      gravityMultiplier: 0
+      restoreStartVerticalVelocity: 0
+      allowAirDash: 1
+      maxCharges: 1
+      useGroundRefill: 1
+      retryLockTime: 0.02
+      groundCooldownTime: 0.12
+      useGroundSnap: 1
+      groundSnapDistance: 0.2
+      allowTurnDuringDash: 1
+      useDashBuffer: 1
+      dashBufferTime: 0.06
+      invulnerable: 0
+      useEightWayInput: 1
+      directionDeadZone: 0.25
+      diagonalAssistAngle: 8
+    inputAssist:
+      moveInputGamepadDeadZone: 0.2
   healthSettings:
     maxHealth: 3
     invincibilityDuration: 1
@@ -1968,16 +1963,6 @@ MonoBehaviour:
   stageResetSystem: {fileID: 1934615090}
   playerCameraController: {fileID: 1882003663}
   playerDeathView: {fileID: 395024898}
-  knockbackResistance: 1
-  knockbackDuration: 0.25
-  decayKnockbackOverTime: 1
-  showHealthDebugLog: 0
-  damagedStateDuration: 0.15
-  grabbedStateDuration: 0.5
-  smashedStateDuration: 0.35
-  smashIsInstantDeath: 1
-  showReactionDebugLog: 0
-  killAfterGrabbedDuration: 1
 --- !u!54 &1189614812
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2963,7 +2948,8 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 6671750570475710838, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -3022,4 +3008,3 @@ SceneRoots:
   - {fileID: 264922970}
   - {fileID: 493675299}
   - {fileID: 31727799}
-  - {fileID: 44723792}

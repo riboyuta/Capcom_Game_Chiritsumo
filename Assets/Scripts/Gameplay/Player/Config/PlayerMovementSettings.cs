@@ -237,6 +237,58 @@ public sealed class WallSettings
     [Tooltip("壁捕まり中に維持する縦速度です。0でその場維持、負値でゆっくり下降、正値で上昇します。")]
     [SerializeField] float wallGrabVerticalSpeed = 0f;
 
+    [Header("壁捕まり開始距離")]
+    [Tooltip("壁に捕まるための最大距離です。壁からこの距離以上離れると捕まりを開始できません。")]
+    [SerializeField] float wallGrabEnterDistance = 0.04f;
+
+    [Header("壁捕まり維持距離")]
+    [Tooltip("壁に捕まった状態を維持できる最大距離です。壁からこの距離以上離れると捕まり状態が解除されます。")]
+    [SerializeField] float wallGrabExitDistance = 0.06f;
+
+    [Header("壁登りの上速度")]
+    [Tooltip("壁捕まり中に上入力しているときの上方向速度です。大きいほど速く登ります。")]
+    [SerializeField] float wallClimbUpSpeed = 3.0f;
+
+    [Header("壁登りの下速度")]
+    [Tooltip("壁捕まり中に下入力しているときの下方向速度です。大きいほど速く降ります。")]
+    [SerializeField] float wallClimbDownSpeed = 2.5f;
+
+    [Header("壁登り入力しきい値")]
+    [Tooltip("壁登り中に入力として認識する最小値です。小さすぎると誤判定しやすく、大きすぎると意図した操作が出にくくなります。")]
+    [SerializeField] float wallClimbInputThreshold = 0.1f;
+
+    [Header("段差登りを使う")]
+    [Tooltip("壁の段差を登る機能を有効にします。段差のある壁を自然に登れるようになります。")]
+    [SerializeField] bool useLedgeClimb = true;
+
+    [Header("段差登りの登る時間")]
+    [Tooltip("段差登りのアニメーションや移動にかかる時間です。長いほどゆっくり登ります。")]
+    [SerializeField] float ledgeClimbDuration = 0.22f;
+
+    [Header("段差登りの持ち上げ高さ")]
+    [Tooltip("段差登りでキャラクターを持ち上げる高さです。大きいほど高い段差を登れるようになりますが、不自然な動きになりやすくなります。")]
+    [SerializeField] float ledgeClimbLiftHeight = 0.35f;
+
+    [Header("段差登りの内側への入り込み量")]
+    [Tooltip("段差登りで壁の内側へどれだけ入り込むかの量です。大きいほど段差をしっかり掴むようになりますが、壁から離れすぎると不自然になります。")]
+    [SerializeField] float ledgeClimbInnerInset = 0.18f;
+
+    [Header("段差登りの前方への入り込み量")]
+    [Tooltip("段差登りで壁の前方へどれだけ入り込むかの量です。大きいほど段差をしっかり掴むようになりますが、前に出すぎると不自然になります。")]
+    [SerializeField] float ledgeClimbControlForwardInset = 0.05f;
+
+    [Header("段差登りの上入力しきい値")]
+    [Tooltip("段差登り中に上入力として認識する最小値です。小さすぎると誤判定しやすく、大きすぎると意図した操作が出にくくなります。")]
+    [SerializeField] float ledgeClimbUpInputThreshold = 0.1f;
+
+    [Header("段差登りの前方チェック距離")]
+    [Tooltip("段差登りで前方の壁をチェックする距離です。大きいほど遠くの壁を認識しやすくなりますが、不自然な動きになる可能性があります。")]
+    [SerializeField] float ledgeClimbForwardCheckDistance = 0.08f;
+
+    [Header("段差登りの上方チェック距離")]
+    [Tooltip("段差登りで上方の壁をチェックする距離です。大きいほど高い段差を認識しやすくなりますが、不自然な動きになる可能性があります。")]
+    [SerializeField] float ledgeClimbTopDownCheckDistance = 1.0f;
+
     [Header("壁キックを使う")]
     [Tooltip("壁から反発して跳ぶ壁キック機能を有効にします。")]
     [SerializeField] bool useWallKick = true;
@@ -264,6 +316,19 @@ public sealed class WallSettings
     public float WallSlideMaxSpeed => wallSlideMaxSpeed;
     public bool UseWallGrab => useWallGrab;
     public float WallGrabVerticalSpeed => wallGrabVerticalSpeed;
+    public float WallGrabEnterDistance => wallGrabEnterDistance;
+    public float WallGrabExitDistance => wallGrabExitDistance;
+    public float WallClimbUpSpeed => wallClimbUpSpeed;
+    public float WallClimbDownSpeed => wallClimbDownSpeed;
+    public float WallClimbInputThreshold => wallClimbInputThreshold;
+    public bool UseLedgeClimb => useLedgeClimb;
+    public float LedgeClimbDuration => ledgeClimbDuration;
+    public float LedgeClimbLiftHeight => ledgeClimbLiftHeight;
+    public float LedgeClimbInnerInset => ledgeClimbInnerInset;
+    public float LedgeClimbControlForwardInset => ledgeClimbControlForwardInset;
+    public float LedgeClimbUpInputThreshold => ledgeClimbUpInputThreshold;
+    public float LedgeClimbForwardCheckDistance => ledgeClimbForwardCheckDistance;
+    public float LedgeClimbTopDownCheckDistance => ledgeClimbTopDownCheckDistance;
     public bool UseWallKick => useWallKick;
     public float WallJumpHorizontalVelocity => wallJumpHorizontalVelocity;
     public float WallJumpVerticalVelocity => wallJumpVerticalVelocity;

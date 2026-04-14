@@ -27,6 +27,27 @@ internal sealed class PlayerRuntimeState
     // 捕まっている壁の左右。(-1:left / +1:right / 0:none)
     public int wallGrabSide;
 
+    // 現在掴まれているかどうか。
+    public bool isLedgeClimbing;
+
+    // 掴み開始位置
+    public Vector3 ledgeClimbStart;
+
+    // 掴み中のコントロール位置
+    public Vector3 ledgeClimbControl;
+
+    // 掴み終了位置
+    public Vector3 ledgeClimbEnd;
+
+    // 掴み開始からの経過時間。
+    public float ledgeClimbTimer;
+
+    // 掴み全体の所要時間。
+    public float ledgeClimbDuration;
+
+    // 掴んでいる段差の左右。(-1:left / +1:right)
+    public int ledgeClimbSide;
+
     // 現在ダッシュ中かどうか。
     public bool isDashing;
 
