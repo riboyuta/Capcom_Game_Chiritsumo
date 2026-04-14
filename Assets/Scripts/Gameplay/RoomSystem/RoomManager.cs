@@ -3,6 +3,17 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class RoomManager : MonoBehaviour
 {
+    private void Awake();
+    private void Start();
+    private void OnValidate();
+
+    private void ResolveReferences();
+    private void EvaluateRoomTransition();
+    private bool TryGetExitDirection(out RoomDirection direction);
+    private bool TryStartTransition(RoomDirection direction);
+    private void ApplyRoom(Room room);
+    private void UpdateCheckpoint(Room room, RoomDirection direction);
+    private void Log(string message);
     public enum RoomDirection
     {
         None = 0,
@@ -45,4 +56,6 @@ public sealed class RoomManager : MonoBehaviour
     public Room PreviousRoom => previousRoom;
     public RoomDirection LastTransitionDirection => lastTransitionDirection;
     public bool IsTransitioning => isTransitioning;
+
+
 }
