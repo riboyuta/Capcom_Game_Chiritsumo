@@ -3,10 +3,10 @@ using UnityEngine;
 
 namespace Capcom_Game_Chiritsumo.Camera.CameraShake
 {
-    /// <summary>
+    
     /// カメラの揺れを管理・計算するマネージャー。
     /// MainCamera（CameraRootの子オブジェクト）にアタッチして使用します。
-    /// </summary>
+
     public class CameraShakeManager : MonoBehaviour
     {
         // ============================================
@@ -69,9 +69,9 @@ namespace Capcom_Game_Chiritsumo.Camera.CameraShake
         // Public API
         // ============================================
 
-        /// <summary>
+        
         /// 継続的な揺れ（Enemyが近い時など）の強さを設定します。毎フレーム呼ぶ想定です。
-        /// </summary>
+    
         /// <param name="intensity">0f～1fの範囲（1で最大振動）</param>
         /// <param name="profile">揺れのパラメータを持つプロファイル</param>
         public void SetContinuousIntensity(float intensity, CameraShakeProfile profile)
@@ -80,9 +80,9 @@ namespace Capcom_Game_Chiritsumo.Camera.CameraShake
             _continuousProfile = profile;
         }
 
-        /// <summary>
+        
         /// 叩きつけ攻撃などの単発的な揺れを発生させます。
-        /// </summary>
+    
         /// <param name="profile">揺れのパラメータと持続時間(Duration)を持つプロファイル</param>
         public void ExecuteImpulseShake(CameraShakeProfile profile)
         {
@@ -146,9 +146,9 @@ namespace Capcom_Game_Chiritsumo.Camera.CameraShake
             transform.localRotation = _initialLocalRotation * Quaternion.Euler(finalRotShake);
         }
 
-        /// <summary>
+        
         /// パーリンノイズによる揺れ（X/Y/Z）を計算する共用メソッド
-        /// </summary>
+    
         private (Vector3 position, Vector3 rotation) CalculateNoise(CameraShakeProfile profile, float seed, float time)
         {
             float timeSpd = time * profile.shakeSpeed;
