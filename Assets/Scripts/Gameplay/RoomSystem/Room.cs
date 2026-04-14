@@ -71,6 +71,16 @@ public sealed class Room : MonoBehaviour
     public CameraBounds RoomBounds => roomBounds;
     public Vector2 RoomFocusOffset => roomFocusOffset;
 
+    public Room LeftRoom => leftRoom;
+    public Room RightRoom => rightRoom;
+    public Room UpRoom => upRoom;
+    public Room DownRoom => downRoom;
+
+    public Transform RespawnFromLeft => respawnFromLeft;
+    public Transform RespawnFromRight => respawnFromRight;
+    public Transform RespawnFromUp => respawnFromUp;
+    public Transform RespawnFromDown => respawnFromDown;
+
     public bool HasFollowSmoothingOverride => overrideFollowSmoothing;
     public float SmoothTimeX => smoothTimeX;
     public float SmoothTimeY => smoothTimeY;
@@ -80,4 +90,6 @@ public sealed class Room : MonoBehaviour
 
     public bool HasOrthographicSizeSmoothTimeOverride => overrideOrthographicSizeSmoothTime;
     public float OrthographicSizeSmoothTime => orthographicSizeSmoothTime;
+
+
 }

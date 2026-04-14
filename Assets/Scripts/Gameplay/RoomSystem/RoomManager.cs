@@ -9,7 +9,7 @@ public sealed class RoomManager : MonoBehaviour
         Left = 1,
         Right = 2,
         Up = 3,
-        Down = 4
+        Down = 4,
     }
 
     [Header("開始部屋")]
@@ -17,32 +17,42 @@ public sealed class RoomManager : MonoBehaviour
     [SerializeField] private Room initialRoom;
 
     [Header("参照: プレイヤー")]
-    [Tooltip("部屋遷移判定に使う PlayerController です。位置、速度、後の入力停止連携に使います。")]
+    [Tooltip("部屋遷移判定に使うプレイヤー本体です。位置・速度・停止制御に使います。")]
     [SerializeField] private PlayerController playerController;
 
     [Header("参照: カメラ")]
-    [Tooltip("部屋ごとのカメラ境界と注視設定を反映する PlayerCameraController です。")]
+    [Tooltip("部屋ごとのカメラ境界と注視設定を反映するカメラ制御です。")]
     [SerializeField] private PlayerCameraController playerCameraController;
 
     [Header("参照: チェックポイント")]
-    [Tooltip("部屋遷移成功時に復帰地点を更新する CheckpointSystem です。")]
+    [Tooltip("部屋遷移成功時に復帰地点を更新するチェックポイント管理です。")]
     [SerializeField] private CheckpointSystem checkpointSystem;
 
-    [Header("境界判定")]
-    [Tooltip("部屋境界を超えたと判定するための余白です。0 より少し大きい値にすると境界ぴったりのガタつきを減らせます。")]
-    [SerializeField, Min(0f)] private float exitEpsilon = 0.05f;
+    [Header("遷移判定")]
+    [Tooltip("部屋境界を越えたとみなす余白です。境界ぴったりでの誤判定を減らします。")]
+    [SerializeField] private float transitionEpsilon = 0.05f;
 
-    [Header("デバッグ")]
-    [Tooltip("有効にすると部屋遷移判定や部屋切り替えのログを出します。")]
+    [Tooltip("遷移方向と同じ向きの速度が出ている時だけ遷移を許可します。")]
+    [SerializeField] private bool requireMatchingVelocitySign = true;
+
+    [Tooltip("上下左右のどの方向を優先して遷移判定するかの優先順位です。")]
+    [SerializeField]
+    private RoomDirection[] directionPriority =
+    {
+        RoomDirection.Right,
+        RoomDirection.Left,
+        RoomDirection.Up,
+        RoomDirection.Down,
+    };
+
+    [Header("デバッグ表示")]
+    [Tooltip("有効にすると部屋切り替えや判定ログを出力します。")]
     [SerializeField] private bool enableDebugLog = true;
 
     private Room currentRoom;
     private Room previousRoom;
+    private Room pendingRoom;
+
     private RoomDirection lastTransitionDirection = RoomDirection.None;
     private bool isTransitioning;
-
-    public Room CurrentRoom => currentRoom;
-    public Room PreviousRoom => previousRoom;
-    public RoomDirection LastTransitionDirection => lastTransitionDirection;
-    public bool IsTransitioning => isTransitioning;
 }
