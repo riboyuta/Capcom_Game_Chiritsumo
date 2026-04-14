@@ -85,6 +85,43 @@ public sealed class RoomManager : MonoBehaviour
 
         Debug.LogWarning("RoomManager: initialRoom が未設定のため currentRoom を確定できません。", this);
     }
+    private void Update()
+    {
+        // 現在部屋が確定していない間は遷移判定しない。
+        if (currentRoom == null)
+        {
+            return;
+        }
+
+        // 遷移中フラグが立っている間は二重遷移を防ぐ。
+        if (isTransitioning)
+        {
+            return;
+        }
+
+        // プレイヤー参照が無い場合は判定できない。
+        if (playerController == null)
+        {
+            return;
+        }
+
+        // 現在部屋の境界情報が無い場合は警告して処理を止める。
+        if (currentRoom.RoomBounds == null)
+        {
+            Debug.LogWarning($"RoomManager: currentRoom '{currentRoom.name}' の RoomBounds が未設定です。", this);
+            return;
+        }
+
+        // プレイヤー位置と速度を使って境界外への移動方向を判定する。
+        Vector3 playerPosition = playerController.transform.position;
+        Vector3 playerVelocity = playerController.CurrentVelocity;
+        Bounds currentBounds = currentRoom.RoomBounds.WorldBounds;
+
+        if (TryGetTransitionDirection(currentBounds, playerPosition, playerVelocity, out RoomDirection direction))
+        {
+            TryTransition(direction);
+        }
+    }
 
     private void ResolveReferences()
     {
@@ -127,5 +164,110 @@ public sealed class RoomManager : MonoBehaviour
         {
             Debug.Log($"RoomManager: currentRoom を '{currentRoom.name}' に設定しました。", this);
         }
+    }
+
+    private bool TryGetTransitionDirection(
+        Bounds bounds,
+        Vector3 playerPosition,
+        Vector3 playerVelocity,
+        out RoomDirection direction)
+    {
+        // 優先順に方向を検査し、最初に成立した方向を返す。
+        for (int i = 0; i < directionPriority.Length; i++)
+        {
+            RoomDirection candidate = directionPriority[i];
+            bool exceededBounds = false;
+            bool velocityMatched = true;
+
+            switch (candidate)
+            {
+                case RoomDirection.Right:
+                    exceededBounds = playerPosition.x > bounds.max.x + transitionEpsilon;
+                    velocityMatched = playerVelocity.x > 0f;
+                    break;
+
+                case RoomDirection.Left:
+                    exceededBounds = playerPosition.x < bounds.min.x - transitionEpsilon;
+                    velocityMatched = playerVelocity.x < 0f;
+                    break;
+
+                case RoomDirection.Up:
+                    exceededBounds = playerPosition.y > bounds.max.y + transitionEpsilon;
+                    velocityMatched = playerVelocity.y > 0f;
+                    break;
+
+                case RoomDirection.Down:
+                    exceededBounds = playerPosition.y < bounds.min.y - transitionEpsilon;
+                    velocityMatched = playerVelocity.y < 0f;
+                    break;
+            }
+
+            if (!exceededBounds)
+            {
+                continue;
+            }
+
+            if (requireMatchingVelocitySign && !velocityMatched)
+            {
+                continue;
+            }
+
+            direction = candidate;
+            return true;
+        }
+
+        direction = RoomDirection.None;
+        return false;
+    }
+
+    private bool TryTransition(RoomDirection direction)
+    {
+        // 現在部屋が無い場合は遷移できない。
+        if (currentRoom == null)
+        {
+            return false;
+        }
+
+        // 遷移方向に応じた隣接部屋を選ぶ。
+        Room nextRoom = null;
+        switch (direction)
+        {
+            case RoomDirection.Left:
+                nextRoom = currentRoom.LeftRoom;
+                break;
+            case RoomDirection.Right:
+                nextRoom = currentRoom.RightRoom;
+                break;
+            case RoomDirection.Up:
+                nextRoom = currentRoom.UpRoom;
+                break;
+            case RoomDirection.Down:
+                nextRoom = currentRoom.DownRoom;
+                break;
+        }
+
+        // 隣接部屋が未設定なら遷移しない。
+        if (nextRoom == null)
+        {
+            return false;
+        }
+
+        // Step 2 は状態切り替えのみ実行し、他システム反映は行わない。
+        isTransitioning = true;
+        previousRoom = currentRoom;
+        pendingRoom = nextRoom;
+        currentRoom = nextRoom;
+        lastTransitionDirection = direction;
+        pendingRoom = null;
+        isTransitioning = false;
+
+        if (enableDebugLog)
+        {
+            Debug.Log(
+                $"RoomManager: '{previousRoom.name}' -> '{currentRoom.name}' に遷移しました。Direction={direction}",
+                this);
+        }
+
+        return true;
     }
 }

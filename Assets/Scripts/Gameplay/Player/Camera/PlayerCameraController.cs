@@ -261,9 +261,9 @@ public sealed class PlayerCameraController : MonoBehaviour
         if (logViewportPosition)
         {
             Vector3 viewport = targetCamera.WorldToViewportPoint(effectiveTarget.position);
-            Debug.Log(
-                $"CameraTarget Viewport : x={viewport.x:F2}, y={viewport.y:F2}",
-                this);
+            //Debug.Log(
+            //    $"CameraTarget Viewport : x={viewport.x:F2}, y={viewport.y:F2}",
+            //    this);
         }
     }
 
