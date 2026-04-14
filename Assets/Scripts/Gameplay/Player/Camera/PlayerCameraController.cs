@@ -115,6 +115,11 @@ public sealed class PlayerCameraController : MonoBehaviour
     private bool hasActiveOrthographicSizeSmoothTimeOverride;
     private float activeOrthographicSizeSmoothTimeOverride;
 
+    // Room からの注視オフセット 一時上書き。
+    private bool hasActiveRoomFocusOffset;
+    private Vector2 activeRoomFocusOffset;
+
+
     // 現在有効な Zone 群。
     private readonly List<CameraZone> activeZones = new List<CameraZone>();
     // Zone ごとの「最後に入った順」を記録する。
@@ -234,8 +239,17 @@ public sealed class PlayerCameraController : MonoBehaviour
             return;
         }
 
-        // 追従対象位置 + オフセット で理想位置を作る。
-        desiredPosition = effectiveTarget.position + cameraOffset;
+        // 追従対象位置 + カメラオフセット(+必要なら部屋注視オフセット) で理想位置を作る。
+        Vector3 baseDesiredPosition = effectiveTarget.position + cameraOffset;
+        if (hasActiveRoomFocusOffset)
+        {
+            Vector3 focusOffset3D = new Vector3(activeRoomFocusOffset.x, activeRoomFocusOffset.y, 0f);
+            desiredPosition = baseDesiredPosition + focusOffset3D;
+        }
+        else
+        {
+            desiredPosition = baseDesiredPosition;
+        }
 
         // 理想位置をカメラ境界内に収めた最終候補位置を作る。
         clampedPosition = GetClampedPosition(desiredPosition);
@@ -594,11 +608,75 @@ public sealed class PlayerCameraController : MonoBehaviour
         hasActiveOrthographicSizeSmoothTimeOverride = false;
     }
 
+    public void SetActiveRoomFocusOffset(Vector2 focusOffset)
+    {
+        activeRoomFocusOffset = focusOffset;
+        hasActiveRoomFocusOffset = true;
+    }
+
+    public void ClearActiveRoomFocusOffset()
+    {
+        hasActiveRoomFocusOffset = false;
+        activeRoomFocusOffset = Vector2.zero;
+    }
+
+    public void ApplyRoomCameraSettings(Room room)
+    {
+        // null の部屋は反映せずに警告だけ出す。
+        if (room == null)
+        {
+            Debug.LogWarning("PlayerCameraController: ApplyRoomCameraSettings に null が渡されました。", this);
+            return;
+        }
+
+        // 部屋境界がある場合は境界 override を反映し、無い場合は world 境界に戻す。
+        if (room.RoomBounds != null)
+        {
+            SetActiveBoundsOverride(room.RoomBounds.WorldBounds);
+        }
+        else
+        {
+            ClearActiveBoundsOverride();
+        }
+
+        // 部屋注視オフセットは常に即反映する。
+        SetActiveRoomFocusOffset(room.RoomFocusOffset);
+
+        // 追従スムーズ override の有無に応じて反映を切り替える。
+        if (room.HasFollowSmoothingOverride)
+        {
+            SetActiveFollowSmoothingOverride(room.SmoothTimeX, room.SmoothTimeY);
+        }
+        else
+        {
+            ClearActiveFollowSmoothingOverride();
+        }
+
+        // orthographic size override の有無に応じて反映を切り替える。
+        if (room.HasOrthographicSizeOverride)
+        {
+            SetActiveOrthographicSizeOverride(room.OrthographicSize);
+        }
+        else
+        {
+            ClearActiveOrthographicSizeOverride();
+        }
+
+        // orthographic size 補間時間 override の有無に応じて反映を切り替える。
+        if (room.HasOrthographicSizeSmoothTimeOverride)
+        {
+            SetActiveOrthographicSizeSmoothTimeOverride(room.OrthographicSizeSmoothTime);
+        }
+        else
+        {
+            ClearActiveOrthographicSizeSmoothTimeOverride();
+        }
+    }
+
     public Bounds GetEffectiveBounds()
     {
         return EffectiveWorldBounds;
     }
-
     // -----------------------------
     // camera 実行
     // -----------------------------

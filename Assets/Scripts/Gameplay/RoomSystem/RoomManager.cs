@@ -80,6 +80,7 @@ public sealed class RoomManager : MonoBehaviour
         if (initialRoom != null)
         {
             ForceSetCurrentRoom(initialRoom);
+            ApplyCurrentRoomCameraSettings();
             return;
         }
 
@@ -163,6 +164,33 @@ public sealed class RoomManager : MonoBehaviour
         if (enableDebugLog)
         {
             Debug.Log($"RoomManager: currentRoom を '{currentRoom.name}' に設定しました。", this);
+        }
+    }
+
+    private void ApplyCurrentRoomCameraSettings()
+    {
+        // 現在部屋が無ければ何も反映しない。
+        if (currentRoom == null)
+        {
+            return;
+        }
+
+        // カメラ参照が無い場合は反映不能なので警告して終了する。
+        if (playerCameraController == null)
+        {
+            Debug.LogWarning("RoomManager: playerCameraController が未設定のためカメラ設定を反映できません。", this);
+            return;
+        }
+
+        // 現在部屋のカメラ設定を即時反映する。
+        playerCameraController.ApplyRoomCameraSettings(currentRoom);
+
+        // デバッグ有効時のみ、反映した部屋名と注視オフセットを出力する。
+        if (enableDebugLog)
+        {
+            Debug.Log(
+                $"RoomManager: カメラ設定を適用しました。Room='{currentRoom.name}', FocusOffset={currentRoom.RoomFocusOffset}",
+                this);
         }
     }
 
@@ -252,11 +280,12 @@ public sealed class RoomManager : MonoBehaviour
             return false;
         }
 
-        // Step 2 は状態切り替えのみ実行し、他システム反映は行わない。
+        // 状態切り替え直後にカメラ設定のみ即時反映する。
         isTransitioning = true;
         previousRoom = currentRoom;
         pendingRoom = nextRoom;
         currentRoom = nextRoom;
+        ApplyCurrentRoomCameraSettings();
         lastTransitionDirection = direction;
         pendingRoom = null;
         isTransitioning = false;
