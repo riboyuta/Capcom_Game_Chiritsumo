@@ -20,6 +20,10 @@ public sealed class RoomManager : MonoBehaviour
     [Tooltip("部屋遷移判定に使うプレイヤー本体です。位置・速度・停止制御に使います。")]
     [SerializeField] private PlayerController playerController;
 
+    [Header("参照: プレイヤー公開窓口")]
+    [Tooltip("部屋遷移中の入力遮断要求を送る公開窓口です。未設定時は実行時に探索を試みます。")]
+    [SerializeField] private PlayerFacade playerFacade;
+
     [Header("参照: カメラ")]
     [Tooltip("部屋ごとのカメラ境界と注視設定を反映するカメラ制御です。")]
     [SerializeField] private PlayerCameraController playerCameraController;
@@ -55,6 +59,7 @@ public sealed class RoomManager : MonoBehaviour
 
     private RoomDirection lastTransitionDirection = RoomDirection.None;
     private bool isTransitioning;
+    private bool isTransitionInputBlocked;
 
     public Room CurrentRoom => currentRoom;
     public Room PreviousRoom => previousRoom;
@@ -91,18 +96,21 @@ public sealed class RoomManager : MonoBehaviour
         // 現在部屋が確定していない間は遷移判定しない。
         if (currentRoom == null)
         {
+            ApplyTransitionInputBlock();
             return;
         }
 
         // 遷移中フラグが立っている間は二重遷移を防ぐ。
         if (isTransitioning)
         {
+            ApplyTransitionInputBlock();
             return;
         }
 
         // プレイヤー参照が無い場合は判定できない。
         if (playerController == null)
         {
+            ApplyTransitionInputBlock();
             return;
         }
 
@@ -110,6 +118,7 @@ public sealed class RoomManager : MonoBehaviour
         if (currentRoom.RoomBounds == null)
         {
             Debug.LogWarning($"RoomManager: currentRoom '{currentRoom.name}' の RoomBounds が未設定です。", this);
+            ApplyTransitionInputBlock();
             return;
         }
 
@@ -120,8 +129,13 @@ public sealed class RoomManager : MonoBehaviour
 
         if (TryGetTransitionDirection(currentBounds, playerPosition, playerVelocity, out RoomDirection direction))
         {
-            TryTransition(direction);
+            if (TryTransition(direction))
+            {
+                BeginRoomTransitionInputBlock();
+            }
         }
+
+        ApplyTransitionInputBlock();
     }
 
     private void ResolveReferences()
@@ -130,6 +144,11 @@ public sealed class RoomManager : MonoBehaviour
         if (playerController == null)
         {
             playerController = FindFirstObjectByType<PlayerController>();
+        }
+
+        if (playerFacade == null)
+        {
+            playerFacade = FindFirstObjectByType<PlayerFacade>();
         }
 
         // 未設定のカメラ参照だけを補完する。
@@ -142,6 +161,52 @@ public sealed class RoomManager : MonoBehaviour
         if (checkpointSystem == null)
         {
             checkpointSystem = FindFirstObjectByType<CheckpointSystem>();
+        }
+    }
+
+    private void ApplyTransitionInputBlock()
+    {
+        // 遷移中入力遮断が無効なら何もしない。
+        if (!isTransitionInputBlocked)
+        {
+            return;
+        }
+
+        // 公開窓口参照がなければ要求できない。
+        if (playerFacade == null)
+        {
+            Debug.LogWarning("RoomManager: playerFacade が未設定のため遷移中入力遮断を適用できません。", this);
+            return;
+        }
+
+        // 遷移中は移動系入力を毎フレーム遮断する。
+        playerFacade.RequestInputBlockThisFrame(
+            PlayerController.InputBlockFlags.Move
+            | PlayerController.InputBlockFlags.Jump
+            | PlayerController.InputBlockFlags.Dash
+            | PlayerController.InputBlockFlags.Grab);
+    }
+
+    public void BeginRoomTransitionInputBlock()
+    {
+        // 遷移中入力遮断を開始する。
+        isTransitionInputBlocked = true;
+
+        if (enableDebugLog)
+        {
+            Debug.Log("RoomManager: 部屋遷移中入力遮断を開始しました。", this);
+        }
+    }
+
+    [ContextMenu("End Room Transition Input Block")]
+    public void EndRoomTransitionInputBlock()
+    {
+        // 遷移中入力遮断を終了する。
+        isTransitionInputBlocked = false;
+
+        if (enableDebugLog)
+        {
+            Debug.Log("RoomManager: 部屋遷移中入力遮断を終了しました。", this);
         }
     }
 
