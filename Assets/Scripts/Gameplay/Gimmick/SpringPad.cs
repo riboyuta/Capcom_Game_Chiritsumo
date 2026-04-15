@@ -74,22 +74,28 @@ public sealed class SpringPad : MonoBehaviour
 
         lastBounceTime = Time.time;
 
-        // プレイヤーに外部打ち上げを通知する。
-        // 可変ジャンプカットによる速度削減を防ぐ。
+        // プレイヤーに固定ジャンプを適用する。
+        // ジャンプボタンの押下状態に関係なく、常に一定高さだけ跳ねる。
         PlayerFacade facade = targetRb.GetComponent<PlayerFacade>();
         if (facade != null)
         {
-            facade.NotifyExternalLaunch();
+            Vector3 bounceVelocity = ComputeBounceVelocity(targetRb);
+            facade.ApplyFixedJump(bounceVelocity);
         }
-
-        ApplyBounce(targetRb);
+        else
+        {
+            // プレイヤー以外の Rigidbody 用フォールバック。
+            ApplyBounce(targetRb);
+        }
     }
 
     // ──────────────────────────────────────────────
     // 跳ね返しロジック
     // ──────────────────────────────────────────────
 
-    private void ApplyBounce(Rigidbody targetRb)
+    // 跳ね返し後の速度ベクトルを計算する。
+    // 横速度は維持し、跳ね返し方向の既存速度だけを新しい速度で上書きする。
+    private Vector3 ComputeBounceVelocity(Rigidbody targetRb)
     {
         // このオブジェクトのローカル上方向を跳ね返し方向とする。
         Vector3 bounceDir = transform.up.normalized;
@@ -109,6 +115,12 @@ public sealed class SpringPad : MonoBehaviour
         velocity -= dot * bounceDir;
         velocity += bounceDir * bounceSpeed;
 
-        targetRb.linearVelocity = velocity;
+        return velocity;
+    }
+
+    // プレイヤー以外の Rigidbody に跳ね返し速度を適用する。
+    private void ApplyBounce(Rigidbody targetRb)
+    {
+        targetRb.linearVelocity = ComputeBounceVelocity(targetRb);
     }
 }
