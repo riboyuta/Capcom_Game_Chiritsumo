@@ -1405,10 +1405,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d250bb7f298bdde45bffe65faa83cb60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnTrigger
-  playerTag: Player
-  targetEnemy: {fileID: 0}
-  gameRoot: {fileID: 1603009781}
-  triggerOnlyOnce: 1
 --- !u!65 &333303603
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1475,10 +1471,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d250bb7f298bdde45bffe65faa83cb60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnTrigger
-  playerTag: Player
-  targetEnemy: {fileID: 0}
-  gameRoot: {fileID: 1603009781}
-  triggerOnlyOnce: 1
 --- !u!65 &337614775
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5240,10 +5232,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d250bb7f298bdde45bffe65faa83cb60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnTrigger
-  playerTag: Player
-  targetEnemy: {fileID: 0}
-  gameRoot: {fileID: 1603009781}
-  triggerOnlyOnce: 1
 --- !u!65 &1076190078
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -6120,16 +6108,6 @@ MonoBehaviour:
   stageResetSystem: {fileID: 1934615090}
   playerCameraController: {fileID: 0}
   playerDeathView: {fileID: 395024898}
-  knockbackResistance: 1
-  knockbackDuration: 0.25
-  decayKnockbackOverTime: 1
-  showHealthDebugLog: 0
-  damagedStateDuration: 0.15
-  grabbedStateDuration: 0.5
-  smashedStateDuration: 0.35
-  smashIsInstantDeath: 1
-  showReactionDebugLog: 0
-  killAfterGrabbedDuration: 1
 --- !u!54 &1189614812
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -7165,10 +7143,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d250bb7f298bdde45bffe65faa83cb60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnTrigger
-  playerTag: Player
-  targetEnemy: {fileID: 0}
-  gameRoot: {fileID: 1603009781}
-  triggerOnlyOnce: 1
 --- !u!65 &1349357021
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7337,10 +7311,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d250bb7f298bdde45bffe65faa83cb60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnTrigger
-  playerTag: Player
-  targetEnemy: {fileID: 0}
-  gameRoot: {fileID: 1603009781}
-  triggerOnlyOnce: 1
 --- !u!65 &1367673051
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7884,10 +7854,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d250bb7f298bdde45bffe65faa83cb60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnTrigger
-  playerTag: Player
-  targetEnemy: {fileID: 0}
-  gameRoot: {fileID: 1603009781}
-  triggerOnlyOnce: 1
 --- !u!65 &1538364887
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -9820,10 +9786,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d250bb7f298bdde45bffe65faa83cb60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnTrigger
-  playerTag: Player
-  targetEnemy: {fileID: 0}
-  gameRoot: {fileID: 1603009781}
-  triggerOnlyOnce: 1
 --- !u!65 &1928392864
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -10496,7 +10458,7 @@ GameObject:
   - component: {fileID: 2071674963}
   - component: {fileID: 2071674962}
   m_Layer: 0
-  m_Name: Gimmick_Switch
+  m_Name: Gimmick_SpringPad
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
