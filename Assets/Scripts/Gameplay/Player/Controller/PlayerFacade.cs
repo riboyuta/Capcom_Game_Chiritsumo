@@ -86,6 +86,19 @@ public enum ExternalVisualPolicy
     Hide
 }
 
+// 外部制御中の速度方針。
+public enum ExternalVelocityPolicy
+{
+    // 現在の速度を維持する。
+    Keep,
+
+    // 水平方向速度だけゼロにする。
+    ZeroHorizontal,
+
+    // 速度を完全にゼロにする。
+    ZeroAll
+}
+
 // 外部制御開始時の要求内容をまとめたもの。
 // 重要:
 // - TryBeginExternalControl は全部停止 API ではない
@@ -115,6 +128,9 @@ public struct PlayerExternalControlRequest
 
     // 見た目の扱い。
     public ExternalVisualPolicy VisualPolicy;
+
+    // 速度の扱い。
+    public ExternalVelocityPolicy VelocityPolicy;
 }
 
 // ワープ時の補助指定。
