@@ -67,6 +67,13 @@ public sealed class Room : MonoBehaviour
     [Tooltip("overrideOrthographicSizeSmoothTime が有効な時に使う補間時間です。")]
     [SerializeField] private float orthographicSizeSmoothTime = 0.10f;
 
+    [Header("部屋遷移カメラ時間上書き")]
+    [Tooltip("有効にすると、この部屋へ遷移する時のカメラ移動時間を上書きします。")]
+    [SerializeField] private bool overrideRoomTransitionDuration = false;
+
+    [Tooltip("overrideRoomTransitionDuration が有効な時に使う遷移時間です。")]
+    [SerializeField] private float roomTransitionDuration = 0.20f;
+
     public string RoomId => roomId;
     public CameraBounds RoomBounds => roomBounds;
     public Vector2 RoomFocusOffset => roomFocusOffset;
@@ -90,6 +97,6 @@ public sealed class Room : MonoBehaviour
 
     public bool HasOrthographicSizeSmoothTimeOverride => overrideOrthographicSizeSmoothTime;
     public float OrthographicSizeSmoothTime => orthographicSizeSmoothTime;
-
-
+    public bool HasRoomTransitionDurationOverride => overrideRoomTransitionDuration;
+    public float RoomTransitionDuration => roomTransitionDuration;
 }

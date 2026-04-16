@@ -479,10 +479,12 @@ MonoBehaviour:
   overrideFollowSmoothing: 0
   smoothTimeX: 0.08
   smoothTimeY: 0.12
-  overrideOrthographicSize: 1
+  overrideOrthographicSize: 0
   orthographicSize: 5
   overrideOrthographicSizeSmoothTime: 0
   orthographicSizeSmoothTime: 0.1
+  overrideRoomTransitionDuration: 0
+  roomTransitionDuration: 0.2
 --- !u!1 &382794040
 GameObject:
   m_ObjectHideFlags: 0
@@ -2196,9 +2198,11 @@ MonoBehaviour:
   playerTag: Player
   anchorChildName: CameraTargetAnchor
   cameraOffset: {x: 0, y: 0, z: -10}
-  smoothTimeX: 0.01
-  smoothTimeY: 0.01
-  orthographicSizeSmoothTime: 0.01
+  smoothTimeX: 0
+  smoothTimeY: 0
+  orthographicSizeSmoothTime: 1
+  defaultRoomTransitionDuration: 1
+  roomTransitionCompleteDistance: 0.05
   drawDebugGizmos: 1
   logViewportPosition: 1
 --- !u!1 &1278174171
@@ -2296,6 +2300,8 @@ MonoBehaviour:
   orthographicSize: 7
   overrideOrthographicSizeSmoothTime: 0
   orthographicSizeSmoothTime: 0.1
+  overrideRoomTransitionDuration: 0
+  roomTransitionDuration: 0.2
 --- !u!1 &1410207502
 GameObject:
   m_ObjectHideFlags: 0
@@ -2806,6 +2812,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoomManager
   initialRoom: {fileID: 1290682617}
   playerController: {fileID: 1259927090}
+  playerFacade: {fileID: 1259927095}
   playerCameraController: {fileID: 1265851343}
   checkpointSystem: {fileID: 1097650499}
   transitionEpsilon: 0.05

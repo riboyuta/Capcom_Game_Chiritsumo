@@ -100,10 +100,32 @@ public sealed class RoomManager : MonoBehaviour
             return;
         }
 
-        // 遷移中フラグが立っている間は二重遷移を防ぐ。
+        // 遷移中フラグが立っている間は入力遮断を維持し、カメラ到達まで待機する。
         if (isTransitioning)
         {
             ApplyTransitionInputBlock();
+
+            if (playerCameraController == null)
+            {
+                Debug.LogWarning("RoomManager: 遷移中ですが playerCameraController が未設定のため遷移を強制終了します。", this);
+                EndRoomTransitionInputBlock();
+                pendingRoom = null;
+                isTransitioning = false;
+                return;
+            }
+
+            if (!playerCameraController.IsRoomTransitionRunning || playerCameraController.HasReachedRoomTransitionTarget)
+            {
+                EndRoomTransitionInputBlock();
+                pendingRoom = null;
+                isTransitioning = false;
+
+                if (enableDebugLog)
+                {
+                    Debug.Log("RoomManager: カメラ遷移完了を検出したため入力遮断を解除しました。", this);
+                }
+            }
+
             return;
         }
 
@@ -129,10 +151,7 @@ public sealed class RoomManager : MonoBehaviour
 
         if (TryGetTransitionDirection(currentBounds, playerPosition, playerVelocity, out RoomDirection direction))
         {
-            if (TryTransition(direction))
-            {
-                BeginRoomTransitionInputBlock();
-            }
+            TryTransition(direction);
         }
 
         ApplyTransitionInputBlock();
@@ -401,7 +420,7 @@ public sealed class RoomManager : MonoBehaviour
             return false;
         }
 
-        // 状態切り替え直後にカメラ設定のみ即時反映する。
+        // 状態切り替え直後にカメラ設定反映と遷移開始を行う。
         isTransitioning = true;
         previousRoom = currentRoom;
         pendingRoom = nextRoom;
@@ -409,8 +428,16 @@ public sealed class RoomManager : MonoBehaviour
         lastTransitionDirection = direction;
         ApplyCurrentRoomCameraSettings();
         UpdateCheckpointForRoomEntry(currentRoom, direction);
-        pendingRoom = null;
-        isTransitioning = false;
+        if (playerCameraController != null)
+        {
+            playerCameraController.BeginRoomTransition(currentRoom);
+        }
+        else
+        {
+            Debug.LogWarning("RoomManager: playerCameraController が未設定のためカメラ遷移を開始できません。", this);
+        }
+
+        BeginRoomTransitionInputBlock();
 
         if (enableDebugLog)
         {
