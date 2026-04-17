@@ -1,6 +1,6 @@
 using UnityEngine;
 
-/// <summary>
+
 /// 複数の ParallaxLayer を統括し、カメラ追従 または 自動スクロール で
 /// パララックス背景を駆動するコントローラー。
 /// </summary>
@@ -47,10 +47,10 @@ public sealed class ParallaxBackground : MonoBehaviour
         }
     }
 
-    /// <summary>
+    
     /// LateUpdate でスクロール処理を実行する。
     /// カメラ移動後に背景を動かすため LateUpdate を使用する。
-    /// </summary>
+
     private void LateUpdate()
     {
         float delta;
@@ -82,17 +82,17 @@ public sealed class ParallaxBackground : MonoBehaviour
         }
     }
 
-    /// <summary>
+    
     /// 自動スクロール速度を動的に変更する。
-    /// </summary>
+
     public void SetAutoScrollSpeed(float speed)
     {
         autoScrollSpeed = speed;
     }
 
-    /// <summary>
+    
     /// 追従対象のカメラを動的に変更する。
-    /// </summary>
+
     public void SetCameraTransform(Transform cam)
     {
         cameraTransform = cam;

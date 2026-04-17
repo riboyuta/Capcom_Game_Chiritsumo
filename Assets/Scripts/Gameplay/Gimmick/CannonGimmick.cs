@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Collider))]
-public class CannonGimmick : MonoBehaviour
+public class CannonGimmick : MonoBehaviour, IRespawnResettable
 {
     public enum CannonType
     {
@@ -102,6 +102,20 @@ public class CannonGimmick : MonoBehaviour
     private float moveTimer = 0f;
     private enum MoveState { MovingToDest, WaitingAtDest, MovingToOrigin, WaitingAtOrigin }
     private MoveState currentMoveState = MoveState.MovingToDest;
+
+    private bool hasCapturedInitialState = false;
+    private bool initialEnabledState = true;
+    private Vector3 initialTransformPosition;
+    private Quaternion initialTransformRotation;
+    private Vector3 initialOriginPos;
+    private Vector3 initialDestinationPos;
+    private MoveState initialMoveState = MoveState.MovingToDest;
+    private float initialMoveTimer = 0f;
+    private SteppedState initialRotState = SteppedState.Waiting;
+    private float initialRotTimer = 0f;
+    private Quaternion initialStartRotation;
+    private Quaternion initialTargetRotation;
+    private readonly List<CannonFlightMonitor> spawnedFlightMonitors = new List<CannonFlightMonitor>();
 
     private void Awake()
     {
@@ -405,6 +419,7 @@ public class CannonGimmick : MonoBehaviour
                 storedPlayerCollider,
                 myCollider
             );
+            spawnedFlightMonitors.Add(monitor);
 
             // 参照のクリア処理
             storedPlayer = null;
@@ -417,41 +432,10 @@ public class CannonGimmick : MonoBehaviour
 
     private void OnDisable()
     {
-        // 大砲が無効化された場合、外部制御を安全に復帰させる
-        if (activeSession.IsValid)
-        {
-            activeSession.EndControl();
-            activeSession = PlayerExternalControlSession.Invalid;
-        }
-
-        // プレイヤーを保持中なら見た目と物理を復帰する
-        if (hasPlayer && storedPlayer != null)
-        {
-            if (storedPlayerRb != null)
-            {
-                storedPlayerRb.isKinematic = false;
-            }
-
-            foreach (var r in storedRenderers)
-            {
-                if (r != null)
-                {
-                    r.enabled = true;
-                }
-            }
-
-            if (myCollider != null && storedPlayerCollider != null)
-            {
-                Physics.IgnoreCollision(myCollider, storedPlayerCollider, false);
-            }
-        }
-
-        hasPlayer = false;
-        storedPlayer = null;
-        storedPlayerFacade = null;
-        storedPlayerRb = null;
-        storedPlayerCollider = null;
-        storedRenderers.Clear();
+        // 大砲が無効化された場合も、保持中プレイヤーと入力参照を安全に解放する
+        CleanupActiveSession();
+        RestoreStoredPlayerState();
+        ClearRuntimeReferences();
     }
 
     private void OnDrawGizmos()
@@ -470,5 +454,128 @@ public class CannonGimmick : MonoBehaviour
         
         Gizmos.color = Color.yellow;
         Gizmos.DrawLine(aPoint, bPoint);
+    }
+
+    public void CaptureInitialState()
+    {
+        // 初回の正しい初期状態だけ保存し、途中状態で上書きしない
+        if (hasCapturedInitialState)
+        {
+            return;
+        }
+
+        initialEnabledState = enabled;
+        initialTransformPosition = transform.position;
+        initialTransformRotation = transform.rotation;
+        initialOriginPos = originPos;
+        initialDestinationPos = destinationPos;
+        initialMoveState = currentMoveState;
+        initialMoveTimer = moveTimer;
+        initialRotState = currentRotState;
+        initialRotTimer = rotTimer;
+        initialStartRotation = startRotation;
+        initialTargetRotation = targetRotation;
+        hasCapturedInitialState = true;
+    }
+
+    public void ResetToRespawnState()
+    {
+        if (!hasCapturedInitialState)
+        {
+            CaptureInitialState();
+        }
+
+        CleanupActiveSession();
+        RestoreStoredPlayerState();
+        CleanupFlightMonitors();
+        RestoreTransformAndMovementState();
+        RestoreRotationState();
+        fireTimer = 0f;
+        enabled = initialEnabledState;
+        ClearRuntimeReferences();
+    }
+
+    private void CleanupActiveSession()
+    {
+        // 外部制御セッションが残っている場合は明示終了する
+        if (!activeSession.IsValid)
+        {
+            return;
+        }
+
+        activeSession.EndControl();
+        activeSession = PlayerExternalControlSession.Invalid;
+    }
+
+    private void RestoreStoredPlayerState()
+    {
+        // プレイヤー保持中の途中状態を必ず通常状態へ戻す
+        if (storedPlayerRb != null)
+        {
+            storedPlayerRb.isKinematic = false;
+        }
+
+        for (int i = 0; i < storedRenderers.Count; i++)
+        {
+            Renderer renderer = storedRenderers[i];
+            if (renderer != null)
+            {
+                renderer.enabled = true;
+            }
+        }
+
+        if (myCollider != null && storedPlayerCollider != null)
+        {
+            Physics.IgnoreCollision(myCollider, storedPlayerCollider, false);
+        }
+    }
+
+    private void CleanupFlightMonitors()
+    {
+        // この大砲が発射時に生成したフライト監視を残さない
+        for (int i = spawnedFlightMonitors.Count - 1; i >= 0; i--)
+        {
+            CannonFlightMonitor monitor = spawnedFlightMonitors[i];
+            if (monitor == null)
+            {
+                spawnedFlightMonitors.RemoveAt(i);
+                continue;
+            }
+
+            Destroy(monitor);
+            spawnedFlightMonitors.RemoveAt(i);
+        }
+    }
+
+    private void RestoreTransformAndMovementState()
+    {
+        // 位置と移動ステートを初期値へ戻す
+        transform.position = initialTransformPosition;
+        originPos = initialOriginPos;
+        destinationPos = initialDestinationPos;
+        currentMoveState = initialMoveState;
+        moveTimer = initialMoveTimer;
+    }
+
+    private void RestoreRotationState()
+    {
+        // 回転と回転ステートを初期値へ戻す
+        transform.rotation = initialTransformRotation;
+        currentRotState = initialRotState;
+        rotTimer = initialRotTimer;
+        startRotation = initialStartRotation;
+        targetRotation = initialTargetRotation;
+    }
+
+    private void ClearRuntimeReferences()
+    {
+        // 参照をクリアして次回動作に持ち越さない
+        hasPlayer = false;
+        storedPlayer = null;
+        storedPlayerFacade = null;
+        storedPlayerRb = null;
+        storedPlayerCollider = null;
+        storedRenderers.Clear();
+        rawInputSource = null;
     }
 }
