@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // 鍵のグループを管理するマネージャー。
@@ -12,6 +13,9 @@ public class KeyManager : MonoBehaviour, IRespawnResettable
     private int totalKeysCount = 0;
     private bool hasCapturedInitialState;
 
+    private int initialCollectedCount;
+    private bool initialIsCompleted;
+
     // 全ての鍵が集まったら true になるプロパティ
     public bool IsCompleted { get; private set; }
 
@@ -23,6 +27,8 @@ public class KeyManager : MonoBehaviour, IRespawnResettable
             keys = GetComponentsInChildren<KeyCollectible>(true);
         }
 
+        EnsureStableKeys();
+
         totalKeysCount = keys.Length;
         
         foreach (var key in keys)
@@ -32,6 +38,57 @@ public class KeyManager : MonoBehaviour, IRespawnResettable
                 key.Initialize(this);
             }
         }
+    }
+
+    // keys 配列の null を除去して、初期管理集合を安定させる
+    private void EnsureStableKeys()
+    {
+        if (keys == null)
+        {
+            keys = System.Array.Empty<KeyCollectible>();
+            return;
+        }
+
+        bool hasNull = false;
+        for (int i = 0; i < keys.Length; i++)
+        {
+            if (keys[i] == null)
+            {
+                hasNull = true;
+                break;
+            }
+        }
+
+        if (!hasNull)
+        {
+            return;
+        }
+
+        List<KeyCollectible> sanitizedKeys = new List<KeyCollectible>(keys.Length);
+        for (int i = 0; i < keys.Length; i++)
+        {
+            if (keys[i] != null)
+            {
+                sanitizedKeys.Add(keys[i]);
+            }
+        }
+
+        Debug.LogWarning($"[{nameof(KeyManager)}] null の KeyCollectible 参照を除外しました: {name}", this);
+        keys = sanitizedKeys.ToArray();
+    }
+
+    // 初期の進行状態を保存する
+    private void CaptureManagerInitialState()
+    {
+        initialCollectedCount = collectedCount;
+        initialIsCompleted = IsCompleted;
+    }
+
+    // 保存した初期の進行状態を復元する
+    private void RestoreManagerInitialState()
+    {
+        collectedCount = initialCollectedCount;
+        IsCompleted = initialIsCompleted;
     }
 
     // 鍵が取得されたときに KeyCollectible から呼ばれる
@@ -57,14 +114,22 @@ public class KeyManager : MonoBehaviour, IRespawnResettable
 
     public void CaptureInitialState()
     {
-        if (hasCapturedInitialState) return;
+        if (hasCapturedInitialState)
+        {
+            return;
+        }
+
+        CaptureManagerInitialState();
         hasCapturedInitialState = true;
     }
 
     public void ResetToRespawnState()
     {
-        // リスポーン時は取得カウントと完了状態を初期化する
-        collectedCount = 0;
-        IsCompleted = false;
+        if (!hasCapturedInitialState)
+        {
+            CaptureInitialState();
+        }
+
+        RestoreManagerInitialState();
     }
 }
