@@ -290,38 +290,6 @@ public sealed class WallSettings
     [Min(0f)]
     [SerializeField] float wallGrabJumpReattachLockTime = 0.18f;
 
-    [Header("段差登りを使う")]
-    [Tooltip("壁の段差を登る機能を有効にします。段差のある壁を自然に登れるようになります。")]
-    [SerializeField] bool useLedgeClimb = true;
-
-    [Header("段差登りの登る時間")]
-    [Tooltip("段差登りのアニメーションや移動にかかる時間です。長いほどゆっくり登ります。")]
-    [SerializeField] float ledgeClimbDuration = 0.22f;
-
-    [Header("段差登りの持ち上げ高さ")]
-    [Tooltip("段差登りでキャラクターを持ち上げる高さです。大きいほど高い段差を登れるようになりますが、不自然な動きになりやすくなります。")]
-    [SerializeField] float ledgeClimbLiftHeight = 0.35f;
-
-    [Header("段差登りの内側への入り込み量")]
-    [Tooltip("段差登りで壁の内側へどれだけ入り込むかの量です。大きいほど段差をしっかり掴むようになりますが、壁から離れすぎると不自然になります。")]
-    [SerializeField] float ledgeClimbInnerInset = 0.18f;
-
-    [Header("段差登りの前方への入り込み量")]
-    [Tooltip("段差登りで壁の前方へどれだけ入り込むかの量です。大きいほど段差をしっかり掴むようになりますが、前に出すぎると不自然になります。")]
-    [SerializeField] float ledgeClimbControlForwardInset = 0.05f;
-
-    [Header("段差登りの上入力しきい値")]
-    [Tooltip("段差登り中に上入力として認識する最小値です。小さすぎると誤判定しやすく、大きすぎると意図した操作が出にくくなります。")]
-    [SerializeField] float ledgeClimbUpInputThreshold = 0.1f;
-
-    [Header("段差登りの前方チェック距離")]
-    [Tooltip("段差登りで前方の壁をチェックする距離です。大きいほど遠くの壁を認識しやすくなりますが、不自然な動きになる可能性があります。")]
-    [SerializeField] float ledgeClimbForwardCheckDistance = 0.08f;
-
-    [Header("段差登りの上方チェック距離")]
-    [Tooltip("段差登りで上方の壁をチェックする距離です。大きいほど高い段差を認識しやすくなりますが、不自然な動きになる可能性があります。")]
-    [SerializeField] float ledgeClimbTopDownCheckDistance = 1.0f;
-
     [Header("壁キックを使う")]
     [Tooltip("壁から反発して跳ぶ壁キック機能を有効にします。")]
     [SerializeField] bool useWallKick = true;
@@ -362,14 +330,7 @@ public sealed class WallSettings
     public float WallGrabJumpHorizontalLockTime => wallGrabJumpHorizontalLockTime;
 
     public float WallGrabJumpReattachLockTime => wallGrabJumpReattachLockTime;
-    public bool UseLedgeClimb => useLedgeClimb;
-    public float LedgeClimbDuration => ledgeClimbDuration;
-    public float LedgeClimbLiftHeight => ledgeClimbLiftHeight;
-    public float LedgeClimbInnerInset => ledgeClimbInnerInset;
-    public float LedgeClimbControlForwardInset => ledgeClimbControlForwardInset;
-    public float LedgeClimbUpInputThreshold => ledgeClimbUpInputThreshold;
-    public float LedgeClimbForwardCheckDistance => ledgeClimbForwardCheckDistance;
-    public float LedgeClimbTopDownCheckDistance => ledgeClimbTopDownCheckDistance;
+    
     public bool UseWallKick => useWallKick;
     public float WallJumpHorizontalVelocity => wallJumpHorizontalVelocity;
     public float WallJumpVerticalVelocity => wallJumpVerticalVelocity;

@@ -27,27 +27,6 @@ internal sealed class PlayerRuntimeState
     // 捕まっている壁の左右。(-1:left / +1:right / 0:none)
     public int wallGrabSide;
 
-    // 現在掴まれているかどうか。
-    public bool isLedgeClimbing;
-
-    // 掴み開始位置
-    public Vector3 ledgeClimbStart;
-
-    // 掴み中のコントロール位置
-    public Vector3 ledgeClimbControl;
-
-    // 掴み終了位置
-    public Vector3 ledgeClimbEnd;
-
-    // 掴み開始からの経過時間。
-    public float ledgeClimbTimer;
-
-    // 掴み全体の所要時間。
-    public float ledgeClimbDuration;
-
-    // 掴んでいる段差の左右。(-1:left / +1:right)
-    public int ledgeClimbSide;
-
     // 壁掴まりの残り継続時間。
     // 接地で最大値へ戻り、壁掴まり中だけ減少する。
     public float wallGrabRemainingTime = 0f;

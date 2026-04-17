@@ -485,15 +485,6 @@ public sealed partial class PlayerController : MonoBehaviour
         // 壁掴まり継続時間を更新
         locomotionSystem.UpdateWallGrabLimitTimer(deltaTime);
 
-        // 壁接触からの掴まり開始を試みる。
-        if (locomotionSystem.TryStartLedgeClimbFromWallContact())
-        {
-            UpdateAudioEvents();
-            UpdateVibrationEvents();
-            FinalizeVisualState(previousVelocityY);
-            return;
-        }
-
         // 壁捕まり状態の進入・離脱を更新する。
         locomotionSystem.UpdateWallGrabState();
 
@@ -548,30 +539,12 @@ public sealed partial class PlayerController : MonoBehaviour
             return;
         }
 
-        // 掴まり中は専用移動を適用して通常移動へ入らない。
-        if (runtimeState.isLedgeClimbing)
-        {
-            locomotionSystem.ApplyLedgeClimbMovement(deltaTime);
-            UpdateAudioEvents();
-            UpdateVibrationEvents();
-            FinalizeVisualState(previousVelocityY);
-            return;
-        }
-
         if (runtimeState.isWallGrabbing)
         {
             locomotionSystem.ApplyJump();
 
             if (runtimeState.isWallGrabbing)
             {
-                if (locomotionSystem.TryStartLedgeClimb())
-                {
-                    UpdateAudioEvents();
-                    UpdateVibrationEvents();
-                    FinalizeVisualState(previousVelocityY);
-                    return;
-                }
-
                 locomotionSystem.ApplyWallGrabMovement();
                 UpdateAudioEvents();
                 UpdateVibrationEvents();
