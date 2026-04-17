@@ -482,6 +482,9 @@ public sealed partial class PlayerController : MonoBehaviour
             out runtimeState.isTouchingWall,
             out runtimeState.wallSide);
 
+        // 壁掴まり継続時間を更新
+        locomotionSystem.UpdateWallGrabLimitTimer(deltaTime);
+
         // 壁接触からの掴まり開始を試みる。
         if (locomotionSystem.TryStartLedgeClimbFromWallContact())
         {

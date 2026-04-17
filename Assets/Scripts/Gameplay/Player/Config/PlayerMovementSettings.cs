@@ -233,6 +233,26 @@ public sealed class WallSettings
     [Tooltip("空中で壁に接触中に Grab 入力を保持しているとき、壁に捕まる機能を有効にします。")]
     [SerializeField] bool useWallGrab = true;
 
+    [Header("壁捕まり継続可能時間")]
+    [Tooltip("着地してから次に着地するまでに、壁へ捕まり続けられる合計時間です。0以下になると着地するまで壁捕まりできません。壁キックは可能です。")]
+    [Min(0f)]
+    [SerializeField] float wallGrabMaxHoldTime = 7.0f;
+
+    [Header("壁捕まり通常時の消費量/秒")]
+    [Tooltip("壁に掴まって静止しているとき、1秒あたりに消費する壁捕まりリソース量です。")]
+    [Min(0f)]
+    [SerializeField] float wallGrabIdleDrainPerSecond = 1.0f;
+
+    [Header("壁捕まり上下移動時の消費量/秒")]
+    [Tooltip("壁に掴まって上下移動しているとき、1秒あたりに消費する壁捕まりリソース量です。通常時より大きくします。")]
+    [Min(0f)]
+    [SerializeField] float wallGrabClimbDrainPerSecond = 1.8f;
+
+    [Header("壁捕まり真上ジャンプ時の消費量")]
+    [Tooltip("壁捕まり状態から真上ジャンプした瞬間に消費する壁捕まりリソース量です。")]
+    [Min(0f)]
+    [SerializeField] float wallGrabJumpCost = 2.5f;
+
     [Header("壁捕まり中の縦速度")]
     [Tooltip("壁捕まり中に維持する縦速度です。0でその場維持、負値でゆっくり下降、正値で上昇します。")]
     [SerializeField] float wallGrabVerticalSpeed = 0f;
@@ -256,6 +276,19 @@ public sealed class WallSettings
     [Header("壁登り入力しきい値")]
     [Tooltip("壁登り中に入力として認識する最小値です。小さすぎると誤判定しやすく、大きすぎると意図した操作が出にくくなります。")]
     [SerializeField] float wallClimbInputThreshold = 0.1f;
+
+    [Header("壁捕まりジャンプ上速度")]
+    [Tooltip("壁捕まり中に真上へジャンプするときの上方向速度です。通常ジャンプや壁キックとは別に調整します。")]
+    [SerializeField] float wallGrabJumpVerticalVelocity = 12.5f;
+
+    [Header("壁捕まりジャンプ後横入力ロック時間")]
+    [Tooltip("壁捕まりジャンプ直後に横方向の移動入力を無効化する時間です。短すぎると壁から離れにくく、長すぎると操作不能感が出ます。")]
+    [SerializeField] float wallGrabJumpHorizontalLockTime = 0.08f;
+
+    [Header("壁捕まりジャンプ後再付着ロック時間")]
+    [Tooltip("壁捕まりジャンプ直後に再び壁へ捕まるのを防ぐ時間です。短すぎると壁に吸い戻されやすく、長すぎると操作不能感が出ます。")]
+    [Min(0f)]
+    [SerializeField] float wallGrabJumpReattachLockTime = 0.18f;
 
     [Header("段差登りを使う")]
     [Tooltip("壁の段差を登る機能を有効にします。段差のある壁を自然に登れるようになります。")]
@@ -315,12 +348,20 @@ public sealed class WallSettings
     public bool UseWallSlide => useWallSlide;
     public float WallSlideMaxSpeed => wallSlideMaxSpeed;
     public bool UseWallGrab => useWallGrab;
+    public float WallGrabMaxHoldTime => wallGrabMaxHoldTime;
+    public float WallGrabIdleDrainPerSecond => wallGrabIdleDrainPerSecond;
+    public float WallGrabClimbDrainPerSecond => wallGrabClimbDrainPerSecond;
+    public float WallGrabJumpCost => wallGrabJumpCost;
     public float WallGrabVerticalSpeed => wallGrabVerticalSpeed;
     public float WallGrabEnterDistance => wallGrabEnterDistance;
     public float WallGrabExitDistance => wallGrabExitDistance;
     public float WallClimbUpSpeed => wallClimbUpSpeed;
     public float WallClimbDownSpeed => wallClimbDownSpeed;
     public float WallClimbInputThreshold => wallClimbInputThreshold;
+    public float WallGrabJumpVerticalVelocity => wallGrabJumpVerticalVelocity;
+    public float WallGrabJumpHorizontalLockTime => wallGrabJumpHorizontalLockTime;
+
+    public float WallGrabJumpReattachLockTime => wallGrabJumpReattachLockTime;
     public bool UseLedgeClimb => useLedgeClimb;
     public float LedgeClimbDuration => ledgeClimbDuration;
     public float LedgeClimbLiftHeight => ledgeClimbLiftHeight;

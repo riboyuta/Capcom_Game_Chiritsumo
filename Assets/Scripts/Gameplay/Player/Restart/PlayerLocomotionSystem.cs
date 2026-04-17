@@ -163,6 +163,7 @@ internal sealed class PlayerLocomotionSystem
         justWallJumpedThisFrame = false;
         suppressVariableJumpCutThisTick = false;
         resolvedLocomotionModifier = PlayerLocomotionModifierRequest.Identity;
+        runtimeState.wallGrabRemainingTime = movementSettings.Wall.WallGrabMaxHoldTime;
     }
 
     // 物理Tick用の移動補正を解決する。
@@ -194,6 +195,35 @@ internal sealed class PlayerLocomotionSystem
         }
 
         jumpHoldTimer = Mathf.Max(0f, jumpHoldTimer - deltaTime);
+    }
+
+    internal void UpdateWallGrabLimitTimer(float deltaTime)
+    {
+        if (runtimeState.isGrounded)
+        {
+            runtimeState.wallGrabRemainingTime = movementSettings.Wall.WallGrabMaxHoldTime;
+            return;
+        }
+
+        if (!runtimeState.isWallGrabbing)
+        {
+            return;
+        }
+
+        float inputY = Mathf.Clamp(playerInputReader.Move.y, -1f, 1f);
+        float threshold = movementSettings.Wall.WallClimbInputThreshold;
+
+        bool isClimbing =
+            inputY > threshold ||
+            inputY < -threshold;
+
+        float drainPerSecond = isClimbing
+            ? movementSettings.Wall.WallGrabClimbDrainPerSecond
+            : movementSettings.Wall.WallGrabIdleDrainPerSecond;
+
+        runtimeState.wallGrabRemainingTime = Mathf.Max(
+            0f,
+            runtimeState.wallGrabRemainingTime - drainPerSecond * deltaTime);
     }
 
     // 移動入力から向きを更新する。
@@ -265,6 +295,14 @@ internal sealed class PlayerLocomotionSystem
             return;
         }
 
+        // 壁掴まり中の真上ジャンプを先に判定
+        if (TryApplyWallGrabVerticalJump())
+        {
+            jumpBufferTimer = 0f;
+            return;
+        }
+
+        // その次に壁キック
         if (TryApplyWallKick())
         {
             jumpBufferTimer = 0f;
@@ -287,6 +325,59 @@ internal sealed class PlayerLocomotionSystem
         jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
         justJumpedThisFrame = true;
         playJumpSound?.Invoke();
+    }
+
+    internal bool TryApplyWallGrabVerticalJump()
+    {
+        if (!runtimeState.isWallGrabbing)
+        {
+            return false;
+        }
+
+        if (runtimeState.isDashing)
+        {
+            return false;
+        }
+
+        int side = runtimeState.wallGrabSide != 0 ? runtimeState.wallGrabSide : runtimeState.wallSide;
+        if (side == 0)
+        {
+            return false;
+        }
+
+        float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
+        float threshold = movementSettings.Detection.WallInputThreshold;
+
+        bool pushingAwayFromWall = inputX * side < -threshold;
+        if (pushingAwayFromWall)
+        {
+            return false;
+        }
+
+        ExitWallGrab();
+
+        runtimeState.wallGrabRemainingTime = Mathf.Max(
+            0f,
+            runtimeState.wallGrabRemainingTime - movementSettings.Wall.WallGrabJumpCost);
+
+        Vector3 velocity = rb.linearVelocity;
+        velocity.x = 0f;
+        velocity.y = movementSettings.Wall.WallGrabJumpVerticalVelocity;
+        rb.linearVelocity = velocity;
+
+        runtimeState.isGrounded = false;
+        runtimeState.isWallSliding = false;
+        runtimeState.isFastFalling = false;
+        runtimeState.wallJumpControlLockTimer = movementSettings.Wall.WallGrabJumpHorizontalLockTime;
+        runtimeState.wallReattachLockTimer = movementSettings.Wall.WallGrabJumpReattachLockTime;
+
+        coyoteTimer = 0f;
+        jumpBufferTimer = 0f;
+        jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
+        justJumpedThisFrame = true;
+
+        playJumpSound?.Invoke();
+        return true;
     }
 
     // 壁キックを開始できる場合に適用する。
@@ -312,29 +403,54 @@ internal sealed class PlayerLocomotionSystem
             return false;
         }
 
+        int side = runtimeState.isWallGrabbing
+            ? runtimeState.wallGrabSide
+            : runtimeState.wallSide;
+
+        if (side == 0)
+        {
+            return false;
+        }
+
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
-        bool hasHorizontalInput = Mathf.Abs(inputX) >= movementSettings.Detection.WallInputThreshold;
+        float threshold = movementSettings.Detection.WallInputThreshold;
+        bool hasHorizontalInput = Mathf.Abs(inputX) >= threshold;
+
         if (!hasHorizontalInput)
         {
             return false;
         }
 
+        if (runtimeState.isWallGrabbing)
+        {
+            // 壁掴まり中だけ「壁と反対入力」で壁キック
+            bool pushingAwayFromWall = inputX * side < -threshold;
+            if (!pushingAwayFromWall)
+            {
+                return false;
+            }
+        }
+        // 壁掴まり中ではないなら、左右どちら入力でも壁キック
+
         ExitWallGrab();
 
         Vector3 velocity = rb.linearVelocity;
-        velocity.x = -runtimeState.wallSide * movementSettings.Wall.WallJumpHorizontalVelocity;
+        velocity.x = -side * movementSettings.Wall.WallJumpHorizontalVelocity;
         velocity.y = movementSettings.Wall.WallJumpVerticalVelocity;
         rb.linearVelocity = velocity;
 
         runtimeState.wallJumpControlLockTimer = movementSettings.Wall.WallJumpControlLockTime;
         runtimeState.wallReattachLockTimer = movementSettings.Wall.WallReattachLockTime;
         coyoteTimer = 0f;
+        jumpBufferTimer = 0f;
         jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
         runtimeState.isGrounded = false;
+        runtimeState.isWallSliding = false;
+        runtimeState.isFastFalling = false;
         justWallJumpedThisFrame = true;
+
         playWallKickVibration?.Invoke();
         playWallKickSound?.Invoke();
-
         return true;
     }
 
@@ -584,6 +700,11 @@ internal sealed class PlayerLocomotionSystem
             return false;
         }
 
+        if (runtimeState.wallGrabRemainingTime <= 0f)
+        {
+            return false;
+        }
+
         if (!IsWithinWallGrabRange(movementSettings.Wall.WallGrabEnterDistance))
         {
             return false;
@@ -631,6 +752,11 @@ internal sealed class PlayerLocomotionSystem
         }
 
         if (runtimeState.wallReattachLockTimer > 0f)
+        {
+            return true;
+        }
+
+        if (runtimeState.wallGrabRemainingTime <= 0f)
         {
             return true;
         }

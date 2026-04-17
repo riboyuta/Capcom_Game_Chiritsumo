@@ -1912,19 +1912,26 @@ MonoBehaviour:
       useWallSlide: 1
       wallSlideMaxSpeed: 3
       useWallGrab: 1
+      wallGrabMaxHoldTime: 7
+      wallGrabIdleDrainPerSecond: 1
+      wallGrabClimbDrainPerSecond: 1.8
+      wallGrabJumpCost: 2.5
       wallGrabVerticalSpeed: 0
       wallGrabEnterDistance: 0.04
       wallGrabExitDistance: 0.06
       wallClimbUpSpeed: 3
       wallClimbDownSpeed: 2.5
-      wallClimbInputThreshold: 0.1
+      wallClimbInputThreshold: 0.8
+      wallGrabJumpVerticalVelocity: 10
+      wallGrabJumpHorizontalLockTime: 0.08
+      wallGrabJumpReattachLockTime: 0.3
       useLedgeClimb: 1
       ledgeClimbDuration: 0.6
       ledgeClimbLiftHeight: 0.35
       ledgeClimbInnerInset: 0.18
       ledgeClimbControlForwardInset: 0.05
-      ledgeClimbUpInputThreshold: 0.1
-      ledgeClimbForwardCheckDistance: 0.08
+      ledgeClimbUpInputThreshold: 0.7
+      ledgeClimbForwardCheckDistance: 0.14
       ledgeClimbTopDownCheckDistance: 1
       useWallKick: 1
       wallJumpHorizontalVelocity: 8

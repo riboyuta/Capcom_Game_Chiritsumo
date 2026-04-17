@@ -48,6 +48,10 @@ internal sealed class PlayerRuntimeState
     // 掴んでいる段差の左右。(-1:left / +1:right)
     public int ledgeClimbSide;
 
+    // 壁掴まりの残り継続時間。
+    // 接地で最大値へ戻り、壁掴まり中だけ減少する。
+    public float wallGrabRemainingTime = 0f;
+
     // 現在ダッシュ中かどうか。
     public bool isDashing;
 
