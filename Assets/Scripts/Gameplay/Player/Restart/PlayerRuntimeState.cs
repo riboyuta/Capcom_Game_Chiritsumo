@@ -77,4 +77,16 @@ internal sealed class PlayerRuntimeState
     // ジャンプ上昇維持の残り時間。
     public float jumpHoldTimer = 0f;
 
+    // 崖乗り上げ実行中かどうか。
+    public bool isLedgeClimbing;
+
+    // 崖乗り上げ開始時刻。
+    public float ledgeClimbStartTime;
+
+    // 崖乗り上げ開始位置。
+    public Vector3 ledgeClimbStartPosition;
+
+    // 崖乗り上げ目標位置。
+    public Vector3 ledgeClimbTargetPosition;
+
 }

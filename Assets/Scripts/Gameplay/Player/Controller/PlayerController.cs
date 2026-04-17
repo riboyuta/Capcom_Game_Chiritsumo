@@ -239,21 +239,41 @@ public sealed partial class PlayerController : MonoBehaviour
 
     private bool CanAcceptMoveInput()
     {
+        if (runtimeState.isLedgeClimbing)
+        {
+            return false;
+        }
+
         return !IsInputBlocked(InputBlockFlags.Move);
     }
 
     private bool CanAcceptJumpInput()
     {
+        if (runtimeState.isLedgeClimbing)
+        {
+            return false;
+        }
+
         return !IsInputBlocked(InputBlockFlags.Jump);
     }
 
     private bool CanAcceptDashInput()
     {
+        if (runtimeState.isLedgeClimbing)
+        {
+            return false;
+        }
+
         return !IsInputBlocked(InputBlockFlags.Dash);
     }
 
     private bool CanAcceptGrabInput()
     {
+        if (runtimeState.isLedgeClimbing)
+        {
+            return false;
+        }
+
         return !IsInputBlocked(InputBlockFlags.Grab);
     }
 
@@ -533,6 +553,16 @@ public sealed partial class PlayerController : MonoBehaviour
         if (runtimeState.isDashing)
         {
             locomotionSystem.ApplyDashVelocity();
+            UpdateAudioEvents();
+            UpdateVibrationEvents();
+            FinalizeVisualState(previousVelocityY);
+            return;
+        }
+
+        // 崖乗り上げ中は専用の移動を適用する。
+        if (runtimeState.isLedgeClimbing)
+        {
+            locomotionSystem.UpdateLedgeClimb();
             UpdateAudioEvents();
             UpdateVibrationEvents();
             FinalizeVisualState(previousVelocityY);

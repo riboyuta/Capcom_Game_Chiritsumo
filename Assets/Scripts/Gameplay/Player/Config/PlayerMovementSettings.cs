@@ -313,6 +313,40 @@ public sealed class WallSettings
     [Min(0f)]
     [SerializeField] float wallReattachLockTime = 0.12f;
 
+    [Header("崖乗り上げを使う")]
+    [Tooltip("壁捕まり中に上方向へ移動して崖の頂上に達したとき、自動的に崖の上に乗り上げる機能を有効にします。")]
+    [SerializeField] bool useLedgeClimb = true;
+
+    [Header("崖検出前方距離")]
+    [Tooltip("崖の頂上を検出するための前方チェック距離です。")]
+    [Min(0f)]
+    [SerializeField] float ledgeDetectForwardDistance = 0.4f;
+
+    [Header("崖検出上方距離")]
+    [Tooltip("頭上に障害物がないかチェックする距離です。")]
+    [Min(0f)]
+    [SerializeField] float ledgeDetectUpDistance = 0.6f;
+
+    [Header("崖上地面検出距離")]
+    [Tooltip("崖の上に立てる地面があるか検出する距離です。")]
+    [Min(0f)]
+    [SerializeField] float ledgeGroundCheckDistance = 0.5f;
+
+    [Header("崖乗り上げ時間")]
+    [Tooltip("崖に乗り上げるアニメーション時間です。短いほど素早く、長いほど滑らかになります。")]
+    [Min(0.01f)]
+    [SerializeField] float ledgeClimbDuration = 0.35f;
+
+    [Header("崖乗り上げ前方オフセット")]
+    [Tooltip("崖に乗り上げた後の前方移動距離です。")]
+    [Min(0f)]
+    [SerializeField] float ledgeClimbForwardOffset = 0.8f;
+
+    [Header("崖乗り上げ上方オフセット")]
+    [Tooltip("崖に乗り上げた後の上方移動距離です。")]
+    [Min(0f)]
+    [SerializeField] float ledgeClimbUpOffset = 0.3f;
+
     public bool UseWallSlide => useWallSlide;
     public float WallSlideMaxSpeed => wallSlideMaxSpeed;
     public bool UseWallGrab => useWallGrab;
@@ -336,6 +370,13 @@ public sealed class WallSettings
     public float WallJumpVerticalVelocity => wallJumpVerticalVelocity;
     public float WallJumpControlLockTime => wallJumpControlLockTime;
     public float WallReattachLockTime => wallReattachLockTime;
+    public bool UseLedgeClimb => useLedgeClimb;
+    public float LedgeDetectForwardDistance => ledgeDetectForwardDistance;
+    public float LedgeDetectUpDistance => ledgeDetectUpDistance;
+    public float LedgeGroundCheckDistance => ledgeGroundCheckDistance;
+    public float LedgeClimbDuration => ledgeClimbDuration;
+    public float LedgeClimbForwardOffset => ledgeClimbForwardOffset;
+    public float LedgeClimbUpOffset => ledgeClimbUpOffset;
 }
 
 [Serializable]
