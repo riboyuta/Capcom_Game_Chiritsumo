@@ -59,7 +59,7 @@ public sealed class RoomManager : MonoBehaviour
 
     private RoomDirection lastTransitionDirection = RoomDirection.None;
     private bool isTransitioning;
-    private bool isTransitionInputBlocked;
+    private PlayerExternalControlSession roomTransitionControlSession = PlayerExternalControlSession.Invalid;
 
     public Room CurrentRoom => currentRoom;
     public Room PreviousRoom => previousRoom;
@@ -96,19 +96,16 @@ public sealed class RoomManager : MonoBehaviour
         // 現在部屋が確定していない間は遷移判定しない。
         if (currentRoom == null)
         {
-            ApplyTransitionInputBlock();
             return;
         }
 
-        // 遷移中フラグが立っている間は入力遮断を維持し、カメラ到達まで待機する。
+        // 遷移中フラグが立っている間はカメラ到達まで待機する。
         if (isTransitioning)
         {
-            ApplyTransitionInputBlock();
-
             if (playerCameraController == null)
             {
                 Debug.LogWarning("RoomManager: 遷移中ですが playerCameraController が未設定のため遷移を強制終了します。", this);
-                EndRoomTransitionInputBlock();
+                EndRoomTransitionExternalControl();
                 pendingRoom = null;
                 isTransitioning = false;
                 return;
@@ -116,13 +113,13 @@ public sealed class RoomManager : MonoBehaviour
 
             if (!playerCameraController.IsRoomTransitionRunning || playerCameraController.HasReachedRoomTransitionTarget)
             {
-                EndRoomTransitionInputBlock();
+                EndRoomTransitionExternalControl();
                 pendingRoom = null;
                 isTransitioning = false;
 
                 if (enableDebugLog)
                 {
-                    Debug.Log("RoomManager: カメラ遷移完了を検出したため入力遮断を解除しました。", this);
+                    Debug.Log("RoomManager: カメラ遷移完了を検出したため external control を終了しました。", this);
                 }
             }
 
@@ -132,7 +129,6 @@ public sealed class RoomManager : MonoBehaviour
         // プレイヤー参照が無い場合は判定できない。
         if (playerController == null)
         {
-            ApplyTransitionInputBlock();
             return;
         }
 
@@ -140,7 +136,6 @@ public sealed class RoomManager : MonoBehaviour
         if (currentRoom.RoomBounds == null)
         {
             Debug.LogWarning($"RoomManager: currentRoom '{currentRoom.name}' の RoomBounds が未設定です。", this);
-            ApplyTransitionInputBlock();
             return;
         }
 
@@ -153,8 +148,6 @@ public sealed class RoomManager : MonoBehaviour
         {
             TryTransition(direction);
         }
-
-        ApplyTransitionInputBlock();
     }
 
     private void ResolveReferences()
@@ -183,49 +176,79 @@ public sealed class RoomManager : MonoBehaviour
         }
     }
 
-    private void ApplyTransitionInputBlock()
+    private bool BeginRoomTransitionExternalControl()
     {
-        // 遷移中入力遮断が無効なら何もしない。
-        if (!isTransitionInputBlocked)
-        {
-            return;
-        }
-
         // 公開窓口参照がなければ要求できない。
         if (playerFacade == null)
         {
-            Debug.LogWarning("RoomManager: playerFacade が未設定のため遷移中入力遮断を適用できません。", this);
-            return;
+            Debug.LogWarning("RoomManager: playerFacade が未設定のため部屋遷移 external control を開始できません。", this);
+            return false;
         }
 
-        // 遷移中は移動系入力を毎フレーム遮断する。
-        playerFacade.RequestInputBlockThisFrame(
-            PlayerController.InputBlockFlags.Move
-            | PlayerController.InputBlockFlags.Jump
-            | PlayerController.InputBlockFlags.Dash
-            | PlayerController.InputBlockFlags.Grab);
+        // 既存セッションが残っていたら先に終了してから開始する。
+        if (roomTransitionControlSession.IsValid)
+        {
+            roomTransitionControlSession.EndControl();
+            roomTransitionControlSession = PlayerExternalControlSession.Invalid;
+        }
+
+        // 部屋遷移中にプレイヤー停止するための要求を組み立てる。
+        PlayerExternalControlRequest request = new PlayerExternalControlRequest
+        {
+            Owner = this,
+            Mode = ExternalControlMode.ScriptDriven,
+            InputBlockFlags = PlayerController.InputBlockFlags.Move
+                              | PlayerController.InputBlockFlags.Jump
+                              | PlayerController.InputBlockFlags.Dash
+                              | PlayerController.InputBlockFlags.Grab,
+            PhysicsPolicy = ExternalPhysicsPolicy.Suspend,
+            GravityPolicy = ExternalGravityPolicy.ForceOff,
+            VisualPolicy = ExternalVisualPolicy.Keep,
+            VelocityPolicy = ExternalVelocityPolicy.ZeroAll,
+        };
+
+        // 開始できたらセッションを保持し、失敗時は警告する。
+        if (!playerFacade.TryBeginExternalControl(request, out roomTransitionControlSession))
+        {
+            roomTransitionControlSession = PlayerExternalControlSession.Invalid;
+            Debug.LogWarning("RoomManager: 部屋遷移 external control の開始に失敗しました。プレイヤーが移動できる可能性があります。", this);
+            return false;
+        }
+
+        if (enableDebugLog)
+        {
+            Debug.Log("RoomManager: 部屋遷移 external control を開始しました。", this);
+        }
+
+        return true;
     }
 
     public void BeginRoomTransitionInputBlock()
     {
-        // 遷移中入力遮断を開始する。
-        isTransitionInputBlocked = true;
-
-        if (enableDebugLog)
-        {
-            Debug.Log("RoomManager: 部屋遷移中入力遮断を開始しました。", this);
-        }
+        // 後方互換のため API 名は維持し、内部では external control 開始へ委譲する。
+        BeginRoomTransitionExternalControl();
     }
 
     [ContextMenu("End Room Transition Input Block")]
     public void EndRoomTransitionInputBlock()
     {
-        // 遷移中入力遮断を終了する。
-        isTransitionInputBlocked = false;
+        // 後方互換のため API 名は維持し、内部では external control 終了へ委譲する。
+        EndRoomTransitionExternalControl();
+    }
+
+    private void EndRoomTransitionExternalControl()
+    {
+        // 有効な遷移セッションがある場合だけ終了する。
+        if (roomTransitionControlSession.IsValid)
+        {
+            roomTransitionControlSession.EndControl();
+        }
+
+        roomTransitionControlSession = PlayerExternalControlSession.Invalid;
 
         if (enableDebugLog)
         {
-            Debug.Log("RoomManager: 部屋遷移中入力遮断を終了しました。", this);
+            Debug.Log("RoomManager: 部屋遷移 external control を終了しました。", this);
         }
     }
 
@@ -244,6 +267,7 @@ public sealed class RoomManager : MonoBehaviour
         pendingRoom = null;
         lastTransitionDirection = RoomDirection.None;
         isTransitioning = false;
+        EndRoomTransitionExternalControl();
 
         if (enableDebugLog)
         {
@@ -437,7 +461,7 @@ public sealed class RoomManager : MonoBehaviour
             Debug.LogWarning("RoomManager: playerCameraController が未設定のためカメラ遷移を開始できません。", this);
         }
 
-        BeginRoomTransitionInputBlock();
+        BeginRoomTransitionExternalControl();
 
         if (enableDebugLog)
         {

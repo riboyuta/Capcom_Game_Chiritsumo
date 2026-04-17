@@ -2202,7 +2202,7 @@ MonoBehaviour:
   smoothTimeY: 0
   orthographicSizeSmoothTime: 1
   defaultRoomTransitionDuration: 1
-  roomTransitionCompleteDistance: 0.05
+  roomTransitionCompleteDistance: 1
   drawDebugGizmos: 1
   logViewportPosition: 1
 --- !u!1 &1278174171
