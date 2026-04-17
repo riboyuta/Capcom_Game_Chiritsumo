@@ -32,6 +32,10 @@ public sealed class RoomManager : MonoBehaviour
     [Tooltip("部屋遷移成功時に復帰地点を更新するチェックポイント管理です。")]
     [SerializeField] private CheckpointSystem checkpointSystem;
 
+    [Header("参照: ステージ初期化")]
+    [Tooltip("部屋遷移完了時にステージ上の IRespawnResettable を全初期化するシステムです。")]
+    [SerializeField] private StageResetSystem stageResetSystem;
+
     [Header("遷移判定")]
     [Tooltip("部屋境界を越えたとみなす余白です。境界ぴったりでの誤判定を減らします。")]
     [SerializeField] private float transitionEpsilon = 0.05f;
@@ -113,6 +117,7 @@ public sealed class RoomManager : MonoBehaviour
 
             if (!playerCameraController.IsRoomTransitionRunning || playerCameraController.HasReachedRoomTransitionTarget)
             {
+                ResetStageOnRoomTransitionComplete();
                 EndRoomTransitionExternalControl();
                 pendingRoom = null;
                 isTransitioning = false;
@@ -121,6 +126,8 @@ public sealed class RoomManager : MonoBehaviour
                 {
                     Debug.Log("RoomManager: カメラ遷移完了を検出したため external control を終了しました。", this);
                 }
+
+                return;
             }
 
             return;
@@ -173,6 +180,12 @@ public sealed class RoomManager : MonoBehaviour
         if (checkpointSystem == null)
         {
             checkpointSystem = FindFirstObjectByType<CheckpointSystem>();
+        }
+
+        // 未設定のステージ初期化参照だけを補完する。
+        if (stageResetSystem == null)
+        {
+            stageResetSystem = FindFirstObjectByType<StageResetSystem>();
         }
     }
 
@@ -249,6 +262,25 @@ public sealed class RoomManager : MonoBehaviour
         if (enableDebugLog)
         {
             Debug.Log("RoomManager: 部屋遷移 external control を終了しました。", this);
+        }
+    }
+
+    private void ResetStageOnRoomTransitionComplete()
+    {
+        // ステージ初期化システムが無い場合は安全のため何もしない。
+        if (stageResetSystem == null)
+        {
+            Debug.LogWarning("RoomManager: stageResetSystem が未設定のため部屋遷移完了時の全初期化を実行できません。", this);
+            return;
+        }
+
+        // カメラ遷移完了直後にステージ全体の復帰状態リセットを行う。
+        stageResetSystem.ResetAllToRespawnState();
+
+        // デバッグ有効時のみ、部屋遷移完了境界で全初期化を呼んだことを記録する。
+        if (enableDebugLog)
+        {
+            Debug.Log("RoomManager: 部屋遷移完了境界で StageResetSystem.ResetAllToRespawnState() を実行しました。", this);
         }
     }
 
