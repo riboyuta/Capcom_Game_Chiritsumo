@@ -1925,19 +1925,18 @@ MonoBehaviour:
       wallGrabJumpVerticalVelocity: 10
       wallGrabJumpHorizontalLockTime: 0.08
       wallGrabJumpReattachLockTime: 0.3
-      useLedgeClimb: 1
-      ledgeClimbDuration: 0.6
-      ledgeClimbLiftHeight: 0.35
-      ledgeClimbInnerInset: 0.18
-      ledgeClimbControlForwardInset: 0.05
-      ledgeClimbUpInputThreshold: 0.7
-      ledgeClimbForwardCheckDistance: 0.14
-      ledgeClimbTopDownCheckDistance: 1
       useWallKick: 1
       wallJumpHorizontalVelocity: 8
       wallJumpVerticalVelocity: 10.5
       wallJumpControlLockTime: 0.09
       wallReattachLockTime: 0.12
+      useLedgeClimb: 1
+      ledgeDetectForwardDistance: 0.1
+      ledgeDetectUpDistance: 0.4
+      ledgeGroundCheckDistance: 0.3
+      ledgeClimbDuration: 0.5
+      ledgeClimbForwardOffset: 0.04
+      ledgeClimbUpOffset: 1
     dash:
       useDash: 1
       speed: 18
