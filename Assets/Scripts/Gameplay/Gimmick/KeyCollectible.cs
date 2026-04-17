@@ -16,10 +16,6 @@ public class KeyCollectible : MonoBehaviour, IRespawnResettable
     private bool isCollected = false;
     private bool hasCapturedInitialState;
 
-    private bool initialIsCollected;
-    private bool initialColliderEnabled;
-    private bool[] initialRendererEnabledStates;
-
     public void Initialize(KeyManager m)
     {
         manager = m;
@@ -38,22 +34,15 @@ public class KeyCollectible : MonoBehaviour, IRespawnResettable
         {
             visualTransform = transform.childCount > 0 ? transform.GetChild(0) : transform;
         }
-
-        visualRenderers = visualTransform != null
-            ? visualTransform.GetComponentsInChildren<Renderer>(true)
-            : new Renderer[0];
-
-        if (visualTransform == null)
-        {
-            Debug.LogWarning($"[{nameof(KeyCollectible)}] visualTransform が解決できませんでした: {name}", this);
-        }
+        
+        visualRenderers = visualTransform.GetComponentsInChildren<Renderer>();
     }
 
     private void OnTriggerEnter(Collider other)
     {
         // 既に取得済みなら無視する
         if (isCollected) return;
-
+        
         // Player 以外は無視する
         if (!other.CompareTag("Player")) return;
 
@@ -63,25 +52,18 @@ public class KeyCollectible : MonoBehaviour, IRespawnResettable
     private void GetCollected()
     {
         isCollected = true;
-
+        
         // 判定と見た目を無効化
         if (myCollider != null) myCollider.enabled = false;
-        for (int i = 0; i < visualRenderers.Length; i++)
+        foreach (var r in visualRenderers)
         {
-            if (visualRenderers[i] != null)
-            {
-                visualRenderers[i].enabled = false;
-            }
+            if (r != null) r.enabled = false;
         }
 
         // マネージャーへ通知
         if (manager != null)
         {
             manager.NotifyKeyCollected();
-        }
-        else
-        {
-            Debug.LogWarning($"[{nameof(KeyCollectible)}] KeyManager が未設定です: {name}", this);
         }
 
         // SE: 取得したときの音
@@ -91,61 +73,25 @@ public class KeyCollectible : MonoBehaviour, IRespawnResettable
         }
     }
 
-    // Collider と Renderer の初期状態を含めて保存する
-    private void CaptureVisualAndColliderInitialState()
-    {
-        initialIsCollected = isCollected;
-        initialColliderEnabled = myCollider != null && myCollider.enabled;
-
-        initialRendererEnabledStates = new bool[visualRenderers.Length];
-        for (int i = 0; i < visualRenderers.Length; i++)
-        {
-            initialRendererEnabledStates[i] = visualRenderers[i] != null && visualRenderers[i].enabled;
-        }
-    }
-
-    // 保存した初期状態へ復元する
-    private void RestoreVisualAndColliderInitialState()
-    {
-        isCollected = initialIsCollected;
-
-        if (myCollider != null)
-        {
-            myCollider.enabled = initialColliderEnabled;
-        }
-
-        int restoreCount = Mathf.Min(visualRenderers.Length, initialRendererEnabledStates != null ? initialRendererEnabledStates.Length : 0);
-        for (int i = 0; i < restoreCount; i++)
-        {
-            if (visualRenderers[i] != null)
-            {
-                visualRenderers[i].enabled = initialRendererEnabledStates[i];
-            }
-        }
-    }
-
     // ──────────────────────────────────────────────
     // IRespawnResettable
     // ──────────────────────────────────────────────
 
     public void CaptureInitialState()
     {
-        if (hasCapturedInitialState)
-        {
-            return;
-        }
-
-        CaptureVisualAndColliderInitialState();
+        if (hasCapturedInitialState) return;
         hasCapturedInitialState = true;
     }
 
     public void ResetToRespawnState()
     {
-        if (!hasCapturedInitialState)
+        // 死亡リセット時は未取得状態に戻し、判定・見た目を有効化する
+        isCollected = false;
+        
+        if (myCollider != null) myCollider.enabled = true;
+        foreach (var r in visualRenderers)
         {
-            CaptureInitialState();
+            if (r != null) r.enabled = true;
         }
-
-        RestoreVisualAndColliderInitialState();
     }
 }

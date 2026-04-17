@@ -25,9 +25,6 @@ public class KeyActivatedWall : MonoBehaviour, IRespawnResettable
     private float currentDistance = 0f;
     private bool hasCapturedInitialState;
 
-    private Vector3 capturedInitialLocalPosition;
-    private float capturedInitialDistance;
-
     private void Awake()
     {
         initialLocalPosition = transform.localPosition;
@@ -35,10 +32,7 @@ public class KeyActivatedWall : MonoBehaviour, IRespawnResettable
 
     private void Update()
     {
-        if (targetKeyManager == null)
-        {
-            return;
-        }
+        if (targetKeyManager == null) return;
 
         // --- 移動処理 ---
         bool shouldOpen = targetKeyManager.IsCompleted;
@@ -60,45 +54,28 @@ public class KeyActivatedWall : MonoBehaviour, IRespawnResettable
         currentDistance = nextDistance;
         transform.localPosition = initialLocalPosition + (slideLocalDirection.normalized * currentDistance);
     }
-
-    // 壁の初期位置と初期距離を保存する
-    private void CaptureWallInitialState()
-    {
-        capturedInitialLocalPosition = transform.localPosition;
-        capturedInitialDistance = currentDistance;
-        initialLocalPosition = capturedInitialLocalPosition - (slideLocalDirection.normalized * capturedInitialDistance);
-    }
-
-    // 保存した壁の初期状態を復元する
-    private void RestoreWallInitialState()
-    {
-        currentDistance = capturedInitialDistance;
-        initialLocalPosition = capturedInitialLocalPosition - (slideLocalDirection.normalized * capturedInitialDistance);
-        transform.localPosition = capturedInitialLocalPosition;
-    }
-
+    
     // ──────────────────────────────────────────────
     // IRespawnResettable
     // ──────────────────────────────────────────────
 
     public void CaptureInitialState()
     {
-        if (hasCapturedInitialState)
-        {
-            return;
-        }
-
-        CaptureWallInitialState();
+        if (hasCapturedInitialState) return;
+        
+        initialLocalPosition = transform.localPosition;
         hasCapturedInitialState = true;
     }
 
     public void ResetToRespawnState()
     {
+        // 死亡リセット時は即時で閉じた状態へ戻します。
         if (!hasCapturedInitialState)
         {
             CaptureInitialState();
         }
 
-        RestoreWallInitialState();
+        currentDistance = 0f;
+        transform.localPosition = initialLocalPosition;
     }
 }
