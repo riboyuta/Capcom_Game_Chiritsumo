@@ -33,6 +33,11 @@ public class MapEditor : MonoBehaviour
     [Tooltip("現在編集しているステージの番号")]
     [SerializeField] private int stageNumber = 1;
 
+    [Header("マップフォルダ")]
+    [Tooltip("現在選択されているファイルのマップに読み書きします")]
+    [SerializeField] private string mapFolder = "MapData";
+
+
 
     [Header("コメント")]
     [Tooltip("ステージ毎に保存されるメモ書き")]
@@ -59,8 +64,15 @@ public class MapEditor : MonoBehaviour
 
     private int currentTile = 1;
 
+    //フォルダ定義
+    string folderPath =>
+  Application.dataPath + "/" + mapFolder;
 
-   
+    //完全パス
+    string FilePath()
+    {
+        return folderPath + "/Stage_" + stageNumber + ".json";
+    }
 
     void OnEnable()
     {
@@ -124,90 +136,11 @@ public class MapEditor : MonoBehaviour
             }
 
 
-         
-
-
             //範囲選択処理
-            
-                //コピー範囲開始
-                if ((Input.GetKeyDown(KeyCode.Space))) 
-                {
-                    selecting = true;
-                    selectStart = GetGridPosition();
-                Debug.Log("範囲選択開始");
-
-                //一時保存バッファをクリア
-                temporaryBuffer.Clear();
-                }
-
-                //ドラッグ中
-                else if ((Input.GetKey(KeyCode.Space)) && selecting)
-                {
-                    selectEnd = GetGridPosition();
-                Debug.Log("範囲選択中");
-            }
-
-                //離したらコピー
-                else if (Input.GetKeyUp(KeyCode.Space) && selecting)
-                {
-                    selecting = false;
-
-                    CopyTilesTemporary(selectStart, selectEnd);
-
-                    Debug.Log("一時保存が完了しました");
-                }
-            
-
+            SelectRange();
 
             //範囲選択消去処理
-            if (Input.GetKeyDown(KeyCode.Backspace))
-            {
-
-                //一時保存バッファになにも存在しない場合
-                if (temporaryBuffer.Count <= 0)
-                {
-                    Debug.Log("範囲消去に失敗しました：一時保存されていません");
-                    return;
-                }
-
-                //selectingがtrueの場合
-                if (selecting)
-                {
-                    Debug.Log("範囲選択に失敗しました：選択中です！");
-                    return;
-                }
-
-                //まずは履歴に保存
-                SaveUndo();
-
-                // 　範囲選択を削除する
-                foreach (TileData data in temporaryBuffer)
-                {
-                    Vector3Int gridPos = new Vector3Int(
-                        temporaryOrigin.x + data.x,
-                        temporaryOrigin.y + data.y,
-                        temporaryOrigin.z + data.z
-                    );
-
-                    if (!tiles.ContainsKey(gridPos))
-                        continue;
-
-                    GameObject tile = tiles[gridPos];
-
-                    if (Application.isPlaying)
-                        Destroy(tile);
-                    else
-                        DestroyImmediate(tile);
-
-                    tiles.Remove(gridPos);
-                }
-
-                temporaryBuffer.Clear();
-                Debug.Log("範囲削除完了");
-
-                
-
-            }
+            RemoveSelectRange();
 
 
             //コピー処理
@@ -244,33 +177,7 @@ public class MapEditor : MonoBehaviour
 
 
             //ペースト処理
-            if (Input.GetKeyDown(KeyCode.V))
-            {
-
-                //コピーバッファになにも存在しない場合
-                if (copyBuffer.Count <= 0)
-                {
-                    Debug.Log("ペーストに失敗しました：コピーがされていません");
-                    return;
-                }
-
-                //selectingがtrueの場合
-                if (selecting)
-                {
-                    Debug.Log("コピーに失敗しました：選択中です！");
-                    return;
-                }
-
-                //まずは履歴に保存
-                SaveUndo();
-
-                //コピーをペーストする
-                PasteTiles(GetGridPosition());
-
-            }
-
-
-        
+            ExecutePaste();        
 
          
 
@@ -409,6 +316,100 @@ public class MapEditor : MonoBehaviour
         undoStack.Clear();
     }
 
+
+
+    //===========================-------
+    //　　　　　 範囲選択システム
+    //===========================-------
+
+    void SelectRange()
+    {
+
+        //コピー範囲開始
+        if ((Input.GetKeyDown(KeyCode.Space)))
+        {
+            selecting = true;
+            selectStart = GetGridPosition();
+            Debug.Log("範囲選択開始");
+
+            //一時保存バッファをクリア
+            temporaryBuffer.Clear();
+        }
+
+        //ドラッグ中
+        else if ((Input.GetKey(KeyCode.Space)) && selecting)
+        {
+            selectEnd = GetGridPosition();
+            Debug.Log("範囲選択中");
+        }
+
+        //離したらコピー
+        else if (Input.GetKeyUp(KeyCode.Space) && selecting)
+        {
+            selecting = false;
+
+            CopyTilesTemporary(selectStart, selectEnd);
+
+            Debug.Log("一時保存が完了しました");
+        }
+
+
+    }
+
+
+    void RemoveSelectRange()
+    {
+        if (Input.GetKeyDown(KeyCode.Backspace))
+        {
+
+            //一時保存バッファになにも存在しない場合
+            if (temporaryBuffer.Count <= 0)
+            {
+                Debug.Log("範囲消去に失敗しました：一時保存されていません");
+                return;
+            }
+
+            //selectingがtrueの場合
+            if (selecting)
+            {
+                Debug.Log("範囲選択に失敗しました：選択中です！");
+                return;
+            }
+
+            //まずは履歴に保存
+            SaveUndo();
+
+            // 　範囲選択を削除する
+            foreach (TileData data in temporaryBuffer)
+            {
+                Vector3Int gridPos = new Vector3Int(
+                    temporaryOrigin.x + data.x,
+                    temporaryOrigin.y + data.y,
+                    temporaryOrigin.z + data.z
+                );
+
+                if (!tiles.ContainsKey(gridPos))
+                    continue;
+
+                GameObject tile = tiles[gridPos];
+
+                if (Application.isPlaying)
+                    Destroy(tile);
+                else
+                    DestroyImmediate(tile);
+
+                tiles.Remove(gridPos);
+            }
+
+            temporaryBuffer.Clear();
+            Debug.Log("範囲削除完了");
+
+
+
+        }
+    }
+
+
     //===========================-------
     //　　　　　 履歴システム
     //===========================-------
@@ -530,9 +531,39 @@ public class MapEditor : MonoBehaviour
         Debug.Log("Copied Tiles : " + copyBuffer.Count);
     }
 
+
     //===========================-------
     //　　　　　 ペーストシステム
     //===========================-------
+
+    void ExecutePaste()
+    {
+        if (Input.GetKeyDown(KeyCode.V))
+        {
+
+            //コピーバッファになにも存在しない場合
+            if (copyBuffer.Count <= 0)
+            {
+                Debug.Log("ペーストに失敗しました：コピーがされていません");
+                return;
+            }
+
+            //selectingがtrueの場合
+            if (selecting)
+            {
+                Debug.Log("コピーに失敗しました：選択中です！");
+                return;
+            }
+
+            //まずは履歴に保存
+            SaveUndo();
+
+            //コピーをペーストする
+            PasteTiles(GetGridPosition());
+
+        }
+    }
+
 
     void PasteTiles(Vector3Int targetPos)
     {
@@ -567,7 +598,6 @@ public class MapEditor : MonoBehaviour
 
         Debug.Log("Paste Complete");
     }
-
 
 
 
@@ -665,17 +695,14 @@ public class MapEditor : MonoBehaviour
 
         string json = JsonUtility.ToJson(mapData, true);
 
-        string folder = Application.dataPath +
-"/Scenes/DebugScenes/koki/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData";
-        if (!Directory.Exists(folder))
+        if (!Directory.Exists(folderPath))
         {
-            Directory.CreateDirectory(folder);
+            Directory.CreateDirectory(folderPath);
         }
 
-        string path = folder + "/Stage" + stageNumber + ".json";
+        File.WriteAllText(FilePath(), json);
 
-        File.WriteAllText(path, json);
-        Debug.Log("Map Saved : " + path);
+        Debug.Log("Map Saved : " + FilePath());
     }
 
 
@@ -694,25 +721,24 @@ public class MapEditor : MonoBehaviour
 
         tiles.Clear();
 
-        string folder = Application.dataPath +
-"/Scenes/DebugScenes/koki/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData";
-        if (!Directory.Exists(folder))
-        {
-            Directory.CreateDirectory(folder);
-        }
 
-        string path = folder + "/Stage" + stageNumber + ".json";
 
-        if (!System.IO.File.Exists(path))
+
+
+        if (!File.Exists(FilePath()))
         {
             Debug.Log("Map file not found");
             return;
         }
 
-        string json = System.IO.File.ReadAllText(path);
+        string json = File.ReadAllText(FilePath());
 
         MapData mapData = JsonUtility.FromJson<MapData>(json);
         comment = mapData.comment;
+
+
+
+
 
         foreach (TileData data in mapData.tiles)
         {
@@ -765,6 +791,8 @@ public class MapEditor : MonoBehaviour
             }
         }
     }
+
+
 
     //===========================-------
     //　　　　　   GUI
