@@ -18,6 +18,8 @@ public enum TileTypeEnum
     Block07, 
     Block08,
     Block09,
+
+    
     MAX
 }
 
