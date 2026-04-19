@@ -68,6 +68,13 @@ public sealed class PlayerCameraController : MonoBehaviour
     [Tooltip("Zone による orthographicSize 上書きが切り替わる際の補間時間です。0 のときは即時反映します。")]
     [SerializeField] private float orthographicSizeSmoothTime = 0.10f;
 
+    [Header("部屋遷移カメラ時間")]
+    [Tooltip("部屋遷移モード時に開始位置から目標位置まで移動する標準時間です。Room 側の上書きがある場合はそちらを優先します。")]
+    [SerializeField] private float defaultRoomTransitionDuration = 0.20f;
+
+    [Tooltip("部屋遷移モード中に目標へ到達したとみなす距離しきい値です。")]
+    [SerializeField] private float roomTransitionCompleteDistance = 0.05f;
+
     [Header("デバッグGizmoを描画するか")]
     [Tooltip("有効にすると、Scene ビュー上に目標位置・Clamp 後位置・追従対象位置の Gizmo を描画します。カメラ挙動確認用です。")]
     // Scene ビュー上にデバッグ用 Gizmo を描画するか。
@@ -115,6 +122,11 @@ public sealed class PlayerCameraController : MonoBehaviour
     private bool hasActiveOrthographicSizeSmoothTimeOverride;
     private float activeOrthographicSizeSmoothTimeOverride;
 
+    // Room からの注視オフセット 一時上書き。
+    private bool hasActiveRoomFocusOffset;
+    private Vector2 activeRoomFocusOffset;
+
+
     // 現在有効な Zone 群。
     private readonly List<CameraZone> activeZones = new List<CameraZone>();
     // Zone ごとの「最後に入った順」を記録する。
@@ -136,6 +148,13 @@ public sealed class PlayerCameraController : MonoBehaviour
     private Vector3 desiredPosition;
     // 境界適用後の「実際に目指す位置」。
     private Vector3 clampedPosition;
+    // 部屋遷移モードのランタイム状態。
+    private bool isRoomTransitionRunning;
+    private float activeRoomTransitionDuration;
+    private float roomTransitionElapsed;
+    private Vector3 roomTransitionStartPosition;
+    private Vector3 roomTransitionTargetPosition;
+
 
     // -----------------------------
     // 読み取り専用公開プロパティ
@@ -188,6 +207,9 @@ public sealed class PlayerCameraController : MonoBehaviour
     public bool HasTemporaryTarget => temporaryTargetAnchor != null && !IsTemporaryTargetExpired();
     public Transform TemporaryTargetAnchor => temporaryTargetAnchor;
     public float TemporaryTargetExpireTime => temporaryTargetExpireTime;
+    public bool IsRoomTransitionRunning => isRoomTransitionRunning;
+    public bool HasReachedRoomTransitionTarget => !isRoomTransitionRunning
+        || Vector3.Distance(transform.position, roomTransitionTargetPosition) <= Mathf.Max(0f, roomTransitionCompleteDistance);
 
     // -----------------------------
     // Unity lifecycle
@@ -234,11 +256,41 @@ public sealed class PlayerCameraController : MonoBehaviour
             return;
         }
 
-        // 追従対象位置 + オフセット で理想位置を作る。
-        desiredPosition = effectiveTarget.position + cameraOffset;
+        // 追従対象位置 + カメラオフセット(+必要なら部屋注視オフセット) で理想位置を作る。
+        Vector3 baseDesiredPosition = effectiveTarget.position + cameraOffset;
+        if (hasActiveRoomFocusOffset)
+        {
+            // Inspector の意味を直感に合わせるため、適用時に符号を反転する（+X=右を見せる、+Y=上を見せる）。
+            Vector3 focusOffset3D = new Vector3(-activeRoomFocusOffset.x, -activeRoomFocusOffset.y, 0f);
+            desiredPosition = baseDesiredPosition + focusOffset3D;
+        }
+        else
+        {
+            desiredPosition = baseDesiredPosition;
+        }
 
         // 理想位置をカメラ境界内に収めた最終候補位置を作る。
         clampedPosition = GetClampedPosition(desiredPosition);
+
+        if (isRoomTransitionRunning)
+        {
+            // 部屋遷移モード中は、開始点と目標点を線形補間して通常追従は止める。
+            roomTransitionElapsed += Time.deltaTime;
+            float t = activeRoomTransitionDuration <= 0f
+                ? 1f
+                : Mathf.Clamp01(roomTransitionElapsed / activeRoomTransitionDuration);
+
+            transform.position = Vector3.Lerp(roomTransitionStartPosition, roomTransitionTargetPosition, t);
+
+            float completeDistance = Mathf.Max(0f, roomTransitionCompleteDistance);
+            if (Vector3.Distance(transform.position, roomTransitionTargetPosition) <= completeDistance || t >= 1f)
+            {
+                transform.position = roomTransitionTargetPosition;
+                isRoomTransitionRunning = false;
+            }
+
+            return;
+        }
 
         // X と Y を別々の SmoothDamp で補間する。
         // これにより、軸ごとの追従感を個別に調整できる。
@@ -261,9 +313,9 @@ public sealed class PlayerCameraController : MonoBehaviour
         if (logViewportPosition)
         {
             Vector3 viewport = targetCamera.WorldToViewportPoint(effectiveTarget.position);
-            Debug.Log(
-                $"CameraTarget Viewport : x={viewport.x:F2}, y={viewport.y:F2}",
-                this);
+            //Debug.Log(
+            //    $"CameraTarget Viewport : x={viewport.x:F2}, y={viewport.y:F2}",
+            //    this);
         }
     }
 
@@ -594,14 +646,146 @@ public sealed class PlayerCameraController : MonoBehaviour
         hasActiveOrthographicSizeSmoothTimeOverride = false;
     }
 
+    public void SetActiveRoomFocusOffset(Vector2 focusOffset)
+    {
+        activeRoomFocusOffset = focusOffset;
+        hasActiveRoomFocusOffset = true;
+    }
+
+    public void ClearActiveRoomFocusOffset()
+    {
+        hasActiveRoomFocusOffset = false;
+        activeRoomFocusOffset = Vector2.zero;
+    }
+
+    public void ApplyRoomCameraSettings(Room room)
+    {
+        // null の部屋は反映せずに警告だけ出す。
+        if (room == null)
+        {
+            Debug.LogWarning("PlayerCameraController: ApplyRoomCameraSettings に null が渡されました。", this);
+            return;
+        }
+
+        // 部屋境界がある場合は境界 override を反映し、無い場合は world 境界に戻す。
+        if (room.RoomBounds != null)
+        {
+            SetActiveBoundsOverride(room.RoomBounds.WorldBounds);
+        }
+        else
+        {
+            ClearActiveBoundsOverride();
+        }
+
+        // 部屋注視オフセットは常に即反映する。
+        SetActiveRoomFocusOffset(room.RoomFocusOffset);
+
+        // 追従スムーズ override の有無に応じて反映を切り替える。
+        if (room.HasFollowSmoothingOverride)
+        {
+            SetActiveFollowSmoothingOverride(room.SmoothTimeX, room.SmoothTimeY);
+        }
+        else
+        {
+            ClearActiveFollowSmoothingOverride();
+        }
+
+        // orthographic size override の有無に応じて反映を切り替える。
+        if (room.HasOrthographicSizeOverride)
+        {
+            SetActiveOrthographicSizeOverride(room.OrthographicSize);
+        }
+        else
+        {
+            ClearActiveOrthographicSizeOverride();
+        }
+
+        // orthographic size 補間時間 override の有無に応じて反映を切り替える。
+        if (room.HasOrthographicSizeSmoothTimeOverride)
+        {
+            SetActiveOrthographicSizeSmoothTimeOverride(room.OrthographicSizeSmoothTime);
+        }
+        else
+        {
+            ClearActiveOrthographicSizeSmoothTimeOverride();
+        }
+    }
+
     public Bounds GetEffectiveBounds()
     {
         return EffectiveWorldBounds;
     }
 
+    public void BeginRoomTransition(Room room)
+    {
+        // 部屋情報がない場合は遷移を開始できない。
+        if (room == null)
+        {
+            Debug.LogWarning("PlayerCameraController: BeginRoomTransition に null が渡されました。", this);
+            return;
+        }
+
+        // 現在位置を開始地点として保存する。
+        roomTransitionStartPosition = transform.position;
+
+        // 現在の反映済み設定から遷移目標位置を再計算して保存する。
+        Transform effectiveTarget = GetEffectiveTargetAnchor();
+        if (effectiveTarget != null)
+        {
+            Vector3 baseDesiredPosition = effectiveTarget.position + cameraOffset;
+            if (hasActiveRoomFocusOffset)
+            {
+                Vector3 focusOffset3D = new Vector3(-activeRoomFocusOffset.x, -activeRoomFocusOffset.y, 0f);
+                desiredPosition = baseDesiredPosition + focusOffset3D;
+            }
+            else
+            {
+                desiredPosition = baseDesiredPosition;
+            }
+
+            clampedPosition = GetClampedPosition(desiredPosition);
+            roomTransitionTargetPosition = clampedPosition;
+        }
+        else
+        {
+            roomTransitionTargetPosition = transform.position;
+        }
+
+        // 遷移時間を部屋設定とデフォルトから確定する。
+        activeRoomTransitionDuration = GetEffectiveRoomTransitionDuration(room);
+        roomTransitionElapsed = 0f;
+
+        if (activeRoomTransitionDuration <= 0f)
+        {
+            transform.position = roomTransitionTargetPosition;
+            isRoomTransitionRunning = false;
+            return;
+        }
+
+        isRoomTransitionRunning = true;
+    }
+
+    public void CancelRoomTransitionAndSnapToTarget()
+    {
+        // 遷移中フラグを落として目標位置へ即時スナップする。
+        isRoomTransitionRunning = false;
+        transform.position = roomTransitionTargetPosition;
+    }
     // -----------------------------
     // camera 実行
     // -----------------------------
+
+    private float GetEffectiveRoomTransitionDuration(Room room)
+    {
+        // 部屋側の上書きがあれば優先し、無ければデフォルト値を使う。
+        float duration = defaultRoomTransitionDuration;
+        if (room != null && room.HasRoomTransitionDurationOverride)
+        {
+            duration = room.RoomTransitionDuration;
+        }
+
+        return Mathf.Max(0f, duration);
+    }
 
     private Vector3 GetClampedPosition(Vector3 desired)
     {

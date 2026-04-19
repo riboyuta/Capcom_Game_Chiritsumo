@@ -86,6 +86,19 @@ public enum ExternalVisualPolicy
     Hide
 }
 
+// 外部制御中の速度方針。
+public enum ExternalVelocityPolicy
+{
+    // 現在の速度を維持する。
+    Keep,
+
+    // 水平方向速度だけゼロにする。
+    ZeroHorizontal,
+
+    // 速度を完全にゼロにする。
+    ZeroAll
+}
+
 // 外部制御開始時の要求内容をまとめたもの。
 // 重要:
 // - TryBeginExternalControl は全部停止 API ではない
@@ -115,6 +128,9 @@ public struct PlayerExternalControlRequest
 
     // 見た目の扱い。
     public ExternalVisualPolicy VisualPolicy;
+
+    // 速度の扱い。
+    public ExternalVelocityPolicy VelocityPolicy;
 }
 
 // ワープ時の補助指定。
@@ -452,6 +468,55 @@ public sealed class PlayerFacade : MonoBehaviour
     {
         playerController.RequestFacing(facing);
     }
+    // ──────────────────────────────────────────────
+    // 固定ジャンプ（バネ床等の外部打ち上げ用）
+    // ──────────────────────────────────────────────
+
+    // 固定ジャンプ中かどうか。
+    // true の間は毎 physics tick で NotifyExternalLaunch を呼び、
+    // 可変ジャンプカットを上昇中ずっと抑制する。
+    private bool isFixedJump;
+
+    // 外部から固定ジャンプを適用する。
+    // 用途例:
+    // - バネ床
+    // - 打ち上げパッド
+    // - ジャンプボタンの押下状態に関係なく、常に一定高さだけ跳ねさせたいギミック
+    // 注意:
+    // - 速度設定と可変ジャンプカット抑制を一括で行う
+    // - 呼び出し元で Rigidbody の速度を個別に触る必要はない
+    // - 上昇が終了（velocity.y ≤ 0）または接地で自動的に固定ジャンプ状態を解除する
+    public void ApplyFixedJump(Vector3 velocity)
+    {
+        Rigidbody rb = playerController.Rigidbody;
+        if (rb == null) return;
+
+        rb.linearVelocity = velocity;
+        playerController.NotifyExternalLaunch();
+        isFixedJump = true;
+    }
+
+    private void FixedUpdate()
+    {
+        if (!isFixedJump) return;
+
+        // 落下開始で固定ジャンプを解除する。
+        // 注意:
+        // - IsGrounded は判定に使わない。
+        //   横からバネ床に触れた場合、プレイヤーは地面に立っているため
+        //   IsGrounded = true で即リセットされてしまう。
+        // - velocity.y <= 0 だけで十分。上昇が終われば自動解除される。
+        Rigidbody rb = playerController.Rigidbody;
+        if (rb == null || rb.linearVelocity.y <= 0f)
+        {
+            isFixedJump = false;
+            return;
+        }
+
+        // 上昇中は毎 tick 外部打ち上げ通知を送り、可変ジャンプカットを抑制し続ける。
+        playerController.NotifyExternalLaunch();
+    }
+
     // ハザード由来の死亡を要求する。
     // 用途例:
     // - トゲ

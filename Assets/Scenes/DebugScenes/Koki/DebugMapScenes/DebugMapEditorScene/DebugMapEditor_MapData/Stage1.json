@@ -1,8 +1,32 @@
 {
     "tiles": [
         {
-            "x": -2,
-            "y": 9,
+            "x": 3,
+            "y": -1,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 12,
+            "y": -1,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -5,
+            "y": -1,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -4,
+            "y": -1,
             "z": 0,
             "type": 1,
             "gimmickType": 0,
@@ -10,15 +34,7 @@
         },
         {
             "x": -1,
-            "y": 9,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 0,
-            "y": 9,
+            "y": -1,
             "z": 0,
             "type": 1,
             "gimmickType": 0,
@@ -26,71 +42,15 @@
         },
         {
             "x": 1,
-            "y": 9,
+            "y": -1,
             "z": 0,
             "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 2,
-            "y": 9,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 3,
-            "y": 9,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 4,
-            "y": 9,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 5,
-            "y": 9,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 6,
-            "y": 9,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 7,
-            "y": 9,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 8,
-            "y": 9,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 9,
-            "y": 9,
+            "x": 0,
+            "y": -1,
             "z": 0,
             "type": 1,
             "gimmickType": 0,
@@ -98,7 +58,7 @@
         },
         {
             "x": 10,
-            "y": 9,
+            "y": -1,
             "z": 0,
             "type": 1,
             "gimmickType": 0,
@@ -106,953 +66,81 @@
         },
         {
             "x": 11,
-            "y": 9,
+            "y": -1,
             "z": 0,
             "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 12,
-            "y": 9,
+            "x": 2,
+            "y": -1,
             "z": 0,
             "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 4,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 4,
-            "y": 11,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 4,
-            "y": 12,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 5,
-            "y": 12,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 6,
-            "y": 12,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 6,
-            "y": 11,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 7,
-            "y": 11,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 7,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 7,
-            "y": 12,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 6,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 5,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 5,
-            "y": 11,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -6,
-            "y": 9,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -5,
-            "y": 9,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -4,
-            "y": 9,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -3,
-            "y": 9,
-            "z": 0,
-            "type": 1,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 0,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 0,
-            "y": 11,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 0,
-            "y": 12,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 1,
-            "y": 12,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 2,
-            "y": 12,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 2,
-            "y": 11,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 3,
-            "y": 11,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 3,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 3,
-            "y": 12,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 2,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 1,
-            "y": 10,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 1,
-            "y": 11,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 0,
-            "y": 14,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 0,
-            "y": 15,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 0,
-            "y": 16,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 1,
-            "y": 16,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 1,
-            "y": 17,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 1,
-            "y": 18,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 2,
-            "y": 18,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 3,
-            "y": 19,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 4,
-            "y": 19,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 5,
-            "y": 19,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 6,
-            "y": 19,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 6,
-            "y": 18,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 7,
-            "y": 18,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 7,
-            "y": 17,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 7,
-            "y": 16,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 8,
-            "y": 16,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 8,
-            "y": 15,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 7,
-            "y": 15,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 7,
-            "y": 14,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 6,
-            "y": 14,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 5,
-            "y": 14,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 4,
-            "y": 14,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 3,
-            "y": 14,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 2,
-            "y": 14,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 1,
-            "y": 14,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -3,
-            "y": 18,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -3,
-            "y": 19,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -3,
-            "y": 20,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -4,
-            "y": 20,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -5,
-            "y": 20,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -5,
-            "y": 19,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -6,
-            "y": 19,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -6,
-            "y": 18,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -6,
-            "y": 17,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -6,
-            "y": 16,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -5,
-            "y": 16,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -4,
-            "y": 16,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -4,
-            "y": 17,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -3,
-            "y": 17,
-            "z": 0,
-            "type": 3,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 0,
-            "y": 21,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 1,
-            "y": 21,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 2,
-            "y": 21,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 3,
-            "y": 21,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 4,
-            "y": 21,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 5,
-            "y": 21,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 6,
-            "y": 21,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 7,
-            "y": 21,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 8,
-            "y": 21,
-            "z": 0,
-            "type": 2,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 9,
-            "y": 21,
+            "y": -1,
             "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 10,
-            "y": 20,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 11,
-            "y": 20,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 11,
-            "y": 19,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 11,
-            "y": 18,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 12,
-            "y": 18,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 12,
-            "y": 17,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 12,
-            "y": 16,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 12,
-            "y": 15,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 13,
-            "y": 15,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 13,
-            "y": 14,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 13,
-            "y": 13,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 12,
-            "y": 13,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 12,
-            "y": 12,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 11,
-            "y": 12,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 11,
-            "y": 11,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 10,
-            "y": 11,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 9,
-            "y": 11,
-            "z": 0,
-            "type": 2,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 8,
-            "y": 11,
+            "y": -1,
             "z": 0,
-            "type": 2,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": -1,
-            "y": 12,
+            "x": 7,
+            "y": -1,
             "z": 0,
-            "type": 2,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 6,
+            "y": -1,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 5,
+            "y": -1,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 4,
+            "y": -1,
+            "z": 0,
+            "type": 1,
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -3,
+            "y": -1,
+            "z": 0,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": -2,
-            "y": 12,
+            "y": -1,
             "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -3,
-            "y": 12,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -4,
-            "y": 12,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -5,
-            "y": 12,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -5,
-            "y": 13,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -6,
-            "y": 13,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -6,
-            "y": 14,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -7,
-            "y": 14,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -7,
-            "y": 15,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -7,
-            "y": 16,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -8,
-            "y": 16,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -8,
-            "y": 17,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -8,
-            "y": 18,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -7,
-            "y": 19,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -7,
-            "y": 20,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -6,
-            "y": 20,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -5,
-            "y": 21,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -4,
-            "y": 21,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -3,
-            "y": 21,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -2,
-            "y": 21,
-            "z": 0,
-            "type": 2,
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": -1,
-            "y": 21,
-            "z": 0,
-            "type": 2,
+            "type": 1,
             "gimmickType": 0,
             "gimmickID": 0
         }

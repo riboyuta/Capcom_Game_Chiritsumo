@@ -63,6 +63,9 @@ internal sealed class PlayerExternalControlSystem
     // 直近に開始された外部制御の見た目方針。
     private ExternalVisualPolicy currentVisualPolicy;
 
+    // 直近に開始された外部制御の速度方針。
+    private ExternalVelocityPolicy currentVelocityPolicy;
+
     // 現在、外部制御中かを返す。
     public bool IsExternallyControlled => isExternallyControlled;
 
@@ -170,6 +173,7 @@ internal sealed class PlayerExternalControlSystem
         currentPhysicsPolicy = request.PhysicsPolicy;
         currentGravityPolicy = request.GravityPolicy;
         currentVisualPolicy = request.VisualPolicy;
+        currentVelocityPolicy = request.VelocityPolicy;
 
         // 新しいセッション識別子を採番してアクティブ化する。
         currentSessionId = nextSessionId;
@@ -348,6 +352,12 @@ internal sealed class PlayerExternalControlSystem
             ApplyFacing(facingRequest.facing);
         }
 
+        // 外部制御中の速度方針を反映する。
+        if (isExternallyControlled)
+        {
+            ApplyVelocityPolicy();
+        }
+
         // 反映後は 1 フレーム要求を消す。
         ResetPerFrameRequests();
     }
@@ -374,6 +384,7 @@ internal sealed class PlayerExternalControlSystem
         currentPhysicsPolicy = ExternalPhysicsPolicy.Keep;
         currentGravityPolicy = ExternalGravityPolicy.Keep;
         currentVisualPolicy = ExternalVisualPolicy.Keep;
+        currentVelocityPolicy = ExternalVelocityPolicy.Keep;
 
         // 1フレーム要求を消す。
         ResetPerFrameRequests();
@@ -459,6 +470,29 @@ internal sealed class PlayerExternalControlSystem
             ApplyFacing(options.Facing);
         }
     }
+
+    // 速度方針を反映する。
+    private void ApplyVelocityPolicy()
+    {
+        if (playerRigidbody == null)
+        {
+            return;
+        }
+
+        Vector3 currentVelocity = playerRigidbody.linearVelocity;
+        switch (currentVelocityPolicy)
+        {
+            case ExternalVelocityPolicy.Keep:
+                return;
+            case ExternalVelocityPolicy.ZeroHorizontal:
+                playerRigidbody.linearVelocity = new Vector3(0f, currentVelocity.y, 0f);
+                return;
+            case ExternalVelocityPolicy.ZeroAll:
+                playerRigidbody.linearVelocity = Vector3.zero;
+                return;
+        }
+    }
+
     // 射出を反映する。
     private void ApplyLaunch(Vector3 velocity)
     {

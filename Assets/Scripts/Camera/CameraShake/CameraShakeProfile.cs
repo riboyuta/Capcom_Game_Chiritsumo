@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace Capcom_Game_Chiritsumo.Camera.CameraShake
 {
-    /// <summary>
+    
     /// カメラの振動（シェイク）パラメータを保持するデータアセット
-    /// </summary>
+
     [CreateAssetMenu(fileName = "NewCameraShakeProfile", menuName = "ScriptableObjects/CameraShake/CameraShakeProfile", order = 1)]
     public class CameraShakeProfile : ScriptableObject
     {

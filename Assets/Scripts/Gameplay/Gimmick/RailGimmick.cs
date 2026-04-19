@@ -22,7 +22,7 @@ public class RailTriggerNode : MonoBehaviour
 }
 
 [RequireComponent(typeof(LineRenderer))]
-public class RailGimmick : MonoBehaviour
+public class RailGimmick : MonoBehaviour, IRespawnResettable
 {
     [Header("Rail Waypoints (Local Position)")]
     [Tooltip("レールの節点（このオブジェクトからの相対座標）。エディタのSceneビューで編集できます。")]
@@ -83,6 +83,18 @@ public class RailGimmick : MonoBehaviour
     // レール離脱後の再搭乗クールダウンタイマー。
     private float reattachCooldownTimer;
 
+    // 初期状態を一度だけ保存したかどうか。
+    private bool hasCapturedInitialState;
+
+    // 初期位置。
+    private Vector3 initialPosition;
+
+    // 初期回転。
+    private Quaternion initialRotation;
+
+    // 初期クールダウン値。
+    private float initialReattachCooldownTimer;
+
     // 外部から補間ポイント群を参照するためのプロパティ
     public IReadOnlyList<Vector3> RailPath => railPath;
 
@@ -112,12 +124,42 @@ public class RailGimmick : MonoBehaviour
 
     private void OnDisable()
     {
-        if (activeSession.IsValid)
+        // 無効化時は外部制御を閉じて搭乗状態をクリアします。
+        EndActiveRideSessionIfNeeded();
+        ClearRideState();
+    }
+
+    public void CaptureInitialState()
+    {
+        // 初期状態は一度だけ保存し、搭乗中の途中状態では保存しません。
+        if (hasCapturedInitialState)
         {
-            activeSession.EndControl();
+            return;
         }
 
-        ClearRideState();
+        if (activeSession.IsValid || activePlayerFacade != null || activePlayerRigidbody != null)
+        {
+            return;
+        }
+
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
+        initialReattachCooldownTimer = reattachCooldownTimer;
+        hasCapturedInitialState = true;
+    }
+
+    public void ResetToRespawnState()
+    {
+        // 初期状態が未保存なら可能な範囲で保存してからリセットします。
+        if (!hasCapturedInitialState)
+        {
+            CaptureInitialState();
+        }
+
+        EndActiveRideSessionIfNeeded();
+        RestoreActivePlayerPhysicsIfNeeded();
+        ClearRideRuntimeState();
+        RestoreInitialTransformAndCooldown();
     }
 
     public List<Vector3> GetWorldSplinePath()
@@ -429,22 +471,43 @@ public class RailGimmick : MonoBehaviour
 
     private void ExitRideWithoutLaunch()
     {
-        if (activeSession.IsValid)
-        {
-            activeSession.EndControl();
-        }
-
+        // ジャンプなし離脱時は制御を終了して搭乗状態をクリアします。
+        EndActiveRideSessionIfNeeded();
         ClearRideState();
     }
 
     private void ClearRideState()
     {
-        // kinematic を元に戻す。
-        if (activePlayerRigidbody != null)
+        // 通常離脱時は物理を戻して搭乗状態を初期化します。
+        RestoreActivePlayerPhysicsIfNeeded();
+        ClearRideRuntimeState();
+    }
+
+    private void EndActiveRideSessionIfNeeded()
+    {
+        // 外部制御セッションが残っている場合だけ安全に終了します。
+        if (!activeSession.IsValid)
         {
-            activePlayerRigidbody.isKinematic = false;
+            return;
         }
 
+        activeSession.EndControl();
+    }
+
+    private void RestoreActivePlayerPhysicsIfNeeded()
+    {
+        // レール搭乗中に kinematic 化した Rigidbody を通常状態へ戻します。
+        if (activePlayerRigidbody == null)
+        {
+            return;
+        }
+
+        activePlayerRigidbody.isKinematic = false;
+    }
+
+    private void ClearRideRuntimeState()
+    {
+        // 搭乗中プレイヤー参照とレール進行状態を未搭乗の初期状態へ戻します。
         activeSession = PlayerExternalControlSession.Invalid;
         activePlayerFacade = null;
         activePlayerRigidbody = null;
@@ -452,6 +515,20 @@ public class RailGimmick : MonoBehaviour
         activeSegmentIndex = 0;
         distanceOnSegment = 0f;
         grindDirection = 1;
+    }
+
+    private void RestoreInitialTransformAndCooldown()
+    {
+        // レール本体の transform と再搭乗クールダウンを初期値へ戻します。
+        if (hasCapturedInitialState)
+        {
+            transform.position = initialPosition;
+            transform.rotation = initialRotation;
+            reattachCooldownTimer = initialReattachCooldownTimer;
+            return;
+        }
+
+        reattachCooldownTimer = 0f;
     }
     private bool IsReattachCooldownActive()
     {
