@@ -124,11 +124,19 @@ namespace Game.Input
             DashHeld = dashState.Held;
             DashReleased = dashState.ReleasedThisFrame;
 
-            // Dash を押した瞬間の方向入力を確定する。
+            // Dash を押している間、常に最新の方向入力を更新する。
+            // これにより、ダッシュボタンを押した後に方向を微調整できる。
             // 実際にダッシュを開始するかどうかは PlayerController 側の責務。
-            DashDirectionInput = DashPressed
-                ? ResolveDashDirectionInput()
-                : Vector2.zero;
+            if (DashPressed || DashHeld)
+            {
+                DashDirectionInput = ResolveDashDirectionInput();
+            }
+            else if (DashReleased)
+            {
+                // ダッシュボタンを離した瞬間にリセット
+                DashDirectionInput = Vector2.zero;
+            }
+            // それ以外（何も押していない）は前フレームの値を保持
 
             // Grab アクションの統合状態を解決する。
             RawButtonFrameState grabState = ResolveActionState(bindings.Grab);
@@ -233,27 +241,29 @@ namespace Game.Input
         }
 
         // 8方向インデックスをダッシュ方向ベクトルへ変換する。
-        // 正規化は PlayerController 側で行う前提なので、斜めは (1,1) のまま返す。
+        // 正規化済みのベクトルを返す（斜めも長さ1.0）
         private static Vector2 DirectionIndexToVector(int directionIndex)
         {
+            const float diagonal = 0.707106781f; // 1/√2
+
             switch (directionIndex)
             {
                 case 0:
-                    return Vector2.right;
+                    return Vector2.right;                       // 右: 0度
                 case 1:
-                    return new Vector2(1.0f, 1.0f);
+                    return new Vector2(diagonal, diagonal);     // 右上: 45度
                 case 2:
-                    return Vector2.up;
+                    return Vector2.up;                          // 上: 90度
                 case 3:
-                    return new Vector2(-1.0f, 1.0f);
+                    return new Vector2(-diagonal, diagonal);    // 左上: 135度
                 case 4:
-                    return Vector2.left;
+                    return Vector2.left;                        // 左: 180度
                 case 5:
-                    return new Vector2(-1.0f, -1.0f);
+                    return new Vector2(-diagonal, -diagonal);   // 左下: 225度
                 case 6:
-                    return Vector2.down;
+                    return Vector2.down;                        // 下: 270度
                 case 7:
-                    return new Vector2(1.0f, -1.0f);
+                    return new Vector2(diagonal, -diagonal);    // 右下: 315度
                 default:
                     return Vector2.zero;
             }

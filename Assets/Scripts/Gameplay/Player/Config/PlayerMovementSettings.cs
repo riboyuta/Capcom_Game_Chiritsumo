@@ -233,9 +233,62 @@ public sealed class WallSettings
     [Tooltip("空中で壁に接触中に Grab 入力を保持しているとき、壁に捕まる機能を有効にします。")]
     [SerializeField] bool useWallGrab = true;
 
+    [Header("壁捕まり継続可能時間")]
+    [Tooltip("着地してから次に着地するまでに、壁へ捕まり続けられる合計時間です。0以下になると着地するまで壁捕まりできません。壁キックは可能です。")]
+    [Min(0f)]
+    [SerializeField] float wallGrabMaxHoldTime = 7.0f;
+
+    [Header("壁捕まり通常時の消費量/秒")]
+    [Tooltip("壁に掴まって静止しているとき、1秒あたりに消費する壁捕まりリソース量です。")]
+    [Min(0f)]
+    [SerializeField] float wallGrabIdleDrainPerSecond = 1.0f;
+
+    [Header("壁捕まり上下移動時の消費量/秒")]
+    [Tooltip("壁に掴まって上下移動しているとき、1秒あたりに消費する壁捕まりリソース量です。通常時より大きくします。")]
+    [Min(0f)]
+    [SerializeField] float wallGrabClimbDrainPerSecond = 1.8f;
+
+    [Header("壁捕まり真上ジャンプ時の消費量")]
+    [Tooltip("壁捕まり状態から真上ジャンプした瞬間に消費する壁捕まりリソース量です。")]
+    [Min(0f)]
+    [SerializeField] float wallGrabJumpCost = 2.5f;
+
     [Header("壁捕まり中の縦速度")]
     [Tooltip("壁捕まり中に維持する縦速度です。0でその場維持、負値でゆっくり下降、正値で上昇します。")]
     [SerializeField] float wallGrabVerticalSpeed = 0f;
+
+    [Header("壁捕まり開始距離")]
+    [Tooltip("壁に捕まるための最大距離です。壁からこの距離以上離れると捕まりを開始できません。")]
+    [SerializeField] float wallGrabEnterDistance = 0.04f;
+
+    [Header("壁捕まり維持距離")]
+    [Tooltip("壁に捕まった状態を維持できる最大距離です。壁からこの距離以上離れると捕まり状態が解除されます。")]
+    [SerializeField] float wallGrabExitDistance = 0.06f;
+
+    [Header("壁登りの上速度")]
+    [Tooltip("壁捕まり中に上入力しているときの上方向速度です。大きいほど速く登ります。")]
+    [SerializeField] float wallClimbUpSpeed = 3.0f;
+
+    [Header("壁登りの下速度")]
+    [Tooltip("壁捕まり中に下入力しているときの下方向速度です。大きいほど速く降ります。")]
+    [SerializeField] float wallClimbDownSpeed = 2.5f;
+
+    [Header("壁登り入力しきい値")]
+    [Tooltip("壁登り中に入力として認識する最小値です。小さすぎると誤判定しやすく、大きすぎると意図した操作が出にくくなります。")]
+    [SerializeField] float wallClimbInputThreshold = 0.1f;
+
+    [Header("壁捕まりジャンプ上速度")]
+    [Tooltip("壁捕まり中に真上へジャンプするときの上方向速度です。通常ジャンプや壁キックとは別に調整します。")]
+    [SerializeField] float wallGrabJumpVerticalVelocity = 12.5f;
+
+    [Header("壁捕まりジャンプ後横入力ロック時間")]
+    [Tooltip("壁捕まりジャンプ直後に横方向の移動入力を無効化する時間です。短すぎると壁から離れにくく、長すぎると操作不能感が出ます。")]
+    [SerializeField] float wallGrabJumpHorizontalLockTime = 0.08f;
+
+    [Header("壁捕まりジャンプ後再付着ロック時間")]
+    [Tooltip("壁捕まりジャンプ直後に再び壁へ捕まるのを防ぐ時間です。短すぎると壁に吸い戻されやすく、長すぎると操作不能感が出ます。")]
+    [Min(0f)]
+    [SerializeField] float wallGrabJumpReattachLockTime = 0.18f;
 
     [Header("壁キックを使う")]
     [Tooltip("壁から反発して跳ぶ壁キック機能を有効にします。")]
@@ -260,15 +313,70 @@ public sealed class WallSettings
     [Min(0f)]
     [SerializeField] float wallReattachLockTime = 0.12f;
 
+    [Header("崖乗り上げを使う")]
+    [Tooltip("壁捕まり中に上方向へ移動して崖の頂上に達したとき、自動的に崖の上に乗り上げる機能を有効にします。")]
+    [SerializeField] bool useLedgeClimb = true;
+
+    [Header("崖検出前方距離")]
+    [Tooltip("崖の頂上を検出するための前方チェック距離です。")]
+    [Min(0f)]
+    [SerializeField] float ledgeDetectForwardDistance = 0.4f;
+
+    [Header("崖検出上方距離")]
+    [Tooltip("頭上に障害物がないかチェックする距離です。")]
+    [Min(0f)]
+    [SerializeField] float ledgeDetectUpDistance = 0.6f;
+
+    [Header("崖上地面検出距離")]
+    [Tooltip("崖の上に立てる地面があるか検出する距離です。")]
+    [Min(0f)]
+    [SerializeField] float ledgeGroundCheckDistance = 0.5f;
+
+    [Header("崖乗り上げ時間")]
+    [Tooltip("崖に乗り上げるアニメーション時間です。短いほど素早く、長いほど滑らかになります。")]
+    [Min(0.01f)]
+    [SerializeField] float ledgeClimbDuration = 0.35f;
+
+    [Header("崖乗り上げ前方オフセット")]
+    [Tooltip("崖に乗り上げた後の前方移動距離です。")]
+    [Min(0f)]
+    [SerializeField] float ledgeClimbForwardOffset = 0.8f;
+
+    [Header("崖乗り上げ上方オフセット")]
+    [Tooltip("崖に乗り上げた後の上方移動距離です。")]
+    [Min(0f)]
+    [SerializeField] float ledgeClimbUpOffset = 0.3f;
+
     public bool UseWallSlide => useWallSlide;
     public float WallSlideMaxSpeed => wallSlideMaxSpeed;
     public bool UseWallGrab => useWallGrab;
+    public float WallGrabMaxHoldTime => wallGrabMaxHoldTime;
+    public float WallGrabIdleDrainPerSecond => wallGrabIdleDrainPerSecond;
+    public float WallGrabClimbDrainPerSecond => wallGrabClimbDrainPerSecond;
+    public float WallGrabJumpCost => wallGrabJumpCost;
     public float WallGrabVerticalSpeed => wallGrabVerticalSpeed;
+    public float WallGrabEnterDistance => wallGrabEnterDistance;
+    public float WallGrabExitDistance => wallGrabExitDistance;
+    public float WallClimbUpSpeed => wallClimbUpSpeed;
+    public float WallClimbDownSpeed => wallClimbDownSpeed;
+    public float WallClimbInputThreshold => wallClimbInputThreshold;
+    public float WallGrabJumpVerticalVelocity => wallGrabJumpVerticalVelocity;
+    public float WallGrabJumpHorizontalLockTime => wallGrabJumpHorizontalLockTime;
+
+    public float WallGrabJumpReattachLockTime => wallGrabJumpReattachLockTime;
+    
     public bool UseWallKick => useWallKick;
     public float WallJumpHorizontalVelocity => wallJumpHorizontalVelocity;
     public float WallJumpVerticalVelocity => wallJumpVerticalVelocity;
     public float WallJumpControlLockTime => wallJumpControlLockTime;
     public float WallReattachLockTime => wallReattachLockTime;
+    public bool UseLedgeClimb => useLedgeClimb;
+    public float LedgeDetectForwardDistance => ledgeDetectForwardDistance;
+    public float LedgeDetectUpDistance => ledgeDetectUpDistance;
+    public float LedgeGroundCheckDistance => ledgeGroundCheckDistance;
+    public float LedgeClimbDuration => ledgeClimbDuration;
+    public float LedgeClimbForwardOffset => ledgeClimbForwardOffset;
+    public float LedgeClimbUpOffset => ledgeClimbUpOffset;
 }
 
 [Serializable]
@@ -353,7 +461,7 @@ public sealed class DashSettings
     [Header("ダッシュ方向入力のデッドゾーン")]
     [Tooltip("ダッシュ方向としてゲームパッド入力を受け付ける最小値です。小さいほど弱い倒しでも方向入力として扱います。")]
     [Range(0f, 1f)]
-    [SerializeField] float directionDeadZone = 0.25f;
+    [SerializeField] float directionDeadZone = 0.15f;
 
     [Header("ダッシュ斜め入力補助角度")]
     [Tooltip("8方向スナップ時に斜め方向を少し選びやすくする補助角度です。大きいほど斜めが出しやすくなります。")]

@@ -27,6 +27,10 @@ internal sealed class PlayerRuntimeState
     // 捕まっている壁の左右。(-1:left / +1:right / 0:none)
     public int wallGrabSide;
 
+    // 壁掴まりの残り継続時間。
+    // 接地で最大値へ戻り、壁掴まり中だけ減少する。
+    public float wallGrabRemainingTime = 0f;
+
     // 現在ダッシュ中かどうか。
     public bool isDashing;
 
@@ -72,5 +76,17 @@ internal sealed class PlayerRuntimeState
 
     // ジャンプ上昇維持の残り時間。
     public float jumpHoldTimer = 0f;
+
+    // 崖乗り上げ実行中かどうか。
+    public bool isLedgeClimbing;
+
+    // 崖乗り上げ開始時刻。
+    public float ledgeClimbStartTime;
+
+    // 崖乗り上げ開始位置。
+    public Vector3 ledgeClimbStartPosition;
+
+    // 崖乗り上げ目標位置。
+    public Vector3 ledgeClimbTargetPosition;
 
 }

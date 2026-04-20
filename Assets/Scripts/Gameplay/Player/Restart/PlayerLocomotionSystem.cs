@@ -81,6 +81,9 @@ internal sealed class PlayerLocomotionSystem
     // この物理フレームで壁ジャンプしたか。
     private bool justWallJumpedThisFrame;
 
+    // 可変ジャンプカットの対象になる「通常ジャンプ由来の上昇中」か。
+    private bool isVariableJumpCutActive;
+
     // デバッグ表示用のコヨーテタイマー。
     internal float CoyoteTimer => coyoteTimer;
 
@@ -163,6 +166,10 @@ internal sealed class PlayerLocomotionSystem
         justWallJumpedThisFrame = false;
         suppressVariableJumpCutThisTick = false;
         resolvedLocomotionModifier = PlayerLocomotionModifierRequest.Identity;
+        runtimeState.wallGrabRemainingTime = movementSettings.Wall.WallGrabMaxHoldTime;
+        runtimeState.isLedgeClimbing = false;
+        runtimeState.ledgeClimbStartTime = 0f;
+        isVariableJumpCutActive = false;
     }
 
     // 物理Tick用の移動補正を解決する。
@@ -194,6 +201,35 @@ internal sealed class PlayerLocomotionSystem
         }
 
         jumpHoldTimer = Mathf.Max(0f, jumpHoldTimer - deltaTime);
+    }
+
+    internal void UpdateWallGrabLimitTimer(float deltaTime)
+    {
+        if (runtimeState.isGrounded)
+        {
+            runtimeState.wallGrabRemainingTime = movementSettings.Wall.WallGrabMaxHoldTime;
+            return;
+        }
+
+        if (!runtimeState.isWallGrabbing)
+        {
+            return;
+        }
+
+        float inputY = Mathf.Clamp(playerInputReader.Move.y, -1f, 1f);
+        float threshold = movementSettings.Wall.WallClimbInputThreshold;
+
+        bool isClimbing =
+            inputY > threshold ||
+            inputY < -threshold;
+
+        float drainPerSecond = isClimbing
+            ? movementSettings.Wall.WallGrabClimbDrainPerSecond
+            : movementSettings.Wall.WallGrabIdleDrainPerSecond;
+
+        runtimeState.wallGrabRemainingTime = Mathf.Max(
+            0f,
+            runtimeState.wallGrabRemainingTime - drainPerSecond * deltaTime);
     }
 
     // 移動入力から向きを更新する。
@@ -265,6 +301,14 @@ internal sealed class PlayerLocomotionSystem
             return;
         }
 
+        // 壁掴まり中の真上ジャンプを先に判定
+        if (TryApplyWallGrabVerticalJump())
+        {
+            jumpBufferTimer = 0f;
+            return;
+        }
+
+        // その次に壁キック
         if (TryApplyWallKick())
         {
             jumpBufferTimer = 0f;
@@ -285,8 +329,63 @@ internal sealed class PlayerLocomotionSystem
         coyoteTimer = 0f;
         jumpBufferTimer = 0f;
         jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
+        isVariableJumpCutActive = true;
         justJumpedThisFrame = true;
         playJumpSound?.Invoke();
+    }
+
+    internal bool TryApplyWallGrabVerticalJump()
+    {
+        if (!runtimeState.isWallGrabbing)
+        {
+            return false;
+        }
+
+        if (runtimeState.isDashing)
+        {
+            return false;
+        }
+
+        int side = runtimeState.wallGrabSide != 0 ? runtimeState.wallGrabSide : runtimeState.wallSide;
+        if (side == 0)
+        {
+            return false;
+        }
+
+        float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
+        float threshold = movementSettings.Detection.WallInputThreshold;
+
+        bool pushingAwayFromWall = inputX * side < -threshold;
+        if (pushingAwayFromWall)
+        {
+            return false;
+        }
+
+        ExitWallGrab();
+
+        runtimeState.wallGrabRemainingTime = Mathf.Max(
+            0f,
+            runtimeState.wallGrabRemainingTime - movementSettings.Wall.WallGrabJumpCost);
+
+        Vector3 velocity = rb.linearVelocity;
+        velocity.x = 0f;
+        velocity.y = movementSettings.Wall.WallGrabJumpVerticalVelocity;
+        rb.linearVelocity = velocity;
+
+        runtimeState.isGrounded = false;
+        runtimeState.isWallSliding = false;
+        runtimeState.isFastFalling = false;
+        runtimeState.wallJumpControlLockTimer = movementSettings.Wall.WallGrabJumpHorizontalLockTime;
+        runtimeState.wallReattachLockTimer = movementSettings.Wall.WallGrabJumpReattachLockTime;
+
+        coyoteTimer = 0f;
+        jumpBufferTimer = 0f;
+        jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
+        isVariableJumpCutActive = false;
+        justJumpedThisFrame = true;
+
+        playJumpSound?.Invoke();
+        return true;
     }
 
     // 壁キックを開始できる場合に適用する。
@@ -312,29 +411,55 @@ internal sealed class PlayerLocomotionSystem
             return false;
         }
 
+        int side = runtimeState.isWallGrabbing
+            ? runtimeState.wallGrabSide
+            : runtimeState.wallSide;
+
+        if (side == 0)
+        {
+            return false;
+        }
+
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
-        bool hasHorizontalInput = Mathf.Abs(inputX) >= movementSettings.Detection.WallInputThreshold;
+        float threshold = movementSettings.Detection.WallInputThreshold;
+        bool hasHorizontalInput = Mathf.Abs(inputX) >= threshold;
+
         if (!hasHorizontalInput)
         {
             return false;
         }
 
+        if (runtimeState.isWallGrabbing)
+        {
+            // 壁掴まり中だけ「壁と反対入力」で壁キック
+            bool pushingAwayFromWall = inputX * side < -threshold;
+            if (!pushingAwayFromWall)
+            {
+                return false;
+            }
+        }
+        // 壁掴まり中ではないなら、左右どちら入力でも壁キック
+
         ExitWallGrab();
 
         Vector3 velocity = rb.linearVelocity;
-        velocity.x = -runtimeState.wallSide * movementSettings.Wall.WallJumpHorizontalVelocity;
+        velocity.x = -side * movementSettings.Wall.WallJumpHorizontalVelocity;
         velocity.y = movementSettings.Wall.WallJumpVerticalVelocity;
         rb.linearVelocity = velocity;
 
         runtimeState.wallJumpControlLockTimer = movementSettings.Wall.WallJumpControlLockTime;
         runtimeState.wallReattachLockTimer = movementSettings.Wall.WallReattachLockTime;
         coyoteTimer = 0f;
+        jumpBufferTimer = 0f;
         jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
+        isVariableJumpCutActive = false;
         runtimeState.isGrounded = false;
+        runtimeState.isWallSliding = false;
+        runtimeState.isFastFalling = false;
         justWallJumpedThisFrame = true;
+
         playWallKickVibration?.Invoke();
         playWallKickSound?.Invoke();
-
         return true;
     }
 
@@ -351,13 +476,20 @@ internal sealed class PlayerLocomotionSystem
             return;
         }
 
-        if (playerInputReader.JumpHeld)
+        if (!isVariableJumpCutActive)
         {
             return;
         }
 
         Vector3 velocity = rb.linearVelocity;
+
         if (velocity.y <= 0f)
+        {
+            isVariableJumpCutActive = false;
+            return;
+        }
+
+        if (playerInputReader.JumpHeld)
         {
             return;
         }
@@ -365,6 +497,8 @@ internal sealed class PlayerLocomotionSystem
         float cutVelocityY = movementSettings.Jump.JumpVelocity * movementSettings.Jump.JumpCutMultiplier;
         velocity.y = Mathf.Min(velocity.y, cutVelocityY);
         rb.linearVelocity = velocity;
+
+        isVariableJumpCutActive = false;
     }
 
     // 壁滑り状態と落下速度上限を更新する。
@@ -535,6 +669,12 @@ internal sealed class PlayerLocomotionSystem
     // 壁捕まり状態の進入・離脱判定を更新する。
     internal void UpdateWallGrabState()
     {
+        // 崖乗り上げ中は壁掴まり状態を更新しない。
+        if (runtimeState.isLedgeClimbing)
+        {
+            return;
+        }
+
         if (runtimeState.isWallGrabbing)
         {
             if (ShouldExitWallGrab())
@@ -569,6 +709,12 @@ internal sealed class PlayerLocomotionSystem
             return false;
         }
 
+        // 崖乗り上げ中は壁掴まりに進入しない。
+        if (runtimeState.isLedgeClimbing)
+        {
+            return false;
+        }
+
         if (!runtimeState.isTouchingWall || runtimeState.wallSide == 0)
         {
             return false;
@@ -580,6 +726,16 @@ internal sealed class PlayerLocomotionSystem
         }
 
         if (!playerInputReader.GrabHeld)
+        {
+            return false;
+        }
+
+        if (runtimeState.wallGrabRemainingTime <= 0f)
+        {
+            return false;
+        }
+
+        if (!IsWithinWallGrabRange(movementSettings.Wall.WallGrabEnterDistance))
         {
             return false;
         }
@@ -620,7 +776,40 @@ internal sealed class PlayerLocomotionSystem
             return true;
         }
 
+        if (runtimeState.wallGrabRemainingTime <= 0f)
+        {
+            return true;
+        }
+
+        if (!IsWithinWallGrabRange(movementSettings.Wall.WallGrabExitDistance))
+        {
+            return true;
+        }
+
         return false;
+    }
+
+    private bool IsWithinWallGrabRange(float maxDistance)
+    {
+        if (!runtimeState.isTouchingWall || runtimeState.wallSide == 0)
+        {
+            return false;
+        }
+
+        Bounds bounds = capsuleCollider.bounds;
+        Vector3 wallDir = Vector3.right * runtimeState.wallSide;
+
+        // プレイヤーの側面ギリギリ少し内側から前方へ飛ばす
+        Vector3 origin = bounds.center;
+        origin.y += bounds.extents.y * 0.15f;
+        origin.x += wallDir.x * (bounds.extents.x - 0.01f);
+
+        return Physics.Raycast(
+            origin,
+            wallDir,
+            maxDistance + 0.01f,
+            movementSettings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Ignore);
     }
 
     // 壁捕まり状態へ遷移させる。
@@ -631,9 +820,11 @@ internal sealed class PlayerLocomotionSystem
         runtimeState.isWallSliding = false;
         runtimeState.isFastFalling = false;
 
+        rb.useGravity = false;
+
         Vector3 velocity = rb.linearVelocity;
         velocity.x = 0f;
-        velocity.y = Mathf.Max(velocity.y, movementSettings.Wall.WallGrabVerticalSpeed);
+        velocity.y = 0f;
         rb.linearVelocity = velocity;
     }
 
@@ -642,6 +833,7 @@ internal sealed class PlayerLocomotionSystem
     {
         runtimeState.isWallGrabbing = false;
         runtimeState.wallGrabSide = 0;
+        rb.useGravity = true;
     }
 
     // 壁捕まり中の専用移動を適用する。
@@ -654,9 +846,28 @@ internal sealed class PlayerLocomotionSystem
 
         runtimeState.facing = runtimeState.wallGrabSide;
 
+        float inputY = Mathf.Clamp(playerInputReader.Move.y, -1f, 1f);
+        float threshold = movementSettings.Wall.WallClimbInputThreshold;
+
+        float targetVerticalSpeed = 0f;
+
+        if (inputY > threshold)
+        {
+            targetVerticalSpeed = movementSettings.Wall.WallClimbUpSpeed;
+
+            if (TryStartLedgeClimb())
+            {
+                return;
+            }
+        }
+        else if (inputY < -threshold)
+        {
+            targetVerticalSpeed = -movementSettings.Wall.WallClimbDownSpeed;
+        }
+
         Vector3 velocity = rb.linearVelocity;
         velocity.x = 0f;
-        velocity.y = movementSettings.Wall.WallGrabVerticalSpeed;
+        velocity.y = targetVerticalSpeed;
         rb.linearVelocity = velocity;
 
         runtimeState.isWallSliding = false;
@@ -811,14 +1022,27 @@ internal sealed class PlayerLocomotionSystem
         runtimeState.isDashing = false;
         TrySnapToGroundAfterDash();
 
-        if (!movementSettings.Dash.RestoreStartVerticalVelocity)
+        if (movementSettings.Dash.RestoreStartVerticalVelocity)
         {
-            return;
+            Vector3 restoredVelocity = rb.linearVelocity;
+            restoredVelocity.y = runtimeState.dashStartVerticalVelocity;
+            rb.linearVelocity = restoredVelocity;
         }
 
-        Vector3 velocity = rb.linearVelocity;
-        velocity.y = runtimeState.dashStartVerticalVelocity;
-        rb.linearVelocity = velocity;
+        // 上ダッシュ / 斜め上ダッシュだけ、終了時の上向き速度を一定値まで制限する。
+        // これで JumpHeld の有無に関係なく同じ終端挙動になる。
+        if (runtimeState.dashDirection.y > 0f)
+        {
+            Vector3 velocity = rb.linearVelocity;
+            float maxUpwardVelocityAfterDash =
+                movementSettings.Jump.JumpVelocity * movementSettings.Jump.JumpCutMultiplier;
+
+            if (velocity.y > maxUpwardVelocityAfterDash)
+            {
+                velocity.y = maxUpwardVelocityAfterDash;
+                rb.linearVelocity = velocity;
+            }
+        }
     }
 
     // ダッシュ入力バッファタイマーを更新する。
@@ -881,6 +1105,7 @@ internal sealed class PlayerLocomotionSystem
         ExitWallGrab();
         runtimeState.isDashing = true;
         runtimeState.isFastFalling = false;
+        isVariableJumpCutActive = false;
         runtimeState.dashTimer = movementSettings.Dash.Duration;
         if (runtimeState.isGrounded)
         {
@@ -1005,12 +1230,184 @@ internal sealed class PlayerLocomotionSystem
             return new Vector2(runtimeState.facing, 0f);
         }
 
-        return requestedDirection.normalized;
+        // PlayerInputReaderで既に正規化済み8方向なのでそのまま使う
+        return requestedDirection;
     }
 
     // ダッシュ中の専用速度を適用する。
     internal void ApplyDashVelocity()
     {
         rb.linearVelocity = runtimeState.dashDirection * (movementSettings.Dash.Speed * resolvedLocomotionModifier.dashSpeedMultiplier);
+    }
+
+    // 崖乗り上げを開始できるか判定し、開始する。
+    internal bool TryStartLedgeClimb()
+    {
+        if (!movementSettings.Wall.UseLedgeClimb)
+        {
+            return false;
+        }
+
+        if (!runtimeState.isWallGrabbing)
+        {
+            return false;
+        }
+
+        if (runtimeState.isLedgeClimbing)
+        {
+            return false;
+        }
+
+        if (!CanDetectLedge(out Vector3 ledgeTopPosition))
+        {
+            return false;
+        }
+
+        StartLedgeClimb(ledgeTopPosition);
+        return true;
+    }
+
+    // 崖の頂上を検出できるか判定する。
+    internal bool CanDetectLedge(out Vector3 ledgeTopPosition)
+    {
+        ledgeTopPosition = Vector3.zero;
+
+        int side = runtimeState.wallGrabSide;
+        if (side == 0)
+        {
+            return false;
+        }
+
+        Bounds bounds = capsuleCollider.bounds;
+        Vector3 wallDir = Vector3.right * side;
+
+        Vector3 playerHead = bounds.center;
+        playerHead.y = bounds.max.y;
+
+        Vector3 headCheckOrigin = playerHead;
+        headCheckOrigin.x += wallDir.x * (bounds.extents.x - 0.01f);
+
+        bool hasObstacleAbove = Physics.Raycast(
+            headCheckOrigin,
+            Vector3.up,
+            movementSettings.Wall.LedgeDetectUpDistance,
+            movementSettings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Ignore);
+
+        if (hasObstacleAbove)
+        {
+            return false;
+        }
+
+        Vector3 forwardCheckOrigin = bounds.center;
+        forwardCheckOrigin.y += bounds.extents.y * 0.3f;
+        forwardCheckOrigin.x += wallDir.x * (bounds.extents.x - 0.01f);
+
+        bool hasWallAhead = Physics.Raycast(
+            forwardCheckOrigin,
+            wallDir,
+            movementSettings.Wall.LedgeDetectForwardDistance,
+            movementSettings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Ignore);
+
+        if (hasWallAhead)
+        {
+            return false;
+        }
+
+        Vector3 groundCheckOrigin = forwardCheckOrigin;
+        groundCheckOrigin.x += wallDir.x * movementSettings.Wall.LedgeDetectForwardDistance;
+
+        float groundCheckDistance = movementSettings.Wall.LedgeGroundCheckDistance + bounds.extents.y;
+
+        bool foundGround = Physics.Raycast(
+            groundCheckOrigin,
+            Vector3.down,
+            out RaycastHit hit,
+            groundCheckDistance,
+            movementSettings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Ignore);
+
+        if (foundGround)
+        {
+            ledgeTopPosition = hit.point;
+            return true;
+        }
+
+        return false;
+    }
+
+    // 崖乗り上げを開始する。
+    internal void StartLedgeClimb(Vector3 ledgeTopPosition)
+    {
+        runtimeState.isLedgeClimbing = true;
+        runtimeState.ledgeClimbStartTime = Time.time;
+        runtimeState.ledgeClimbStartPosition = rb.position;
+
+        int side = runtimeState.wallGrabSide;
+        Vector3 targetPosition = ledgeTopPosition;
+        targetPosition.x += side * movementSettings.Wall.LedgeClimbForwardOffset;
+        targetPosition.y += movementSettings.Wall.LedgeClimbUpOffset;
+
+        runtimeState.ledgeClimbTargetPosition = targetPosition;
+
+        ExitWallGrab();
+
+        runtimeState.wallReattachLockTimer = movementSettings.Wall.LedgeClimbDuration + 0.2f;
+
+        rb.linearVelocity = Vector3.zero;
+        rb.isKinematic = true;
+        capsuleCollider.enabled = false;
+    }
+
+    // 崖乗り上げ中の移動を更新する。
+    internal void UpdateLedgeClimb()
+    {
+        if (!runtimeState.isLedgeClimbing)
+        {
+            return;
+        }
+
+        float elapsed = Time.time - runtimeState.ledgeClimbStartTime;
+        float duration = movementSettings.Wall.LedgeClimbDuration;
+
+        if (elapsed >= duration)
+        {
+            CompleteLedgeClimb();
+            return;
+        }
+
+        float t = elapsed / duration;
+        float easedT = EaseOutCubic(t);
+
+        Vector3 currentPosition = Vector3.Lerp(
+            runtimeState.ledgeClimbStartPosition,
+            runtimeState.ledgeClimbTargetPosition,
+            easedT);
+
+        transform.position = currentPosition;
+    }
+
+    // 崖乗り上げを完了する。
+    internal void CompleteLedgeClimb()
+    {
+        runtimeState.isLedgeClimbing = false;
+        transform.position = runtimeState.ledgeClimbTargetPosition;
+
+        capsuleCollider.enabled = true;
+        rb.isKinematic = false;
+        rb.linearVelocity = Vector3.zero;
+        runtimeState.isGrounded = false;
+
+        runtimeState.isWallGrabbing = false;
+        runtimeState.wallGrabSide = 0;
+        runtimeState.isWallSliding = false;
+    }
+
+    // イージング関数: EaseOutCubic（滑らかな減速）
+    private float EaseOutCubic(float t)
+    {
+        float f = t - 1f;
+        return f * f * f + 1f;
     }
 }

@@ -239,21 +239,41 @@ public sealed partial class PlayerController : MonoBehaviour
 
     private bool CanAcceptMoveInput()
     {
+        if (runtimeState.isLedgeClimbing)
+        {
+            return false;
+        }
+
         return !IsInputBlocked(InputBlockFlags.Move);
     }
 
     private bool CanAcceptJumpInput()
     {
+        if (runtimeState.isLedgeClimbing)
+        {
+            return false;
+        }
+
         return !IsInputBlocked(InputBlockFlags.Jump);
     }
 
     private bool CanAcceptDashInput()
     {
+        if (runtimeState.isLedgeClimbing)
+        {
+            return false;
+        }
+
         return !IsInputBlocked(InputBlockFlags.Dash);
     }
 
     private bool CanAcceptGrabInput()
     {
+        if (runtimeState.isLedgeClimbing)
+        {
+            return false;
+        }
+
         return !IsInputBlocked(InputBlockFlags.Grab);
     }
 
@@ -482,6 +502,9 @@ public sealed partial class PlayerController : MonoBehaviour
             out runtimeState.isTouchingWall,
             out runtimeState.wallSide);
 
+        // 壁掴まり継続時間を更新
+        locomotionSystem.UpdateWallGrabLimitTimer(deltaTime);
+
         // 壁捕まり状態の進入・離脱を更新する。
         locomotionSystem.UpdateWallGrabState();
 
@@ -536,11 +559,20 @@ public sealed partial class PlayerController : MonoBehaviour
             return;
         }
 
-        // 壁捕まり中は先にジャンプだけ試し、
-        // まだ捕まり中なら専用移動を適用して通常移動へ入らない。
+        // 崖乗り上げ中は専用の移動を適用する。
+        if (runtimeState.isLedgeClimbing)
+        {
+            locomotionSystem.UpdateLedgeClimb();
+            UpdateAudioEvents();
+            UpdateVibrationEvents();
+            FinalizeVisualState(previousVelocityY);
+            return;
+        }
+
         if (runtimeState.isWallGrabbing)
         {
             locomotionSystem.ApplyJump();
+
             if (runtimeState.isWallGrabbing)
             {
                 locomotionSystem.ApplyWallGrabMovement();
