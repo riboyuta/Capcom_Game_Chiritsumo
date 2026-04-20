@@ -461,7 +461,7 @@ public sealed class DashSettings
     [Header("ダッシュ方向入力のデッドゾーン")]
     [Tooltip("ダッシュ方向としてゲームパッド入力を受け付ける最小値です。小さいほど弱い倒しでも方向入力として扱います。")]
     [Range(0f, 1f)]
-    [SerializeField] float directionDeadZone = 0.25f;
+    [SerializeField] float directionDeadZone = 0.15f;
 
     [Header("ダッシュ斜め入力補助角度")]
     [Tooltip("8方向スナップ時に斜め方向を少し選びやすくする補助角度です。大きいほど斜めが出しやすくなります。")]

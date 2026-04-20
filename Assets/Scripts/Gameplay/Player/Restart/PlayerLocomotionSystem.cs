@@ -81,6 +81,9 @@ internal sealed class PlayerLocomotionSystem
     // この物理フレームで壁ジャンプしたか。
     private bool justWallJumpedThisFrame;
 
+    // 可変ジャンプカットの対象になる「通常ジャンプ由来の上昇中」か。
+    private bool isVariableJumpCutActive;
+
     // デバッグ表示用のコヨーテタイマー。
     internal float CoyoteTimer => coyoteTimer;
 
@@ -166,6 +169,7 @@ internal sealed class PlayerLocomotionSystem
         runtimeState.wallGrabRemainingTime = movementSettings.Wall.WallGrabMaxHoldTime;
         runtimeState.isLedgeClimbing = false;
         runtimeState.ledgeClimbStartTime = 0f;
+        isVariableJumpCutActive = false;
     }
 
     // 物理Tick用の移動補正を解決する。
@@ -325,6 +329,7 @@ internal sealed class PlayerLocomotionSystem
         coyoteTimer = 0f;
         jumpBufferTimer = 0f;
         jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
+        isVariableJumpCutActive = true;
         justJumpedThisFrame = true;
         playJumpSound?.Invoke();
     }
@@ -376,6 +381,7 @@ internal sealed class PlayerLocomotionSystem
         coyoteTimer = 0f;
         jumpBufferTimer = 0f;
         jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
+        isVariableJumpCutActive = false;
         justJumpedThisFrame = true;
 
         playJumpSound?.Invoke();
@@ -446,6 +452,7 @@ internal sealed class PlayerLocomotionSystem
         coyoteTimer = 0f;
         jumpBufferTimer = 0f;
         jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
+        isVariableJumpCutActive = false;
         runtimeState.isGrounded = false;
         runtimeState.isWallSliding = false;
         runtimeState.isFastFalling = false;
@@ -469,13 +476,20 @@ internal sealed class PlayerLocomotionSystem
             return;
         }
 
-        if (playerInputReader.JumpHeld)
+        if (!isVariableJumpCutActive)
         {
             return;
         }
 
         Vector3 velocity = rb.linearVelocity;
+
         if (velocity.y <= 0f)
+        {
+            isVariableJumpCutActive = false;
+            return;
+        }
+
+        if (playerInputReader.JumpHeld)
         {
             return;
         }
@@ -483,6 +497,8 @@ internal sealed class PlayerLocomotionSystem
         float cutVelocityY = movementSettings.Jump.JumpVelocity * movementSettings.Jump.JumpCutMultiplier;
         velocity.y = Mathf.Min(velocity.y, cutVelocityY);
         rb.linearVelocity = velocity;
+
+        isVariableJumpCutActive = false;
     }
 
     // 壁滑り状態と落下速度上限を更新する。
@@ -1006,14 +1022,27 @@ internal sealed class PlayerLocomotionSystem
         runtimeState.isDashing = false;
         TrySnapToGroundAfterDash();
 
-        if (!movementSettings.Dash.RestoreStartVerticalVelocity)
+        if (movementSettings.Dash.RestoreStartVerticalVelocity)
         {
-            return;
+            Vector3 restoredVelocity = rb.linearVelocity;
+            restoredVelocity.y = runtimeState.dashStartVerticalVelocity;
+            rb.linearVelocity = restoredVelocity;
         }
 
-        Vector3 velocity = rb.linearVelocity;
-        velocity.y = runtimeState.dashStartVerticalVelocity;
-        rb.linearVelocity = velocity;
+        // 上ダッシュ / 斜め上ダッシュだけ、終了時の上向き速度を一定値まで制限する。
+        // これで JumpHeld の有無に関係なく同じ終端挙動になる。
+        if (runtimeState.dashDirection.y > 0f)
+        {
+            Vector3 velocity = rb.linearVelocity;
+            float maxUpwardVelocityAfterDash =
+                movementSettings.Jump.JumpVelocity * movementSettings.Jump.JumpCutMultiplier;
+
+            if (velocity.y > maxUpwardVelocityAfterDash)
+            {
+                velocity.y = maxUpwardVelocityAfterDash;
+                rb.linearVelocity = velocity;
+            }
+        }
     }
 
     // ダッシュ入力バッファタイマーを更新する。
@@ -1076,6 +1105,7 @@ internal sealed class PlayerLocomotionSystem
         ExitWallGrab();
         runtimeState.isDashing = true;
         runtimeState.isFastFalling = false;
+        isVariableJumpCutActive = false;
         runtimeState.dashTimer = movementSettings.Dash.Duration;
         if (runtimeState.isGrounded)
         {
@@ -1200,7 +1230,8 @@ internal sealed class PlayerLocomotionSystem
             return new Vector2(runtimeState.facing, 0f);
         }
 
-        return requestedDirection.normalized;
+        // PlayerInputReaderで既に正規化済み8方向なのでそのまま使う
+        return requestedDirection;
     }
 
     // ダッシュ中の専用速度を適用する。
