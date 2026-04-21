@@ -69,6 +69,15 @@ internal sealed class PlayerLocomotionSystem
     // ダッシュバッファタイマー。
     private float dashBufferTimer;
 
+    // ダッシュ終了直後のジャンプカット無効タイマー。
+    private float dashEndJumpCutLockTimer;
+
+    // 壁から離れた直後でも壁キックを許可する猶予タイマー。
+    private float wallDetachGraceTimer;
+
+    // 壁離脱猶予中に参照する最後の壁面方向。
+    private int lastWallDetachSide;
+
     // 可変ジャンプカット抑制フラグ。
     private bool suppressVariableJumpCutThisTick;
 
@@ -162,6 +171,9 @@ internal sealed class PlayerLocomotionSystem
         jumpBufferTimer = 0f;
         jumpHoldTimer = 0f;
         dashBufferTimer = 0f;
+        dashEndJumpCutLockTimer = 0f;
+        wallDetachGraceTimer = 0f;
+        lastWallDetachSide = 0;
         justJumpedThisFrame = false;
         justWallJumpedThisFrame = false;
         suppressVariableJumpCutThisTick = false;
@@ -201,6 +213,7 @@ internal sealed class PlayerLocomotionSystem
         }
 
         jumpHoldTimer = Mathf.Max(0f, jumpHoldTimer - deltaTime);
+        dashEndJumpCutLockTimer = Mathf.Max(0f, dashEndJumpCutLockTimer - deltaTime);
     }
 
     internal void UpdateWallGrabLimitTimer(float deltaTime)
@@ -388,6 +401,27 @@ internal sealed class PlayerLocomotionSystem
         return true;
     }
 
+    // 壁キックに使う壁面方向を解決する。
+    private int ResolveWallKickSide()
+    {
+        if (runtimeState.isWallGrabbing && runtimeState.wallGrabSide != 0)
+        {
+            return runtimeState.wallGrabSide;
+        }
+
+        if (runtimeState.isTouchingWall && runtimeState.wallSide != 0)
+        {
+            return runtimeState.wallSide;
+        }
+
+        if (wallDetachGraceTimer > 0f)
+        {
+            return lastWallDetachSide;
+        }
+
+        return 0;
+    }
+
     // 壁キックを開始できる場合に適用する。
     internal bool TryApplyWallKick()
     {
@@ -401,7 +435,7 @@ internal sealed class PlayerLocomotionSystem
             return false;
         }
 
-        if (runtimeState.isGrounded || !runtimeState.isTouchingWall || runtimeState.wallSide == 0)
+        if (runtimeState.isGrounded)
         {
             return false;
         }
@@ -411,10 +445,7 @@ internal sealed class PlayerLocomotionSystem
             return false;
         }
 
-        int side = runtimeState.isWallGrabbing
-            ? runtimeState.wallGrabSide
-            : runtimeState.wallSide;
-
+        int side = ResolveWallKickSide();
         if (side == 0)
         {
             return false;
@@ -449,10 +480,13 @@ internal sealed class PlayerLocomotionSystem
 
         runtimeState.wallJumpControlLockTimer = movementSettings.Wall.WallJumpControlLockTime;
         runtimeState.wallReattachLockTimer = movementSettings.Wall.WallReattachLockTime;
+
+        wallDetachGraceTimer = 0f;
+        lastWallDetachSide = 0;
+
         coyoteTimer = 0f;
         jumpBufferTimer = 0f;
         jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
-        isVariableJumpCutActive = false;
         runtimeState.isGrounded = false;
         runtimeState.isWallSliding = false;
         runtimeState.isFastFalling = false;
@@ -476,16 +510,8 @@ internal sealed class PlayerLocomotionSystem
             return;
         }
 
-        if (!isVariableJumpCutActive)
+        if (dashEndJumpCutLockTimer > 0f)
         {
-            return;
-        }
-
-        Vector3 velocity = rb.linearVelocity;
-
-        if (velocity.y <= 0f)
-        {
-            isVariableJumpCutActive = false;
             return;
         }
 
@@ -494,11 +520,15 @@ internal sealed class PlayerLocomotionSystem
             return;
         }
 
+        Vector3 velocity = rb.linearVelocity;
+        if (velocity.y <= 0f)
+        {
+            return;
+        }
+
         float cutVelocityY = movementSettings.Jump.JumpVelocity * movementSettings.Jump.JumpCutMultiplier;
         velocity.y = Mathf.Min(velocity.y, cutVelocityY);
         rb.linearVelocity = velocity;
-
-        isVariableJumpCutActive = false;
     }
 
     // 壁滑り状態と落下速度上限を更新する。
@@ -577,6 +607,213 @@ internal sealed class PlayerLocomotionSystem
     {
         runtimeState.wallJumpControlLockTimer = Mathf.Max(0f, runtimeState.wallJumpControlLockTimer - deltaTime);
         runtimeState.wallReattachLockTimer = Mathf.Max(0f, runtimeState.wallReattachLockTimer - deltaTime);
+
+        if (runtimeState.isGrounded)
+        {
+            wallDetachGraceTimer = 0f;
+            lastWallDetachSide = 0;
+            return;
+        }
+
+        if (runtimeState.isTouchingWall && runtimeState.wallSide != 0)
+        {
+            wallDetachGraceTimer = movementSettings.Wall.WallDetachGraceTime;
+            lastWallDetachSide = runtimeState.wallSide;
+            return;
+        }
+
+        wallDetachGraceTimer = Mathf.Max(0f, wallDetachGraceTimer - deltaTime);
+        if (wallDetachGraceTimer <= 0f)
+        {
+            lastWallDetachSide = 0;
+        }
+    }
+
+    // ジャンプ頂点付近かを判定する。
+    private bool IsNearJumpApex(float velocityY)
+    {
+        return Mathf.Abs(velocityY) <= movementSettings.Jump.ApexThreshold;
+    }
+
+    // 角補正の試行方向を解決する。
+    private int ResolveCornerCorrectionDirection()
+    {
+        float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
+        if (inputX > 0.01f)
+        {
+            return 1;
+        }
+
+        if (inputX < -0.01f)
+        {
+            return -1;
+        }
+
+        float velocityX = rb.linearVelocity.x;
+        if (velocityX > 0.01f)
+        {
+            return 1;
+        }
+
+        if (velocityX < -0.01f)
+        {
+            return -1;
+        }
+
+        return 0;
+    }
+
+    // 指定位置にカプセルを置いたときのワールド座標を求める。
+    private void GetCapsuleWorldPointsAtPosition(
+        Vector3 targetPosition,
+        out Vector3 topPoint,
+        out Vector3 bottomPoint,
+        out float worldRadius)
+    {
+        Vector3 worldCenter = transform.TransformPoint(capsuleCollider.center);
+        Vector3 positionDelta = targetPosition - rb.position;
+        worldCenter += positionDelta;
+
+        Vector3 up = transform.up;
+        worldRadius = getWorldCapsuleRadius();
+
+        float halfHeight = Mathf.Max(capsuleCollider.height * 0.5f, capsuleCollider.radius);
+        float worldHalfHeight = halfHeight * Mathf.Abs(transform.lossyScale.y);
+        float sphereOffset = Mathf.Max(0f, worldHalfHeight - worldRadius);
+
+        topPoint = worldCenter + up * sphereOffset;
+        bottomPoint = worldCenter - up * sphereOffset;
+    }
+
+    // 上昇中に天井角へ引っかかったとき、横へ少しずらして抜けやすくする。
+    private bool TryApplyCornerCorrection()
+    {
+        if (!movementSettings.InputAssist.UseCornerCorrection)
+        {
+            return false;
+        }
+
+        if (runtimeState.isGrounded || runtimeState.isDashing || runtimeState.isWallGrabbing || runtimeState.isLedgeClimbing)
+        {
+            return false;
+        }
+
+        Vector3 velocity = rb.linearVelocity;
+        if (velocity.y <= 0f)
+        {
+            return false;
+        }
+
+        int direction = ResolveCornerCorrectionDirection();
+        if (direction == 0)
+        {
+            return false;
+        }
+
+        Bounds bounds = capsuleCollider.bounds;
+        Vector3 up = transform.up;
+        Vector3 side = Vector3.right * direction;
+
+        Vector3 headCornerOrigin = bounds.center;
+        headCornerOrigin += up * (bounds.extents.y - 0.02f);
+        headCornerOrigin += side * (bounds.extents.x - 0.01f);
+
+        bool hitCorner = Physics.Raycast(
+            headCornerOrigin,
+            up,
+            movementSettings.InputAssist.CornerCorrectionUpCheckDistance,
+            movementSettings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Ignore);
+
+        if (!hitCorner)
+        {
+            return false;
+        }
+
+        Vector3 candidatePosition = rb.position + side * movementSettings.InputAssist.CornerCorrectionDistance;
+
+        GetCapsuleWorldPointsAtPosition(candidatePosition, out Vector3 topPoint, out Vector3 bottomPoint, out float worldRadius);
+
+        bool blockedAtCandidate = Physics.CheckCapsule(
+            topPoint,
+            bottomPoint,
+            worldRadius * 0.98f,
+            movementSettings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Ignore);
+
+        if (blockedAtCandidate)
+        {
+            return false;
+        }
+
+        rb.position = candidatePosition;
+        return true;
+    }
+
+    // ダッシュ中に壁角へ引っかかったとき、少し上へずらして抜けやすくする。
+    private bool TryApplyDashCornerCorrection()
+    {
+        if (!movementSettings.Dash.UseDashCornerCorrection)
+        {
+            return false;
+        }
+
+        if (!runtimeState.isDashing)
+        {
+            return false;
+        }
+
+        if (runtimeState.isWallGrabbing || runtimeState.isLedgeClimbing)
+        {
+            return false;
+        }
+
+        if (!runtimeState.isTouchingWall || runtimeState.wallSide == 0)
+        {
+            return false;
+        }
+
+        // 水平成分がなく、真上/真下ダッシュなら補正しない。
+        if (Mathf.Abs(runtimeState.dashDirection.x) <= 0.01f)
+        {
+            return false;
+        }
+
+        // 下方向ダッシュでは使わない。
+        if (runtimeState.dashDirection.y < 0f)
+        {
+            return false;
+        }
+
+        // 実際に壁へ向かってダッシュしているときだけ発動。
+        bool movingIntoWall = runtimeState.dashDirection.x * runtimeState.wallSide > 0.01f;
+        if (!movingIntoWall)
+        {
+            return false;
+        }
+
+        Vector3 candidatePosition = rb.position + transform.up * movementSettings.Dash.DashCornerCorrectionUpDistance;
+
+        GetCapsuleWorldPointsAtPosition(
+            candidatePosition,
+            out Vector3 topPoint,
+            out Vector3 bottomPoint,
+            out float worldRadius);
+
+        bool blockedAtCandidate = Physics.CheckCapsule(
+            topPoint,
+            bottomPoint,
+            worldRadius * 0.98f,
+            movementSettings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Ignore);
+
+        if (blockedAtCandidate)
+        {
+            return false;
+        }
+
+        rb.position = candidatePosition;
+        return true;
     }
 
     // 通常の横移動速度を更新する。
@@ -590,6 +827,7 @@ internal sealed class PlayerLocomotionSystem
         float inputX = Mathf.Clamp(playerInputReader.Move.x, -1f, 1f);
         float targetSpeed = inputX * (movementSettings.Move.MaxSpeed * resolvedLocomotionModifier.moveSpeedMultiplier);
         bool hasMoveInput = Mathf.Abs(inputX) > 0.01f;
+        bool isNearApex = !runtimeState.isGrounded && IsNearJumpApex(rb.linearVelocity.y);
 
         float accel;
         if (hasMoveInput)
@@ -615,6 +853,11 @@ internal sealed class PlayerLocomotionSystem
                 : movementSettings.Move.AirDeceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
         }
 
+        if (isNearApex)
+        {
+            accel *= movementSettings.Jump.ApexHorizontalControlMultiplier;
+        }
+
         if (runtimeState.wallJumpControlLockTimer > 0f)
         {
             return;
@@ -626,16 +869,26 @@ internal sealed class PlayerLocomotionSystem
     }
 
     // カスタム重力と落下上限を適用する。
+    // カスタム重力と落下上限を適用する。
     internal void ApplyCustomGravity()
     {
+        TryApplyCornerCorrection();
+
         Vector3 velocity = rb.linearVelocity;
         bool isFalling = velocity.y < 0f;
         bool isRising = velocity.y > 0f;
+        bool isNearApex = !runtimeState.isGrounded && IsNearJumpApex(velocity.y);
 
         float gravityMultiplier = movementSettings.Jump.GravityScale * resolvedLocomotionModifier.gravityScaleMultiplier;
+
         if (isRising && playerInputReader.JumpHeld && jumpHoldTimer > 0f)
         {
             gravityMultiplier *= movementSettings.Jump.RiseGravityMultiplier;
+        }
+
+        if (isNearApex)
+        {
+            gravityMultiplier *= movementSettings.Jump.ApexGravityMultiplier;
         }
 
         if (isFalling)
@@ -1029,20 +1282,19 @@ internal sealed class PlayerLocomotionSystem
             rb.linearVelocity = restoredVelocity;
         }
 
-        // 上ダッシュ / 斜め上ダッシュだけ、終了時の上向き速度を一定値まで制限する。
-        // これで JumpHeld の有無に関係なく同じ終端挙動になる。
         if (runtimeState.dashDirection.y > 0f)
         {
             Vector3 velocity = rb.linearVelocity;
-            float maxUpwardVelocityAfterDash =
-                movementSettings.Jump.JumpVelocity * movementSettings.Jump.JumpCutMultiplier;
+            float maxUpwardVelocity = movementSettings.Dash.UpwardDashEndVerticalSpeedClamp;
 
-            if (velocity.y > maxUpwardVelocityAfterDash)
+            if (velocity.y > maxUpwardVelocity)
             {
-                velocity.y = maxUpwardVelocityAfterDash;
+                velocity.y = maxUpwardVelocity;
                 rb.linearVelocity = velocity;
             }
         }
+
+        dashEndJumpCutLockTimer = movementSettings.Dash.DashEndJumpCutLockTime;
     }
 
     // ダッシュ入力バッファタイマーを更新する。
@@ -1237,6 +1489,7 @@ internal sealed class PlayerLocomotionSystem
     // ダッシュ中の専用速度を適用する。
     internal void ApplyDashVelocity()
     {
+        TryApplyDashCornerCorrection();
         rb.linearVelocity = runtimeState.dashDirection * (movementSettings.Dash.Speed * resolvedLocomotionModifier.dashSpeedMultiplier);
     }
 

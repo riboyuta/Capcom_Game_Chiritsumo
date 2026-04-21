@@ -119,6 +119,21 @@ public sealed class JumpSettings
     [Range(0f, 1f)]
     [SerializeField] float jumpCutMultiplier = 0.5f;
 
+    [Header("頂点判定速度しきい値")]
+    [Tooltip("ジャンプ頂点付近とみなす縦速度の絶対値しきい値です。値を大きくすると頂点扱いの時間が長くなり、空中のため感が強くなります。")]
+    [Min(0f)]
+    [SerializeField] float apexThreshold = 2.0f;
+
+    [Header("頂点付近の重力倍率")]
+    [Tooltip("ジャンプ頂点付近で適用する重力倍率です。1より小さいほど頂点で少しためが生まれ、滞空感が強くなります。")]
+    [Min(0f)]
+    [SerializeField] float apexGravityMultiplier = 0.75f;
+
+    [Header("頂点付近の横制御倍率")]
+    [Tooltip("ジャンプ頂点付近で空中横制御へ掛ける倍率です。1より大きいほど頂点付近で左右の微調整がしやすくなります。")]
+    [Min(0f)]
+    [SerializeField] float apexHorizontalControlMultiplier = 1.25f;
+
     [Header("コヨーテタイムを使う")]
     [Tooltip("足場から離れた直後でも少しの間ジャンプできる猶予を有効にします。操作の救済用です。")]
     [SerializeField] bool useCoyoteTime = true;
@@ -143,6 +158,9 @@ public sealed class JumpSettings
     public float MaxJumpHoldTime => maxJumpHoldTime;
     public float RiseGravityMultiplier => riseGravityMultiplier;
     public float JumpCutMultiplier => jumpCutMultiplier;
+    public float ApexThreshold => apexThreshold;
+    public float ApexGravityMultiplier => apexGravityMultiplier;
+    public float ApexHorizontalControlMultiplier => apexHorizontalControlMultiplier;
     public bool UseCoyoteTime => useCoyoteTime;
     public float CoyoteTime => coyoteTime;
     public bool UseJumpBuffer => useJumpBuffer;
@@ -313,6 +331,11 @@ public sealed class WallSettings
     [Min(0f)]
     [SerializeField] float wallReattachLockTime = 0.12f;
 
+    [Header("壁離脱後ジャンプ猶予時間")]
+    [Tooltip("壁から離れた直後でも壁キックを受け付ける猶予時間です。短いほどシビアで、長いほど取りこぼし軽減になります。")]
+    [Min(0f)]
+    [SerializeField] float wallDetachGraceTime = 0.08f;
+
     [Header("崖乗り上げを使う")]
     [Tooltip("壁捕まり中に上方向へ移動して崖の頂上に達したとき、自動的に崖の上に乗り上げる機能を有効にします。")]
     [SerializeField] bool useLedgeClimb = true;
@@ -370,6 +393,7 @@ public sealed class WallSettings
     public float WallJumpVerticalVelocity => wallJumpVerticalVelocity;
     public float WallJumpControlLockTime => wallJumpControlLockTime;
     public float WallReattachLockTime => wallReattachLockTime;
+    public float WallDetachGraceTime => wallDetachGraceTime;
     public bool UseLedgeClimb => useLedgeClimb;
     public float LedgeDetectForwardDistance => ledgeDetectForwardDistance;
     public float LedgeDetectUpDistance => ledgeDetectUpDistance;
@@ -404,6 +428,25 @@ public sealed class DashSettings
     [Header("ダッシュ終了時に開始時Y速度を復元")]
     [Tooltip("有効にすると、ダッシュ開始時の縦速度を終了時に戻します。空中ダッシュ後の落下感や上昇感を保ちたいときに使います。")]
     [SerializeField] bool restoreStartVerticalVelocity = false;
+
+    [Header("上ダッシュ終了時の最大上向き速度")]
+    [Tooltip("上方向または斜め上方向のダッシュ終了時に許可する上向き速度の上限です。値を小さくすると終端の伸びが抑えられ、値を大きくすると上方向へ抜けやすくなります。")]
+    [Min(0f)]
+    [SerializeField] float upwardDashEndVerticalSpeedClamp = 7.0f;
+
+    [Header("ダッシュ終了後のジャンプカット無効時間")]
+    [Tooltip("ダッシュ終了直後に可変ジャンプの早離しカットを無効化する時間です。値を大きくすると上ダッシュ終端の伸びが安定しやすくなりますが、長すぎると通常ジャンプ復帰が鈍く感じられます。")]
+    [Min(0f)]
+    [SerializeField] float dashEndJumpCutLockTime = 0.05f;
+
+    [Header("ダッシュ角補正を使う")]
+    [Tooltip("ダッシュ中に壁角へ引っかったとき、少しだけ上へずらして通しやすくする補正を有効にします。")]
+    [SerializeField] bool useDashCornerCorrection = true;
+
+    [Header("ダッシュ角補正の上移動距離")]
+    [Tooltip("ダッシュ角補正が発動したときに上方向へずらす距離です。大きいほど角を越えやすくなりますが、補正感も強くなります。")]
+    [Min(0f)]
+    [SerializeField] float dashCornerCorrectionUpDistance = 0.12f;
 
     [Header("空中ダッシュを許可")]
     [Tooltip("有効にすると、空中でもダッシュを使用できます。")]
@@ -455,7 +498,7 @@ public sealed class DashSettings
     [SerializeField] bool invulnerable = false;
 
     [Header("ダッシュ方向入力を8方向にスナップする")]
-    [Tooltip("有効にすると、ゲームパッドのダッシュ方向入力を8方向へ丸めます。セレステ寄りの入力感にしたいときに使います。")]
+    [Tooltip("有効にすると、ゲームパッドのダッシュ方向入力を8方向へ丸めます。")]
     [SerializeField] bool useEightWayInput = true;
 
     [Header("ダッシュ方向入力のデッドゾーン")]
@@ -473,6 +516,10 @@ public sealed class DashSettings
     public float Duration => duration;
     public float GravityMultiplier => gravityMultiplier;
     public bool RestoreStartVerticalVelocity => restoreStartVerticalVelocity;
+    public float UpwardDashEndVerticalSpeedClamp => upwardDashEndVerticalSpeedClamp;
+    public float DashEndJumpCutLockTime => dashEndJumpCutLockTime;
+    public bool UseDashCornerCorrection => useDashCornerCorrection;
+    public float DashCornerCorrectionUpDistance => dashCornerCorrectionUpDistance;
     public bool AllowAirDash => allowAirDash;
     public int MaxCharges => maxCharges;
     public bool UseGroundRefill => useGroundRefill;
@@ -497,5 +544,22 @@ public sealed class InputAssistSettings
     [Range(0f, 1f)]
     [SerializeField] float moveInputGamepadDeadZone = 0.20f;
 
+    [Header("角補正を使う")]
+    [Tooltip("上昇中に天井角へ引っかかったとき、横へ少しずらして通しやすくする補正を有効にします。")]
+    [SerializeField] bool useCornerCorrection = true;
+
+    [Header("角補正の横移動距離")]
+    [Tooltip("角補正が発動したときに、横方向へずらす最大距離です。大きいほど引っかかりは減りますが、補正感も強くなります。")]
+    [Min(0f)]
+    [SerializeField] float cornerCorrectionDistance = 0.10f;
+
+    [Header("角補正の上方向チェック距離")]
+    [Tooltip("頭付近の角へ引っかかっているか確認する上方向のチェック距離です。小さすぎると補正が発動しづらく、大きすぎると意図しない補正が出やすくなります。")]
+    [Min(0f)]
+    [SerializeField] float cornerCorrectionUpCheckDistance = 0.18f;
+
     public float MoveInputGamepadDeadZone => moveInputGamepadDeadZone;
+    public bool UseCornerCorrection => useCornerCorrection;
+    public float CornerCorrectionDistance => cornerCorrectionDistance;
+    public float CornerCorrectionUpCheckDistance => cornerCorrectionUpCheckDistance;
 }
