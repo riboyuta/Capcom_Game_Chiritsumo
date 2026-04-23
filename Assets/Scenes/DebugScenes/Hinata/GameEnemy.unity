@@ -1996,6 +1996,9 @@ MonoBehaviour:
       airAcceleration: 28
       airTurnAcceleration: 40
       airDeceleration: 12
+      landingControlAssistTime: 0.03
+      landingGroundAccelerationMultiplier: 1.2
+      landingGroundDecelerationMultiplier: 0.8
     jump:
       jumpVelocity: 16
       gravityScale: 4
@@ -2062,6 +2065,7 @@ MonoBehaviour:
       restoreStartVerticalVelocity: 0
       upwardDashEndVerticalSpeedClamp: 8
       dashEndJumpCutLockTime: 0.05
+      dashEndHorizontalCarryMultiplier: 0.6
       useDashCornerCorrection: 1
       dashCornerCorrectionUpDistance: 0.2
       allowAirDash: 1
@@ -2083,6 +2087,7 @@ MonoBehaviour:
       useCornerCorrection: 1
       cornerCorrectionDistance: 0.1
       cornerCorrectionUpCheckDistance: 5
+      cornerCorrectionProbeCount: 4
   healthSettings:
     maxHealth: 3
     invincibilityDuration: 1
