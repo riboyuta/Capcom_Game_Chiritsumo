@@ -79,6 +79,21 @@ public sealed class MoveSettings
     [Min(0f)]
     [SerializeField] float airDeceleration = 12f;
 
+    [Header("着地直後の横制御補正時間")]
+    [Tooltip("着地した直後だけ地上の横制御を強める時間です。短いほど自然で、長いほど着地後の立て直しがしやすくなります。")]
+    [Min(0f)]
+    [SerializeField] float landingControlAssistTime = 0.06f;
+
+    [Header("着地直後の地上加速倍率")]
+    [Tooltip("着地直後だけ地上加速と地上反転加速へ掛ける倍率です。1より大きいほど着地後すぐに切り返しや走り出しがしやすくなります。")]
+    [Min(0f)]
+    [SerializeField] float landingGroundAccelerationMultiplier = 1.15f;
+
+    [Header("着地直後の地上減速倍率")]
+    [Tooltip("着地直後だけ地上減速へ掛ける倍率です。1より大きいほど着地後に滑りにくくなり、ピタッと止まりやすくなります。")]
+    [Min(0f)]
+    [SerializeField] float landingGroundDecelerationMultiplier = 1.35f;
+
     public float MaxSpeed => maxSpeed;
     public float GroundAcceleration => groundAcceleration;
     public float GroundTurnAcceleration => groundTurnAcceleration;
@@ -86,6 +101,9 @@ public sealed class MoveSettings
     public float AirAcceleration => airAcceleration;
     public float AirTurnAcceleration => airTurnAcceleration;
     public float AirDeceleration => airDeceleration;
+    public float LandingControlAssistTime => landingControlAssistTime;
+    public float LandingGroundAccelerationMultiplier => landingGroundAccelerationMultiplier;
+    public float LandingGroundDecelerationMultiplier => landingGroundDecelerationMultiplier;
 }
 
 [Serializable]
@@ -439,6 +457,11 @@ public sealed class DashSettings
     [Min(0f)]
     [SerializeField] float dashEndJumpCutLockTime = 0.05f;
 
+    [Header("ダッシュ終了時の横速度保持倍率")]
+    [Tooltip("ダッシュ終了時に横速度をどの程度残すかの倍率です。0で完全停止、1でダッシュ中の横速度をそのまま引き継ぎます。値を下げるほど終端が素直になり、値を上げるほど勢いを維持します。")]
+    [Range(0f, 1f)]
+    [SerializeField] float dashEndHorizontalCarryMultiplier = 0.60f;
+
     [Header("ダッシュ角補正を使う")]
     [Tooltip("ダッシュ中に壁角へ引っかったとき、少しだけ上へずらして通しやすくする補正を有効にします。")]
     [SerializeField] bool useDashCornerCorrection = true;
@@ -518,6 +541,7 @@ public sealed class DashSettings
     public bool RestoreStartVerticalVelocity => restoreStartVerticalVelocity;
     public float UpwardDashEndVerticalSpeedClamp => upwardDashEndVerticalSpeedClamp;
     public float DashEndJumpCutLockTime => dashEndJumpCutLockTime;
+    public float DashEndHorizontalCarryMultiplier => dashEndHorizontalCarryMultiplier;
     public bool UseDashCornerCorrection => useDashCornerCorrection;
     public float DashCornerCorrectionUpDistance => dashCornerCorrectionUpDistance;
     public bool AllowAirDash => allowAirDash;
@@ -558,8 +582,14 @@ public sealed class InputAssistSettings
     [Min(0f)]
     [SerializeField] float cornerCorrectionUpCheckDistance = 0.18f;
 
+    [Header("角補正の分割試行回数")]
+    [Tooltip("ジャンプ角補正の横移動距離を何段階に分けて試すかです。大きいほど Celeste 寄りの細かい wiggle になりますが、判定回数は増えます。")]
+    [Range(1, 8)]
+    [SerializeField] int cornerCorrectionProbeCount = 4;
+
     public float MoveInputGamepadDeadZone => moveInputGamepadDeadZone;
     public bool UseCornerCorrection => useCornerCorrection;
     public float CornerCorrectionDistance => cornerCorrectionDistance;
     public float CornerCorrectionUpCheckDistance => cornerCorrectionUpCheckDistance;
+    public int CornerCorrectionProbeCount => cornerCorrectionProbeCount;
 }

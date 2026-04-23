@@ -72,6 +72,9 @@ internal sealed class PlayerLocomotionSystem
     // ダッシュ終了直後のジャンプカット無効タイマー。
     private float dashEndJumpCutLockTimer;
 
+    // 着地直後だけ横制御を強める補正タイマー。
+    private float landingControlAssistTimer;
+
     // 壁から離れた直後でも壁キックを許可する猶予タイマー。
     private float wallDetachGraceTimer;
 
@@ -172,6 +175,7 @@ internal sealed class PlayerLocomotionSystem
         jumpHoldTimer = 0f;
         dashBufferTimer = 0f;
         dashEndJumpCutLockTimer = 0f;
+        landingControlAssistTimer = 0f;
         wallDetachGraceTimer = 0f;
         lastWallDetachSide = 0;
         justJumpedThisFrame = false;
@@ -214,6 +218,7 @@ internal sealed class PlayerLocomotionSystem
 
         jumpHoldTimer = Mathf.Max(0f, jumpHoldTimer - deltaTime);
         dashEndJumpCutLockTimer = Mathf.Max(0f, dashEndJumpCutLockTimer - deltaTime);
+        landingControlAssistTimer = Mathf.Max(0f, landingControlAssistTimer - deltaTime);
     }
 
     internal void UpdateWallGrabLimitTimer(float deltaTime)
@@ -663,6 +668,103 @@ internal sealed class PlayerLocomotionSystem
         return 0;
     }
 
+    // 指定位置で頭の指定側が天井に当たっているか確認する。
+    // sideSign:
+    // -1 = 左角
+    //  0 = 頭中央
+    //  1 = 右角
+    private bool IsHeadBlockedAtPosition(Vector3 targetPosition, int sideSign)
+    {
+        Bounds bounds = capsuleCollider.bounds;
+        Vector3 center = bounds.center + (targetPosition - rb.position);
+        Vector3 up = transform.up;
+
+        Vector3 origin = center;
+        origin += up * (bounds.extents.y - 0.02f);
+        origin += Vector3.right * sideSign * (bounds.extents.x - 0.01f);
+
+        return Physics.Raycast(
+            origin,
+            up,
+            movementSettings.InputAssist.CornerCorrectionUpCheckDistance,
+            movementSettings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Ignore);
+    }
+
+    // 指定位置にプレイヤーのカプセルを置けるか確認する。
+    private bool IsCapsuleFreeAtPosition(Vector3 targetPosition)
+    {
+        GetCapsuleWorldPointsAtPosition(
+            targetPosition,
+            out Vector3 topPoint,
+            out Vector3 bottomPoint,
+            out float worldRadius);
+
+        return !Physics.CheckCapsule(
+            topPoint,
+            bottomPoint,
+            worldRadius * 0.98f,
+            movementSettings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Ignore);
+    }
+
+    // ジャンプ角補正用の横オフセットを探す。
+    // Celeste っぽく、一発テレポートではなく小刻みに横へ試す。
+    private bool TryFindJumpCornerCorrectionOffset(int preferredDirection, out float resolvedOffsetX)
+    {
+        resolvedOffsetX = 0f;
+
+        int firstDirection = preferredDirection != 0 ? preferredDirection : 1;
+        int secondDirection = -firstDirection;
+
+        return TryFindJumpCornerCorrectionOffsetInDirection(firstDirection, out resolvedOffsetX)
+            || TryFindJumpCornerCorrectionOffsetInDirection(secondDirection, out resolvedOffsetX);
+    }
+
+    private bool TryFindJumpCornerCorrectionOffsetInDirection(int direction, out float resolvedOffsetX)
+    {
+        resolvedOffsetX = 0f;
+
+        // 平天井に頭中央が当たっているなら角補正しない。
+        if (IsHeadBlockedAtPosition(rb.position, 0))
+        {
+            return false;
+        }
+
+        // その方向の角が当たっていないなら、この方向には補正しない。
+        if (!IsHeadBlockedAtPosition(rb.position, direction))
+        {
+            return false;
+        }
+
+        int probeCount = movementSettings.InputAssist.CornerCorrectionProbeCount;
+        float maxDistance = movementSettings.InputAssist.CornerCorrectionDistance;
+
+        for (int probeIndex = 1; probeIndex <= probeCount; probeIndex++)
+        {
+            float t = probeIndex / (float)probeCount;
+            float offsetX = maxDistance * t * direction;
+
+            Vector3 candidatePosition = rb.position + Vector3.right * offsetX;
+
+            // 横へずらした後も頭中央がまだ詰まるなら不採用。
+            if (IsHeadBlockedAtPosition(candidatePosition, 0))
+            {
+                continue;
+            }
+
+            if (!IsCapsuleFreeAtPosition(candidatePosition))
+            {
+                continue;
+            }
+
+            resolvedOffsetX = offsetX;
+            return true;
+        }
+
+        return false;
+    }
+
     // 指定位置にカプセルを置いたときのワールド座標を求める。
     private void GetCapsuleWorldPointsAtPosition(
         Vector3 targetPosition,
@@ -698,55 +800,26 @@ internal sealed class PlayerLocomotionSystem
             return false;
         }
 
-        Vector3 velocity = rb.linearVelocity;
-        if (velocity.y <= 0f)
+        Vector3 originalVelocity = rb.linearVelocity;
+        if (originalVelocity.y <= 0f)
         {
             return false;
         }
 
-        int direction = ResolveCornerCorrectionDirection();
-        if (direction == 0)
+        int preferredDirection = ResolveCornerCorrectionDirection();
+
+        if (!TryFindJumpCornerCorrectionOffset(preferredDirection, out float offsetX))
         {
             return false;
         }
 
-        Bounds bounds = capsuleCollider.bounds;
-        Vector3 up = transform.up;
-        Vector3 side = Vector3.right * direction;
+        Vector3 correctedPosition = rb.position;
+        correctedPosition.x += offsetX;
+        rb.position = correctedPosition;
 
-        Vector3 headCornerOrigin = bounds.center;
-        headCornerOrigin += up * (bounds.extents.y - 0.02f);
-        headCornerOrigin += side * (bounds.extents.x - 0.01f);
-
-        bool hitCorner = Physics.Raycast(
-            headCornerOrigin,
-            up,
-            movementSettings.InputAssist.CornerCorrectionUpCheckDistance,
-            movementSettings.Detection.GroundLayerMask,
-            QueryTriggerInteraction.Ignore);
-
-        if (!hitCorner)
-        {
-            return false;
-        }
-
-        Vector3 candidatePosition = rb.position + side * movementSettings.InputAssist.CornerCorrectionDistance;
-
-        GetCapsuleWorldPointsAtPosition(candidatePosition, out Vector3 topPoint, out Vector3 bottomPoint, out float worldRadius);
-
-        bool blockedAtCandidate = Physics.CheckCapsule(
-            topPoint,
-            bottomPoint,
-            worldRadius * 0.98f,
-            movementSettings.Detection.GroundLayerMask,
-            QueryTriggerInteraction.Ignore);
-
-        if (blockedAtCandidate)
-        {
-            return false;
-        }
-
-        rb.position = candidatePosition;
+        // 補正そのものでは速度を変えない。
+        // 「横にずれた分の力で斜めに飛ぶ」状態を作らないため、速度は元のまま戻す。
+        rb.linearVelocity = originalVelocity;
         return true;
     }
 
@@ -828,6 +901,7 @@ internal sealed class PlayerLocomotionSystem
         float targetSpeed = inputX * (movementSettings.Move.MaxSpeed * resolvedLocomotionModifier.moveSpeedMultiplier);
         bool hasMoveInput = Mathf.Abs(inputX) > 0.01f;
         bool isNearApex = !runtimeState.isGrounded && IsNearJumpApex(rb.linearVelocity.y);
+        bool isLandingAssistActive = runtimeState.isGrounded && landingControlAssistTimer > 0f;
 
         float accel;
         if (hasMoveInput)
@@ -845,12 +919,22 @@ internal sealed class PlayerLocomotionSystem
                     ? movementSettings.Move.GroundAcceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
                     : movementSettings.Move.AirAcceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
             }
+
+            if (isLandingAssistActive)
+            {
+                accel *= movementSettings.Move.LandingGroundAccelerationMultiplier;
+            }
         }
         else
         {
             accel = runtimeState.isGrounded
                 ? movementSettings.Move.GroundDeceleration * resolvedLocomotionModifier.groundAccelerationMultiplier
                 : movementSettings.Move.AirDeceleration * resolvedLocomotionModifier.airAccelerationMultiplier;
+
+            if (isLandingAssistActive)
+            {
+                accel *= movementSettings.Move.LandingGroundDecelerationMultiplier;
+            }
         }
 
         if (isNearApex)
@@ -1294,6 +1378,12 @@ internal sealed class PlayerLocomotionSystem
             }
         }
 
+        {
+            Vector3 velocity = rb.linearVelocity;
+            velocity.x *= movementSettings.Dash.DashEndHorizontalCarryMultiplier;
+            rb.linearVelocity = velocity;
+        }
+
         dashEndJumpCutLockTimer = movementSettings.Dash.DashEndJumpCutLockTime;
     }
 
@@ -1401,6 +1491,7 @@ internal sealed class PlayerLocomotionSystem
         if (!runtimeState.wasGroundedLastFrame && runtimeState.isGrounded)
         {
             runtimeState.groundDashCooldownTimer = 0f;
+            landingControlAssistTimer = movementSettings.Move.LandingControlAssistTime;
         }
     }
 
