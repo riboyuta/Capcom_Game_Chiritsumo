@@ -5,6 +5,10 @@ using UnityEngine;
 // PlayerController 内部専用の通常移動システム。
 internal sealed class PlayerLocomotionSystem
 {
+    // ============================================================
+    // 依存注入されるオブジェクト
+    // ============================================================
+
     // 継続的なプレイヤー実行時状態。
     private readonly PlayerRuntimeState runtimeState;
 
@@ -25,6 +29,10 @@ internal sealed class PlayerLocomotionSystem
 
     // 入力読み取りコンポーネント。
     private readonly PlayerInputReader playerInputReader;
+
+    // ============================================================
+    // 入力・状態判定デリゲート
+    // ============================================================
 
     // 移動入力受付可否の判定デリゲート。
     private readonly Func<bool> canAcceptMoveInput;
@@ -48,6 +56,10 @@ internal sealed class PlayerLocomotionSystem
     // カプセル半径のワールド値取得デリゲート。
     private readonly Func<float> getWorldCapsuleRadius;
 
+    // ============================================================
+    // 音響・演出デリゲート
+    // ============================================================
+
     // ジャンプSE 再生要求デリゲート。
     private readonly Action playJumpSound;
 
@@ -56,6 +68,10 @@ internal sealed class PlayerLocomotionSystem
 
     // 壁キック振動要求デリゲート。
     private readonly Action playWallKickVibration;
+
+    // ============================================================
+    // 内部状態（タイマー・フラグ・補正情報）
+    // ============================================================
 
     // コヨーテタイマー。
     private float coyoteTimer;
@@ -93,8 +109,9 @@ internal sealed class PlayerLocomotionSystem
     // この物理フレームで壁ジャンプしたか。
     private bool justWallJumpedThisFrame;
 
-    // 可変ジャンプカットの対象になる「通常ジャンプ由来の上昇中」か。
-    private bool isVariableJumpCutActive;
+    // ============================================================
+    // デバッグ・外部公開プロパティ
+    // ============================================================
 
     // デバッグ表示用のコヨーテタイマー。
     internal float CoyoteTimer => coyoteTimer;
@@ -154,6 +171,10 @@ internal sealed class PlayerLocomotionSystem
         this.playWallKickVibration = playWallKickVibration;
     }
 
+    // ============================================================
+    // 初期化・リセット
+    // ============================================================
+
     // 可変ジャンプカット抑制フラグを更新する。
     internal void SetSuppressVariableJumpCutThisTick(bool value)
     {
@@ -185,7 +206,6 @@ internal sealed class PlayerLocomotionSystem
         runtimeState.wallGrabRemainingTime = movementSettings.Wall.WallGrabMaxHoldTime;
         runtimeState.isLedgeClimbing = false;
         runtimeState.ledgeClimbStartTime = 0f;
-        isVariableJumpCutActive = false;
     }
 
     // 物理Tick用の移動補正を解決する。
@@ -194,6 +214,10 @@ internal sealed class PlayerLocomotionSystem
         resolvedLocomotionModifier = frameRequests.requestedLocomotionModifierThisTick;
         frameRequests.requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
     }
+
+    // ============================================================
+    // タイマー更新
+    // ============================================================
 
     // ジャンプ補助タイマーを更新する。
     internal void UpdateJumpAssistTimers(float deltaTime)
@@ -280,6 +304,11 @@ internal sealed class PlayerLocomotionSystem
             runtimeState.facing = -1;
         }
     }
+
+    // ============================================================
+    // ジャンプ処理
+    // ============================================================
+
     // ジャンプ入力を処理して速度へ反映する。
     internal void ApplyJump()
     {
@@ -319,6 +348,11 @@ internal sealed class PlayerLocomotionSystem
             return;
         }
 
+        // ジャンプ種類の優先順位:
+        // 1. 壁掴まり中の真上ジャンプ
+        // 2. 壁キック
+        // 3. 通常ジャンプ（コヨーテタイム含む）
+
         // 壁掴まり中の真上ジャンプを先に判定
         if (TryApplyWallGrabVerticalJump())
         {
@@ -347,7 +381,6 @@ internal sealed class PlayerLocomotionSystem
         coyoteTimer = 0f;
         jumpBufferTimer = 0f;
         jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
-        isVariableJumpCutActive = true;
         justJumpedThisFrame = true;
         playJumpSound?.Invoke();
     }
@@ -399,7 +432,6 @@ internal sealed class PlayerLocomotionSystem
         coyoteTimer = 0f;
         jumpBufferTimer = 0f;
         jumpHoldTimer = movementSettings.Jump.MaxJumpHoldTime;
-        isVariableJumpCutActive = false;
         justJumpedThisFrame = true;
 
         playJumpSound?.Invoke();
@@ -536,6 +568,10 @@ internal sealed class PlayerLocomotionSystem
         rb.linearVelocity = velocity;
     }
 
+    // ============================================================
+    // 壁アクション（壁滑り・壁掴まり・壁キック）
+    // ============================================================
+
     // 壁滑り状態と落下速度上限を更新する。
     internal void ApplyWallSlide()
     {
@@ -639,6 +675,10 @@ internal sealed class PlayerLocomotionSystem
     {
         return Mathf.Abs(velocityY) <= movementSettings.Jump.ApexThreshold;
     }
+
+    // ============================================================
+    // 角補正（ジャンプ時・ダッシュ時）
+    // ============================================================
 
     // 角補正の試行方向を解決する。
     private int ResolveCornerCorrectionDirection()
@@ -889,6 +929,10 @@ internal sealed class PlayerLocomotionSystem
         return true;
     }
 
+    // ============================================================
+    // 基本移動（横移動・重力）
+    // ============================================================
+
     // 通常の横移動速度を更新する。
     internal void ApplyHorizontalMovement(float deltaTime)
     {
@@ -952,7 +996,6 @@ internal sealed class PlayerLocomotionSystem
         rb.linearVelocity = velocity;
     }
 
-    // カスタム重力と落下上限を適用する。
     // カスタム重力と落下上限を適用する。
     internal void ApplyCustomGravity()
     {
@@ -1211,6 +1254,10 @@ internal sealed class PlayerLocomotionSystem
         runtimeState.isFastFalling = false;
     }
 
+    // ============================================================
+    // ダッシュ処理
+    // ============================================================
+
     // ダッシュリソース回復状態を更新する。
     internal void UpdateDashResourceState()
     {
@@ -1354,6 +1401,11 @@ internal sealed class PlayerLocomotionSystem
     }
 
     // ダッシュ終了処理を実行する。
+    // 処理順序:
+    // 1. 接地スナップ
+    // 2. 縦速度の復元または制限
+    // 3. 横速度の減衰
+    // 4. ジャンプカット無効タイマー設定
     internal void EndDash()
     {
         runtimeState.isDashing = false;
@@ -1447,7 +1499,6 @@ internal sealed class PlayerLocomotionSystem
         ExitWallGrab();
         runtimeState.isDashing = true;
         runtimeState.isFastFalling = false;
-        isVariableJumpCutActive = false;
         runtimeState.dashTimer = movementSettings.Dash.Duration;
         if (runtimeState.isGrounded)
         {
@@ -1584,6 +1635,10 @@ internal sealed class PlayerLocomotionSystem
         rb.linearVelocity = runtimeState.dashDirection * (movementSettings.Dash.Speed * resolvedLocomotionModifier.dashSpeedMultiplier);
     }
 
+    // ============================================================
+    // 崖乗り上げ（レッジクライム）
+    // ============================================================
+
     // 崖乗り上げを開始できるか判定し、開始する。
     internal bool TryStartLedgeClimb()
     {
@@ -1612,6 +1667,10 @@ internal sealed class PlayerLocomotionSystem
     }
 
     // 崖の頂上を検出できるか判定する。
+    // 検出手順:
+    // 1. 頭上に障害物がないか確認
+    // 2. 前方に壁が続いていないか確認
+    // 3. 前方上部に地面があるか確認
     internal bool CanDetectLedge(out Vector3 ledgeTopPosition)
     {
         ledgeTopPosition = Vector3.zero;
