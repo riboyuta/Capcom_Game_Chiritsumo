@@ -13,8 +13,8 @@ public sealed class CameraZone : MonoBehaviour, IRespawnResettable
     [SerializeField] private BoxCollider zoneVolume;
 
     [Header("カメラ境界")]
-    [Tooltip("この Zone で使う CameraBounds です。通常は子オブジェクト CameraBounds を指定します。")]
-    [SerializeField] private CameraBounds zoneBounds;
+    [Tooltip("この Zone で使う RoomBounds です。通常は子オブジェクト RoomBounds を指定します。")]
+    [SerializeField] private RoomBounds zoneBounds;
 
     [Header("Zone 優先度")]
     [Tooltip("Zone が重なったときの優先度です。値が大きい Zone ほど優先されます。同値の場合は後から入った Zone が優先されます。")]
@@ -70,7 +70,7 @@ public sealed class CameraZone : MonoBehaviour, IRespawnResettable
     private bool isTimedActivationRunning = false;
     private float activationExpireTime = 0f;
 
-    public CameraBounds ZoneBounds => zoneBounds;
+    public RoomBounds ZoneBounds => zoneBounds;
     public bool HasOrthographicSizeOverride => overrideOrthographicSize;
     public float OrthographicSizeOverride => orthographicSize;
     public bool HasFollowSmoothingOverride => overrideFollowSmoothing;
@@ -138,13 +138,13 @@ public sealed class CameraZone : MonoBehaviour, IRespawnResettable
             }
         }
 
-        // CameraBounds 未設定なら子名から補完。
+        // RoomBounds 未設定なら子名から補完。
         if (zoneBounds == null)
         {
-            Transform bounds = transform.Find("CameraBounds");
+            Transform bounds = transform.Find("RoomBounds");
             if (bounds != null)
             {
-                zoneBounds = bounds.GetComponent<CameraBounds>();
+                zoneBounds = bounds.GetComponent<RoomBounds>();
             }
         }
     }
@@ -231,7 +231,7 @@ public sealed class CameraZone : MonoBehaviour, IRespawnResettable
 
         if (zoneBounds == null)
         {
-            Debug.LogWarning("CameraZone: CameraBounds reference is missing.", this);
+            Debug.LogWarning("CameraZone: RoomBounds reference is missing.", this);
             return;
         }
 

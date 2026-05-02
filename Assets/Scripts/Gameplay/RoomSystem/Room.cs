@@ -8,8 +8,8 @@ public sealed class Room : MonoBehaviour
     [SerializeField] private string roomId = "Room_01";
 
     [Header("部屋境界")]
-    [Tooltip("この部屋のカメラ境界と部屋矩形を表す CameraBounds です。")]
-    [SerializeField] private CameraBounds roomBounds;
+    [Tooltip("この部屋のカメラ境界と部屋矩形を表す RoomBounds です。")]
+    [SerializeField] private RoomBounds roomBounds;
 
     [Header("隣接部屋: 左右")]
     [Tooltip("この部屋の左へ抜けた時の遷移先です。未設定なら左遷移はできません。")]
@@ -75,7 +75,7 @@ public sealed class Room : MonoBehaviour
     [SerializeField] private float roomTransitionDuration = 0.20f;
 
     public string RoomId => roomId;
-    public CameraBounds RoomBounds => roomBounds;
+    public RoomBounds RoomBounds => roomBounds;
     public Vector2 RoomFocusOffset => roomFocusOffset;
 
     public Room LeftRoom => leftRoom;

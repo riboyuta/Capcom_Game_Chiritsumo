@@ -25,10 +25,10 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     [Header("ワールド全体のfallback境界")]
     [Tooltip("常に使える基本のカメラ移動境界です。エリア別の一時境界が未設定のときはこの境界を使ってカメラ位置を制限します。")]
-    [FormerlySerializedAs("cameraBounds")]
+    [FormerlySerializedAs("RoomBounds")]
     // 通常時に使うカメラ移動可能範囲。
     // activeBounds が無いときのフォールバックとして使う。
-    [SerializeField] private CameraBounds worldBounds;
+    [SerializeField] private RoomBounds worldBounds;
 
     [Header("アンカー自動探索を使うか")]
     [Tooltip("有効にすると、targetAnchor 未設定時に playerTag と anchorChildName を使って追従対象を自動探索します。手動設定を優先したい場合は無効にします。")]
@@ -191,7 +191,7 @@ public sealed class PlayerCameraController : MonoBehaviour
     public Vector3 ClampedPosition => clampedPosition;
     public bool HasActiveBoundsOverride => hasActiveBoundsOverride;
     public Bounds ActiveBoundsOverride => activeBoundsOverride;
-    public CameraBounds WorldBounds => worldBounds;
+    public RoomBounds WorldBounds => worldBounds;
     public Bounds EffectiveBounds => EffectiveWorldBounds;
     public bool HasActiveOrthographicSizeOverride => hasActiveOrthographicSizeOverride;
     public float ActiveOrthographicSizeOverride => activeOrthographicSizeOverride;
@@ -448,10 +448,10 @@ public sealed class PlayerCameraController : MonoBehaviour
             return;
         }
 
-        CameraBounds zoneBounds = zone.ZoneBounds;
+        RoomBounds zoneBounds = zone.ZoneBounds;
         if (zoneBounds == null)
         {
-            Debug.LogWarning("PlayerCameraController: CameraZone has no CameraBounds.", zone);
+            Debug.LogWarning("PlayerCameraController: CameraZone has no RoomBounds.", zone);
             return;
         }
 
