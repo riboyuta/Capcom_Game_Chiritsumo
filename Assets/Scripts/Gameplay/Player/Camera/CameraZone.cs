@@ -104,14 +104,6 @@ public sealed class CameraZone : MonoBehaviour, IRespawnResettable
         }
 
         isTimedActivationRunning = false;
-
-        if (cameraController == null)
-        {
-            Debug.LogWarning("CameraZone: PlayerCameraController reference is missing.", this);
-            return;
-        }
-
-        cameraController.ClearZone(this);
     }
 
     private void OnValidate()
@@ -223,12 +215,6 @@ public sealed class CameraZone : MonoBehaviour, IRespawnResettable
 
     private void ActivateZone()
     {
-        if (cameraController == null)
-        {
-            Debug.LogWarning("CameraZone: PlayerCameraController reference is missing.", this);
-            return;
-        }
-
         if (zoneBounds == null)
         {
             Debug.LogWarning("CameraZone: RoomBounds reference is missing.", this);
@@ -239,7 +225,6 @@ public sealed class CameraZone : MonoBehaviour, IRespawnResettable
         {
             return;
         }
-        cameraController.ApplyZone(this);
         activationConsumed = true;
 
         if (enableTimeLimit)
@@ -255,13 +240,7 @@ public sealed class CameraZone : MonoBehaviour, IRespawnResettable
 
     private void DeactivateZone()
     {
-        if (cameraController == null)
-        {
-            Debug.LogWarning("CameraZone: PlayerCameraController reference is missing.", this);
-            return;
-        }
         isTimedActivationRunning = false;
-        cameraController.ClearZone(this);
     }
 
     public void CaptureInitialState()
@@ -274,12 +253,6 @@ public sealed class CameraZone : MonoBehaviour, IRespawnResettable
         isTimedActivationRunning = false;
         activationExpireTime = 0f;
         insidePlayerColliderIds.Clear();
-
-        if (cameraController == null)
-        {
-            return;
-        }
-        cameraController.ClearZone(this);
     }
 
 

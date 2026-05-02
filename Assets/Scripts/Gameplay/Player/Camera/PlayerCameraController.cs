@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -65,7 +64,7 @@ public sealed class PlayerCameraController : MonoBehaviour
     [SerializeField] private float smoothTimeY = 0.12f;
 
     [Header("Orthographic Size 補間時間")]
-    [Tooltip("Zone による orthographicSize 上書きが切り替わる際の補間時間です。0 のときは即時反映します。")]
+    [Tooltip("Room ベースの orthographicSize 上書きが切り替わる際の補間時間です。0 のときは即時反映します。")]
     [SerializeField] private float orthographicSizeSmoothTime = 0.10f;
 
     [Header("部屋遷移カメラ時間")]
@@ -90,18 +89,18 @@ public sealed class PlayerCameraController : MonoBehaviour
     // ランタイム状態
     // -----------------------------
 
-    // Zone から一時的に上書きされる現在有効な境界。
+    // Room ベースで一時的に上書きされる現在有効な境界。
     // true のときだけ activeBoundsOverride を使う。
     private bool hasActiveBoundsOverride;
 
-    // Zone から直接渡されるワールド座標系 Bounds。
+    // Room ベースで直接渡されるワールド座標系 Bounds。
     // hasActiveBoundsOverride == true の間だけ有効。
     private Bounds activeBoundsOverride;
 
     // 通常時に戻るための World 基準 Orthographic Size。
     private float worldOrthographicSize;
 
-    // Zone からの Orthographic Size 一時上書き。
+    // Room ベースの Orthographic Size 一時上書き。
     private bool hasActiveOrthographicSizeOverride;
     private float activeOrthographicSizeOverride;
     private float orthographicSizeVelocity;
@@ -110,7 +109,7 @@ public sealed class PlayerCameraController : MonoBehaviour
     private float worldSmoothTimeX;
     private float worldSmoothTimeY;
 
-    // Zone からの追従スムーズ時間 一時上書き。
+    // Room ベースの追従スムーズ時間 一時上書き。
     private bool hasActiveFollowSmoothingOverride;
     private float activeSmoothTimeXOverride;
     private float activeSmoothTimeYOverride;
@@ -118,20 +117,13 @@ public sealed class PlayerCameraController : MonoBehaviour
     // 通常時に戻るための World 基準 Orthographic Size 補間時間。
     private float worldOrthographicSizeSmoothTime;
 
-    // Zone からの Orthographic Size 補間時間 一時上書き。
+    // Room ベースの Orthographic Size 補間時間 一時上書き。
     private bool hasActiveOrthographicSizeSmoothTimeOverride;
     private float activeOrthographicSizeSmoothTimeOverride;
 
     // Room からの注視オフセット 一時上書き。
     private bool hasActiveRoomFocusOffset;
     private Vector2 activeRoomFocusOffset;
-
-
-    // 現在有効な Zone 群。
-    private readonly List<CameraZone> activeZones = new List<CameraZone>();
-    // Zone ごとの「最後に入った順」を記録する。
-    private readonly Dictionary<CameraZone, int> zoneEnterOrders = new Dictionary<CameraZone, int>();
-    private int zoneEnterSequence;
 
     // SmoothDamp 用の内部速度。
     // ref で渡してフレーム間で保持する必要がある。
@@ -438,169 +430,30 @@ public sealed class PlayerCameraController : MonoBehaviour
     }
 
     // -----------------------------
-    // zone 管理・再評価
+    // リスポーン時のカメラ状態リセット
     // -----------------------------
-
-    public void ApplyZone(CameraZone zone)
-    {
-        if (zone == null)
-        {
-            return;
-        }
-
-        RoomBounds zoneBounds = zone.ZoneBounds;
-        if (zoneBounds == null)
-        {
-            Debug.LogWarning("PlayerCameraController: CameraZone has no RoomBounds.", zone);
-            return;
-        }
-
-        if (!activeZones.Contains(zone))
-        {
-            activeZones.Add(zone);
-        }
-
-        zoneEnterSequence++;
-        zoneEnterOrders[zone] = zoneEnterSequence;
-
-        ReevaluateActiveZone();
-    }
-
-    public void ClearZone(CameraZone zone)
-    {
-        if (zone == null)
-        {
-            return;
-        }
-
-        activeZones.Remove(zone);
-        zoneEnterOrders.Remove(zone);
-
-        ReevaluateActiveZone();
-    }
 
     public void ResetRuntimeStateForRespawn()
     {
-        activeZones.Clear();
-        zoneEnterOrders.Clear();
-        zoneEnterSequence = 0;
+        ResetCameraMotionForRespawn();
+    }
 
-        ApplyWorldFallback();
-
+    public void ResetCameraMotionForRespawn()
+    {
+        // リスポーン後に追従対象を通常状態へ戻す。
         ClearTemporaryTarget();
-        orthographicSizeVelocity = 0f;
+        // SmoothDamp の内部速度を初期化して慣性を除去する。
         velocityX = 0f;
         velocityY = 0f;
-    }
-
-    private void ReevaluateActiveZone()
-    {
-        CameraZone resolvedZone = ResolveBestZone();
-        ApplyResolvedZone(resolvedZone);
-    }
-
-    private CameraZone ResolveBestZone()
-    {
-        for (int i = activeZones.Count - 1; i >= 0; i--)
+        orthographicSizeVelocity = 0f;
+        // 部屋遷移中なら現在の目標位置へスナップして遷移を終了する。
+        if (isRoomTransitionRunning)
         {
-            CameraZone activeZone = activeZones[i];
-            if (activeZone != null && activeZone.ZoneBounds != null)
-            {
-                continue;
-            }
-
-            activeZones.RemoveAt(i);
-            zoneEnterOrders.Remove(activeZone);
-        }
-
-        CameraZone bestZone = null;
-
-        for (int i = 0; i < activeZones.Count; i++)
-        {
-            CameraZone candidate = activeZones[i];
-            if (candidate == null)
-            {
-                continue;
-            }
-
-            if (bestZone == null || IsHigherPriority(candidate, bestZone))
-            {
-                bestZone = candidate;
-            }
-        }
-
-        return bestZone;
-    }
-
-    private bool IsHigherPriority(CameraZone candidate, CameraZone currentBest)
-    {
-        if (candidate.Priority != currentBest.Priority)
-        {
-            return candidate.Priority > currentBest.Priority;
-        }
-
-        int candidateOrder = GetZoneEnterOrder(candidate);
-        int currentBestOrder = GetZoneEnterOrder(currentBest);
-        return candidateOrder > currentBestOrder;
-    }
-
-    private int GetZoneEnterOrder(CameraZone zone)
-    {
-        return zoneEnterOrders.TryGetValue(zone, out int order) ? order : int.MinValue;
-    }
-
-    private void ApplyResolvedZone(CameraZone zone)
-    {
-        if (zone == null)
-        {
-            ApplyWorldFallback();
-            return;
-        }
-
-        ApplyZoneOverrides(zone);
-    }
-
-    private void ApplyZoneOverrides(CameraZone zone)
-    {
-        SetActiveBoundsOverride(zone.ZoneBounds.WorldBounds);
-
-        if (zone.HasOrthographicSizeOverride)
-        {
-            SetActiveOrthographicSizeOverride(zone.OrthographicSizeOverride);
-        }
-        else
-        {
-            ClearActiveOrthographicSizeOverride();
-        }
-
-        if (zone.HasFollowSmoothingOverride)
-        {
-            SetActiveFollowSmoothingOverride(zone.SmoothTimeXOverride, zone.SmoothTimeYOverride);
-        }
-        else
-        {
-            ClearActiveFollowSmoothingOverride();
-        }
-
-        if (zone.HasOrthographicSizeSmoothTimeOverride)
-        {
-            SetActiveOrthographicSizeSmoothTimeOverride(zone.OrthographicSizeSmoothTimeOverride);
-        }
-        else
-        {
-            ClearActiveOrthographicSizeSmoothTimeOverride();
+            CancelRoomTransitionAndSnapToTarget();
         }
     }
 
-    private void ApplyWorldFallback()
-    {
-        ClearActiveBoundsOverride();
-        ClearActiveOrthographicSizeOverride();
-        ClearActiveFollowSmoothingOverride();
-        ClearActiveOrthographicSizeSmoothTimeOverride();
-    }
-
-    // Zone 反映時の内部 override 操作 API。
+    // Room 反映時の内部 override 操作 API。
     public void SetActiveBoundsOverride(Bounds newBounds)
     {
         activeBoundsOverride = newBounds;
