@@ -266,16 +266,23 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         if (isRoomTransitionRunning)
         {
-            // 部屋遷移モード中は、開始点と目標点を線形補間して通常追従は止める。
+            // 部屋遷移モード中は、開始点と目標点を補間して通常追従は止める。
             roomTransitionElapsed += Time.deltaTime;
-            float t = activeRoomTransitionDuration <= 0f
+
+            float linearT = activeRoomTransitionDuration <= 0f
                 ? 1f
                 : Mathf.Clamp01(roomTransitionElapsed / activeRoomTransitionDuration);
 
-            transform.position = Vector3.Lerp(roomTransitionStartPosition, roomTransitionTargetPosition, t);
+            // Linear の進行率を EaseInOut に変換する。
+            float easedT = EvaluateRoomTransitionEaseInOut(linearT);
+
+            transform.position = Vector3.Lerp(
+                roomTransitionStartPosition,
+                roomTransitionTargetPosition,
+                easedT);
 
             float completeDistance = Mathf.Max(0f, roomTransitionCompleteDistance);
-            if (Vector3.Distance(transform.position, roomTransitionTargetPosition) <= completeDistance || t >= 1f)
+            if (Vector3.Distance(transform.position, roomTransitionTargetPosition) <= completeDistance || linearT >= 1f)
             {
                 transform.position = roomTransitionTargetPosition;
                 isRoomTransitionRunning = false;
@@ -639,7 +646,15 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         return Mathf.Max(0f, duration);
     }
+    // 0〜1の進行率を、開始と終了がなめらかなEaseInOutに変換する。
+    private float EvaluateRoomTransitionEaseInOut(float t)
+    {
+        t = Mathf.Clamp01(t);
 
+        // Mathf.SmoothStep(0, 1, t) と同じ形。
+        // 明示的に書くことで「何をしているか」を追いやすくする。
+        return t * t * (3f - 2f * t);
+    }
     private Vector3 GetClampedPosition(Vector3 desired)
     {
         // 現在使うべきワールド境界を取得する。
