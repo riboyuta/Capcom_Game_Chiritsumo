@@ -54,13 +54,6 @@ public sealed class RoomManager : MonoBehaviour
         RoomDirection.Down,
     };
 
-    [Header("一方通行遷移")]
-    [Tooltip("有効にすると部屋遷移を一方通行として扱い、戻り方向をブロックします。")]
-    [SerializeField] private bool enableOneWayRoomTransition = false;
-
-    [Tooltip("一方通行 Blocker に割り当てるレイヤー名です。未設定時は Default を使います。")]
-    [SerializeField] private string oneWayBlockerLayerName = "OneWayBlocker";
-
     [Header("デバッグ表示")]
     [Tooltip("有効にすると部屋切り替えや判定ログを出力します。")]
     [SerializeField] private bool enableDebugLog = true;
@@ -405,13 +398,7 @@ public sealed class RoomManager : MonoBehaviour
 
     private void InitializeRoomBlockers()
     {
-        // Layer 名を解決し、見つからない場合は Default(0) を使う。
-        oneWayBlockerLayer = LayerMask.NameToLayer(oneWayBlockerLayerName);
-        if (oneWayBlockerLayer < 0)
-        {
-            Debug.LogWarning($"RoomManager: Layer '{oneWayBlockerLayerName}' が見つからないため Default レイヤーを使用します。", this);
-            oneWayBlockerLayer = 0;
-        }
+
 
         Room[] rooms = FindObjectsByType<Room>(FindObjectsSortMode.None);
         for (int i = 0; i < rooms.Length; i++)
@@ -431,11 +418,19 @@ public sealed class RoomManager : MonoBehaviour
 
     private RoomBlockerSet EnsureRoomBlockerSet(Room room)
     {
-        // 対象部屋に RoomBlockerSet が無ければ自動追加する。
-        RoomBlockerSet blockerSet = room.GetComponent<RoomBlockerSet>();
+        // Room 配下の専用子 "RoomBlockerSet" を再利用または生成する。
+        Transform blockerSetTransform = room.transform.Find("RoomBlockerSet");
+        if (blockerSetTransform == null)
+        {
+            GameObject blockerSetObject = new GameObject("RoomBlockerSet");
+            blockerSetObject.transform.SetParent(room.transform, false);
+            blockerSetTransform = blockerSetObject.transform;
+        }
+
+        RoomBlockerSet blockerSet = blockerSetTransform.GetComponent<RoomBlockerSet>();
         if (blockerSet == null)
         {
-            blockerSet = room.gameObject.AddComponent<RoomBlockerSet>();
+            blockerSet = blockerSetTransform.gameObject.AddComponent<RoomBlockerSet>();
         }
 
         return blockerSet;
@@ -551,13 +546,10 @@ public sealed class RoomManager : MonoBehaviour
         }
 
         // 一方通行有効時、現在部屋で禁止された方向への遷移は拒否する。
-        if (enableOneWayRoomTransition)
+        if (blockedDirectionsByRoom.TryGetValue(currentRoom, out HashSet<RoomDirection> blockedInCurrent)
+            && blockedInCurrent.Contains(moveDirection))
         {
-            if (blockedDirectionsByRoom.TryGetValue(currentRoom, out HashSet<RoomDirection> blockedInCurrent)
-                && blockedInCurrent.Contains(moveDirection))
-            {
-                return false;
-            }
+            return false;
         }
 
         // 状態切り替え直後にカメラ設定反映と遷移開始を行う。
@@ -577,28 +569,25 @@ public sealed class RoomManager : MonoBehaviour
             Debug.LogWarning("RoomManager: playerCameraController が未設定のためカメラ遷移を開始できません。", this);
         }
 
-        // 一方通行有効時、遷移先の反対方向 Blocker を有効化し論理的にも禁止する。
-        if (enableOneWayRoomTransition)
+        // 遷移先 Room の設定が有効な場合のみ、反対方向 Blocker と論理禁止を登録する。
+        RoomDirection blockedDirection = GetOppositeDirection(moveDirection);
+        if (currentRoom.EnableOneWayBlockerOnEntry && blockedDirection != RoomDirection.None)
         {
-            RoomDirection blockedDirection = GetOppositeDirection(moveDirection);
-            if (blockedDirection != RoomDirection.None)
+            if (!blockedDirectionsByRoom.TryGetValue(currentRoom, out HashSet<RoomDirection> blockedInTarget))
             {
-                if (!blockedDirectionsByRoom.TryGetValue(currentRoom, out HashSet<RoomDirection> blockedInTarget))
-                {
-                    blockedInTarget = new HashSet<RoomDirection>();
-                    blockedDirectionsByRoom[currentRoom] = blockedInTarget;
-                }
+                blockedInTarget = new HashSet<RoomDirection>();
+                blockedDirectionsByRoom[currentRoom] = blockedInTarget;
+            }
 
-                blockedInTarget.Add(blockedDirection);
+            blockedInTarget.Add(blockedDirection);
 
-                RoomBlockerSet blockerSet = EnsureRoomBlockerSet(currentRoom);
-                blockerSet.RebuildFromBounds(currentRoom.RoomBounds.WorldBounds);
-                ApplyBlockerLayer(blockerSet.gameObject);
-                BoxCollider blocker = blockerSet.GetBlocker(blockedDirection);
-                if (blocker != null)
-                {
-                    blocker.enabled = true;
-                }
+            RoomBlockerSet blockerSet = EnsureRoomBlockerSet(currentRoom);
+            blockerSet.RebuildFromBounds(currentRoom.RoomBounds.WorldBounds);
+            ApplyBlockerLayer(blockerSet.gameObject);
+            BoxCollider blocker = blockerSet.GetBlocker(blockedDirection);
+            if (blocker != null)
+            {
+                blocker.enabled = true;
             }
         }
 

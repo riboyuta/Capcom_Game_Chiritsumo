@@ -419,6 +419,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 637675784}
+  - {fileID: 460159390}
   m_Father: {fileID: 716347681}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &344009638
@@ -433,7 +434,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff4307e59b8f607438dba48edb6d5cf9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Room
-  roomId: Room_01
+  roomId: Room_02
   roomBounds: {fileID: 637675785}
   leftRoom: {fileID: 1290682617}
   rightRoom: {fileID: 0}
@@ -443,6 +444,7 @@ MonoBehaviour:
   respawnFromRight: {fileID: 1192430541}
   respawnFromUp: {fileID: 458072952}
   respawnFromDown: {fileID: 1854642005}
+  enableOneWayBlockerOnEntry: 0
   roomFocusOffset: {x: -2, y: 0}
   overrideFollowSmoothing: 0
   smoothTimeX: 0.08
@@ -639,7 +641,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 716347681}
+  m_Father: {fileID: 344009637}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &460159391
 MonoBehaviour:
@@ -788,7 +790,6 @@ Transform:
   - {fileID: 2070467339}
   - {fileID: 1290682616}
   - {fileID: 344009637}
-  - {fileID: 460159390}
   m_Father: {fileID: 1188184030}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &721219265
@@ -2309,6 +2310,7 @@ MonoBehaviour:
   respawnFromRight: {fileID: 522182107}
   respawnFromUp: {fileID: 419622230}
   respawnFromDown: {fileID: 1112102531}
+  enableOneWayBlockerOnEntry: 1
   roomFocusOffset: {x: 0, y: 0}
   overrideFollowSmoothing: 0
   smoothTimeX: 0.08
@@ -2836,8 +2838,6 @@ MonoBehaviour:
   transitionEpsilon: 0.5
   requireMatchingVelocitySign: 1
   directionPriority: 02000000010000000300000004000000
-  enableOneWayRoomTransition: 1
-  oneWayBlockerLayerName: OneWayBlocker
   enableDebugLog: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

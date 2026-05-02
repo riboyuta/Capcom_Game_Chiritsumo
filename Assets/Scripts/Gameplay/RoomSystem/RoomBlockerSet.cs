@@ -51,9 +51,20 @@ public sealed class RoomBlockerSet : MonoBehaviour
 
         if (child == null)
         {
-            // 既存が無い場合のみ新規生成する。
-            blockerObject = new GameObject(blockerName);
-            blockerObject.transform.SetParent(transform, false);
+            Transform roomRoot = transform.parent;
+            Transform legacyChild = roomRoot != null ? roomRoot.Find(blockerName) : null;
+
+            if (legacyChild != null)
+            {
+                legacyChild.SetParent(transform, true);
+                blockerObject = legacyChild.gameObject;
+            }
+            else
+            {
+                // 既存が無い場合のみ新規生成する。
+                blockerObject = new GameObject(blockerName);
+                blockerObject.transform.SetParent(transform, false);
+            }
         }
         else
         {
