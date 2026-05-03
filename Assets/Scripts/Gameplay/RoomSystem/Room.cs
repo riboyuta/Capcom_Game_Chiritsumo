@@ -8,8 +8,8 @@ public sealed class Room : MonoBehaviour
     [SerializeField] private string roomId = "Room_01";
 
     [Header("部屋境界")]
-    [Tooltip("この部屋のカメラ境界と部屋矩形を表す CameraBounds です。")]
-    [SerializeField] private CameraBounds roomBounds;
+    [Tooltip("この部屋のカメラ境界と部屋矩形を表す RoomBounds です。")]
+    [SerializeField] private RoomBounds roomBounds;
 
     [Header("隣接部屋: 左右")]
     [Tooltip("この部屋の左へ抜けた時の遷移先です。未設定なら左遷移はできません。")]
@@ -38,6 +38,10 @@ public sealed class Room : MonoBehaviour
 
     [Tooltip("下側からこの部屋へ入った時、または下遷移に対応する復帰位置です。未使用なら未設定で構いません。")]
     [SerializeField] private Transform respawnFromDown;
+
+    [Header("一方通行設定")]
+    [Tooltip("この Room へ入った時、入ってきた面の戻り防止 Blocker を有効化するかを設定します。")]
+    [SerializeField] private bool enableOneWayBlockerOnEntry = false;
 
     [Header("カメラ注視位置")]
     [Tooltip("この部屋で使うカメラ注視オフセットです。Xで左右寄せ、Yで上下寄せを調整します。")]
@@ -75,7 +79,7 @@ public sealed class Room : MonoBehaviour
     [SerializeField] private float roomTransitionDuration = 0.20f;
 
     public string RoomId => roomId;
-    public CameraBounds RoomBounds => roomBounds;
+    public RoomBounds RoomBounds => roomBounds;
     public Vector2 RoomFocusOffset => roomFocusOffset;
 
     public Room LeftRoom => leftRoom;
@@ -88,6 +92,7 @@ public sealed class Room : MonoBehaviour
     public Transform RespawnFromUp => respawnFromUp;
     public Transform RespawnFromDown => respawnFromDown;
 
+    public bool EnableOneWayBlockerOnEntry => enableOneWayBlockerOnEntry;
     public bool HasFollowSmoothingOverride => overrideFollowSmoothing;
     public float SmoothTimeX => smoothTimeX;
     public float SmoothTimeY => smoothTimeY;
