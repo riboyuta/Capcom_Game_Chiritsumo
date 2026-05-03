@@ -8,6 +8,27 @@ using static UnityEditor.Rendering.InspectorCurveEditor;
 public class MapEditor : MonoBehaviour
 {
 
+    [System.Serializable] //タイル個々のクラス
+    public class TileData
+    {
+        public int x;
+        public int y;
+        public int z;
+
+        public string tileID;
+        public TileGimmickTypeEnum gimmickType;
+        public TileGimmickIDEnum gimmickID;
+
+    }
+
+    [System.Serializable] //マップ全体のクラス
+    public class MapData
+    {
+        public List<TileData> tiles = new List<TileData>();
+        public string comment;
+    }
+
+
     Dictionary<Vector3Int, GameObject> tiles =
         new Dictionary<Vector3Int, GameObject>();
 
@@ -19,14 +40,12 @@ public class MapEditor : MonoBehaviour
 
     Stack<MapData> undoStack = new Stack<MapData>(); //変更履歴のスタック
 
-    //範囲選択用
-    bool selecting = false;
-    Vector3Int selectStart;
-    Vector3Int selectEnd;
 
-    [Header("プレハブパレット")]
-    [Tooltip("キー毎に割り当てられているプレハブ")]
-    [SerializeField]　private GameObject[] tilePrefab;
+
+
+    [Header("TileDatabase")]
+    [Tooltip("TileDatabaseスクリプトをここにドラッグしてね")]
+    [SerializeField] private TileDatabase tileDatabase;
 
 
     [Header("現在のステージ番号")]
@@ -45,24 +64,25 @@ public class MapEditor : MonoBehaviour
     [SerializeField] private string comment;
 
 
-    [Header("タイル変換")]
-    [Tooltip("変換したいプレハブをセットしよう")]
-    [SerializeField] private ChangeTileContainer changeTileContainer;
-    [System.Serializable]
-    public struct ChangeTileContainer
-    {
-        public TileTypeEnum target;
-        public TileTypeEnum changeTo;
-    }
-
 
     float gridSize = 1.0f;
    
     bool showSaveConfirm = false;
-
     bool showLoadConfirm = false;
+    bool showPrefabConfirm = false;
 
-    private int currentTile = 1;
+    private int currentPage = 0;
+    private int selectedKeyNumber = 0;
+    private int selectedIndex;
+    private TileDefinition currentTile;
+
+    bool selecting = false;
+    Vector3Int selectStart;
+    Vector3Int selectEnd;
+
+    bool canPlaceTile = true;
+    int PlaceTileFlagTimer = 0;
+
 
     //フォルダ定義
     string folderPath =>
@@ -82,26 +102,29 @@ public class MapEditor : MonoBehaviour
  
     void Update()
     {
-      
-
 
         // プレイ中
         if (Application.isPlaying)
         {
 
-            if (showSaveConfirm || showLoadConfirm) { return; } //セーブorロード選択中はエディット操作できない
+            if (showSaveConfirm || showLoadConfirm) { return; } //セーブ、ロード選択中はエディット操作できない
 
             //数字キーで使うタイルを変える
-            if (Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0)) currentTile = 0;
-            if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) currentTile = 1;
-            if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2)) currentTile = 2;
-            if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)) currentTile = 3;
-            if (Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4)) currentTile = 4;
-            if (Input.GetKeyDown(KeyCode.Alpha5) || Input.GetKeyDown(KeyCode.Keypad5)) currentTile = 5;
-            if (Input.GetKeyDown(KeyCode.Alpha6) || Input.GetKeyDown(KeyCode.Keypad6)) currentTile = 6;
-            if (Input.GetKeyDown(KeyCode.Alpha7) || Input.GetKeyDown(KeyCode.Keypad7)) currentTile = 7;
-            if (Input.GetKeyDown(KeyCode.Alpha8) || Input.GetKeyDown(KeyCode.Keypad8)) currentTile = 8;
-            if (Input.GetKeyDown(KeyCode.Alpha9) || Input.GetKeyDown(KeyCode.Keypad9)) currentTile = 9;
+            if (Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0)) selectedKeyNumber = 0;
+            if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) selectedKeyNumber = 1;
+            if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2)) selectedKeyNumber = 2;
+            if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)) selectedKeyNumber = 3;
+            if (Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4)) selectedKeyNumber = 4;
+            if (Input.GetKeyDown(KeyCode.Alpha5) || Input.GetKeyDown(KeyCode.Keypad5)) selectedKeyNumber = 5;
+            if (Input.GetKeyDown(KeyCode.Alpha6) || Input.GetKeyDown(KeyCode.Keypad6)) selectedKeyNumber = 6;
+            if (Input.GetKeyDown(KeyCode.Alpha7) || Input.GetKeyDown(KeyCode.Keypad7)) selectedKeyNumber = 7;
+            if (Input.GetKeyDown(KeyCode.Alpha8) || Input.GetKeyDown(KeyCode.Keypad8)) selectedKeyNumber = 8;
+            if (Input.GetKeyDown(KeyCode.Alpha9) || Input.GetKeyDown(KeyCode.Keypad9)) selectedKeyNumber = 9;
+
+            selectedIndex = currentPage * 10 + selectedKeyNumber;
+
+
+
 
             //タイル配置
             if (Input.GetMouseButton(0))
@@ -113,6 +136,12 @@ public class MapEditor : MonoBehaviour
             if (Input.GetMouseButton(1))
             {
                 RemoveTile();
+            }
+
+            //プレハブ一覧
+            if (Input.GetKeyDown(KeyCode.Tab))
+            {
+                showPrefabConfirm = !showPrefabConfirm;
             }
 
             //セーブ
@@ -175,25 +204,38 @@ public class MapEditor : MonoBehaviour
             }
 
 
-
             //ペースト処理
-            ExecutePaste();        
-
-         
+            ExecutePaste();
 
 
+
+            // タイル設置制限のクールタイム減少
+            if (!canPlaceTile)
+            {
+                PlaceTileFlagTimer--;
+                Debug.Log("a");
+
+                if (PlaceTileFlagTimer <= 0)
+                {
+                    canPlaceTile = true;
+                    PlaceTileFlagTimer = 0;
+                }
+            }
         }
     
+
         //実行外
         else
         {
             
         }
 
+
     }
 
 
 
+    //グリッド取得関数
     Vector3Int GetGridPosition()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -201,17 +243,18 @@ public class MapEditor : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit))
         {
+
             Vector3 pos = hit.point;
 
             int gridX = Mathf.RoundToInt(pos.x / gridSize);
             int gridY = Mathf.RoundToInt(pos.y / gridSize);
-            int gridZ = Mathf.RoundToInt(pos.z / gridSize);
+            int gridZ = 0; // Mathf.RoundToInt(pos.z / gridSize);
 
             return new Vector3Int(gridX, gridY, gridZ);
         }
 
-        return new Vector3Int(0, 0, 0);
 
+        return new Vector3Int(-10, -10, -10);
     }
 
 
@@ -219,10 +262,27 @@ public class MapEditor : MonoBehaviour
 
     void PlaceTile()
     {
+        if (showPrefabConfirm)
+        {
+            Debug.LogWarning("プレハブ選択中です！");
+            return;
+        }
+
+
+        if (!canPlaceTile)
+        {
+            Debug.LogWarning("[canPlaceTile]がfalseです！");
+            return;
+        }
+
+        if (currentTile == null)
+        {
+            Debug.LogWarning("タイルが選択されてない！");
+            return;
+        }
+
         Vector3Int gridPos = GetGridPosition();
-
-        if (tiles.ContainsKey(gridPos)) return;
-
+        if (tiles.ContainsKey(gridPos)) return; //同じ場所だった場合はreturn
 
         //キーを押された直後ならUndoスタックをセーブ
         if (Input.GetMouseButtonDown(0))
@@ -236,11 +296,19 @@ public class MapEditor : MonoBehaviour
             gridPos.z * gridSize - 0.01f
         );
 
-        GameObject tile =
-            Instantiate(tilePrefab[currentTile], spawnPos, Quaternion.identity);
+
+        GameObject tile = Instantiate(currentTile.prefab, spawnPos, Quaternion.identity);
+
+        TileType tileType = tile.GetComponent<TileType>();
+        if (tileType == null)
+        {
+            Debug.LogError("TileTypeが付いてない！");
+            return;
+        }
+
+        tileType.tileDefinition = currentTile;
 
         tiles.Add(gridPos, tile);
-
        
     }
 
@@ -278,6 +346,12 @@ public class MapEditor : MonoBehaviour
         }
     }
 
+
+    void SetTilePlacePrevent(int timer)
+    {
+        canPlaceTile = false;
+        PlaceTileFlagTimer = timer;
+    }
 
   
 
@@ -428,7 +502,8 @@ public class MapEditor : MonoBehaviour
 
             TileType type = tile.Value.GetComponent<TileType>();
 
-            data.type = type.type;
+
+            data.tileID = type.tileDefinition.tileID;
             data.gimmickType = type.gimmickType;
             data.gimmickID = type.gimmickID;
 
@@ -468,12 +543,19 @@ public class MapEditor : MonoBehaviour
                 data.z * gridSize - 0.01f
             );
 
-            GameObject tile =
-                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
 
+            //定義されてるタイルを探す
+            TileDefinition def = tileDatabase.tiles.Find(t => t.tileID == data.tileID);
+            if (def == null)
+            {
+                Debug.LogError("TileIDが見当たりませぬ" + data.tileID);
+                continue;
+            }
+
+            GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
             TileType tileType = tile.GetComponent<TileType>();
 
-            tileType.type = data.type;
+            tileType.tileDefinition = def;
             tileType.gimmickType = data.gimmickType;
             tileType.gimmickID = data.gimmickID;
 
@@ -520,7 +602,7 @@ public class MapEditor : MonoBehaviour
                 data.y = pos.y - copyOrigin.y;
                 data.z = pos.z - copyOrigin.z;
 
-                data.type = type.type;
+                data.tileID = type.tileDefinition.tileID;
                 data.gimmickType = type.gimmickType;
                 data.gimmickID = type.gimmickID;
 
@@ -584,12 +666,19 @@ public class MapEditor : MonoBehaviour
                 gridPos.z * gridSize - 0.01f
             );
 
-            GameObject tile =
-                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
 
+            //定義されてるタイルを探す
+            TileDefinition def = tileDatabase.tiles.Find(t => t.tileID == data.tileID);
+            if (def == null)
+            {
+                Debug.LogError("TileIDが見当たりませぬ" + data.tileID);
+                continue;
+            }
+
+            GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
             TileType tileType = tile.GetComponent<TileType>();
 
-            tileType.type = data.type;
+            tileType.tileDefinition = def;
             tileType.gimmickType = data.gimmickType;
             tileType.gimmickID = data.gimmickID;
 
@@ -636,7 +725,7 @@ public class MapEditor : MonoBehaviour
                 data.y = pos.y - temporaryOrigin.y;
                 data.z = pos.z - temporaryOrigin.z;
 
-                data.type = type.type;
+                data.tileID = type.tileDefinition.tileID;
                 data.gimmickType = type.gimmickType;
                 data.gimmickID = type.gimmickID;
 
@@ -653,25 +742,7 @@ public class MapEditor : MonoBehaviour
     //　　　　　保存システム
     //===========================-------
 
-    [System.Serializable] //タイル個々のクラス
-    public class TileData
-    {
-        public int x;
-        public int y;
-        public int z;
-
-        public TileTypeEnum type;
-        public TileGimmickTypeEnum gimmickType;
-        public TileGimmickIDEnum gimmickID;
-
-    }
-
-    [System.Serializable] //マップ全体のクラス
-    public class MapData
-    {
-        public List<TileData> tiles = new List<TileData>();
-        public string comment;
-    }
+  
 
     public void SaveMap()
     {
@@ -685,7 +756,9 @@ public class MapEditor : MonoBehaviour
             data.x = tile.Key.x;
             data.y = tile.Key.y;
             data.z = tile.Key.z;
-            data.type = tile.Value.GetComponent<TileType>().type;
+            TileType type = tile.Value.GetComponent<TileType>();
+
+            data.tileID = type.tileDefinition.tileID;
             data.gimmickType = tile.Value.GetComponent<TileType>().gimmickType;
             data.gimmickID = tile.Value.GetComponent<TileType>().gimmickID;
 
@@ -750,12 +823,19 @@ public class MapEditor : MonoBehaviour
                 data.z * gridSize - 0.01f
             );
 
-            GameObject tile =
-                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
 
+            //定義されてるタイルを探す
+            TileDefinition def = tileDatabase.tiles.Find(t => t.tileID == data.tileID);
+            if (def == null)
+            {
+                Debug.LogError("TileIDが見当たりませぬ" + data.tileID);
+                continue;
+            }
+
+            GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
             TileType tileType = tile.GetComponent<TileType>();
 
-            tileType.type = data.type;
+            tileType.tileDefinition = def;
             tileType.gimmickType = data.gimmickType;
             tileType.gimmickID = data.gimmickID;
 
@@ -799,6 +879,7 @@ public class MapEditor : MonoBehaviour
     //===========================-------
     void OnGUI()
     {
+        // ===== セーブ＆ロードUI =====
         GUIStyle style = new GUIStyle(GUI.skin.box);
         style.fontSize = 160;
         style.alignment = TextAnchor.UpperCenter;
@@ -823,11 +904,13 @@ public class MapEditor : MonoBehaviour
             {
                 SaveMap();
                 showSaveConfirm = false;
+                
             }
 
             if (GUI.Button(new Rect(boxX + 950, boxY + 450, 300, 120), "No", buttonStyle))
             {
                 showSaveConfirm = false;
+                
             }
         }
 
@@ -839,13 +922,78 @@ public class MapEditor : MonoBehaviour
             {
                 LoadMap();
                 showLoadConfirm = false;
+            
             }
 
             if (GUI.Button(new Rect(boxX + 950, boxY + 450, 300, 120), "No", buttonStyle))
             {
                 showLoadConfirm = false;
+              
             }
         }
+
+        // ===== プレハブ選択ホットバーUI =====
+
+        if (showSaveConfirm || showLoadConfirm) return;
+         
+        if (showPrefabConfirm)
+        {
+
+            int tileCount = tileDatabase.tiles.Count;
+
+            float size = 100;
+            float margin = 10;
+
+            float startX = 50;
+            float startY = Screen.height - 150;
+
+            for (int i = 0; i < 10; i++)
+            {
+                int index = currentPage * 10 + i;
+
+                if (index >= tileCount) break;
+
+                Rect rect = new Rect(startX + i * (size + margin), startY, size, size);
+
+                TileDefinition def = tileDatabase.tiles[index];
+
+                // ボタン（アイコン表示）
+                if (GUI.Button(rect, def.icon != null ? def.icon : Texture2D.grayTexture))
+                {
+                    selectedKeyNumber = i;
+                    currentTile = def;
+                    showPrefabConfirm = false;
+                    SetTilePlacePrevent(7);
+                }
+
+                // 選択中の枠
+                if (i == selectedKeyNumber)
+                {
+                    GUI.color = Color.yellow;
+                    GUI.Box(rect, "");
+                    GUI.color = Color.white;
+                }
+            }
+
+            // ===== ページ切り替え =====
+            if (GUI.Button(new Rect(50, startY - 70, 100, 50), "<"))
+            {
+                currentPage = Mathf.Max(0, currentPage - 1);
+                selectedKeyNumber = 0;
+                SetTilePlacePrevent(7);
+
+            }
+
+            if (GUI.Button(new Rect(200, startY - 70, 100, 50), ">"))
+            {
+                int maxPage = (tileCount - 1) / 10;
+                currentPage = Mathf.Min(maxPage, currentPage + 1);
+                SetTilePlacePrevent(7);
+
+            }
+        }
+
+      
     }
 
     //===========================-------
