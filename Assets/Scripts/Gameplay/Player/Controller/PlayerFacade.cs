@@ -320,6 +320,7 @@ public sealed class PlayerFacade : MonoBehaviour
     // - 8方向入力チュートリアル
     // - 入力方向に応じて挙動を変えるギミック
     public Vector2 MoveInputDirection => playerController.MoveInputDirection;
+
     // 現在の移動入力が斜めか。
     // 用途例:
     // - 斜め入力の可視化
@@ -352,12 +353,14 @@ public sealed class PlayerFacade : MonoBehaviour
     // - すでに別ギミックに拘束されているかの確認
     // - 二重搭乗や二重拘束の防止
     public bool IsExternallyControlled => playerController.IsExternallyControlled;
+
     // 現在の外部制御モード。
     // 用途例:
     // - いま固定中なのか、レール移動中なのか、射出中なのかの診断
     // 注意:
     // - これは「何を止めているか」ではなく、「どう移動を外部が支配しているか」を表す
     public ExternalControlMode CurrentExternalControlMode => playerController.CurrentExternalControlMode;
+
     // ダッシュ回復を試みる。
     // 用途例:
     // - ダッシュ回復クリスタル

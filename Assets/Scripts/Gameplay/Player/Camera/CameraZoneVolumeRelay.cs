@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // 同一 GameObject への多重アタッチを防ぐ。
-// ZoneVolume の中継用途なので 1 つで十分。
+// ZoneVolume の中継用途。
 [DisallowMultipleComponent]
 
 // Trigger 判定に使う BoxCollider を必須にする。
