@@ -40,10 +40,6 @@ public sealed partial class PlayerController : MonoBehaviour
     // 速度・加速度・重力倍率・接地判定距離などを保持する。
     [SerializeField] private PlayerMovementSettings movementSettings = new PlayerMovementSettings();
 
-    [Header("体力: パラメータ設定")]
-    [Tooltip("体力、無敵時間、死亡後復帰待機、デバッグ死亡トリガーをまとめた設定です。")]
-    [SerializeField] private PlayerHealthSettings healthSettings = new PlayerHealthSettings();
-    
     [Header("参照: CheckpointSystem")]
     [Tooltip("同一シーン内の復帰地点を解決するシステムです。未設定時は実行時に探索を試みます。")]
     [SerializeField] private CheckpointSystem checkpointSystem;
