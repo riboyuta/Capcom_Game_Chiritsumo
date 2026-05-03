@@ -1,0 +1,641 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3202484194985546700
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4937124079888304909}
+  - component: {fileID: 8180684953719089296}
+  - component: {fileID: 2931734094814078939}
+  - component: {fileID: 2129286954589855677}
+  - component: {fileID: 9019949910838118758}
+  - component: {fileID: 1107865337994696070}
+  - component: {fileID: 3277351766638840673}
+  - component: {fileID: 4486471173883027432}
+  m_Layer: 0
+  m_Name: PlayerRoot
+  m_TagString: Player
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4937124079888304909
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3202484194985546700}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 20, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4034916896329089538}
+  - {fileID: 2423985313276409691}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &8180684953719089296
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3202484194985546700}
+  m_Material: {fileID: 13400000, guid: 630b6018882b3394697958da43429b95, type: 2}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!54 &2931734094814078939
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3202484194985546700}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 1
+  m_Constraints: 120
+  m_CollisionDetection: 1
+--- !u!114 &2129286954589855677
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3202484194985546700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38a04b1e34f0d13499df7a41144428db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+  rawInputSource: {fileID: 1107865337994696070}
+  inputBindings:
+    jump:
+      _primaryKeyboardKey: 17
+      _secondaryKeyboardKey: 1
+      _gamepadButton: 0
+    dash:
+      _primaryKeyboardKey: 38
+      _secondaryKeyboardKey: 51
+      _gamepadButton: 2
+    grab:
+      _primaryKeyboardKey: 40
+      _secondaryKeyboardKey: 55
+      _gamepadButton: 11
+  movementSettings:
+    move:
+      maxSpeed: 8.2
+      groundAcceleration: 78
+      groundTurnAcceleration: 108
+      groundDeceleration: 92
+      airAcceleration: 28
+      airTurnAcceleration: 40
+      airDeceleration: 12
+    jump:
+      jumpVelocity: 14
+      gravityScale: 3
+      useVariableJump: 1
+      maxJumpHoldTime: 0.12
+      riseGravityMultiplier: 1
+      jumpCutMultiplier: 0.5
+      useCoyoteTime: 1
+      coyoteTime: 0.1
+      useJumpBuffer: 1
+      jumpBufferTime: 0.1
+    fall:
+      gravityMultiplier: 1.75
+      maxSpeed: 20
+      useFastFall: 1
+      fastFallGravityMultiplier: 2.6
+      fastFallMaxSpeed: 28
+    detection:
+      groundCheckDistance: 0.1
+      groundLayerMask:
+        serializedVersion: 2
+        m_Bits: 4294967295
+      wallCheckDistance: 0.15
+      wallCheckRadius: 0.2
+      wallInputThreshold: 0.12
+    wall:
+      useWallSlide: 1
+      wallSlideMaxSpeed: 3
+      useWallGrab: 1
+      wallGrabVerticalSpeed: 0
+      useWallKick: 1
+      wallJumpHorizontalVelocity: 8
+      wallJumpVerticalVelocity: 10.5
+      wallJumpControlLockTime: 0.09
+      wallReattachLockTime: 0.12
+    dash:
+      useDash: 1
+      speed: 18
+      duration: 0.13
+      gravityMultiplier: 0
+      restoreStartVerticalVelocity: 0
+      allowAirDash: 1
+      maxCharges: 1
+      useGroundRefill: 1
+      retryLockTime: 0.02
+      groundCooldownTime: 0.12
+      useGroundSnap: 1
+      groundSnapDistance: 0.2
+      allowTurnDuringDash: 1
+      useDashBuffer: 1
+      dashBufferTime: 0.06
+      invulnerable: 0
+      useEightWayInput: 1
+      directionDeadZone: 0.25
+      diagonalAssistAngle: 8
+    inputAssist:
+      moveInputGamepadDeadZone: 0.2
+  healthSettings:
+    maxHealth: 3
+    invincibilityDuration: 1
+    invincible: 0
+    debugRequestDeath: 0
+    debugRequestHazardDeath: 0
+  checkpointSystem: {fileID: 0}
+  stageResetSystem: {fileID: 0}
+  playerCameraController: {fileID: 0}
+  playerDeathView: {fileID: 1311286768824133779}
+--- !u!114 &9019949910838118758
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3202484194985546700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3b278cf41c69ca4b8fb6af61826afc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerVibrationController
+  playerController: {fileID: 2129286954589855677}
+  enableGroundDash: 1
+  enableAirDash: 1
+  enableWallKick: 1
+  enableWallSlide: 1
+  enableNormalLanding: 1
+  enableStrongLanding: 1
+  enableDamageDeath: 1
+  enableHazardDeath: 1
+  useStrongLandingMinAirTime: 1
+  strongLandingMinAirTime: 0.2
+  useStrongLandingMinFallHeight: 1
+  strongLandingMinFallHeight: 6
+  groundDash:
+    lowFrequency: 0.2
+    highFrequency: 0.3
+    duration: 0.06
+  airDash:
+    lowFrequency: 0.1
+    highFrequency: 0.4
+    duration: 0.05
+  wallKick:
+    lowFrequency: 0.24
+    highFrequency: 0.82
+    duration: 0.09
+  wallSlide:
+    lowFrequency: 0.015
+    highFrequency: 0.05
+    pulseDuration: 0.03
+    pulseInterval: 0.1
+  normalLanding:
+    lowFrequency: 0.22
+    highFrequency: 0.1
+    duration: 0.06
+  strongLanding:
+    lowFrequency: 0.72
+    highFrequency: 0.18
+    duration: 0.11
+  damageDeath:
+    lowFrequency: 0.8
+    highFrequency: 0.35
+    duration: 0.16
+  hazardDeath:
+    lowFrequency: 0.58
+    highFrequency: 0.75
+    duration: 0.12
+  showDebugState: 0
+  wallSlideActive: 0
+  wallSlidePulsePlaying: 0
+  wallSlideTimer: 0
+  oneShotTimer: 0
+  activeRumbleName: None
+--- !u!114 &1107865337994696070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3202484194985546700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d92c46fb874b4ae4696d00ac6d22a42e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Input.RawInputSource
+  _leftStickDeadzone: 0.2
+  _rightStickDeadzone: 0.2
+--- !u!114 &3277351766638840673
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3202484194985546700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0176c90e384004d4eb0990f45007c65f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAudioController
+  playerController: {fileID: 2129286954589855677}
+  enableJump: 1
+  enableWallJump: 1
+  enableNormalLanding: 1
+  enableStrongLanding: 1
+  enableWallSlide: 1
+  enableGroundDash: 1
+  enableAirDash: 1
+  enableDamageDeath: 1
+  enableHazardDeath: 1
+  jumpAudioId: SFX_player_jump
+  wallJumpAudioId: SFX_player_walljump
+  normalLandingAudioId: SFX_player_land
+  strongLandingAudioId: SFX_player_land
+  wallSlideAudioId: SFX_player_wallslide
+  groundDashAudioId: 
+  airDashAudioId: 
+  damageDeathAudioId: SFX_game_over
+  hazardDeathAudioId: SFX_game_over
+  useStrongLandingMinAirTime: 1
+  strongLandingMinAirTime: 0.2
+  useStrongLandingMinFallHeight: 1
+  strongLandingMinFallHeight: 6
+--- !u!114 &4486471173883027432
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3202484194985546700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c061274fb14e7445a906d3bd717329b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerShadowRecorder
+  playerController: {fileID: 2129286954589855677}
+  recordInterval: 0
+  maxHistoryDuration: 2
+  showDebugPath: 1
+  debugPathColor: {r: 1, g: 0, b: 1, a: 1}
+  lastRecordedTime: 0
+  debugHistoryCount: 0
+--- !u!1 &4743958302974860544
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2423985313276409691}
+  m_Layer: 0
+  m_Name: CameraTargetAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2423985313276409691
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4743958302974860544}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4937124079888304909}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5813767534292546930
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4034916896329089538}
+  - component: {fileID: 3051142244313426601}
+  - component: {fileID: 6917261277339074388}
+  - component: {fileID: 1311286768824133779}
+  m_Layer: 0
+  m_Name: ViewRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4034916896329089538
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5813767534292546930}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.6}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 4937124079888304909}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3051142244313426601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5813767534292546930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16a0cb2107c4fc949912093465aa9ec9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerView
+  playerController: {fileID: 2129286954589855677}
+  spriteRenderer: {fileID: 6917261277339074388}
+  viewRoot: {fileID: 4034916896329089538}
+  walkThreshold: 0.05
+  riseThreshold: 0.05
+  baseLocalOffset: {x: 0, y: 0, z: 0}
+  baseScale: {x: 0.4, y: 0.4, z: 0.4}
+  idleClip:
+    enabled: 1
+    sprites:
+    - {fileID: 290368967, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+    startFrame: 0
+    endFrame: 0
+    fps: 12
+    playbackMode: 2
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  walkLoopClip:
+    enabled: 1
+    sprites:
+    - {fileID: 290368967, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+    - {fileID: 1716179379, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+    - {fileID: 1465907502, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+    - {fileID: -727687240, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+    - {fileID: 472008612, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+    - {fileID: -49800599, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+    - {fileID: 248648912, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+    - {fileID: 382070223, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+    startFrame: 0
+    endFrame: 7
+    fps: 12
+    playbackMode: 0
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  landClip:
+    enabled: 1
+    sprites:
+    - {fileID: -1046398307, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+    startFrame: 0
+    endFrame: 0
+    fps: 3
+    playbackMode: 1
+    minimumDuration: 0.09
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  jumpStartClip:
+    enabled: 1
+    sprites:
+    - {fileID: -1812844035, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+    - {fileID: -28800686, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+    - {fileID: -109164536, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+    - {fileID: 641278213, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+    startFrame: 0
+    endFrame: 3
+    fps: 20
+    playbackMode: 2
+    minimumDuration: 0.1
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  jumpRiseClip:
+    enabled: 0
+    sprites:
+    - {fileID: 641278213, guid: 160d2f2539805774aa741bb865af696e, type: 3}
+    startFrame: 0
+    endFrame: 0
+    fps: 12
+    playbackMode: 2
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  jumpToFallClip:
+    enabled: 1
+    sprites:
+    - {fileID: 1303732482, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+    - {fileID: -1045589456, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+    - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+    startFrame: 0
+    endFrame: 2
+    fps: 10
+    playbackMode: 2
+    minimumDuration: 0.1
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  fallClip:
+    enabled: 0
+    sprites:
+    - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
+    startFrame: 0
+    endFrame: 0
+    fps: 12
+    playbackMode: 2
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  wallSlideClip:
+    enabled: 1
+    sprites:
+    - {fileID: 422731689, guid: 0494f32ca83c29b468b8c90383c2f5b0, type: 3}
+    startFrame: 0
+    endFrame: 1
+    fps: 12
+    playbackMode: 0
+    minimumDuration: 0
+    extraFlipX: 1
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  wallJumpClip:
+    enabled: 1
+    sprites:
+    - {fileID: -710639366, guid: d75da9a588426e042a7d7d4c0de1ebbe, type: 3}
+    - {fileID: -710639366, guid: d75da9a588426e042a7d7d4c0de1ebbe, type: 3}
+    startFrame: 0
+    endFrame: 2
+    fps: 3
+    playbackMode: 0
+    minimumDuration: 0.1
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  dashClip:
+    enabled: 1
+    sprites:
+    - {fileID: 1441946917, guid: ad1e1244b7d90d740a91f7892935a8bf, type: 3}
+    startFrame: 0
+    endFrame: 0
+    fps: 0
+    playbackMode: 2
+    minimumDuration: 0
+    extraFlipX: 0
+    extraFlipY: 0
+    scaleMultiplier: 1
+    localOffset: {x: 0, y: 0, z: 0}
+  currentAnimState: 0
+  desiredAnimState: 0
+  currentStateElapsed: 4.490629
+  currentStateLockRemaining: 0
+  currentClipName: Idle
+  currentFrameIndex: 0
+--- !u!212 &6917261277339074388
+SpriteRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5813767534292546930}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 4
+  m_MaskInteraction: 0
+  m_Sprite: {fileID: 290368967, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 5, y: 5}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_SpriteSortPoint: 1
+--- !u!114 &1311286768824133779
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5813767534292546930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f25478112b223f40ae8f2fed71848b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDeathView
+  playerView: {fileID: 3051142244313426601}
+  deathTransitionView: {fileID: 0}
+  damageDeathIntroDuration: 0.3
+  damageDeathTiltAngle: 80
+  damageDeathZoomSizeOffset: -2
+  damageDeathZoomSmoothTime: 3
+  damageBlackInDuration: 3
+  damageBlackOutDuration: 1
+  hazardBlackInDuration: 3
+  hazardBlackOutDuration: 1
+  blackRespawnThreshold: 1
