@@ -2360,7 +2360,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d57d6a31c87bc1a44aee7d296782fec0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CheckpointSystem
-  initialCheckpoint: {fileID: 1298716508}
+  initialCheckpoint: {fileID: 0}
 --- !u!4 &1298716508
 Transform:
   m_ObjectHideFlags: 0

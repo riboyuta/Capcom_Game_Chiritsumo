@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -64,6 +65,8 @@ public sealed class RoomManager : MonoBehaviour
     private RoomDirection lastTransitionDirection = RoomDirection.None;
     private bool isTransitioning;
     private PlayerExternalControlSession roomTransitionControlSession = PlayerExternalControlSession.Invalid;
+    private readonly Dictionary<Room, HashSet<RoomDirection>> blockedDirectionsByRoom = new();
+    private int oneWayBlockerLayer = 0;
 
     public Room CurrentRoom => currentRoom;
     public Room PreviousRoom => previousRoom;
@@ -85,6 +88,9 @@ public sealed class RoomManager : MonoBehaviour
 
     private void Start()
     {
+        // 一方通行 Blocker の初期構築を行う。
+        InitializeRoomBlockers();
+
         // 開始部屋が設定されている場合は現在部屋を確定する。
         if (initialRoom != null)
         {
@@ -390,6 +396,69 @@ public sealed class RoomManager : MonoBehaviour
         }
     }
 
+    private void InitializeRoomBlockers()
+    {
+
+
+        Room[] rooms = FindObjectsByType<Room>(FindObjectsSortMode.None);
+        for (int i = 0; i < rooms.Length; i++)
+        {
+            Room room = rooms[i];
+            if (room == null || room.RoomBounds == null)
+            {
+                continue;
+            }
+
+            RoomBlockerSet blockerSet = EnsureRoomBlockerSet(room);
+            blockerSet.EnsureAllBlockersCreated();
+            blockerSet.RebuildFromBounds(room.RoomBounds.WorldBounds);
+            ApplyBlockerLayer(blockerSet.gameObject);
+        }
+    }
+
+    private RoomBlockerSet EnsureRoomBlockerSet(Room room)
+    {
+        // Room 配下の専用子 "RoomBlockerSet" を再利用または生成する。
+        Transform blockerSetTransform = room.transform.Find("RoomBlockerSet");
+        if (blockerSetTransform == null)
+        {
+            GameObject blockerSetObject = new GameObject("RoomBlockerSet");
+            blockerSetObject.transform.SetParent(room.transform, false);
+            blockerSetTransform = blockerSetObject.transform;
+        }
+
+        RoomBlockerSet blockerSet = blockerSetTransform.GetComponent<RoomBlockerSet>();
+        if (blockerSet == null)
+        {
+            blockerSet = blockerSetTransform.gameObject.AddComponent<RoomBlockerSet>();
+        }
+
+        return blockerSet;
+    }
+
+    private void ApplyBlockerLayer(GameObject root)
+    {
+        // BlockerSet 配下すべてに Layer を設定する。
+        Transform[] transforms = root.GetComponentsInChildren<Transform>(true);
+        for (int i = 0; i < transforms.Length; i++)
+        {
+            transforms[i].gameObject.layer = oneWayBlockerLayer;
+        }
+    }
+
+    private RoomDirection GetOppositeDirection(RoomDirection moveDirection)
+    {
+        // 移動方向の反対側を、遷移先で塞ぐ方向として返す。
+        return moveDirection switch
+        {
+            RoomDirection.Left => RoomDirection.Right,
+            RoomDirection.Right => RoomDirection.Left,
+            RoomDirection.Up => RoomDirection.Down,
+            RoomDirection.Down => RoomDirection.Up,
+            _ => RoomDirection.None,
+        };
+    }
+
     private bool TryGetTransitionDirection(
         Bounds bounds,
         Vector3 playerPosition,
@@ -444,7 +513,7 @@ public sealed class RoomManager : MonoBehaviour
         return false;
     }
 
-    private bool TryTransition(RoomDirection direction)
+    private bool TryTransition(RoomDirection moveDirection)
     {
         // 現在部屋が無い場合は遷移できない。
         if (currentRoom == null)
@@ -454,7 +523,7 @@ public sealed class RoomManager : MonoBehaviour
 
         // 遷移方向に応じた隣接部屋を選ぶ。
         Room nextRoom = null;
-        switch (direction)
+        switch (moveDirection)
         {
             case RoomDirection.Left:
                 nextRoom = currentRoom.LeftRoom;
@@ -476,14 +545,21 @@ public sealed class RoomManager : MonoBehaviour
             return false;
         }
 
+        // 一方通行有効時、現在部屋で禁止された方向への遷移は拒否する。
+        if (blockedDirectionsByRoom.TryGetValue(currentRoom, out HashSet<RoomDirection> blockedInCurrent)
+            && blockedInCurrent.Contains(moveDirection))
+        {
+            return false;
+        }
+
         // 状態切り替え直後にカメラ設定反映と遷移開始を行う。
         isTransitioning = true;
         previousRoom = currentRoom;
         pendingRoom = nextRoom;
         currentRoom = nextRoom;
-        lastTransitionDirection = direction;
+        lastTransitionDirection = moveDirection;
         ApplyCurrentRoomCameraSettings();
-        UpdateCheckpointForRoomEntry(currentRoom, direction);
+        UpdateCheckpointForRoomEntry(currentRoom, moveDirection);
         if (playerCameraController != null)
         {
             playerCameraController.BeginRoomTransition(currentRoom);
@@ -493,12 +569,34 @@ public sealed class RoomManager : MonoBehaviour
             Debug.LogWarning("RoomManager: playerCameraController が未設定のためカメラ遷移を開始できません。", this);
         }
 
+        // 遷移先 Room の設定が有効な場合のみ、反対方向 Blocker と論理禁止を登録する。
+        RoomDirection blockedDirection = GetOppositeDirection(moveDirection);
+        if (currentRoom.EnableOneWayBlockerOnEntry && blockedDirection != RoomDirection.None)
+        {
+            if (!blockedDirectionsByRoom.TryGetValue(currentRoom, out HashSet<RoomDirection> blockedInTarget))
+            {
+                blockedInTarget = new HashSet<RoomDirection>();
+                blockedDirectionsByRoom[currentRoom] = blockedInTarget;
+            }
+
+            blockedInTarget.Add(blockedDirection);
+
+            RoomBlockerSet blockerSet = EnsureRoomBlockerSet(currentRoom);
+            blockerSet.RebuildFromBounds(currentRoom.RoomBounds.WorldBounds);
+            ApplyBlockerLayer(blockerSet.gameObject);
+            BoxCollider blocker = blockerSet.GetBlocker(blockedDirection);
+            if (blocker != null)
+            {
+                blocker.enabled = true;
+            }
+        }
+
         BeginRoomTransitionExternalControl();
 
         if (enableDebugLog)
         {
             Debug.Log(
-                $"RoomManager: '{previousRoom.name}' -> '{currentRoom.name}' に遷移しました。Direction={direction}",
+                $"RoomManager: '{previousRoom.name}' -> '{currentRoom.name}' に遷移しました。Direction={moveDirection}",
                 this);
         }
 
