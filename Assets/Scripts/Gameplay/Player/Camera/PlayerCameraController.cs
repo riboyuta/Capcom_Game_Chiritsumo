@@ -65,14 +65,19 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     [Header("Orthographic Size 補間時間")]
     [Tooltip("Room ベースの orthographicSize 上書きが切り替わる際の補間時間です。0 のときは即時反映します。")]
+    // orthographicSize の切り替えをどれくらい滑らかにするか。
     [SerializeField] private float orthographicSizeSmoothTime = 0.10f;
 
     [Header("部屋遷移カメラ時間")]
     [Tooltip("部屋遷移モード時に開始位置から目標位置まで移動する標準時間です。Room 側の上書きがある場合はそちらを優先します。")]
-    [SerializeField] private float defaultRoomTransitionDuration = 0.20f;
+    // 部屋遷移時の基本移動時間。
+    // 短すぎると終端の変化が目立ちやすいので少し長めにしている。
+    [SerializeField] private float defaultRoomTransitionDuration = 0.30f;
 
-    [Tooltip("部屋遷移モード中に目標へ到達したとみなす距離しきい値です。")]
-    [SerializeField] private float roomTransitionCompleteDistance = 0.05f;
+    [Tooltip("部屋遷移完了判定用の許容距離です。")]
+    // 外部参照用に残している到達判定距離。
+    // 実際の遷移終了判定は時間基準で行う。
+    [SerializeField] private float roomTransitionCompleteDistance = 0.005f;
 
     [Header("デバッグGizmoを描画するか")]
     [Tooltip("有効にすると、Scene ビュー上に目標位置・Clamp 後位置・追従対象位置の Gizmo を描画します。カメラ挙動確認用です。")]
@@ -133,20 +138,22 @@ public sealed class PlayerCameraController : MonoBehaviour
     // 一時追従ターゲットのランタイム状態。
     // Inspector では設定せず、SetTemporaryTarget / ClearTemporaryTarget でのみ変更する。
     private Transform temporaryTargetAnchor;
+
     // 一時追従ターゲットの有効期限( Time.time 基準 )。
     private float temporaryTargetExpireTime = -1f;
 
     // Clamp 前の「行きたい位置」。
     private Vector3 desiredPosition;
+
     // 境界適用後の「実際に目指す位置」。
     private Vector3 clampedPosition;
+
     // 部屋遷移モードのランタイム状態。
     private bool isRoomTransitionRunning;
     private float activeRoomTransitionDuration;
     private float roomTransitionElapsed;
     private Vector3 roomTransitionStartPosition;
     private Vector3 roomTransitionTargetPosition;
-
 
     // -----------------------------
     // 読み取り専用公開プロパティ
@@ -200,6 +207,9 @@ public sealed class PlayerCameraController : MonoBehaviour
     public Transform TemporaryTargetAnchor => temporaryTargetAnchor;
     public float TemporaryTargetExpireTime => temporaryTargetExpireTime;
     public bool IsRoomTransitionRunning => isRoomTransitionRunning;
+
+    // 遷移中でなければ到達済み扱い。
+    // 遷移中は現在位置と目標位置の距離で外部から確認できるようにする。
     public bool HasReachedRoomTransitionTarget => !isRoomTransitionRunning
         || Vector3.Distance(transform.position, roomTransitionTargetPosition) <= Mathf.Max(0f, roomTransitionCompleteDistance);
 
@@ -281,11 +291,11 @@ public sealed class PlayerCameraController : MonoBehaviour
                 roomTransitionTargetPosition,
                 easedT);
 
-            float completeDistance = Mathf.Max(0f, roomTransitionCompleteDistance);
-            if (Vector3.Distance(transform.position, roomTransitionTargetPosition) <= completeDistance || linearT >= 1f)
+            // 距離しきい値で早期終了すると終端でガクつきやすい。
+            // そのため、遷移終了は「時間が最後まで進み切ったか」で判定する。
+            if (linearT >= 1f)
             {
-                transform.position = roomTransitionTargetPosition;
-                isRoomTransitionRunning = false;
+                EndRoomTransition();
             }
 
             return;
@@ -449,10 +459,12 @@ public sealed class PlayerCameraController : MonoBehaviour
     {
         // リスポーン後に追従対象を通常状態へ戻す。
         ClearTemporaryTarget();
+
         // SmoothDamp の内部速度を初期化して慣性を除去する。
         velocityX = 0f;
         velocityY = 0f;
         orthographicSizeVelocity = 0f;
+
         // 部屋遷移中なら現在の目標位置へスナップして遷移を終了する。
         if (isRoomTransitionRunning)
         {
@@ -460,7 +472,10 @@ public sealed class PlayerCameraController : MonoBehaviour
         }
     }
 
-    // Room 反映時の内部 override 操作 API。
+    // -----------------------------
+    // Room 反映時の内部 override 操作 API
+    // -----------------------------
+
     public void SetActiveBoundsOverride(Bounds newBounds)
     {
         activeBoundsOverride = newBounds;
@@ -615,6 +630,12 @@ public sealed class PlayerCameraController : MonoBehaviour
         activeRoomTransitionDuration = GetEffectiveRoomTransitionDuration(room);
         roomTransitionElapsed = 0f;
 
+        // 通常追従側の SmoothDamp 速度を持ち越すと、
+        // 遷移終了後に一瞬だけ変な慣性が乗って見えやすい。
+        // そのため、遷移開始時点で内部速度をリセットする。
+        velocityX = 0f;
+        velocityY = 0f;
+
         if (activeRoomTransitionDuration <= 0f)
         {
             transform.position = roomTransitionTargetPosition;
@@ -630,7 +651,24 @@ public sealed class PlayerCameraController : MonoBehaviour
         // 遷移中フラグを落として目標位置へ即時スナップする。
         isRoomTransitionRunning = false;
         transform.position = roomTransitionTargetPosition;
+
+        // 遷移キャンセル後に余計な慣性が残らないよう内部速度を初期化する。
+        velocityX = 0f;
+        velocityY = 0f;
     }
+
+    private void EndRoomTransition()
+    {
+        // 遷移終了時は最終目標位置へ確定させてから通常追従へ戻す。
+        isRoomTransitionRunning = false;
+        transform.position = roomTransitionTargetPosition;
+
+        // 通常追従へ戻る瞬間のガクつきを防ぐため、
+        // SmoothDamp の内部速度をここでも明示的に初期化する。
+        velocityX = 0f;
+        velocityY = 0f;
+    }
+
     // -----------------------------
     // camera 実行
     // -----------------------------
@@ -646,7 +684,8 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         return Mathf.Max(0f, duration);
     }
-    // 0〜1の進行率を、開始と終了がなめらかなEaseInOutに変換する。
+
+    // 0→1の進行率を、開始と終了がなめらかなEaseInOutに変換する。
     private float EvaluateRoomTransitionEaseInOut(float t)
     {
         t = Mathf.Clamp01(t);
@@ -655,6 +694,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         // 明示的に書くことで「何をしているか」を追いやすくする。
         return t * t * (3f - 2f * t);
     }
+
     private Vector3 GetClampedPosition(Vector3 desired)
     {
         // 現在使うべきワールド境界を取得する。
@@ -683,6 +723,7 @@ public sealed class PlayerCameraController : MonoBehaviour
     {
         float targetSize = Mathf.Max(0.01f, EffectiveOrthographicSize);
         float smoothTime = Mathf.Max(0f, EffectiveOrthographicSizeSmoothTime);
+
         if (smoothTime <= 0f)
         {
             targetCamera.orthographicSize = targetSize;
