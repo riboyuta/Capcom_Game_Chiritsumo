@@ -498,9 +498,9 @@ public sealed class PlayerFacade : MonoBehaviour
         if (rb == null) return;
 
         // ステップ（ダッシュ）中にバネに触れた場合、バネの挙動を優先するためダッシュを強制終了する
-        if (playerController.IsDashActive && playerController.LocomotionSystem != null)
+        if (playerController.IsDashActive && playerController.RuntimeState != null)
         {
-            playerController.LocomotionSystem.EndDash();
+            playerController.RuntimeState.isDashing = false;
         }
 
         rb.linearVelocity = velocity;
