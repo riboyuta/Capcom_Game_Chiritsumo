@@ -480,6 +480,9 @@ public sealed class PlayerFacade : MonoBehaviour
     // 可変ジャンプカットを上昇中ずっと抑制する。
     private bool isFixedJump;
 
+    // 固定ジャンプ中の入力ロック残り時間。
+    private float fixedJumpInputLockTimer;
+
     // 外部から固定ジャンプを適用する。
     // 用途例:
     // - バネ床
@@ -488,36 +491,59 @@ public sealed class PlayerFacade : MonoBehaviour
     // 注意:
     // - 速度設定と可変ジャンプカット抑制を一括で行う
     // - 呼び出し元で Rigidbody の速度を個別に触る必要はない
-    // - 上昇が終了（velocity.y ≤ 0）または接地で自動的に固定ジャンプ状態を解除する
-    public void ApplyFixedJump(Vector3 velocity)
+    // - inputLockTime を指定すると、その時間は横移動入力をブロックし強制移動させる
+    public void ApplyFixedJump(Vector3 velocity, float inputLockTime = 0f)
     {
         Rigidbody rb = playerController.Rigidbody;
         if (rb == null) return;
 
+        // ステップ（ダッシュ）中にバネに触れた場合、バネの挙動を優先するためダッシュを強制終了する
+        if (playerController.IsDashActive && playerController.RuntimeState != null)
+        {
+            playerController.RuntimeState.isDashing = false;
+        }
+
         rb.linearVelocity = velocity;
         playerController.NotifyExternalLaunch();
         isFixedJump = true;
+        fixedJumpInputLockTimer = inputLockTime;
     }
 
     private void FixedUpdate()
     {
         if (!isFixedJump) return;
 
-        // 落下開始で固定ジャンプを解除する。
-        // 注意:
-        // - IsGrounded は判定に使わない。
-        //   横からバネ床に触れた場合、プレイヤーは地面に立っているため
-        //   IsGrounded = true で即リセットされてしまう。
-        // - velocity.y <= 0 だけで十分。上昇が終われば自動解除される。
+        if (fixedJumpInputLockTimer > 0f)
+        {
+            fixedJumpInputLockTimer -= Time.fixedDeltaTime;
+        }
+
         Rigidbody rb = playerController.Rigidbody;
-        if (rb == null || rb.linearVelocity.y <= 0f)
+
+        // ダッシュ（ステップ）入力でいつでも固定状態をキャンセル可能
+        if (rb == null || playerController.IsDashActive)
         {
             isFixedJump = false;
             return;
         }
 
-        // 上昇中は毎 tick 外部打ち上げ通知を送り、可変ジャンプカットを抑制し続ける。
+        // 上昇中（velocity.y > 0）か、ロック時間が残っていれば固定状態を継続
+        bool isAscending = rb.linearVelocity.y > 0.01f;
+        
+        if (!isAscending && fixedJumpInputLockTimer <= 0f)
+        {
+            isFixedJump = false;
+            return;
+        }
+
+        // 状態継続中は毎 tick 外部打ち上げ通知を送り、可変ジャンプカットを抑制し続ける。
         playerController.NotifyExternalLaunch();
+
+        // ロック時間が残っている間は横移動入力をブロックし、慣性を維持させる（Celeste風）
+        if (fixedJumpInputLockTimer > 0f)
+        {
+            playerController.RequestInputBlockThisFrame(PlayerController.InputBlockFlags.Move);
+        }
     }
 
     // ハザード由来の死亡を要求する。

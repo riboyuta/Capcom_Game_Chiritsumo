@@ -330,6 +330,9 @@ public class RailGimmick : MonoBehaviour, IRespawnResettable
             return;
         }
 
+        // ギミック接触によるダッシュ（ステップ）回復
+        facade.TryRefillDash(DashRefillReason.Gimmick);
+
         activeSession = session;
         activePlayerFacade = facade;
         activePlayerRigidbody = rb;
