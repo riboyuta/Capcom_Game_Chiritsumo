@@ -453,8 +453,8 @@ MonoBehaviour:
   orthographicSize: 5
   overrideOrthographicSizeSmoothTime: 0
   orthographicSizeSmoothTime: 0.1
-  overrideRoomTransitionDuration: 0
-  roomTransitionDuration: 0.2
+  overrideRoomTransitionDuration: 1
+  roomTransitionDuration: 1
 --- !u!1 &382794040
 GameObject:
   m_ObjectHideFlags: 0
@@ -1448,7 +1448,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d57d6a31c87bc1a44aee7d296782fec0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CheckpointSystem
-  initialCheckpoint: {fileID: 1097650500}
 --- !u!4 &1097650500
 Transform:
   m_ObjectHideFlags: 0
@@ -1956,12 +1955,6 @@ MonoBehaviour:
       cornerCorrectionDistance: 0.1
       cornerCorrectionUpCheckDistance: 0.18
       cornerCorrectionProbeCount: 4
-  healthSettings:
-    maxHealth: 3
-    invincibilityDuration: 1
-    invincible: 0
-    debugRequestDeath: 0
-    debugRequestHazardDeath: 0
   checkpointSystem: {fileID: 1097650499}
   stageResetSystem: {fileID: 1244627606}
   playerCameraController: {fileID: 1265851343}
@@ -2319,8 +2312,8 @@ MonoBehaviour:
   orthographicSize: 7
   overrideOrthographicSizeSmoothTime: 0
   orthographicSizeSmoothTime: 0.1
-  overrideRoomTransitionDuration: 0
-  roomTransitionDuration: 0.2
+  overrideRoomTransitionDuration: 1
+  roomTransitionDuration: 1
 --- !u!1 &1394137882
 GameObject:
   m_ObjectHideFlags: 0
@@ -2413,7 +2406,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0298a361fda381948bcb9ef1e9c3ec5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazardVolume
-  targetTag: Player
 --- !u!65 &1622462693
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2833,7 +2825,7 @@ MonoBehaviour:
   playerController: {fileID: 1259927090}
   playerFacade: {fileID: 1259927095}
   playerCameraController: {fileID: 1265851343}
-  checkpointSystem: {fileID: 1097650499}
+  checkpointSystem: {fileID: 0}
   stageResetSystem: {fileID: 1244627606}
   transitionEpsilon: 0.5
   requireMatchingVelocitySign: 1
