@@ -1829,7 +1829,8 @@ MonoBehaviour:
     localOffset: {x: 0, y: 0, z: 0}
   dashClip:
     enabled: 1
-    sprites: []
+    sprites:
+    - {fileID: 1441946917, guid: ad1e1244b7d90d740a91f7892935a8bf, type: 3}
     startFrame: 0
     endFrame: 0
     fps: 0
@@ -4339,6 +4340,8 @@ MonoBehaviour:
   smoothTimeX: 0.2
   smoothTimeY: 0.2
   orthographicSizeSmoothTime: 0.2
+  defaultRoomTransitionDuration: 0.2
+  roomTransitionCompleteDistance: 0.05
   drawDebugGizmos: 1
   logViewportPosition: 1
 --- !u!114 &886866406
@@ -6041,6 +6044,9 @@ MonoBehaviour:
       airAcceleration: 28
       airTurnAcceleration: 40
       airDeceleration: 12
+      landingControlAssistTime: 0.06
+      landingGroundAccelerationMultiplier: 1.15
+      landingGroundDecelerationMultiplier: 1.35
     jump:
       jumpVelocity: 14
       gravityScale: 3
@@ -6048,6 +6054,9 @@ MonoBehaviour:
       maxJumpHoldTime: 0.12
       riseGravityMultiplier: 1
       jumpCutMultiplier: 0.5
+      apexThreshold: 2
+      apexGravityMultiplier: 0.75
+      apexHorizontalControlMultiplier: 1.25
       useCoyoteTime: 1
       coyoteTime: 0.1
       useJumpBuffer: 1
@@ -6070,18 +6079,43 @@ MonoBehaviour:
       useWallSlide: 1
       wallSlideMaxSpeed: 3
       useWallGrab: 1
+      wallGrabMaxHoldTime: 7
+      wallGrabIdleDrainPerSecond: 1
+      wallGrabClimbDrainPerSecond: 1.8
+      wallGrabJumpCost: 2.5
       wallGrabVerticalSpeed: 0
+      wallGrabEnterDistance: 0.04
+      wallGrabExitDistance: 0.06
+      wallClimbUpSpeed: 3
+      wallClimbDownSpeed: 2.5
+      wallClimbInputThreshold: 0.1
+      wallGrabJumpVerticalVelocity: 12.5
+      wallGrabJumpHorizontalLockTime: 0.08
+      wallGrabJumpReattachLockTime: 0.18
       useWallKick: 1
       wallJumpHorizontalVelocity: 8
       wallJumpVerticalVelocity: 10.5
       wallJumpControlLockTime: 0.09
       wallReattachLockTime: 0.12
+      wallDetachGraceTime: 0.08
+      useLedgeClimb: 1
+      ledgeDetectForwardDistance: 0.4
+      ledgeDetectUpDistance: 0.6
+      ledgeGroundCheckDistance: 0.5
+      ledgeClimbDuration: 0.35
+      ledgeClimbForwardOffset: 0.8
+      ledgeClimbUpOffset: 0.3
     dash:
       useDash: 1
       speed: 18
       duration: 0.13
       gravityMultiplier: 0
       restoreStartVerticalVelocity: 0
+      upwardDashEndVerticalSpeedClamp: 7
+      dashEndJumpCutLockTime: 0.05
+      dashEndHorizontalCarryMultiplier: 0.6
+      useDashCornerCorrection: 1
+      dashCornerCorrectionUpDistance: 0.12
       allowAirDash: 1
       maxCharges: 1
       useGroundRefill: 1
@@ -6098,6 +6132,10 @@ MonoBehaviour:
       diagonalAssistAngle: 8
     inputAssist:
       moveInputGamepadDeadZone: 0.2
+      useCornerCorrection: 1
+      cornerCorrectionDistance: 0.1
+      cornerCorrectionUpCheckDistance: 0.18
+      cornerCorrectionProbeCount: 4
   healthSettings:
     maxHealth: 3
     invincibilityDuration: 1
@@ -10719,6 +10757,8 @@ MonoBehaviour:
   smoothTimeX: 0.2
   smoothTimeY: 0.2
   orthographicSizeSmoothTime: 0.2
+  defaultRoomTransitionDuration: 0.2
+  roomTransitionCompleteDistance: 0.05
   drawDebugGizmos: 1
   logViewportPosition: 0
 --- !u!1660057539 &9223372036854775807

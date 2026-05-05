@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 1107865337994696070}
   - component: {fileID: 3277351766638840673}
   - component: {fileID: 4486471173883027432}
+  - component: {fileID: -5520412622669580496}
   m_Layer: 0
   m_Name: PlayerRoot
   m_TagString: Player
@@ -118,20 +119,26 @@ MonoBehaviour:
       _gamepadButton: 11
   movementSettings:
     move:
-      maxSpeed: 8.2
+      maxSpeed: 11.2
       groundAcceleration: 78
       groundTurnAcceleration: 108
       groundDeceleration: 92
       airAcceleration: 28
       airTurnAcceleration: 40
       airDeceleration: 12
+      landingControlAssistTime: 0.06
+      landingGroundAccelerationMultiplier: 1.15
+      landingGroundDecelerationMultiplier: 1.35
     jump:
-      jumpVelocity: 14
+      jumpVelocity: 15
       gravityScale: 3
       useVariableJump: 1
       maxJumpHoldTime: 0.12
       riseGravityMultiplier: 1
       jumpCutMultiplier: 0.5
+      apexThreshold: 2
+      apexGravityMultiplier: 0.75
+      apexHorizontalControlMultiplier: 1.25
       useCoyoteTime: 1
       coyoteTime: 0.1
       useJumpBuffer: 1
@@ -154,18 +161,43 @@ MonoBehaviour:
       useWallSlide: 1
       wallSlideMaxSpeed: 3
       useWallGrab: 1
+      wallGrabMaxHoldTime: 7
+      wallGrabIdleDrainPerSecond: 1
+      wallGrabClimbDrainPerSecond: 1.8
+      wallGrabJumpCost: 2.5
       wallGrabVerticalSpeed: 0
+      wallGrabEnterDistance: 0.04
+      wallGrabExitDistance: 0.06
+      wallClimbUpSpeed: 3
+      wallClimbDownSpeed: 2.5
+      wallClimbInputThreshold: 0.1
+      wallGrabJumpVerticalVelocity: 12.5
+      wallGrabJumpHorizontalLockTime: 0.08
+      wallGrabJumpReattachLockTime: 0.18
       useWallKick: 1
       wallJumpHorizontalVelocity: 8
       wallJumpVerticalVelocity: 10.5
       wallJumpControlLockTime: 0.09
       wallReattachLockTime: 0.12
+      wallDetachGraceTime: 0.08
+      useLedgeClimb: 1
+      ledgeDetectForwardDistance: 0.4
+      ledgeDetectUpDistance: 0.6
+      ledgeGroundCheckDistance: 0.5
+      ledgeClimbDuration: 0.35
+      ledgeClimbForwardOffset: 0.8
+      ledgeClimbUpOffset: 0.3
     dash:
       useDash: 1
-      speed: 18
-      duration: 0.13
+      speed: 28
+      duration: 0.17
       gravityMultiplier: 0
       restoreStartVerticalVelocity: 0
+      upwardDashEndVerticalSpeedClamp: 7
+      dashEndJumpCutLockTime: 0.05
+      dashEndHorizontalCarryMultiplier: 0.6
+      useDashCornerCorrection: 1
+      dashCornerCorrectionUpDistance: 0.12
       allowAirDash: 1
       maxCharges: 1
       useGroundRefill: 1
@@ -182,12 +214,10 @@ MonoBehaviour:
       diagonalAssistAngle: 8
     inputAssist:
       moveInputGamepadDeadZone: 0.2
-  healthSettings:
-    maxHealth: 3
-    invincibilityDuration: 1
-    invincible: 0
-    debugRequestDeath: 0
-    debugRequestHazardDeath: 0
+      useCornerCorrection: 1
+      cornerCorrectionDistance: 0.1
+      cornerCorrectionUpCheckDistance: 0.18
+      cornerCorrectionProbeCount: 4
   checkpointSystem: {fileID: 0}
   stageResetSystem: {fileID: 0}
   playerCameraController: {fileID: 0}
@@ -324,6 +354,18 @@ MonoBehaviour:
   debugPathColor: {r: 1, g: 0, b: 1, a: 1}
   lastRecordedTime: 0
   debugHistoryCount: 0
+--- !u!114 &-5520412622669580496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3202484194985546700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b64a9ecd6764a34f880f38d72ab4c9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFacade
 --- !u!1 &4743958302974860544
 GameObject:
   m_ObjectHideFlags: 0

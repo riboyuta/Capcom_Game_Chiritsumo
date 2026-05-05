@@ -79,8 +79,22 @@ public sealed class SpringPad : MonoBehaviour
         PlayerFacade facade = targetRb.GetComponent<PlayerFacade>();
         if (facade != null)
         {
+            // ステップ回数を回復させる
+            facade.TryRefillDash(DashRefillReason.Gimmick);
+
             Vector3 bounceVelocity = ComputeBounceVelocity(targetRb);
-            facade.ApplyFixedJump(bounceVelocity);
+
+            // Celesteのような横向きバネの挙動（強制移動）を実現するため、
+            // 「初速（bounceSpeed）で設定距離（bounceHeight）を移動するのにかかる時間」を計算し
+            // その時間だけプレイヤーの入力をロックする。
+            float effectiveGravity = Mathf.Abs(Physics.gravity.y) * gravityScale;
+            float bounceSpeed = Mathf.Sqrt(2f * effectiveGravity * bounceHeight);
+            float lockDuration = bounceSpeed > 0f ? bounceHeight / bounceSpeed : 0f;
+
+            // 短すぎたり長すぎたりしないように制限する（最低限の強制移動時間を確保）
+            lockDuration = Mathf.Clamp(lockDuration, 0.15f, 0.5f);
+
+            facade.ApplyFixedJump(bounceVelocity, lockDuration);
         }
         else
         {

@@ -78,7 +78,7 @@ MonoBehaviour:
   respawnInterval: 3
   vibrationIntensity: 0.05
   vibrationSpeed: 30.1
-  autoRespawn: 0
+  autoRespawn: 1
   anim:
   - {fileID: 5734361827506005056}
   - {fileID: 329206030620442584}
@@ -98,7 +98,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cbefe0605652694094dc606600ca1df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TileType
-  type: 9
+  tileDefinition:
+    tileID: 
+    prefab: {fileID: 0}
+    icon: {fileID: 0}
   gimmickType: 0
   gimmickID: 0
 --- !u!1001 &162753506554335068
