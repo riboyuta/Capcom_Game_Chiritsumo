@@ -78,7 +78,7 @@ MonoBehaviour:
   respawnInterval: 3
   vibrationIntensity: 0.05
   vibrationSpeed: 30.1
-  autoRespawn: 0
+  autoRespawn: 1
   anim:
   - {fileID: 5734361827506005056}
   - {fileID: 329206030620442584}
