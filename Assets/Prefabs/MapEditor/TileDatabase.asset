@@ -40,9 +40,9 @@ MonoBehaviour:
   - tileID: Pre02
     prefab: {fileID: 2624655085991756549, guid: 5ed4008508043b14e8fe2ae6b8f8aafe, type: 3}
     icon: {fileID: 2800000, guid: 13e897e8bdb7c1b44bdc4d330d63ac86, type: 3}
-  - tileID: 
-    prefab: {fileID: 0}
-    icon: {fileID: 0}
+  - tileID: Gimmick_KeyObject
+    prefab: {fileID: 7927706965222493839, guid: 266b78d911a637a4ebabe76d650eac89, type: 3}
+    icon: {fileID: 2800000, guid: e1356a6eabbf9bd45b3646ae47a6501f, type: 3}
   - tileID: 
     prefab: {fileID: 0}
     icon: {fileID: 0}
