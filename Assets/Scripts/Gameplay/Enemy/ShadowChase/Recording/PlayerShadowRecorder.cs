@@ -251,7 +251,6 @@ public sealed class PlayerShadowRecorder : MonoBehaviour
 
         result.isWallSliding = t < 0.5f ? a.isWallSliding : b.isWallSliding;
         result.isDashing = t < 0.5f ? a.isDashing : b.isDashing;
-        result.isFastFalling = t < 0.5f ? a.isFastFalling : b.isFastFalling;
 
         result.isActionLocked = t < 0.5f ? a.isActionLocked : b.isActionLocked;
         result.isDead = t < 0.5f ? a.isDead : b.isDead;

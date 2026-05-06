@@ -180,7 +180,6 @@ internal sealed class PlayerDashSystem
 
         onWallGrabExit?.Invoke(0);
         deps.RuntimeState.isDashing = true;
-        deps.RuntimeState.isFastFalling = false;
         deps.RuntimeState.dashTimer = deps.Settings.Dash.Duration;
         if (deps.RuntimeState.isGrounded)
         {

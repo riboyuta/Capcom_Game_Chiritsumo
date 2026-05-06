@@ -55,7 +55,6 @@ public sealed partial class PlayerController
             runtimeState.isGrounded,
             runtimeState.isWallSliding,
             runtimeState.isDashing,
-            runtimeState.isFastFalling,
             justLandedThisFrame,
             locomotionSystem != null && locomotionSystem.JustJumpedThisFrame,
             locomotionSystem != null && locomotionSystem.JustWallJumpedThisFrame,
@@ -82,9 +81,6 @@ public sealed partial class PlayerController
 
         // 現在ダッシュ中か。
         public readonly bool isDashing;
-
-        // 現在急降下中か。
-        public readonly bool isFastFalling;
 
         // 単発イベント状態 -----------------
 
@@ -128,7 +124,6 @@ public sealed partial class PlayerController
             bool isGrounded,
             bool isWallSliding,
             bool isDashing,
-            bool isFastFalling,
             bool justLanded,
             bool justJumped,
             bool justWallJumped,
@@ -141,7 +136,6 @@ public sealed partial class PlayerController
             this.isGrounded = isGrounded;
             this.isWallSliding = isWallSliding;
             this.isDashing = isDashing;
-            this.isFastFalling = isFastFalling;
             this.justLanded = justLanded;
             this.justJumped = justJumped;
             this.justWallJumped = justWallJumped;

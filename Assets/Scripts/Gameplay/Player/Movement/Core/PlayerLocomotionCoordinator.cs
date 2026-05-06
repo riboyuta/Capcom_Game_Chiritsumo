@@ -218,12 +218,6 @@ internal sealed class PlayerLocomotionCoordinator
         wallActionSystem.ApplyWallSlide();
     }
 
-    // 急降下開始条件を満たす場合に状態を切り替える。
-    internal void TryStartFastFall()
-    {
-        movementCore.TryStartFastFall();
-    }
-
     // 壁捕まり状態の進入・離脱判定を更新する。
     internal void UpdateWallGrabState()
     {

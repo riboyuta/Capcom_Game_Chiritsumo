@@ -34,9 +34,6 @@ internal sealed class PlayerRuntimeState
     // 現在ダッシュ中かどうか。
     public bool isDashing;
 
-    // 現在急降下中かどうか。
-    public bool isFastFalling;
-
     // ダッシュ残り時間。
     public float dashTimer;
 

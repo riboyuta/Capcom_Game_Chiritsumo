@@ -95,7 +95,6 @@ internal sealed class PlayerLocomotionSystem
     // ============================================================
 
     internal void ApplyWallSlide() => coordinator.ApplyWallSlide();
-    internal void TryStartFastFall() => coordinator.TryStartFastFall();
     internal void UpdateWallGrabState() => coordinator.UpdateWallGrabState();
     internal void ApplyWallGrabMovement() => coordinator.ApplyWallGrabMovement();
 

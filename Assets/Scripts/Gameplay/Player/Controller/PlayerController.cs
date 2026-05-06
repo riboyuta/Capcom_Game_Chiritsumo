@@ -486,11 +486,6 @@ public sealed partial class PlayerController : MonoBehaviour
         // ApplyJump による isGrounded 上書き前に、着地イベント用の情報を保存する。
         CaptureLandingSnapshot();
 
-        // 接地しているなら急降下状態を解除する。
-        if (runtimeState.isGrounded)
-        {
-            runtimeState.isFastFalling = false;
-        }
 
         // 物理フレームで壁接触状態を更新する。
         probeSensor.CheckWallContact(
@@ -580,11 +575,10 @@ public sealed partial class PlayerController : MonoBehaviour
         }
 
         // 通常移動フロー。
-        // 横移動、ジャンプ、可変ジャンプ、急降下、壁滑り、追加重力を順に適用する。
+        // 横移動、ジャンプ、可変ジャンプ、壁滑り、追加重力を順に適用する。
         locomotionSystem.ApplyHorizontalMovement(deltaTime);
         locomotionSystem.ApplyJump();
         locomotionSystem.ApplyVariableJumpCut();
-        locomotionSystem.TryStartFastFall();
         locomotionSystem.ApplyWallSlide();
         locomotionSystem.ApplyCustomGravity();
 

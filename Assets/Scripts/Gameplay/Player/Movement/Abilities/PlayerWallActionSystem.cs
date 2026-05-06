@@ -135,7 +135,6 @@ internal sealed class PlayerWallActionSystem
         }
 
         deps.RuntimeState.isWallSliding = true;
-        deps.RuntimeState.isFastFalling = false;
     }
 
     // ============================================================
@@ -294,7 +293,6 @@ internal sealed class PlayerWallActionSystem
         deps.RuntimeState.isWallGrabbing = true;
         deps.RuntimeState.wallGrabSide = deps.RuntimeState.wallSide;
         deps.RuntimeState.isWallSliding = false;
-        deps.RuntimeState.isFastFalling = false;
 
         deps.Rb.useGravity = false;
 
@@ -347,7 +345,6 @@ internal sealed class PlayerWallActionSystem
         deps.Rb.linearVelocity = velocity;
 
         deps.RuntimeState.isWallSliding = false;
-        deps.RuntimeState.isFastFalling = false;
     }
 
     // ============================================================
@@ -418,7 +415,6 @@ internal sealed class PlayerWallActionSystem
 
         deps.RuntimeState.isGrounded = false;
         deps.RuntimeState.isWallSliding = false;
-        deps.RuntimeState.isFastFalling = false;
 
         deps.PlayWallKickVibration?.Invoke();
         deps.PlayWallKickSound?.Invoke();

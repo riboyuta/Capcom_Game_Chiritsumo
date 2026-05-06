@@ -58,7 +58,6 @@ public sealed class PlayerDebugView : MonoBehaviour
         DrawLine($"壁接触中: {playerController.IsTouchingWall}", startX, ref y, lineHeight);
         DrawLine($"壁方向: {playerController.WallSide}", startX, ref y, lineHeight);
         DrawLine($"壁滑り中: {playerController.IsWallSliding}", startX, ref y, lineHeight);
-        DrawLine($"急降下中: {playerController.IsFastFalling}", startX, ref y, lineHeight);
         DrawLine($"壁キック入力ロック: {playerController.WallJumpControlLockTimer:F3}", startX, ref y, lineHeight);
         DrawLine($"Wall Reattach Lock: {playerController.WallReattachLockTimer:F3}", startX, ref y, lineHeight);
         DrawLine($"向き: {playerController.Facing}", startX, ref y, lineHeight);

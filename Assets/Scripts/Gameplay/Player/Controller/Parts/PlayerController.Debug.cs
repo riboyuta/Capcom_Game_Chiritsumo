@@ -56,9 +56,6 @@ public sealed partial class PlayerController
     // デバッグ表示向けのダッシュ状態。
     public bool IsDashing => runtimeState.isDashing;
 
-    // デバッグ表示向けの急降下状態。
-    public bool IsFastFalling => runtimeState.isFastFalling;
-
     // デバッグ表示向けのダッシュ残り時間。
     public float DashTimer => runtimeState.dashTimer;
 

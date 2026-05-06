@@ -323,7 +323,6 @@ internal sealed class PlayerDeathCoordinator
         runtimeState.wallReattachLockTimer = 0.0f;
         runtimeState.isWallSliding = false;
         runtimeState.isDashing = false;
-        runtimeState.isFastFalling = false;
         runtimeState.dashTimer = 0.0f;
         runtimeState.groundDashCooldownTimer = 0.0f;
         runtimeState.currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);

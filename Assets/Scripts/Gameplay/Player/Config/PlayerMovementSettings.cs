@@ -198,25 +198,8 @@ public sealed class FallSettings
     [Min(0f)]
     [SerializeField] float maxSpeed = 20f;
 
-    [Header("急降下を使う")]
-    [Tooltip("下入力などで通常より速く落下する急降下機能を有効にします。")]
-    [SerializeField] bool useFastFall = true;
-
-    [Header("急降下時の落下重力倍率")]
-    [Tooltip("急降下中に掛ける重力倍率です。通常落下より強くして、意図的に素早く落ちる感触を作ります。")]
-    [Min(1f)]
-    [SerializeField] float fastFallGravityMultiplier = 2.6f;
-
-    [Header("急降下時の最大落下速度")]
-    [Tooltip("急降下中の下方向速度の上限です。通常落下より大きく設定して、速い落下を作る用途です。")]
-    [Min(0f)]
-    [SerializeField] float fastFallMaxSpeed = 28f;
-
     public float GravityMultiplier => gravityMultiplier;
     public float MaxSpeed => maxSpeed;
-    public bool UseFastFall => useFastFall;
-    public float FastFallGravityMultiplier => fastFallGravityMultiplier;
-    public float FastFallMaxSpeed => fastFallMaxSpeed;
 }
 
 [Serializable]
