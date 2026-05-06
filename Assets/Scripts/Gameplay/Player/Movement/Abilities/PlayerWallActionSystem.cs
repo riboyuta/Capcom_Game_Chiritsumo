@@ -180,7 +180,7 @@ internal sealed class PlayerWallActionSystem
             return false;
         }
 
-        if (deps.IsActionLocked() || deps.RuntimeState.isGrounded || deps.RuntimeState.isDashing || deps.IsExternallyControlled())
+        if (deps.IsActionLocked() || deps.RuntimeState.isDashing || deps.IsExternallyControlled())
         {
             return false;
         }
@@ -237,7 +237,7 @@ internal sealed class PlayerWallActionSystem
             return true;
         }
 
-        if (deps.RuntimeState.isGrounded || deps.RuntimeState.isDashing || deps.IsExternallyControlled())
+        if (deps.RuntimeState.isDashing || deps.IsExternallyControlled())
         {
             return true;
         }
