@@ -41,6 +41,13 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
         }
 
         visualRenderers = visualTransform.GetComponentsInChildren<Renderer>();
+
+        // MeshRenderer のソーティングを設定する
+        foreach (var r in GetComponentsInChildren<Renderer>())
+        {
+            r.sortingLayerName = "UseGimmick";
+            r.sortingOrder = 0;
+        }
     }
 
     private void Update()
@@ -58,6 +65,18 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
     }
 
     private void OnTriggerEnter(Collider other)
+    {
+        TryRefillFromCollider(other);
+    }
+
+    // アイテムと重なった状態でダッシュを使った場合も回収できるよう Stay でも判定する。
+    private void OnTriggerStay(Collider other)
+    {
+        TryRefillFromCollider(other);
+    }
+
+    // コライダーに触れているプレイヤーへのダッシュ回復を試みる共通処理。
+    private void TryRefillFromCollider(Collider other)
     {
         if (!isAvailable) return;
         if (!other.CompareTag("Player")) return;
