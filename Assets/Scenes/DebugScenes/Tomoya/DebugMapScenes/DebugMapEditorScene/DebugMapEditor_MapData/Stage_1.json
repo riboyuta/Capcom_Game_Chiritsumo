@@ -73,14 +73,6 @@
             "gimmickID": 0
         },
         {
-            "x": 243,
-            "y": 18,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 83,
             "y": -3,
             "z": 0,
@@ -241,14 +233,6 @@
             "gimmickID": 0
         },
         {
-            "x": 243,
-            "y": 9,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 187,
             "y": 15,
             "z": 0,
@@ -313,10 +297,10 @@
             "gimmickID": 0
         },
         {
-            "x": 250,
+            "x": 252,
             "y": -1,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "Gimmick_Spikeblock",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1156,7 +1140,7 @@
             "x": 111,
             "y": 13,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "Gimmick_Spikeblock",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -1489,7 +1473,7 @@
             "gimmickID": 0
         },
         {
-            "x": 245,
+            "x": 252,
             "y": 2,
             "z": 0,
             "tileID": "BreakbleFloor_Cube",
@@ -1649,7 +1633,7 @@
             "gimmickID": 0
         },
         {
-            "x": 244,
+            "x": 249,
             "y": 12,
             "z": 0,
             "tileID": "ground",
@@ -1809,8 +1793,8 @@
             "gimmickID": 0
         },
         {
-            "x": 244,
-            "y": 11,
+            "x": 248,
+            "y": 12,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -2004,7 +1988,7 @@
             "x": 251,
             "y": -1,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "Gimmick_Spikeblock",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -2329,8 +2313,8 @@
             "gimmickID": 0
         },
         {
-            "x": 244,
-            "y": 13,
+            "x": 247,
+            "y": 10,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -2721,10 +2705,10 @@
             "gimmickID": 0
         },
         {
-            "x": 252,
-            "y": 1,
+            "x": 250,
+            "y": 2,
             "z": 0,
-            "tileID": "Gimmick_Spikeblock",
+            "tileID": "BreakbleFloor_Cube",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -3033,8 +3017,8 @@
             "gimmickID": 0
         },
         {
-            "x": 244,
-            "y": 10,
+            "x": 246,
+            "y": 9,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -3697,10 +3681,10 @@
             "gimmickID": 0
         },
         {
-            "x": 252,
-            "y": 0,
+            "x": 249,
+            "y": 2,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "BreakbleFloor_Cube",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -4457,10 +4441,10 @@
             "gimmickID": 0
         },
         {
-            "x": 252,
+            "x": 250,
             "y": -1,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "Gimmick_Spikeblock",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -5681,14 +5665,6 @@
             "gimmickID": 0
         },
         {
-            "x": 244,
-            "y": 15,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 54,
             "y": 1,
             "z": 0,
@@ -6067,14 +6043,6 @@
         {
             "x": 124,
             "y": -3,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 243,
-            "y": 16,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -6473,14 +6441,6 @@
             "gimmickID": 0
         },
         {
-            "x": 244,
-            "y": 16,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 69,
             "y": 4,
             "z": 0,
@@ -6763,14 +6723,6 @@
         {
             "x": 110,
             "y": 1,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 244,
-            "y": 17,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -7786,9 +7738,9 @@
         },
         {
             "x": 251,
-            "y": 0,
+            "y": 2,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "BreakbleFloor_Cube",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -7821,14 +7773,6 @@
             "y": 16,
             "z": 0,
             "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 250,
-            "y": 1,
-            "z": 0,
-            "tileID": "Gimmick_Spikeblock",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -7893,14 +7837,6 @@
             "y": 16,
             "z": 0,
             "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 251,
-            "y": 1,
-            "z": 0,
-            "tileID": "Gimmick_Spikeblock",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -8265,14 +8201,6 @@
             "gimmickID": 0
         },
         {
-            "x": 241,
-            "y": 19,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 230,
             "y": -3,
             "z": 0,
@@ -8417,10 +8345,10 @@
             "gimmickID": 0
         },
         {
-            "x": 111,
-            "y": 12,
+            "x": 109,
+            "y": 13,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "Gimmick_Spikeblock",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -8841,14 +8769,6 @@
             "gimmickID": 0
         },
         {
-            "x": 243,
-            "y": 17,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 207,
             "y": 14,
             "z": 0,
@@ -9105,8 +9025,8 @@
             "gimmickID": 0
         },
         {
-            "x": 110,
-            "y": 12,
+            "x": 245,
+            "y": 7,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -10265,14 +10185,6 @@
             "gimmickID": 0
         },
         {
-            "x": 244,
-            "y": 2,
-            "z": 0,
-            "tileID": "BreakbleFloor_Cube",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 157,
             "y": 16,
             "z": 0,
@@ -10753,8 +10665,8 @@
             "gimmickID": 0
         },
         {
-            "x": 253,
-            "y": 0,
+            "x": 138,
+            "y": 4,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -10833,8 +10745,8 @@
             "gimmickID": 0
         },
         {
-            "x": 242,
-            "y": 19,
+            "x": 245,
+            "y": 8,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -10955,14 +10867,6 @@
         {
             "x": 131,
             "y": -3,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 243,
-            "y": 14,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -11137,10 +11041,10 @@
             "gimmickID": 0
         },
         {
-            "x": 112,
+            "x": 110,
             "y": 13,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "Gimmick_Spikeblock",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -11876,7 +11780,7 @@
             "x": 253,
             "y": -1,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "Gimmick_Spikeblock",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -12473,26 +12377,10 @@
             "gimmickID": 0
         },
         {
-            "x": 243,
-            "y": 11,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 9,
             "y": -2,
             "z": 0,
             "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": 1,
-            "z": 0,
-            "tileID": "Gimmick_Spikeblock",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -12729,14 +12617,6 @@
             "gimmickID": 0
         },
         {
-            "x": 243,
-            "y": 10,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 247,
             "y": -2,
             "z": 0,
@@ -12867,14 +12747,6 @@
         {
             "x": 245,
             "y": 19,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 250,
-            "y": 0,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -13865,8 +13737,8 @@
             "gimmickID": 0
         },
         {
-            "x": 239,
-            "y": 8,
+            "x": 240,
+            "y": 10,
             "z": 0,
             "tileID": "Gimmick_Dashrefill",
             "gimmickType": 0,
@@ -14187,14 +14059,6 @@
         {
             "x": 54,
             "y": -1,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 243,
-            "y": 12,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -14673,8 +14537,8 @@
             "gimmickID": 0
         },
         {
-            "x": 244,
-            "y": 14,
+            "x": 246,
+            "y": 8,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -15097,18 +14961,10 @@
             "gimmickID": 0
         },
         {
-            "x": 110,
+            "x": 112,
             "y": 13,
             "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 138,
-            "y": 4,
-            "z": 0,
-            "tileID": "ground",
+            "tileID": "Gimmick_Spikeblock",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -15293,14 +15149,6 @@
             "y": -3,
             "z": 0,
             "tileID": "Pre02",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 243,
-            "y": 15,
-            "z": 0,
-            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -16009,14 +15857,6 @@
             "gimmickID": 0
         },
         {
-            "x": 243,
-            "y": 13,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 178,
             "y": -1,
             "z": 0,
@@ -16073,8 +15913,8 @@
             "gimmickID": 0
         },
         {
-            "x": 242,
-            "y": 18,
+            "x": 245,
+            "y": 9,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -47531,6 +47371,30 @@
         {
             "x": 478,
             "y": 64,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 246,
+            "y": 10,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 247,
+            "y": 12,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 247,
+            "y": 11,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
