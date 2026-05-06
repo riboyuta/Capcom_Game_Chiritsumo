@@ -42,6 +42,9 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: UseGimmick
+    uniqueID: 2988768659
+    locked: 0
   - name: Player
     uniqueID: 3188537091
     locked: 0

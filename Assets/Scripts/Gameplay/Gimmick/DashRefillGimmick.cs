@@ -45,7 +45,7 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
         // MeshRenderer のソーティングを設定する
         foreach (var r in GetComponentsInChildren<Renderer>())
         {
-            r.sortingLayerName = "Gimmick";
+            r.sortingLayerName = "UseGimmick";
             r.sortingOrder = 0;
         }
     }
