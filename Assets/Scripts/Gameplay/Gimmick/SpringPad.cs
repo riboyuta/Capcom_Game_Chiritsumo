@@ -84,15 +84,21 @@ public sealed class SpringPad : MonoBehaviour
 
             Vector3 bounceVelocity = ComputeBounceVelocity(targetRb);
 
-            // Celesteのような横向きバネの挙動（強制移動）を実現するため、
-            // 「初速（bounceSpeed）で設定距離（bounceHeight）を移動するのにかかる時間」を計算し
-            // その時間だけプレイヤーの入力をロックする。
-            float effectiveGravity = Mathf.Abs(Physics.gravity.y) * gravityScale;
-            float bounceSpeed = Mathf.Sqrt(2f * effectiveGravity * bounceHeight);
-            float lockDuration = bounceSpeed > 0f ? bounceHeight / bounceSpeed : 0f;
+            // 入力ロックは横向き壁バネ（Celeste風）の場合のみ適用する。
+            // 床バネ（上向き）では不要なため 0 にし、接触前後の慣性変化を防ぐ。
+            // bounceDir の水平成分が大きいほど横向きバネと判定する。
+            Vector3 bounceDir = transform.up.normalized;
+            float horizontalFraction = new Vector2(bounceDir.x, bounceDir.z).magnitude;
+            float lockDuration = 0f;
 
-            // 短すぎたり長すぎたりしないように制限する（最低限の強制移動時間を確保）
-            lockDuration = Mathf.Clamp(lockDuration, 0.15f, 0.5f);
+            if (horizontalFraction > 0.5f)
+            {
+                // 横向きバネ: 「初速で設定距離を移動するのにかかる時間」を入力ロック時間とする。
+                float effectiveGravity = Mathf.Abs(Physics.gravity.y) * gravityScale;
+                float bounceSpeed = Mathf.Sqrt(2f * effectiveGravity * bounceHeight);
+                lockDuration = bounceSpeed > 0f ? bounceHeight / bounceSpeed : 0f;
+                lockDuration = Mathf.Clamp(lockDuration, 0.15f, 0.5f);
+            }
 
             facade.ApplyFixedJump(bounceVelocity, lockDuration);
         }
