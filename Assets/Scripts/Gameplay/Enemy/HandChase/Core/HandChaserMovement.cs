@@ -27,10 +27,34 @@ public sealed class HandChaserMovement : MonoBehaviour
     private Rigidbody rb;
     private bool isActive;
 
+    // 初期状態のキャッシュ（リセット用）
+    private float initialMoveSpeed;
+    private MoveDirection initialMoveDirection;
+    private Vector3 initialCustomMoveAxis;
+    private bool hasCapturedInitialState;
+
     public bool IsActive
     {
         get => isActive;
         set => isActive = value;
+    }
+
+    public float MoveSpeed
+    {
+        get => moveSpeed;
+        set => moveSpeed = Mathf.Max(0f, value);
+    }
+
+    public MoveDirection Direction
+    {
+        get => moveDirection;
+        set => moveDirection = value;
+    }
+
+    public Vector3 CustomMoveAxis
+    {
+        get => customMoveAxis;
+        set => customMoveAxis = value.sqrMagnitude > 0f ? value.normalized : Vector3.right;
     }
 
     private void Awake()
@@ -42,6 +66,9 @@ public sealed class HandChaserMovement : MonoBehaviour
             rb.isKinematic = true;  // MovePositionで移動するためKinematic
             rb.useGravity = false;  // 重力は使わない
         }
+
+        // 初期状態をキャッシュ
+        CaptureInitialState();
     }
 
     private void OnValidate()
@@ -108,5 +135,26 @@ public sealed class HandChaserMovement : MonoBehaviour
     public void SetPlayerTarget(Transform player)
     {
         // プレイヤーの参照は不要になったが、互換性のため空実装を残す
+    }
+
+    // 現在の設定を初期状態としてキャッシュ
+    public void CaptureInitialState()
+    {
+        if (hasCapturedInitialState)
+            return;
+
+        initialMoveSpeed = moveSpeed;
+        initialMoveDirection = moveDirection;
+        initialCustomMoveAxis = customMoveAxis;
+        hasCapturedInitialState = true;
+    }
+
+    // 初期状態にリセット
+    public void ResetToInitialState()
+    {
+        moveSpeed = initialMoveSpeed;
+        moveDirection = initialMoveDirection;
+        customMoveAxis = initialCustomMoveAxis;
+        isActive = false;
     }
 }
