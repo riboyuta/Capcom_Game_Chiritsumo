@@ -1,42 +1,30 @@
 using UnityEngine;
 
+public enum MoveDirection
+{
+    Right,   // 右
+    Left,    // 左
+    Up,      // 上
+    Down,    // 下
+    Custom   // カスタム
+}
+
 [RequireComponent(typeof(Rigidbody))]
 public sealed class HandChaserMovement : MonoBehaviour
 {
-    [Header("基準移動速度")]
-    [Tooltip("基準となる移動速度です。")]
+    [Header("移動速度")]
+    [Tooltip("移動速度です。")]
     [SerializeField, Min(0f)] private float moveSpeed = 2.0f;
 
     [Header("移動方向")]
-    [Tooltip("移動方向です。正規化されます。")]
-    [SerializeField] private Vector3 moveAxis = Vector3.right;
+    [Tooltip("移動方向を選択します。")]
+    [SerializeField] private MoveDirection moveDirection = MoveDirection.Right;
 
-    [Header("距離ベース速度使用")]
-    [Tooltip("true のとき、プレイヤーとの距離に応じて移動速度を変化させます。")]
-    [SerializeField] private bool useDistanceBasedSpeed = true;
-
-    [Header("最低移動速度")]
-    [Tooltip("プレイヤーに十分近いときの最低移動速度です。")]
-    [SerializeField, Min(0f)] private float minMoveSpeed = 1.5f;
-
-    [Header("最大移動速度")]
-    [Tooltip("プレイヤーから十分離れているときの最大移動速度です。")]
-    [SerializeField, Min(0f)] private float maxMoveSpeed = 4.5f;
-
-    [Header("最大速度距離")]
-    [Tooltip("この X 距離以上で最大移動速度になります。")]
-    [SerializeField, Min(0.01f)] private float distanceForMaxSpeed = 10.0f;
-
-    [Header("最低速度距離")]
-    [Tooltip("この X 距離以下では最低移動速度のままにします。")]
-    [SerializeField, Min(0f)] private float distanceForMinSpeed = 1.5f;
-
-    [Header("Gizmo表示")]
-    [Tooltip("移動速度範囲をGizmoで表示します。")]
-    [SerializeField] private bool showSpeedRangeGizmos = true;
+    [Header("カスタム移動方向")]
+    [Tooltip("MoveDirection が Custom の場合に使用される移動方向です。")]
+    [SerializeField] private Vector3 customMoveAxis = Vector3.right;
 
     private Rigidbody rb;
-    private Transform playerTransform;
     private bool isActive;
 
     public bool IsActive
@@ -60,27 +48,30 @@ public sealed class HandChaserMovement : MonoBehaviour
     {
         // 各パラメータを有効な範囲に制限
         moveSpeed = Mathf.Max(0f, moveSpeed);
-        minMoveSpeed = Mathf.Max(0f, minMoveSpeed);
-        maxMoveSpeed = Mathf.Max(0f, maxMoveSpeed);
-        distanceForMaxSpeed = Mathf.Max(0.01f, distanceForMaxSpeed);
-        distanceForMinSpeed = Mathf.Max(0f, distanceForMinSpeed);
 
-        // 最大速度が最小速度より小さい場合は修正
-        if (maxMoveSpeed < minMoveSpeed)
+        // カスタム移動軸を正規化
+        if (customMoveAxis.sqrMagnitude > 0f)
         {
-            maxMoveSpeed = minMoveSpeed;
+            customMoveAxis = customMoveAxis.normalized;
         }
+    }
 
-        // 最小距離が最大距離より大きい場合は修正
-        if (distanceForMinSpeed > distanceForMaxSpeed)
+    private Vector3 GetMoveAxis()
+    {
+        switch (moveDirection)
         {
-            distanceForMinSpeed = distanceForMaxSpeed;
-        }
-
-        // 移動軸を正規化
-        if (moveAxis.sqrMagnitude > 0f)
-        {
-            moveAxis = moveAxis.normalized;
+            case MoveDirection.Right:
+                return Vector3.right;
+            case MoveDirection.Left:
+                return Vector3.left;
+            case MoveDirection.Up:
+                return Vector3.up;
+            case MoveDirection.Down:
+                return Vector3.down;
+            case MoveDirection.Custom:
+                return customMoveAxis.normalized;
+            default:
+                return Vector3.right;
         }
     }
 
@@ -101,12 +92,12 @@ public sealed class HandChaserMovement : MonoBehaviour
             return;
         }
 
-        // 現在の移動速度を計算
-        float currentSpeed = GetCurrentMoveSpeed();
+        // 固定速度で移動
+        Vector3 moveAxis = GetMoveAxis();
         Vector3 before = rb.position;
-        Vector3 next = rb.position + moveAxis * (currentSpeed * Time.fixedDeltaTime);
+        Vector3 next = rb.position + moveAxis * (moveSpeed * Time.fixedDeltaTime);
 
-        Debug.Log($"[HandChaserMovement] before={before} next={next} axis={moveAxis} speed={currentSpeed} isKinematic={rb.isKinematic}", this);
+        Debug.Log($"[HandChaserMovement] before={before} next={next} axis={moveAxis} speed={moveSpeed} isKinematic={rb.isKinematic}", this);
 
         // Rigidbodyを移動
         rb.MovePosition(next);
@@ -116,76 +107,6 @@ public sealed class HandChaserMovement : MonoBehaviour
 
     public void SetPlayerTarget(Transform player)
     {
-        // プレイヤーの参照を保持（距離ベースの速度調整に使用）
-        playerTransform = player;
-    }
-
-    // 現在の移動速度を取得
-    public float GetCurrentMoveSpeed()
-    {
-        return CalculateBaseSpeed();
-    }
-
-    // プレイヤーとの距離に応じた基本移動速度を計算
-    private float CalculateBaseSpeed()
-    {
-        // 距離ベースの速度調整が無効、またはプレイヤーがいない場合は固定速度
-        if (!useDistanceBasedSpeed || playerTransform == null)
-        {
-            return moveSpeed;
-        }
-
-        // X軸での距離を計算
-        float dx = Mathf.Abs(playerTransform.position.x - transform.position.x);
-
-        // 最小距離以下なら最低速度
-        if (dx <= distanceForMinSpeed)
-        {
-            return minMoveSpeed;
-        }
-
-        // 距離に応じて速度を補間
-        float t = Mathf.InverseLerp(distanceForMinSpeed, distanceForMaxSpeed, dx);
-        return Mathf.Lerp(minMoveSpeed, maxMoveSpeed, t);
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        if (!showSpeedRangeGizmos)
-        {
-            return;
-        }
-
-        Vector3 origin = transform.position;
-
-        float minDist = Mathf.Max(0f, distanceForMinSpeed);
-        float maxDist = Mathf.Max(minDist, distanceForMaxSpeed);
-
-        float yOffset = 0.25f;
-        Vector3 leftMin = origin + Vector3.left * minDist + Vector3.up * yOffset;
-        Vector3 rightMin = origin + Vector3.right * minDist + Vector3.up * yOffset;
-
-        Vector3 leftMax = origin + Vector3.left * maxDist + Vector3.up * yOffset;
-        Vector3 rightMax = origin + Vector3.right * maxDist + Vector3.up * yOffset;
-
-        Vector3 lineTopOffset = Vector3.up * 1.5f;
-        Vector3 lineBottomOffset = Vector3.down * 1.5f;
-
-        // 最低速度範囲
-        Gizmos.color = Color.green;
-        Gizmos.DrawLine(leftMin, rightMin);
-        Gizmos.DrawLine(leftMin + lineBottomOffset, leftMin + lineTopOffset);
-        Gizmos.DrawLine(rightMin + lineBottomOffset, rightMin + lineTopOffset);
-
-        // 最大速度到達範囲
-        Gizmos.color = Color.red;
-        Gizmos.DrawLine(leftMax, rightMax);
-        Gizmos.DrawLine(leftMax + lineBottomOffset, leftMax + lineTopOffset);
-        Gizmos.DrawLine(rightMax + lineBottomOffset, rightMax + lineTopOffset);
-
-        // 中間補間エリア
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(leftMin, leftMax);
-        Gizmos.DrawLine(rightMin, rightMax);
+        // プレイヤーの参照は不要になったが、互換性のため空実装を残す
     }
 }

@@ -302,7 +302,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0298a361fda381948bcb9ef1e9c3ec5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazardVolume
-  targetTag: Player
 --- !u!65 &82181430
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1617,19 +1616,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f83a9b8631447004ebfb6ce2e53e2834, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StageLoader
-  tilePrefab:
-  - {fileID: 4101579719256972527, guid: 89bac87119c9094499d2c9cc7e6aa699, type: 3}
-  - {fileID: 7244324344399976800, guid: cadbf6dd5089b0642b6f05f493b3c9a0, type: 3}
-  - {fileID: 6453188548815068593, guid: ea1aa7c465805a5438d28ad7583abbec, type: 3}
-  - {fileID: 6453188548815068593, guid: 0ed0c3f08a1e5cf49b059f226de06797, type: 3}
-  - {fileID: 7938672335187472900, guid: 9e79bd3b8f943564396fb99368e75042, type: 3}
-  - {fileID: 2298395400156925019, guid: e2803883d6517f44e92f9332278f5313, type: 3}
-  - {fileID: 7338064284890883238, guid: 6e11940374d9c7742868f4bbaf43c64c, type: 3}
-  - {fileID: 5409637655077809295, guid: 42bf8138dc9c58a4cae9f73d44cb557a, type: 3}
-  - {fileID: 3699133495810676906, guid: 00f69c8dc354a9044993c6947a803638, type: 3}
-  stageNumber: 2
-  mapFolder: Scenes/DebugScenes/Koki/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData
-  mapRoot: {fileID: 861842949}
 --- !u!4 &861842949
 Transform:
   m_ObjectHideFlags: 0
@@ -1773,22 +1759,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 1882003663}
-  zoneVolume: {fileID: 1909397697}
-  zoneBounds: {fileID: 996175065}
-  priority: 1
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.1
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.1
-  enableTimeLimit: 1
-  activeDuration: 4.61
-  activateOnlyOnce: 1
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &1175559811
 GameObject:
   m_ObjectHideFlags: 0
@@ -2088,12 +2058,6 @@ MonoBehaviour:
       cornerCorrectionDistance: 0.1
       cornerCorrectionUpCheckDistance: 5
       cornerCorrectionProbeCount: 4
-  healthSettings:
-    maxHealth: 3
-    invincibilityDuration: 1
-    invincible: 0
-    debugRequestDeath: 0
-    debugRequestHazardDeath: 0
   checkpointSystem: {fileID: 1298716507}
   stageResetSystem: {fileID: 1934615090}
   playerCameraController: {fileID: 1882003663}
@@ -2360,7 +2324,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d57d6a31c87bc1a44aee7d296782fec0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CheckpointSystem
-  initialCheckpoint: {fileID: 0}
 --- !u!4 &1298716508
 Transform:
   m_ObjectHideFlags: 0
@@ -2539,6 +2502,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!212 &1682095900 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 8817927017108179465, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+  m_PrefabInstance: {fileID: 1939107290}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1693771210
 GameObject:
   m_ObjectHideFlags: 0
@@ -3290,10 +3258,6 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 231848241931794671, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: view
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 231848241931794671, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: player
       value: 
       objectReference: {fileID: 1189614814}
@@ -3302,37 +3266,17 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 231848241931794671, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: spawnPositionOnActivate.x
-      value: -71
-      objectReference: {fileID: 0}
-    - target: {fileID: 231848241931794671, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: spawnPositionOnActivate.y
-      value: 22
-      objectReference: {fileID: 0}
-    - target: {fileID: 231848241931794671, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: useSpawnPositionOnActivate
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 937989432220714875, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 937989432220714875, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: visualRoot
       value: 
       objectReference: {fileID: 1418842865}
     - target: {fileID: 937989432220714875, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: armLocalOffset.x
-      value: -0.588
-      objectReference: {fileID: 0}
-    - target: {fileID: 937989432220714875, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: armLocalOffset.y
-      value: 0.713
-      objectReference: {fileID: 0}
-    - target: {fileID: 937989432220714875, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: armFrames.Array.size
-      value: 0
-      objectReference: {fileID: 0}
+      propertyPath: handRenderer
+      value: 
+      objectReference: {fileID: 1682095900}
     - target: {fileID: 937989432220714875, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: visualRootLocalScale.x
       value: 11
@@ -3345,49 +3289,13 @@ PrefabInstance:
       propertyPath: visualRootLocalScale.z
       value: 11
       objectReference: {fileID: 0}
-    - target: {fileID: 937989432220714875, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: visualRootLocalOffset.x
-      value: 0
+    - target: {fileID: 1923890647421372328, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: m_Name
+      value: ViewRoot
       objectReference: {fileID: 0}
-    - target: {fileID: 937989432220714875, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: visualRootLocalOffset.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 937989432220714875, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: visualRootLocalOffset.z
-      value: 0.6
-      objectReference: {fileID: 0}
-    - target: {fileID: 2411249658003863423, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: moveSpeed
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 2411249658003863423, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: maxMoveSpeed
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 2411249658003863423, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: minMoveSpeed
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 2411249658003863423, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: distanceForMaxSpeed
-      value: 60
-      objectReference: {fileID: 0}
-    - target: {fileID: 2411249658003863423, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: distanceForMinSpeed
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 2411249658003863423, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: showSpeedRangeGizmos
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2411249658003863423, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: useDistanceBasedSpeed
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2411249658003863423, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: speedMultiplierWhileAttacking
-      value: 1
+    - target: {fileID: 2459943370238874255, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: m_Name
+      value: View
       objectReference: {fileID: 0}
     - target: {fileID: 3166458492546859069, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: m_IsKinematic
@@ -3403,26 +3311,33 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3315255634804718948, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.11
+      value: 12.7
       objectReference: {fileID: 0}
     - target: {fileID: 3315255634804718948, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -4.2
+      value: -4.199999
       objectReference: {fileID: 0}
-    - target: {fileID: 6671750570475710838, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: m_Enabled
-      value: 1
+    - target: {fileID: 3315255634804718948, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
       objectReference: {fileID: 0}
-    - target: {fileID: 7296045331812786607, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: m_LocalPosition.x
+    - target: {fileID: 3315255634804718948, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7296045331812786607, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
-      propertyPath: m_LocalPosition.y
+    - target: {fileID: 3315255634804718948, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 6671750570475710838, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+    - target: {fileID: 3315255634804718948, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 3315255634804718948, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 90
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
