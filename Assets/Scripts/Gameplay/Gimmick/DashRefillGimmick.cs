@@ -41,6 +41,13 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
         }
 
         visualRenderers = visualTransform.GetComponentsInChildren<Renderer>();
+
+        // MeshRenderer のソーティングを設定する
+        foreach (var r in GetComponentsInChildren<Renderer>())
+        {
+            r.sortingLayerName = "Gimmick";
+            r.sortingOrder = 0;
+        }
     }
 
     private void Update()
