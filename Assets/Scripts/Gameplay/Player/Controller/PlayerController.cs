@@ -531,6 +531,7 @@ public sealed partial class PlayerController : MonoBehaviour
         locomotionSystem.UpdateDashBufferTimer(deltaTime);
         if (authority == PlayerAuthority.ExternalControl)
         {
+            locomotionSystem.EndStomp();
             if (externalControlSystem != null && externalControlSystem.IsExternallyControlled)
             {
                 externalControlSystem.ApplyResolvedControl();
@@ -541,7 +542,7 @@ public sealed partial class PlayerController : MonoBehaviour
             FinalizeVisualState(previousVelocityY);
             return;
         }
-
+        locomotionSystem.TryStartStomp();
         // ダッシュ開始条件を満たす場合は開始する。
         locomotionSystem.TryStartDash();
 
@@ -572,6 +573,20 @@ public sealed partial class PlayerController : MonoBehaviour
             if (runtimeState.isWallGrabbing)
             {
                 locomotionSystem.ApplyWallGrabMovement();
+                UpdateAudioEvents();
+                UpdateVibrationEvents();
+                FinalizeVisualState(previousVelocityY);
+                return;
+            }
+        }
+        if (runtimeState.isStomping)
+        {
+            locomotionSystem.UpdateStompCancelByInput();
+
+            if (runtimeState.isStomping)
+            {
+                locomotionSystem.UpdateStompTimer(deltaTime);
+                locomotionSystem.ApplyStompVelocity();
                 UpdateAudioEvents();
                 UpdateVibrationEvents();
                 FinalizeVisualState(previousVelocityY);

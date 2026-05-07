@@ -11,7 +11,7 @@ internal sealed class PlayerStompSystem
     }
 
     // 復帰時やリセット時にストンプ関連状態を初期化する。
-    internal void ResetRuntimeState()
+    internal void ResetRuntimeTimers()
     {
         deps.RuntimeState.isStomping = false;
         deps.RuntimeState.stompTimer = 0f;
@@ -98,7 +98,6 @@ internal sealed class PlayerStompSystem
             deps.RuntimeState.stompStartHorizontalVelocity = 0f;
         }
 
-        // TODO Step 4: AllowStartWhileDashing が true の場合は DashSystem 側のダッシュ中断処理と接続する。
         return true;
     }
 
@@ -133,7 +132,6 @@ internal sealed class PlayerStompSystem
                 break;
 
             case StompHorizontalPolicy.AirControl:
-                // Step 3 最小実装: 既存の通常横移動統合は行わず、現在値を維持する。
                 velocity.x = deps.Rb.linearVelocity.x;
                 break;
         }
