@@ -41,6 +41,11 @@ internal sealed class PlayerStompSystem
             return false;
         }
 
+        if (deps.RuntimeState.isStomping)
+        {
+            return false;
+        }
+
         if (deps.RuntimeState.isGrounded)
         {
             return false;
@@ -82,6 +87,7 @@ internal sealed class PlayerStompSystem
 
         deps.RuntimeState.isStomping = true;
         deps.RuntimeState.stompTimer = 0f;
+        deps.FrameRequests.dashRequested = false;
 
         if (deps.Rb != null)
         {
@@ -110,7 +116,7 @@ internal sealed class PlayerStompSystem
         }
 
         float stompSpeed = deps.Settings.Dash.Speed * deps.Settings.Stomp.SpeedMultiplier;
-        Vector2 velocity = deps.Rb.linearVelocity;
+        Vector3 velocity = deps.Rb.linearVelocity;
 
         switch (deps.Settings.Stomp.HorizontalPolicy)
         {
