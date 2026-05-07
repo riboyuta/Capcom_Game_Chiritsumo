@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 // 特定エリア侵入で ShadowChaserEnemy を有効化するトリガー。
@@ -27,8 +28,27 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
     [Tooltip("Player タグ判定に使うタグ名です。")]
     [SerializeField] private string playerTag = "Player";
 
+    [Header("スポーンモード")]
+    [Tooltip("トリガー: プレイヤーがトリガーに入った時に即座にスポーン\n時間: 部屋に入ってから指定秒数後にスポーン")]
+    [SerializeField] private SpawnMode spawnMode = SpawnMode.Trigger;
+
+    [Header("時間モード設定")]
+    [Tooltip("時間モード専用: スポーンするまでの遅延時間（秒）です。0で即座にスポーン。")]
+    [SerializeField] private float spawnDelay = 2.0f;
+
+    [Tooltip("時間モード専用: このActivatorが属するRoomです。未設定時は親階層から自動検索します。")]
+    [SerializeField] private Room parentRoom;
+
+    public enum SpawnMode
+    {
+        Trigger,    // トリガーに入ったらスポーン
+        Time        // 部屋に入ってから時間経過でスポーン
+    }
+
     private Collider triggerCollider;
     private bool hasTriggered = false;
+    private Coroutine spawnCoroutine;
+    private RoomManager roomManager;
 
     // Respawn 用に保存する初期状態
     private bool hasCapturedInitialState;
@@ -48,12 +68,65 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
         {
             spawnPoint = transform;
         }
+
+        // 時間モードの場合、親Roomを検索
+        if (spawnMode == SpawnMode.Time && parentRoom == null)
+        {
+            parentRoom = GetComponentInParent<Room>();
+        }
+    }
+
+    private void Start()
+    {
+        // 時間モードの場合、RoomManagerのイベントを監視
+        if (spawnMode == SpawnMode.Time)
+        {
+            roomManager = FindFirstObjectByType<RoomManager>();
+            if (roomManager != null)
+            {
+                roomManager.OnRoomTransitionComplete += OnRoomTransitionComplete;
+
+                // 既にこのRoomが現在の部屋なら即座にスポーン開始
+                if (parentRoom != null && roomManager.CurrentRoom == parentRoom)
+                {
+                    TriggerSpawn();
+                }
+            }
+            else
+            {
+                Debug.LogWarning("ShadowChaserActivator: 時間モードですがRoomManagerが見つかりません。", this);
+            }
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // イベント登録を解除
+        if (roomManager != null)
+        {
+            roomManager.OnRoomTransitionComplete -= OnRoomTransitionComplete;
+        }
+    }
+
+    private void OnRoomTransitionComplete(Room newRoom)
+    {
+        // 自分が属するRoomに入った時だけスポーン開始
+        if (spawnMode == SpawnMode.Time && parentRoom == newRoom && !hasTriggered)
+        {
+            TriggerSpawn();
+        }
     }
 
     // トリガーに何かが侵入した時の処理。
     // プレイヤーが侵入したら ShadowChaserEnemy を起動する。
     private void OnTriggerEnter(Collider other)
     {
+        // 時間モードの場合はトリガー判定を無視
+        if (spawnMode == SpawnMode.Time)
+        {
+            return;
+        }
+
         // ターゲットの敵が未設定なら何もしない
         if (targetEnemy == null)
         {
@@ -72,15 +145,7 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        // トリガー発動フラグを立てる
-        hasTriggered = true;
-
-        // スポーン要求を作成し、敵を起動
-        ShadowChaserSpawnRequest request = new ShadowChaserSpawnRequest(
-            spawnPoint.position,
-            spawnPoint.rotation);
-
-        targetEnemy.Activate(request);
+        TriggerSpawn();
 
         // oneShot モードなら、このトリガーを無効化
         if (oneShot)
@@ -92,6 +157,68 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
                 triggerCollider.enabled = false;
             }
         }
+    }
+
+    // トリガーから何かが出た時の処理。
+    // 遅延スポーン中にプレイヤーがトリガーから出た場合、スポーンをキャンセル。
+    private void OnTriggerExit(Collider other)
+    {
+        // 時間モードの場合はトリガー判定を無視
+        if (spawnMode == SpawnMode.Time)
+        {
+            return;
+        }
+
+        // トリガーモードは即座にスポーンするため、OnTriggerExitは不要
+        // (将来的にトリガーモードでも遅延が必要になった場合のための予約)
+    }
+
+    private void TriggerSpawn()
+    {
+        hasTriggered = true;
+
+        // 時間モードの場合のみ遅延処理を行う
+        if (spawnMode == SpawnMode.Time && spawnDelay > 0f)
+        {
+            // 既存のコルーチンがあればキャンセル
+            if (spawnCoroutine != null)
+            {
+                StopCoroutine(spawnCoroutine);
+            }
+
+            spawnCoroutine = StartCoroutine(DelayedSpawnCoroutine());
+        }
+        else
+        {
+            // トリガーモード、または遅延時間が0の場合は即座にスポーン
+            ActivateEnemy();
+        }
+    }
+
+    private IEnumerator DelayedSpawnCoroutine()
+    {
+        // 指定秒数待機
+        yield return new WaitForSeconds(spawnDelay);
+
+        // 敵を起動する
+        ActivateEnemy();
+
+        spawnCoroutine = null;
+    }
+
+    private void ActivateEnemy()
+    {
+        if (targetEnemy == null)
+        {
+            return;
+        }
+
+        // スポーン要求を作成し、敵を起動
+        ShadowChaserSpawnRequest request = new ShadowChaserSpawnRequest(
+            spawnPoint.position,
+            spawnPoint.rotation);
+
+        targetEnemy.Activate(request);
     }
 
     // Respawn システム用：初期状態をキャプチャする。
@@ -126,6 +253,13 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
             triggerCollider = GetComponent<Collider>();
         }
 
+        // 実行中のコルーチンをキャンセル
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
+        }
+
         // 初期状態がキャプチャされている場合はそれを復元
         if (hasCapturedInitialState)
         {
@@ -149,6 +283,26 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
                 triggerCollider.enabled = true;
                 triggerCollider.isTrigger = true;
             }
+        }
+
+        // 時間モードで現在の部屋にいる場合、リスポーン後に再度スポーンをトリガー
+        if (spawnMode == SpawnMode.Time && !hasTriggered)
+        {
+            if (roomManager != null && parentRoom != null && roomManager.CurrentRoom == parentRoom)
+            {
+                TriggerSpawn();
+            }
+        }
+    }
+
+    // コンポーネントが無効化された時の処理。
+    // 実行中のコルーチンをキャンセルする。
+    private void OnDisable()
+    {
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
         }
     }
 

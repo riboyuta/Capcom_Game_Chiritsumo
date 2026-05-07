@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,6 +13,9 @@ public sealed class RoomManager : MonoBehaviour
         Up = 3,
         Down = 4,
     }
+
+    // 部屋遷移が完了した時に発火するイベント
+    public event Action<Room> OnRoomTransitionComplete;
 
     [Header("開始部屋")]
     [Tooltip("ゲーム開始時に現在部屋として扱う Room です。")]
@@ -96,6 +100,10 @@ public sealed class RoomManager : MonoBehaviour
         {
             ForceSetCurrentRoom(initialRoom);
             ApplyCurrentRoomCameraSettings();
+
+            // 初期部屋設定完了イベントを発火
+            OnRoomTransitionComplete?.Invoke(currentRoom);
+
             return;
         }
 
@@ -127,6 +135,9 @@ public sealed class RoomManager : MonoBehaviour
                 EndRoomTransitionExternalControl();
                 pendingRoom = null;
                 isTransitioning = false;
+
+                // 部屋遷移完了イベントを発火
+                OnRoomTransitionComplete?.Invoke(currentRoom);
 
                 if (enableDebugLog)
                 {

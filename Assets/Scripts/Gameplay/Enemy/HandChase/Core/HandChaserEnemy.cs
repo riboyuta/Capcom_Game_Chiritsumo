@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Rigidbody))]
@@ -52,6 +52,10 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
     [Tooltip("デバッグログを有効にします。")]
     [SerializeField] private bool enableDebugLog;
 
+    [Header("ヒットボックス自動調整")]
+    [Tooltip("部屋のサイズに応じてヒットボックスを自動調整するかどうかです。")]
+    [SerializeField] private bool autoAdjustHitbox = true;
+
     private Rigidbody rb;
     private Collider cachedCollider;
     private Renderer[] cachedRenderers;
@@ -61,6 +65,9 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
     private Vector3 initialPosition;
     private Quaternion initialRotation;
     private bool hasCapturedInitialState;
+
+    // ヒットボックス調整ヘルパー
+    private HandChaserHitboxAdjuster hitboxAdjuster;
 
     private void Reset()
     {
@@ -81,13 +88,19 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         cachedCollider = GetComponent<Collider>();
         cachedRenderers = GetComponentsInChildren<Renderer>(true);
 
-        // 初期位置を保存
-        initialPosition = transform.position;
-        initialRotation = transform.rotation;
-
         // 必要なコンポーネントを取得
         TryGetComponents();
         ResolvePlayerIfNeeded();
+
+        // ヒットボックス調整ヘルパーを初期化
+        if (autoAdjustHitbox)
+        {
+            hitboxAdjuster = new HandChaserHitboxAdjuster(transform, cachedCollider, movement, enableDebugLog);
+            hitboxAdjuster.Initialize();
+        }
+
+        // 初期状態をキャッシュ（位置・回転・設定値）
+        CaptureInitialState();
 
         // 起動状態を設定
         isActivated = startActive;
@@ -105,6 +118,15 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             {
                 proximityEffects.IsActive = true;
             }
+        }
+    }
+
+    private void Start()
+    {
+        // 初期部屋に既にいる場合、ヒットボックスを調整
+        if (autoAdjustHitbox && hitboxAdjuster != null)
+        {
+            hitboxAdjuster.AdjustIfInCurrentRoom();
         }
     }
 
@@ -217,6 +239,19 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         // 現在の位置と回転を初期状態として保存
         initialPosition = transform.position;
         initialRotation = transform.rotation;
+
+        // Movement の初期状態もキャッシュ
+        if (movement != null)
+        {
+            movement.CaptureInitialState();
+        }
+
+        // ヒットボックス調整ヘルパーのイベント購読
+        if (autoAdjustHitbox && hitboxAdjuster != null)
+        {
+            hitboxAdjuster.SubscribeToRoomEvents();
+        }
+
         hasCapturedInitialState = true;
     }
 
@@ -245,9 +280,10 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             rb.isKinematic = wasKinematic;
         }
 
-        // 各コンポーネントをリセット
+        // Movement の初期状態をリセット
         if (movement != null)
         {
+            movement.ResetToInitialState();
             movement.IsActive = isActivated;
         }
 
@@ -262,6 +298,18 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         if (!gameObject.activeSelf)
         {
             gameObject.SetActive(true);
+        }
+
+        // ヒットボックスをリセットしてから、必要なら再調整
+        if (autoAdjustHitbox && hitboxAdjuster != null)
+        {
+            hitboxAdjuster.ResetHitboxSize();
+            hitboxAdjuster.AdjustIfInCurrentRoom();
+
+            if (enableDebugLog)
+            {
+                Debug.Log($"[HandChaserEnemy] Re-adjusted hitbox after reset", this);
+            }
         }
     }
 
@@ -342,6 +390,15 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         {
             player = playerObject.transform;
             SetPlayerTarget(player);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // イベント購読解除
+        if (autoAdjustHitbox && hitboxAdjuster != null)
+        {
+            hitboxAdjuster.UnsubscribeFromRoomEvents();
         }
     }
 

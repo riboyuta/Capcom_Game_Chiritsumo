@@ -6,13 +6,9 @@ public sealed class HandChaserView : MonoBehaviour
     [Tooltip("見た目のルートTransformです。")]
     [SerializeField] private Transform visualRoot;
 
-    [Header("腕レンダラー")]
-    [Tooltip("腕のSpriteRendererです。")]
-    [SerializeField] private SpriteRenderer armRenderer;
-
-    [Header("手のひらレンダラー")]
-    [Tooltip("手のひらのSpriteRendererです。")]
-    [SerializeField] private SpriteRenderer palmRenderer;
+    [Header("手レンダラー")]
+    [Tooltip("手のSpriteRendererです。β版以降はモデルに変更予定。")]
+    [SerializeField] private SpriteRenderer handRenderer;
 
     [Header("ルート位置オフセット")]
     [Tooltip("visualRoot のローカル位置オフセットです。")]
@@ -22,29 +18,17 @@ public sealed class HandChaserView : MonoBehaviour
     [Tooltip("visualRoot のローカルスケールです。")]
     [SerializeField] private Vector3 visualRootLocalScale = Vector3.one;
 
-    [Header("腕位置オフセット")]
-    [Tooltip("armRenderer のローカル位置オフセットです。")]
-    [SerializeField] private Vector3 armLocalOffset = Vector3.zero;
+    [Header("手位置オフセット")]
+    [Tooltip("handRenderer のローカル位置オフセットです。")]
+    [SerializeField] private Vector3 handLocalOffset = Vector3.zero;
 
-    [Header("腕スケール")]
-    [Tooltip("armRenderer のローカルスケールです。")]
-    [SerializeField] private Vector3 armLocalScale = Vector3.one;
+    [Header("手スケール")]
+    [Tooltip("handRenderer のローカルスケールです。")]
+    [SerializeField] private Vector3 handLocalScale = Vector3.one;
 
-    [Header("手のひら位置オフセット")]
-    [Tooltip("palmRenderer のローカル位置オフセットです。")]
-    [SerializeField] private Vector3 palmLocalOffset = Vector3.zero;
-
-    [Header("手のひらスケール")]
-    [Tooltip("palmRenderer のローカルスケールです。")]
-    [SerializeField] private Vector3 palmLocalScale = Vector3.one;
-
-    [Header("腕フレーム")]
-    [Tooltip("腕のスプライトフレーム配列です。")]
-    [SerializeField] private Sprite[] armFrames;
-
-    [Header("手のひらフレーム")]
-    [Tooltip("手のひらのスプライトフレーム配列です。")]
-    [SerializeField] private Sprite[] palmFrames;
+    [Header("手フレーム")]
+    [Tooltip("手のスプライトフレーム配列です。")]
+    [SerializeField] private Sprite[] handFrames;
 
     [Header("アニメーションFPS")]
     [Tooltip("アニメーションのFPSです。")]
@@ -61,7 +45,7 @@ public sealed class HandChaserView : MonoBehaviour
         }
 
         // Rendererを自動取得試行
-        TryAutoAssignRenderers();
+        TryAutoAssignRenderer();
     }
 
     private void OnValidate()
@@ -74,20 +58,16 @@ public sealed class HandChaserView : MonoBehaviour
         if (visualRootLocalScale.y == 0f) visualRootLocalScale.y = 1f;
         if (visualRootLocalScale.z == 0f) visualRootLocalScale.z = 1f;
 
-        if (armLocalScale.x == 0f) armLocalScale.x = 1f;
-        if (armLocalScale.y == 0f) armLocalScale.y = 1f;
-        if (armLocalScale.z == 0f) armLocalScale.z = 1f;
-
-        if (palmLocalScale.x == 0f) palmLocalScale.x = 1f;
-        if (palmLocalScale.y == 0f) palmLocalScale.y = 1f;
-        if (palmLocalScale.z == 0f) palmLocalScale.z = 1f;
+        if (handLocalScale.x == 0f) handLocalScale.x = 1f;
+        if (handLocalScale.y == 0f) handLocalScale.y = 1f;
+        if (handLocalScale.z == 0f) handLocalScale.z = 1f;
 
         if (visualRoot == null)
         {
             visualRoot = transform;
         }
 
-        TryAutoAssignRenderers();
+        TryAutoAssignRenderer();
     }
 
     private void Update()
@@ -103,8 +83,7 @@ public sealed class HandChaserView : MonoBehaviour
         // FPSが0以下なら最初のフレームを表示
         if (animationFps <= 0f)
         {
-            ApplyFrame(armRenderer, armFrames, 0);
-            ApplyFrame(palmRenderer, palmFrames, 0);
+            ApplyFrame(handRenderer, handFrames, 0);
             return;
         }
 
@@ -112,12 +91,10 @@ public sealed class HandChaserView : MonoBehaviour
         animationTimer += Time.deltaTime;
 
         // ループ再生するフレームインデックスを計算
-        int armIndex = GetLoopFrameIndex(armFrames, animationTimer, animationFps);
-        int palmIndex = GetLoopFrameIndex(palmFrames, animationTimer, animationFps);
+        int handIndex = GetLoopFrameIndex(handFrames, animationTimer, animationFps);
 
         // フレームを適用
-        ApplyFrame(armRenderer, armFrames, armIndex);
-        ApplyFrame(palmRenderer, palmFrames, palmIndex);
+        ApplyFrame(handRenderer, handFrames, handIndex);
     }
 
     // 視覚的レイアウト（位置とスケール）を適用
@@ -130,18 +107,11 @@ public sealed class HandChaserView : MonoBehaviour
             visualRoot.localScale = visualRootLocalScale;
         }
 
-        // 腕の位置とスケールを設定
-        if (armRenderer != null)
+        // 手の位置とスケールを設定
+        if (handRenderer != null)
         {
-            armRenderer.transform.localPosition = armLocalOffset;
-            armRenderer.transform.localScale = armLocalScale;
-        }
-
-        // 手の平の位置とスケールを設定
-        if (palmRenderer != null)
-        {
-            palmRenderer.transform.localPosition = palmLocalOffset;
-            palmRenderer.transform.localScale = palmLocalScale;
+            handRenderer.transform.localPosition = handLocalOffset;
+            handRenderer.transform.localScale = handLocalScale;
         }
     }
 
@@ -184,23 +154,23 @@ public sealed class HandChaserView : MonoBehaviour
     }
 
     // 子オブジェクトからRendererを自動取得試行
-    private void TryAutoAssignRenderers()
+    private void TryAutoAssignRenderer()
     {
         if (visualRoot == null)
         {
             return;
         }
 
-        // "ArmRenderer"という名前の子オブジェクトから腕のRendererを取得
-        if (armRenderer == null)
+        // "HandRenderer"という名前の子オブジェクトから手のRendererを取得
+        if (handRenderer == null)
         {
-            armRenderer = visualRoot.Find("ArmRenderer")?.GetComponent<SpriteRenderer>();
+            handRenderer = visualRoot.Find("HandRenderer")?.GetComponent<SpriteRenderer>();
         }
 
-        // "PalmRenderer"という名前の子オブジェクトから手の平のRendererを取得
-        if (palmRenderer == null)
+        // 見つからなければ最初のSpriteRendererを使用
+        if (handRenderer == null)
         {
-            palmRenderer = visualRoot.Find("PalmRenderer")?.GetComponent<SpriteRenderer>();
+            handRenderer = visualRoot.GetComponentInChildren<SpriteRenderer>();
         }
     }
 }
