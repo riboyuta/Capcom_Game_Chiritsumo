@@ -330,6 +330,11 @@ internal sealed class PlayerLocomotionCoordinator
         stompSystem.UpdateStompCancelByInput();
     }
 
+    internal void UpdateStompEndByLanding()
+    {
+        stompSystem.UpdateStompEndByLanding();
+    }
+
     internal void ApplyStompVelocity()
     {
         stompSystem.ApplyStompVelocity();

@@ -123,6 +123,7 @@ internal sealed class PlayerLocomotionSystem
     internal bool TryStartStomp() => coordinator.TryStartStomp();
     internal void UpdateStompTimer(float deltaTime) => coordinator.UpdateStompTimer(deltaTime);
     internal void UpdateStompCancelByInput() => coordinator.UpdateStompCancelByInput();
+    internal void UpdateStompEndByLanding() => coordinator.UpdateStompEndByLanding();
     internal void ApplyStompVelocity() => coordinator.ApplyStompVelocity();
     internal void EndStompByLanding() => coordinator.EndStompByLanding();
     internal void EndStompForWallGrab() => coordinator.EndStompForWallGrab();

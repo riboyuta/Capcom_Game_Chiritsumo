@@ -581,8 +581,8 @@ public sealed class StompSettings
     [SerializeField] float speedMultiplier = 1f;
 
     [Header("ストンプ中の横速度方針")]
-    [Tooltip("ストンプ中に横速度をどう扱うかの方針です。")]
-    [SerializeField] StompHorizontalPolicy horizontalPolicy = StompHorizontalPolicy.Zero;
+    [Tooltip("ストンプ開始時の横速度を、ストンプ中にどう扱うかを指定します。Zero は真下へ落下、Keep は開始時の横速度を維持、Damp は開始時の横速度を減衰、AirControl は検証用に現在の横速度を維持します。")]
+    [SerializeField] private StompHorizontalPolicy horizontalPolicy = StompHorizontalPolicy.Zero;
 
     [Header("横速度減衰倍率")]
     [Tooltip("horizontalPolicy が Damp のときに使う横速度減衰倍率です。")]

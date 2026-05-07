@@ -581,6 +581,8 @@ public sealed partial class PlayerController : MonoBehaviour
         }
         if (runtimeState.isStomping)
         {
+            locomotionSystem.UpdateStompEndByLanding();
+
             locomotionSystem.UpdateStompCancelByInput();
 
             if (runtimeState.isStomping)

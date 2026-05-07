@@ -159,6 +159,22 @@ internal sealed class PlayerStompSystem
         }
     }
 
+    // 着地によるストンプ終了を更新する。
+    internal void UpdateStompEndByLanding()
+    {
+        if (!deps.RuntimeState.isStomping)
+        {
+            return;
+        }
+
+        if (!deps.RuntimeState.isGrounded)
+        {
+            return;
+        }
+
+        EndStompByLanding();
+    }
+
     // ストンプ継続時間を更新する。
     internal void UpdateStompTimer(float deltaTime)
     {
