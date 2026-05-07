@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -78,6 +79,13 @@ public sealed class Room : MonoBehaviour
     [Tooltip("overrideRoomTransitionDuration が有効な時に使う遷移時間です。")]
     [SerializeField] private float roomTransitionDuration = 0.20f;
 
+    [Header("HandChaser 設定")]
+    [Tooltip("有効にすると、子階層の HandChaserMovement に設定を適用します。")]
+    [SerializeField] private bool useHandChaserSettings = false;
+
+    [Tooltip("この部屋の HandChaserMovement に適用する設定です。")]
+    [SerializeField] private HandChaserMovementSettings handChaserSettings = HandChaserMovementSettings.Default;
+
     public string RoomId => roomId;
     public RoomBounds RoomBounds => roomBounds;
     public Vector2 RoomFocusOffset => roomFocusOffset;
@@ -104,4 +112,45 @@ public sealed class Room : MonoBehaviour
     public float OrthographicSizeSmoothTime => orthographicSizeSmoothTime;
     public bool HasRoomTransitionDurationOverride => overrideRoomTransitionDuration;
     public float RoomTransitionDuration => roomTransitionDuration;
+
+    private void Awake()
+    {
+        // HandChaserMovement に設定を適用
+        ApplyHandChaserSettings();
+    }
+
+    private void ApplyHandChaserSettings()
+    {
+        // 設定適用が無効なら何もしない
+        if (!useHandChaserSettings)
+        {
+            return;
+        }
+
+        // 子階層から HandChaserMovement を自動検索
+        HandChaserMovement[] handChasers = GetComponentsInChildren<HandChaserMovement>(true);
+
+        if (handChasers == null || handChasers.Length == 0)
+        {
+            return;
+        }
+
+        // 見つかった全ての HandChaserMovement に設定を適用
+        foreach (var handChaser in handChasers)
+        {
+            if (handChaser != null)
+            {
+                handChaser.ApplySettings(handChaserSettings);
+            }
+        }
+    }
+
+    // エディタでの変更を即座に反映
+    private void OnValidate()
+    {
+        if (Application.isPlaying)
+        {
+            ApplyHandChaserSettings();
+        }
+    }
 }
