@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public enum MoveDirection
@@ -9,23 +10,36 @@ public enum MoveDirection
     Custom   // カスタム
 }
 
+[Serializable]
+public struct HandChaserMovementSettings
+{
+    [Tooltip("移動速度です。")]
+    [Min(0f)] public float moveSpeed;
+
+    [Tooltip("移動方向を選択します。")]
+    public MoveDirection moveDirection;
+
+    [Tooltip("MoveDirection が Custom の場合に使用される移動方向です。")]
+    public Vector3 customMoveAxis;
+
+    public static HandChaserMovementSettings Default => new HandChaserMovementSettings
+    {
+        moveSpeed = 2.0f,
+        moveDirection = MoveDirection.Right,
+        customMoveAxis = Vector3.right
+    };
+}
+
 [RequireComponent(typeof(Rigidbody))]
 public sealed class HandChaserMovement : MonoBehaviour
 {
-    [Header("移動速度")]
-    [Tooltip("移動速度です。")]
-    [SerializeField, Min(0f)] private float moveSpeed = 2.0f;
-
-    [Header("移動方向")]
-    [Tooltip("移動方向を選択します。")]
-    [SerializeField] private MoveDirection moveDirection = MoveDirection.Right;
-
-    [Header("カスタム移動方向")]
-    [Tooltip("MoveDirection が Custom の場合に使用される移動方向です。")]
-    [SerializeField] private Vector3 customMoveAxis = Vector3.right;
-
     private Rigidbody rb;
     private bool isActive;
+
+    // 現在の設定
+    private float moveSpeed = 2.0f;
+    private MoveDirection moveDirection = MoveDirection.Right;
+    private Vector3 customMoveAxis = Vector3.right;
 
     // 初期状態のキャッシュ（リセット用）
     private float initialMoveSpeed;
@@ -57,6 +71,16 @@ public sealed class HandChaserMovement : MonoBehaviour
         set => customMoveAxis = value.sqrMagnitude > 0f ? value.normalized : Vector3.right;
     }
 
+    // 外部から設定を適用する
+    public void ApplySettings(HandChaserMovementSettings settings)
+    {
+        moveSpeed = Mathf.Max(0f, settings.moveSpeed);
+        moveDirection = settings.moveDirection;
+        customMoveAxis = settings.customMoveAxis.sqrMagnitude > 0f 
+            ? settings.customMoveAxis.normalized 
+            : Vector3.right;
+    }
+
     private void Awake()
     {
         // Rigidbodyを取得してKinematicに設定
@@ -69,18 +93,6 @@ public sealed class HandChaserMovement : MonoBehaviour
 
         // 初期状態をキャッシュ
         CaptureInitialState();
-    }
-
-    private void OnValidate()
-    {
-        // 各パラメータを有効な範囲に制限
-        moveSpeed = Mathf.Max(0f, moveSpeed);
-
-        // カスタム移動軸を正規化
-        if (customMoveAxis.sqrMagnitude > 0f)
-        {
-            customMoveAxis = customMoveAxis.normalized;
-        }
     }
 
     private Vector3 GetMoveAxis()
