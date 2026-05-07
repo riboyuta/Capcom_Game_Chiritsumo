@@ -47,6 +47,7 @@ namespace Game.Input
         public bool LeftPressed { get; private set; }
         public bool RightPressed { get; private set; }
         public bool DownPressed { get; private set; }
+        public bool DownReleased { get; private set; }
 
         // 方向入力の押下エッジ算出に使う前フレーム状態。
         private bool previousLeftHeld;
@@ -62,6 +63,11 @@ namespace Game.Input
         public bool DashPressed { get; private set; }
         public bool DashHeld { get; private set; }
         public bool DashReleased { get; private set; }
+
+        // ストンプ入力のフレーム状態。
+        public bool StompPressed { get; private set; }
+        public bool StompHeld { get; private set; }
+        public bool StompReleased { get; private set; }
 
         // つかみ入力のフレーム状態。
         public bool GrabPressed { get; private set; }
@@ -102,6 +108,7 @@ namespace Game.Input
             LeftPressed = leftHeld && !previousLeftHeld;
             RightPressed = rightHeld && !previousRightHeld;
             DownPressed = downHeld && !previousDownHeld;
+            DownReleased = !downHeld && previousDownHeld;
 
             LeftHeld = leftHeld;
             RightHeld = rightHeld;
@@ -123,6 +130,17 @@ namespace Game.Input
             DashPressed = dashState.PressedThisFrame;
             DashHeld = dashState.Held;
             DashReleased = dashState.ReleasedThisFrame;
+
+            // Stomp アクションの統合状態を解決する。
+            RawButtonFrameState stompState = ResolveActionState(bindings.Stomp);
+            bool keyboardDownForStomp = settings.Stomp.UseKeyboardDownOnly;
+            bool keyboardStompPressed = keyboardDownForStomp && DownPressed;
+            bool keyboardStompHeld = keyboardDownForStomp && DownHeld;
+            bool keyboardStompReleased = keyboardDownForStomp && DownReleased;
+
+            StompPressed = stompState.PressedThisFrame || keyboardStompPressed;
+            StompHeld = stompState.Held || keyboardStompHeld;
+            StompReleased = stompState.ReleasedThisFrame || keyboardStompReleased;
 
             // Dash を押している間、常に最新の方向入力を更新する。
             // これにより、ダッシュボタンを押した後に方向を微調整できる。

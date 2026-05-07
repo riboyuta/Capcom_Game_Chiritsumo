@@ -431,6 +431,10 @@ public sealed partial class PlayerController : MonoBehaviour
         {
             frameRequests.dashRequested = true;
         }
+        if (playerInputReader.StompPressed)
+        {
+            frameRequests.stompRequested = true;
+        }
 
         // 横入力がしきい値を超えたときのみ向きを更新する。
         locomotionSystem?.UpdateFacingFromMoveInput();
@@ -441,6 +445,7 @@ public sealed partial class PlayerController : MonoBehaviour
         {
             frameRequests.jumpRequested = false;
             frameRequests.dashRequested = false;
+            frameRequests.stompRequested = false;
             return;
         }
     }
@@ -454,6 +459,7 @@ public sealed partial class PlayerController : MonoBehaviour
         }
 
         ResetVisualOneShotFlags();
+        frameRequests.ResetPerTickRequests();
 
         float deltaTime = Time.fixedDeltaTime;
         float previousVelocityY = rb != null ? rb.linearVelocity.y : 0f;

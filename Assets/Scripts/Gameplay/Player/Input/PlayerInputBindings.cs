@@ -25,6 +25,15 @@ namespace Game.Input
                 secondaryKeyboardKey: Key.LeftShift,
                 gamepadButton: RawGamepadButton.X);
 
+        [Header("入力設定: ストンプ")]
+        [Tooltip("ストンプ操作に割り当てる入力設定です。キーボード Stomp は Down 入力で扱うため、専用キーは基本使用しません。")]
+        [SerializeField]
+        private InputActionBinding stomp =
+          new InputActionBinding(
+        primaryKeyboardKey: Key.None,
+        secondaryKeyboardKey: Key.None,
+        gamepadButton: RawGamepadButton.B);
+
         [Header("入力設定: つかむ")]
         [Tooltip("壁つかみ・壁登りに割り当てる入力設定です。押している間だけ有効になるホールド入力として使います。")]
         [SerializeField]
@@ -36,6 +45,7 @@ namespace Game.Input
 
         public InputActionBinding Jump => jump;
         public InputActionBinding Dash => dash;
+        public InputActionBinding Stomp => stomp;
         public InputActionBinding Grab => grab;
     }
 }
