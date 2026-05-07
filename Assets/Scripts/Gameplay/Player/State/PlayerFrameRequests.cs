@@ -18,6 +18,20 @@ internal sealed class PlayerFrameRequests
     // この物理フレームで外部打ち上げ通知を受けたかどうかの要求フラグ。
     public bool wasExternallyLaunchedThisFrame;
 
+    public void RequestInputBlock(PlayerController.InputBlockFlags flags)
+    {
+        requestedInputBlockFlagsThisFrame |= flags;
+    }
+
+    public void AccumulateLocomotionModifier(PlayerLocomotionModifierRequest request)
+    {
+        requestedLocomotionModifierThisTick.moveSpeedMultiplier *= request.moveSpeedMultiplier;
+        requestedLocomotionModifierThisTick.groundAccelerationMultiplier *= request.groundAccelerationMultiplier;
+        requestedLocomotionModifierThisTick.airAccelerationMultiplier *= request.airAccelerationMultiplier;
+        requestedLocomotionModifierThisTick.gravityScaleMultiplier *= request.gravityScaleMultiplier;
+        requestedLocomotionModifierThisTick.dashSpeedMultiplier *= request.dashSpeedMultiplier;
+    }
+
     // 1フレームだけ有効な要求を初期化する。
     public void ResetPerFrameRequests()
     {

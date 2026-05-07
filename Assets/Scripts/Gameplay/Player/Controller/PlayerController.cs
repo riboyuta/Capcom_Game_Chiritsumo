@@ -13,15 +13,15 @@ using UnityEngine;
 public sealed partial class PlayerController : MonoBehaviour
 {
 
-        public enum DeathCause
-        {
-            Damage,
-            Hazard
-        }
+    public enum DeathCause
+    {
+        Damage,
+        Hazard
+    }
 
-        private const float DiagonalInputThreshold = 0.5f;
+    private const float DiagonalInputThreshold = 0.5f;
 
-        [Header("入力: 生入力ソース")]
+    [Header("入力: 生入力ソース")]
     [Tooltip("キーボードやゲームパッドなどの生入力を供給するコンポーネントです。未設定時は Awake で同一 GameObject から取得を試みます。")]
     // 生入力の供給元。
     // 未設定なら Awake で同一 GameObject から取得を試みる。
@@ -77,10 +77,6 @@ public sealed partial class PlayerController : MonoBehaviour
     internal bool IsAirborne => !runtimeState.isGrounded;
     internal bool IsWallGrabbing => runtimeState.isWallGrabbing;
     internal int Facing => runtimeState.facing;
-    internal PlayerInputReader InputReader => playerInputReader;
-    internal PlayerLocomotionSystem LocomotionSystem => locomotionSystem;
-    internal PlayerExternalControlSystem ExternalControlSystem => externalControlSystem;
-    internal PlayerFrameRequests FrameRequests => frameRequests;
     internal PlayerRuntimeState RuntimeState => runtimeState;
     internal Rigidbody Rigidbody => rb;
     internal bool IsExternallyControlled => externalControlSystem != null && externalControlSystem.IsExternallyControlled;
@@ -144,11 +140,7 @@ public sealed partial class PlayerController : MonoBehaviour
     // Facade 向け最小 bridge: この tick の移動補正要求。
     internal void RequestLocomotionModifierThisTick(PlayerLocomotionModifierRequest request)
     {
-        frameRequests.requestedLocomotionModifierThisTick.moveSpeedMultiplier *= request.moveSpeedMultiplier;
-        frameRequests.requestedLocomotionModifierThisTick.groundAccelerationMultiplier *= request.groundAccelerationMultiplier;
-        frameRequests.requestedLocomotionModifierThisTick.airAccelerationMultiplier *= request.airAccelerationMultiplier;
-        frameRequests.requestedLocomotionModifierThisTick.gravityScaleMultiplier *= request.gravityScaleMultiplier;
-        frameRequests.requestedLocomotionModifierThisTick.dashSpeedMultiplier *= request.dashSpeedMultiplier;
+        frameRequests.AccumulateLocomotionModifier(request);
     }
 
     // Facade 向け最小 bridge: 単発ワープ要求。
@@ -194,7 +186,7 @@ public sealed partial class PlayerController : MonoBehaviour
 
     internal void RequestInputBlockThisFrame(InputBlockFlags flags)
     {
-        frameRequests.requestedInputBlockFlagsThisFrame |= flags;
+        frameRequests.RequestInputBlock(flags);
     }
 
     internal bool RequestHazardDeath()
