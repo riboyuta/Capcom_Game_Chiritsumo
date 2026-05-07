@@ -29,7 +29,6 @@ internal sealed class PlayerFrameRequests
     {
         requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
         wasExternallyLaunchedThisFrame = false;
-        stompRequested = false;
     }
 }
 

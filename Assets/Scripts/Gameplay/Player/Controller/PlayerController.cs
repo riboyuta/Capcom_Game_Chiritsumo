@@ -459,7 +459,6 @@ public sealed partial class PlayerController : MonoBehaviour
         }
 
         ResetVisualOneShotFlags();
-        frameRequests.ResetPerTickRequests();
 
         float deltaTime = Time.fixedDeltaTime;
         float previousVelocityY = rb != null ? rb.linearVelocity.y : 0f;
