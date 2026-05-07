@@ -13,15 +13,9 @@ using UnityEngine;
 public sealed partial class PlayerController : MonoBehaviour
 {
 
-        public enum DeathCause
-        {
-            Damage,
-            Hazard
-        }
+    private const float DiagonalInputThreshold = 0.5f;
 
-        private const float DiagonalInputThreshold = 0.5f;
-
-        [Header("入力: 生入力ソース")]
+    [Header("入力: 生入力ソース")]
     [Tooltip("キーボードやゲームパッドなどの生入力を供給するコンポーネントです。未設定時は Awake で同一 GameObject から取得を試みます。")]
     // 生入力の供給元。
     // 未設定なら Awake で同一 GameObject から取得を試みる。
@@ -77,10 +71,6 @@ public sealed partial class PlayerController : MonoBehaviour
     internal bool IsAirborne => !runtimeState.isGrounded;
     internal bool IsWallGrabbing => runtimeState.isWallGrabbing;
     internal int Facing => runtimeState.facing;
-    internal PlayerInputReader InputReader => playerInputReader;
-    internal PlayerLocomotionSystem LocomotionSystem => locomotionSystem;
-    internal PlayerExternalControlSystem ExternalControlSystem => externalControlSystem;
-    internal PlayerFrameRequests FrameRequests => frameRequests;
     internal PlayerRuntimeState RuntimeState => runtimeState;
     internal Rigidbody Rigidbody => rb;
     internal bool IsExternallyControlled => externalControlSystem != null && externalControlSystem.IsExternallyControlled;
@@ -144,11 +134,7 @@ public sealed partial class PlayerController : MonoBehaviour
     // Facade 向け最小 bridge: この tick の移動補正要求。
     internal void RequestLocomotionModifierThisTick(PlayerLocomotionModifierRequest request)
     {
-        frameRequests.requestedLocomotionModifierThisTick.moveSpeedMultiplier *= request.moveSpeedMultiplier;
-        frameRequests.requestedLocomotionModifierThisTick.groundAccelerationMultiplier *= request.groundAccelerationMultiplier;
-        frameRequests.requestedLocomotionModifierThisTick.airAccelerationMultiplier *= request.airAccelerationMultiplier;
-        frameRequests.requestedLocomotionModifierThisTick.gravityScaleMultiplier *= request.gravityScaleMultiplier;
-        frameRequests.requestedLocomotionModifierThisTick.dashSpeedMultiplier *= request.dashSpeedMultiplier;
+        frameRequests.AccumulateLocomotionModifier(request);
     }
 
     // Facade 向け最小 bridge: 単発ワープ要求。
@@ -194,25 +180,25 @@ public sealed partial class PlayerController : MonoBehaviour
 
     internal void RequestInputBlockThisFrame(InputBlockFlags flags)
     {
-        frameRequests.requestedInputBlockFlagsThisFrame |= flags;
+        frameRequests.RequestInputBlock(flags);
     }
 
     internal bool RequestHazardDeath()
     {
-        return RequestDeathStart(DeathCause.Hazard);
+        return RequestDeathStart(PlayerDeathCause.Hazard);
     }
 
     internal bool RequestDamageDeath()
     {
-        return RequestDeathStart(DeathCause.Damage);
+        return RequestDeathStart(PlayerDeathCause.Damage);
     }
 
     internal void RequestKill(Vector3 damageDirection)
     {
-        RequestDeathStart(DeathCause.Damage);
+        RequestDeathStart(PlayerDeathCause.Damage);
     }
 
-    private bool RequestDeathStart(DeathCause cause)
+    private bool RequestDeathStart(PlayerDeathCause cause)
     {
         if (deathCoordinator != null && deathCoordinator.IsDeathSequencePlaying)
         {
@@ -431,6 +417,10 @@ public sealed partial class PlayerController : MonoBehaviour
         {
             frameRequests.dashRequested = true;
         }
+        if (playerInputReader.StompPressed)
+        {
+            frameRequests.stompRequested = true;
+        }
 
         // 横入力がしきい値を超えたときのみ向きを更新する。
         locomotionSystem?.UpdateFacingFromMoveInput();
@@ -441,6 +431,7 @@ public sealed partial class PlayerController : MonoBehaviour
         {
             frameRequests.jumpRequested = false;
             frameRequests.dashRequested = false;
+            frameRequests.stompRequested = false;
             return;
         }
     }
@@ -486,11 +477,6 @@ public sealed partial class PlayerController : MonoBehaviour
         // ApplyJump による isGrounded 上書き前に、着地イベント用の情報を保存する。
         CaptureLandingSnapshot();
 
-        // 接地しているなら急降下状態を解除する。
-        if (runtimeState.isGrounded)
-        {
-            runtimeState.isFastFalling = false;
-        }
 
         // 物理フレームで壁接触状態を更新する。
         probeSensor.CheckWallContact(
@@ -531,6 +517,7 @@ public sealed partial class PlayerController : MonoBehaviour
         locomotionSystem.UpdateDashBufferTimer(deltaTime);
         if (authority == PlayerAuthority.ExternalControl)
         {
+            locomotionSystem.EndStomp();
             if (externalControlSystem != null && externalControlSystem.IsExternallyControlled)
             {
                 externalControlSystem.ApplyResolvedControl();
@@ -541,7 +528,7 @@ public sealed partial class PlayerController : MonoBehaviour
             FinalizeVisualState(previousVelocityY);
             return;
         }
-
+        locomotionSystem.TryStartStomp();
         // ダッシュ開始条件を満たす場合は開始する。
         locomotionSystem.TryStartDash();
 
@@ -578,13 +565,28 @@ public sealed partial class PlayerController : MonoBehaviour
                 return;
             }
         }
+        if (runtimeState.isStomping)
+        {
+            locomotionSystem.UpdateStompEndByLanding();
+
+            locomotionSystem.UpdateStompCancelByInput();
+
+            if (runtimeState.isStomping)
+            {
+                locomotionSystem.UpdateStompTimer(deltaTime);
+                locomotionSystem.ApplyStompVelocity();
+                UpdateAudioEvents();
+                UpdateVibrationEvents();
+                FinalizeVisualState(previousVelocityY);
+                return;
+            }
+        }
 
         // 通常移動フロー。
-        // 横移動、ジャンプ、可変ジャンプ、急降下、壁滑り、追加重力を順に適用する。
+        // 横移動、ジャンプ、可変ジャンプ、壁滑り、追加重力を順に適用する。
         locomotionSystem.ApplyHorizontalMovement(deltaTime);
         locomotionSystem.ApplyJump();
         locomotionSystem.ApplyVariableJumpCut();
-        locomotionSystem.TryStartFastFall();
         locomotionSystem.ApplyWallSlide();
         locomotionSystem.ApplyCustomGravity();
 

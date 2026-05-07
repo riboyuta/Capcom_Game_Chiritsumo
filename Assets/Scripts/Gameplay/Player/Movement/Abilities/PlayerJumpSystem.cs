@@ -226,7 +226,6 @@ internal sealed class PlayerJumpSystem
 
         deps.RuntimeState.isGrounded = false;
         deps.RuntimeState.isWallSliding = false;
-        deps.RuntimeState.isFastFalling = false;
         deps.RuntimeState.wallJumpControlLockTimer = deps.Settings.Wall.WallGrabJumpHorizontalLockTime;
         deps.RuntimeState.wallReattachLockTimer = deps.Settings.Wall.WallGrabJumpReattachLockTime;
 

@@ -180,7 +180,6 @@ internal sealed class PlayerDashSystem
 
         onWallGrabExit?.Invoke(0);
         deps.RuntimeState.isDashing = true;
-        deps.RuntimeState.isFastFalling = false;
         deps.RuntimeState.dashTimer = deps.Settings.Dash.Duration;
         if (deps.RuntimeState.isGrounded)
         {
@@ -300,7 +299,16 @@ internal sealed class PlayerDashSystem
         tryApplyDashCornerCorrection();
         deps.Rb.linearVelocity = deps.RuntimeState.dashDirection * (deps.Settings.Dash.Speed * modifier.dashSpeedMultiplier);
     }
+    internal void CancelDashForStomp()
+    {
+        if (!deps.RuntimeState.isDashing)
+        {
+            return;
+        }
 
+        deps.RuntimeState.isDashing = false;
+        deps.RuntimeState.dashTimer = 0f;
+    }
     // ダッシュ終了処理を実行する。
     internal void EndDash(System.Action setDashEndJumpCutLockTimer)
     {

@@ -110,7 +110,7 @@ public sealed partial class PlayerController
 
     // 死亡開始時の音声を再生する。
     // 「いつ鳴らすか」は Controller 側で決め、実際の再生内容は AudioController 側へ委譲する。
-    private void PlayDeathSound(DeathCause cause)
+    private void PlayDeathSound(PlayerDeathCause cause)
     {
         if (audioController == null)
         {

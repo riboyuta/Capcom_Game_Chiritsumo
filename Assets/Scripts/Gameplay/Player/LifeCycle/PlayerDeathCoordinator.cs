@@ -2,6 +2,12 @@ using System;
 using System.Collections;
 using UnityEngine;
 
+public enum PlayerDeathCause
+{
+    Damage,
+    Hazard
+}
+
 internal sealed class PlayerDeathCoordinator
 {
     private readonly MonoBehaviour coroutineRunner;
@@ -21,7 +27,7 @@ internal sealed class PlayerDeathCoordinator
     private StageResetSystem stageResetSystem;
     private PlayerCameraController playerCameraController;
     private PlayerDeathView playerDeathView;
-    private PlayerController.DeathCause lastDeathCause = PlayerController.DeathCause.Damage;
+    private PlayerDeathCause lastDeathCause = PlayerDeathCause.Damage;
     private Coroutine respawnSequenceCoroutine;
 
     private bool isDead;
@@ -67,7 +73,7 @@ internal sealed class PlayerDeathCoordinator
         this.logRespawnWarning = logRespawnWarning;
     }
 
-    internal void StartRespawnSequence(PlayerController.DeathCause deathCause)
+    internal void StartRespawnSequence(PlayerDeathCause deathCause)
     {
         isDead = true;
         isDeathSequencePlaying = true;
@@ -92,7 +98,7 @@ internal sealed class PlayerDeathCoordinator
     {
         LogRespawn("Respawn sequence started");
 
-        if (lastDeathCause == PlayerController.DeathCause.Damage)
+        if (lastDeathCause == PlayerDeathCause.Damage)
         {
             PlayDamageDeathZoom();
             PlayDamageDeathIntro();
@@ -102,7 +108,7 @@ internal sealed class PlayerDeathCoordinator
         ResolvePlayerDeathViewIfNeeded();
         if (playerDeathView != null)
         {
-            if (lastDeathCause == PlayerController.DeathCause.Hazard)
+            if (lastDeathCause == PlayerDeathCause.Hazard)
             {
                 LogRespawn("Hazard death uses immediate black transition");
                 LogRespawn("Hazard black in started");
@@ -170,14 +176,14 @@ internal sealed class PlayerDeathCoordinator
 
     private IEnumerator FinishRespawnSequence()
     {
-        if (lastDeathCause == PlayerController.DeathCause.Damage)
+        if (lastDeathCause == PlayerDeathCause.Damage)
         {
             ResetDamageDeathPresentation();
         }
 
         if (playerDeathView != null)
         {
-            if (lastDeathCause == PlayerController.DeathCause.Hazard)
+            if (lastDeathCause == PlayerDeathCause.Hazard)
             {
                 LogRespawn("Hazard black out started");
             }
@@ -323,7 +329,6 @@ internal sealed class PlayerDeathCoordinator
         runtimeState.wallReattachLockTimer = 0.0f;
         runtimeState.isWallSliding = false;
         runtimeState.isDashing = false;
-        runtimeState.isFastFalling = false;
         runtimeState.dashTimer = 0.0f;
         runtimeState.groundDashCooldownTimer = 0.0f;
         runtimeState.currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);

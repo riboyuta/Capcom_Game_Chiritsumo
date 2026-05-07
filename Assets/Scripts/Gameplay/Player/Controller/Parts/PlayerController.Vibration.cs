@@ -173,7 +173,7 @@ public sealed partial class PlayerController
     }
     // 死亡開始時の振動を再生する。
     // 「いつ鳴らすか」は Controller 側で決め、実際の再生内容は VibrationController 側へ委譲する。
-    private void PlayDeathVibration(DeathCause cause)
+    private void PlayDeathVibration(PlayerDeathCause cause)
     {
         if (vibrationController == null)
         {

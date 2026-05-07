@@ -34,9 +34,6 @@ internal sealed class PlayerRuntimeState
     // 現在ダッシュ中かどうか。
     public bool isDashing;
 
-    // 現在急降下中かどうか。
-    public bool isFastFalling;
-
     // ダッシュ残り時間。
     public float dashTimer;
 
@@ -52,6 +49,15 @@ internal sealed class PlayerRuntimeState
 
     // ダッシュ開始時のY速度。
     public float dashStartVerticalVelocity;
+
+    // 現在ストンプ中かどうか。
+    public bool isStomping;
+
+    // ストンプ継続時間。
+    public float stompTimer;
+
+    // ストンプ開始時の横速度。
+    public float stompStartHorizontalVelocity;
 
     // 最後に向いていた左右方向。(-1:left / +1:right)
     public int facing = 1;
