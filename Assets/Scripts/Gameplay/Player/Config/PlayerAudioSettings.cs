@@ -217,11 +217,11 @@ public sealed class PlayerAudioSettings : MonoBehaviour
 
     // 死亡音を再生する。
     // 死亡開始時は壁滑りループを止めてから再生する。
-    public void PlayDeath(PlayerController.DeathCause cause)
+    public void PlayDeath(PlayerDeathCause cause)
     {
         StopSafe(wallSlideAudioId);
 
-        if (cause == PlayerController.DeathCause.Hazard)
+        if (cause == PlayerDeathCause.Hazard)
         {
             if (!enableHazardDeath) return;
             PlayOverlapSafe(hazardDeathAudioId);

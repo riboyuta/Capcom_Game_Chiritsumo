@@ -13,12 +13,6 @@ using UnityEngine;
 public sealed partial class PlayerController : MonoBehaviour
 {
 
-    public enum DeathCause
-    {
-        Damage,
-        Hazard
-    }
-
     private const float DiagonalInputThreshold = 0.5f;
 
     [Header("入力: 生入力ソース")]
@@ -191,20 +185,20 @@ public sealed partial class PlayerController : MonoBehaviour
 
     internal bool RequestHazardDeath()
     {
-        return RequestDeathStart(DeathCause.Hazard);
+        return RequestDeathStart(PlayerDeathCause.Hazard);
     }
 
     internal bool RequestDamageDeath()
     {
-        return RequestDeathStart(DeathCause.Damage);
+        return RequestDeathStart(PlayerDeathCause.Damage);
     }
 
     internal void RequestKill(Vector3 damageDirection)
     {
-        RequestDeathStart(DeathCause.Damage);
+        RequestDeathStart(PlayerDeathCause.Damage);
     }
 
-    private bool RequestDeathStart(DeathCause cause)
+    private bool RequestDeathStart(PlayerDeathCause cause)
     {
         if (deathCoordinator != null && deathCoordinator.IsDeathSequencePlaying)
         {
