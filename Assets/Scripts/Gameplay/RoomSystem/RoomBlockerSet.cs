@@ -37,6 +37,8 @@ public sealed class RoomBlockerSet : MonoBehaviour
         public RoomManager.RoomDirection side;
         public float intervalMin;
         public float intervalMax;
+        public BoxCollider blockerCollider;
+        public bool isBlocked;
         public bool isAmbiguous;
         public string debugName;
     }
@@ -212,6 +214,7 @@ public sealed class RoomBlockerSet : MonoBehaviour
         }
 
         MarkAmbiguousSegments(ownerRoom);
+        RebuildGateBlockerColliders(ownerRoom);
 
         if (enableGateDebugLog && gateSegments.Count > 0)
         {
@@ -219,6 +222,131 @@ public sealed class RoomBlockerSet : MonoBehaviour
             {
                 GateSegment segment = gateSegments[i];
                 Debug.Log($"RoomBlockerSet: Gate candidate '{segment.debugName}' side={segment.side} interval=({segment.intervalMin:F2}, {segment.intervalMax:F2}) ambiguous={segment.isAmbiguous}", this);
+            }
+        }
+    }
+
+    private void RebuildGateBlockerColliders(Room ownerRoom)
+    {
+        DisableLegacyDirectionBlockers();
+
+        HashSet<string> usedGateBlockerNames = new();
+
+        for (int i = 0; i < gateSegments.Count; i++)
+        {
+            GateSegment segment = gateSegments[i];
+            string targetName = segment.targetRoom != null ? segment.targetRoom.name : "NullTarget";
+            string blockerName = $"GateBlocker_{i}_{segment.side}_{targetName}";
+            usedGateBlockerNames.Add(blockerName);
+
+            BoxCollider collider = GetOrCreateGateBlockerCollider(blockerName);
+            ConfigureGateBlocker(collider, segment, ownerRoom);
+
+            segment.blockerCollider = collider;
+            segment.isBlocked = false;
+            gateSegments[i] = segment;
+
+            if (enableGateDebugLog)
+            {
+                Debug.Log($"RoomBlockerSet: Gate collider '{collider.name}' side={segment.side} target={targetName} interval=({segment.intervalMin:F2}, {segment.intervalMax:F2})", this);
+            }
+        }
+
+        DisableUnusedGateBlockers(usedGateBlockerNames);
+    }
+
+    private BoxCollider GetOrCreateGateBlockerCollider(string blockerName)
+    {
+        Transform child = transform.Find(blockerName);
+        GameObject blockerObject;
+
+        if (child == null)
+        {
+            blockerObject = new GameObject(blockerName);
+            blockerObject.transform.SetParent(transform, false);
+        }
+        else
+        {
+            blockerObject = child.gameObject;
+        }
+
+        BoxCollider collider = blockerObject.GetComponent<BoxCollider>();
+        if (collider == null)
+        {
+            collider = blockerObject.AddComponent<BoxCollider>();
+        }
+
+        collider.isTrigger = false;
+        collider.enabled = false;
+        collider.center = Vector3.zero;
+        collider.transform.rotation = Quaternion.identity;
+        return collider;
+    }
+
+    private void ConfigureGateBlocker(BoxCollider collider, GateSegment segment, Room ownerRoom)
+    {
+        if (ownerRoom == null || ownerRoom.RoomBounds == null)
+        {
+            return;
+        }
+
+        Bounds ownerBounds = ownerRoom.RoomBounds.WorldBounds;
+        float intervalCenter = (segment.intervalMin + segment.intervalMax) * 0.5f;
+        float intervalLength = Mathf.Max(0f, segment.intervalMax - segment.intervalMin);
+
+        Vector3 center;
+        Vector3 size;
+
+        switch (segment.side)
+        {
+            case RoomManager.RoomDirection.Left:
+                center = new Vector3(ownerBounds.min.x - blockerThickness * 0.5f, intervalCenter, ownerBounds.center.z);
+                size = new Vector3(blockerThickness, intervalLength, blockerDepth);
+                break;
+            case RoomManager.RoomDirection.Right:
+                center = new Vector3(ownerBounds.max.x + blockerThickness * 0.5f, intervalCenter, ownerBounds.center.z);
+                size = new Vector3(blockerThickness, intervalLength, blockerDepth);
+                break;
+            case RoomManager.RoomDirection.Up:
+                center = new Vector3(intervalCenter, ownerBounds.max.y + blockerThickness * 0.5f, ownerBounds.center.z);
+                size = new Vector3(intervalLength, blockerThickness, blockerDepth);
+                break;
+            case RoomManager.RoomDirection.Down:
+                center = new Vector3(intervalCenter, ownerBounds.min.y - blockerThickness * 0.5f, ownerBounds.center.z);
+                size = new Vector3(intervalLength, blockerThickness, blockerDepth);
+                break;
+            default:
+                return;
+        }
+
+        collider.transform.position = center;
+        collider.transform.rotation = Quaternion.identity;
+        collider.size = size;
+        collider.isTrigger = false;
+        collider.enabled = false;
+        collider.center = Vector3.zero;
+    }
+
+    private void DisableUnusedGateBlockers(HashSet<string> usedGateBlockerNames)
+    {
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform child = transform.GetChild(i);
+            if (!child.name.StartsWith("GateBlocker_"))
+            {
+                continue;
+            }
+
+            if (usedGateBlockerNames.Contains(child.name))
+            {
+                continue;
+            }
+
+            BoxCollider collider = child.GetComponent<BoxCollider>();
+            if (collider != null)
+            {
+                collider.enabled = false;
+                collider.isTrigger = false;
             }
         }
     }
