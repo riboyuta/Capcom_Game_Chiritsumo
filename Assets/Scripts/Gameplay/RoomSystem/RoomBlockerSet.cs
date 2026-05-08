@@ -4,6 +4,19 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class RoomBlockerSet : MonoBehaviour
 {
+    internal readonly struct GateHandle
+    {
+        internal readonly RoomBlockerSet ownerSet;
+        internal readonly int index;
+        internal bool IsValid => ownerSet != null && index >= 0;
+
+        internal GateHandle(RoomBlockerSet ownerSet, int index)
+        {
+            this.ownerSet = ownerSet;
+            this.index = index;
+        }
+    }
+
     [Header("Blocker 設定")]
     [Tooltip("部屋境界の外周に置く Blocker の厚みです。XY 平面での侵入を防ぐために使います。")]
     [SerializeField] private float blockerThickness = 2.0f;
@@ -40,6 +53,7 @@ public sealed class RoomBlockerSet : MonoBehaviour
         public BoxCollider blockerCollider;
         public bool isBlocked;
         public bool isAmbiguous;
+        public int reverseGateIndex;
         public string debugName;
     }
 
@@ -215,6 +229,7 @@ public sealed class RoomBlockerSet : MonoBehaviour
 
         MarkAmbiguousSegments(ownerRoom);
         RebuildGateBlockerColliders(ownerRoom);
+        BuildReverseGateLinks();
 
         if (enableGateDebugLog && gateSegments.Count > 0)
         {
@@ -374,6 +389,7 @@ public sealed class RoomBlockerSet : MonoBehaviour
             intervalMax = intervalMax,
             isAmbiguous = false,
             debugName = $"{ownerRoom.name}->{targetRoom.name}:{side}",
+            reverseGateIndex = -1,
         });
     }
 
@@ -400,17 +416,22 @@ public sealed class RoomBlockerSet : MonoBehaviour
             intervalMax = intervalMax,
             isAmbiguous = false,
             debugName = $"{ownerRoom.name}->{targetRoom.name}:{side}",
+            reverseGateIndex = -1,
         });
     }
 
-    public bool TryFindGateTarget(
+    internal bool TryFindGate(
         RoomManager.RoomDirection side,
         Vector3 worldPosition,
+        out GateHandle gate,
         out Room targetRoom,
-        out bool blockedByAmbiguous)
+        out bool blockedByAmbiguous,
+        out bool blockedByOneWay)
     {
+        gate = default;
         targetRoom = null;
         blockedByAmbiguous = false;
+        blockedByOneWay = false;
 
         float axisPosition = side == RoomManager.RoomDirection.Left || side == RoomManager.RoomDirection.Right
             ? worldPosition.y
@@ -418,6 +439,7 @@ public sealed class RoomBlockerSet : MonoBehaviour
 
         int matchedCount = 0;
         GateSegment matchedSegment = default;
+        int matchedIndex = -1;
 
         for (int i = 0; i < gateSegments.Count; i++)
         {
@@ -434,6 +456,7 @@ public sealed class RoomBlockerSet : MonoBehaviour
 
             matchedCount++;
             matchedSegment = segment;
+            matchedIndex = i;
 
             if (segment.isAmbiguous)
             {
@@ -453,8 +476,77 @@ public sealed class RoomBlockerSet : MonoBehaviour
             return false;
         }
 
+        if (matchedSegment.isBlocked)
+        {
+            blockedByOneWay = true;
+            return false;
+        }
+
+        gate = new GateHandle(this, matchedIndex);
         targetRoom = matchedSegment.targetRoom;
         return targetRoom != null;
+    }
+
+    internal bool TryGetReverseGate(GateHandle gate, out GateHandle reverseGate)
+    {
+        reverseGate = default;
+        if (gate.ownerSet == null || !gate.ownerSet.IsValidGateHandle(gate))
+        {
+            return false;
+        }
+
+        GateSegment segment = gate.ownerSet.gateSegments[gate.index];
+        RoomBlockerSet reverseOwnerSet = GetBlockerSetForRoom(segment.targetRoom);
+        if (reverseOwnerSet == null)
+        {
+            return false;
+        }
+
+        if (segment.reverseGateIndex < 0 || segment.reverseGateIndex >= reverseOwnerSet.gateSegments.Count)
+        {
+            return false;
+        }
+
+        reverseGate = new GateHandle(reverseOwnerSet, segment.reverseGateIndex);
+        return true;
+    }
+
+    internal void SetGateBlocked(GateHandle gate, bool blocked)
+    {
+        if (!IsValidGateHandle(gate))
+        {
+            return;
+        }
+
+        GateSegment segment = gateSegments[gate.index];
+        if (segment.isAmbiguous && blocked)
+        {
+            Debug.LogWarning($"RoomBlockerSet: Ambiguous gate '{segment.debugName}' は blocked にできません。", this);
+            return;
+        }
+
+        segment.isBlocked = blocked;
+        if (segment.blockerCollider != null)
+        {
+            segment.blockerCollider.isTrigger = false;
+            segment.blockerCollider.enabled = blocked;
+        }
+
+        gateSegments[gate.index] = segment;
+        if (blocked && enableGateDebugLog)
+        {
+            Debug.Log($"RoomBlockerSet: Gate blocked '{segment.debugName}'", this);
+        }
+    }
+
+    internal bool IsGateBlocked(GateHandle gate)
+    {
+        return IsValidGateHandle(gate) && gateSegments[gate.index].isBlocked;
+    }
+
+    internal Room GetGateTargetRoom(GateHandle gate)
+    {
+        return IsValidGateHandle(gate) ? gateSegments[gate.index].targetRoom : null;
     }
 
     private void MarkAmbiguousSegments(Room ownerRoom)
@@ -482,6 +574,99 @@ public sealed class RoomBlockerSet : MonoBehaviour
                 gateSegments[j] = b;
             }
         }
+    }
+
+    private void BuildReverseGateLinks()
+    {
+        for (int i = 0; i < gateSegments.Count; i++)
+        {
+            GateSegment resetSegment = gateSegments[i];
+            resetSegment.reverseGateIndex = -1;
+            gateSegments[i] = resetSegment;
+        }
+
+        const float intervalTolerance = 0.01f;
+        for (int i = 0; i < gateSegments.Count; i++)
+        {
+            GateSegment segment = gateSegments[i];
+            if (segment.isAmbiguous)
+            {
+                continue;
+            }
+
+            RoomBlockerSet reverseOwnerSet = GetBlockerSetForRoom(segment.targetRoom);
+            if (reverseOwnerSet == null)
+            {
+                Debug.LogWarning($"RoomBlockerSet: ReverseGate owner set が見つかりません。gate='{segment.debugName}'", this);
+                continue;
+            }
+
+            int matchedIndex = -1;
+            for (int j = 0; j < reverseOwnerSet.gateSegments.Count; j++)
+            {
+                GateSegment other = reverseOwnerSet.gateSegments[j];
+                if (other.isAmbiguous)
+                {
+                    continue;
+                }
+
+                bool isReversePair =
+                    segment.ownerRoom == other.targetRoom &&
+                    segment.targetRoom == other.ownerRoom &&
+                    segment.side == GetOppositeSide(other.side) &&
+                    Mathf.Abs(segment.intervalMin - other.intervalMin) <= intervalTolerance &&
+                    Mathf.Abs(segment.intervalMax - other.intervalMax) <= intervalTolerance;
+
+                if (!isReversePair)
+                {
+                    continue;
+                }
+
+                if (matchedIndex != -1)
+                {
+                    matchedIndex = -1;
+                    break;
+                }
+
+                matchedIndex = j;
+            }
+
+            if (matchedIndex == -1)
+            {
+                Debug.LogWarning($"RoomBlockerSet: ReverseGate が見つかりません。gate='{segment.debugName}'", this);
+                continue;
+            }
+
+            segment.reverseGateIndex = matchedIndex;
+            gateSegments[i] = segment;
+        }
+    }
+
+    private static RoomManager.RoomDirection GetOppositeSide(RoomManager.RoomDirection side)
+    {
+        return side switch
+        {
+            RoomManager.RoomDirection.Left => RoomManager.RoomDirection.Right,
+            RoomManager.RoomDirection.Right => RoomManager.RoomDirection.Left,
+            RoomManager.RoomDirection.Up => RoomManager.RoomDirection.Down,
+            RoomManager.RoomDirection.Down => RoomManager.RoomDirection.Up,
+            _ => RoomManager.RoomDirection.None,
+        };
+    }
+
+    private bool IsValidGateHandle(GateHandle gate)
+    {
+        return gate.IsValid && gate.ownerSet == this && gate.index < gateSegments.Count;
+    }
+
+    private static RoomBlockerSet GetBlockerSetForRoom(Room room)
+    {
+        if (room == null)
+        {
+            return null;
+        }
+
+        return room.GetComponentInChildren<RoomBlockerSet>(true);
     }
 
     private void OnDrawGizmos()

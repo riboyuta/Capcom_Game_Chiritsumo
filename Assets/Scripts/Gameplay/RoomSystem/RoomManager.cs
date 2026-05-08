@@ -504,15 +504,27 @@ public sealed class RoomManager : MonoBehaviour
         }
 
         RoomBlockerSet currentBlockerSet = EnsureRoomBlockerSet(currentRoom);
+        RoomBlockerSet.GateHandle throughGate;
         Room nextRoom = null;
         bool blockedByAmbiguous = false;
-        bool foundByGate = currentBlockerSet.TryFindGateTarget(moveDirection, playerPosition, out nextRoom, out blockedByAmbiguous);
+        bool blockedByOneWay = false;
+        bool foundByGate = currentBlockerSet.TryFindGate(
+            moveDirection,
+            playerPosition,
+            out throughGate,
+            out nextRoom,
+            out blockedByAmbiguous,
+            out blockedByOneWay);
 
         if (!foundByGate)
         {
             if (enableDebugLog)
             {
-                string reason = blockedByAmbiguous ? "ambiguous gate" : "no matching gate";
+                string reason = blockedByAmbiguous
+                    ? "ambiguous gate"
+                    : blockedByOneWay
+                        ? "one-way blocked gate"
+                        : "no matching gate";
                 Debug.Log($"RoomManager: Gate 検索で遷移先を決定できませんでした。Direction={moveDirection}, reason={reason}", this);
             }
 
@@ -536,8 +548,18 @@ public sealed class RoomManager : MonoBehaviour
             Debug.LogWarning("RoomManager: playerCameraController が未設定のためカメラ遷移を開始できません。", this);
         }
 
-        // Step2 では Gate 検索遷移のみを運用する。
-        // Step3 で Gate Collider 単位の一方通行を導入する予定。
+        if (currentRoom.EnableOneWayBlockerOnEntry)
+        {
+            RoomBlockerSet enteredRoomBlockerSet = EnsureRoomBlockerSet(currentRoom);
+            if (enteredRoomBlockerSet.TryGetReverseGate(throughGate, out RoomBlockerSet.GateHandle reverseGate))
+            {
+                reverseGate.ownerSet.SetGateBlocked(reverseGate, true);
+            }
+            else
+            {
+                Debug.LogWarning($"RoomManager: ReverseGate が見つからないため one-way blocker を有効化できません。fromGateTarget='{nextRoom?.name}'", this);
+            }
+        }
 
         BeginRoomTransitionExternalControl();
 
