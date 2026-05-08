@@ -116,6 +116,7 @@ namespace Capcom_Game_Chiritsumo.Camera.CameraShake
                 
                 // 次のフレームで更新されなければ0に戻るように減衰（呼ぶ側が毎フレーム呼ぶ前提）
                 _continuousIntensity = Mathf.Lerp(_continuousIntensity, 0f, Time.deltaTime * 5f);
+
             }
 
             // 2. Impulse（単発）な揺れの計算
