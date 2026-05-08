@@ -69,8 +69,6 @@ public sealed class RoomManager : MonoBehaviour
     private RoomDirection lastTransitionDirection = RoomDirection.None;
     private bool isTransitioning;
     private PlayerExternalControlSession roomTransitionControlSession = PlayerExternalControlSession.Invalid;
-    private readonly Dictionary<Room, HashSet<RoomDirection>> blockedDirectionsByRoom = new();
-    private int oneWayBlockerLayer = 0;
 
     public Room CurrentRoom => currentRoom;
     public Room PreviousRoom => previousRoom;
@@ -92,7 +90,7 @@ public sealed class RoomManager : MonoBehaviour
 
     private void Start()
     {
-        // 一方通行 Blocker の初期構築を行う。
+        // Gate 候補の初期構築を行う（方向単位 Blocker は Step3 まで無効化）。
         InitializeRoomBlockers();
 
         // 開始部屋が設定されている場合は現在部屋を確定する。
@@ -409,8 +407,6 @@ public sealed class RoomManager : MonoBehaviour
 
     private void InitializeRoomBlockers()
     {
-
-
         Room[] rooms = FindObjectsByType<Room>(FindObjectsSortMode.None);
         for (int i = 0; i < rooms.Length; i++)
         {
@@ -421,10 +417,7 @@ public sealed class RoomManager : MonoBehaviour
             }
 
             RoomBlockerSet blockerSet = EnsureRoomBlockerSet(room);
-            blockerSet.EnsureAllBlockersCreated();
-            blockerSet.RebuildFromBounds(room.RoomBounds.WorldBounds);
             blockerSet.RebuildGateSegments(room, rooms);
-            ApplyBlockerLayer(blockerSet.gameObject);
         }
     }
 
@@ -446,29 +439,6 @@ public sealed class RoomManager : MonoBehaviour
         }
 
         return blockerSet;
-    }
-
-    private void ApplyBlockerLayer(GameObject root)
-    {
-        // BlockerSet 配下すべてに Layer を設定する。
-        Transform[] transforms = root.GetComponentsInChildren<Transform>(true);
-        for (int i = 0; i < transforms.Length; i++)
-        {
-            transforms[i].gameObject.layer = oneWayBlockerLayer;
-        }
-    }
-
-    private RoomDirection GetOppositeDirection(RoomDirection moveDirection)
-    {
-        // 移動方向の反対側を、遷移先で塞ぐ方向として返す。
-        return moveDirection switch
-        {
-            RoomDirection.Left => RoomDirection.Right,
-            RoomDirection.Right => RoomDirection.Left,
-            RoomDirection.Up => RoomDirection.Down,
-            RoomDirection.Down => RoomDirection.Up,
-            _ => RoomDirection.None,
-        };
     }
 
     private bool TryGetTransitionDirection(
@@ -549,13 +519,6 @@ public sealed class RoomManager : MonoBehaviour
             return false;
         }
 
-        // 一方通行有効時、現在部屋で禁止された方向への遷移は拒否する。
-        if (blockedDirectionsByRoom.TryGetValue(currentRoom, out HashSet<RoomDirection> blockedInCurrent)
-            && blockedInCurrent.Contains(moveDirection))
-        {
-            return false;
-        }
-
         // 状態切り替え直後にカメラ設定反映と遷移開始を行う。
         isTransitioning = true;
         previousRoom = currentRoom;
@@ -573,27 +536,8 @@ public sealed class RoomManager : MonoBehaviour
             Debug.LogWarning("RoomManager: playerCameraController が未設定のためカメラ遷移を開始できません。", this);
         }
 
-        // 遷移先 Room の設定が有効な場合のみ、反対方向 Blocker と論理禁止を登録する。
-        RoomDirection blockedDirection = GetOppositeDirection(moveDirection);
-        if (currentRoom.EnableOneWayBlockerOnEntry && blockedDirection != RoomDirection.None)
-        {
-            if (!blockedDirectionsByRoom.TryGetValue(currentRoom, out HashSet<RoomDirection> blockedInTarget))
-            {
-                blockedInTarget = new HashSet<RoomDirection>();
-                blockedDirectionsByRoom[currentRoom] = blockedInTarget;
-            }
-
-            blockedInTarget.Add(blockedDirection);
-
-            RoomBlockerSet targetBlockerSet = EnsureRoomBlockerSet(currentRoom);
-            targetBlockerSet.RebuildFromBounds(currentRoom.RoomBounds.WorldBounds);
-            ApplyBlockerLayer(targetBlockerSet.gameObject);
-            BoxCollider blocker = targetBlockerSet.GetBlocker(blockedDirection);
-            if (blocker != null)
-            {
-                blocker.enabled = true;
-            }
-        }
+        // Step2 では Gate 検索遷移のみを運用する。
+        // Step3 で Gate Collider 単位の一方通行を導入する予定。
 
         BeginRoomTransitionExternalControl();
 

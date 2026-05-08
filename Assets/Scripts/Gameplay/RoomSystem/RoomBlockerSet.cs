@@ -27,6 +27,7 @@ public sealed class RoomBlockerSet : MonoBehaviour
     private const string BlockerRightName = "Blocker_Right";
     private const string BlockerUpName = "Blocker_Up";
     private const string BlockerDownName = "Blocker_Down";
+    private static readonly string[] LegacyBlockerNames = { BlockerLeftName, BlockerRightName, BlockerUpName, BlockerDownName };
 
 
     private struct GateSegment
@@ -44,8 +45,14 @@ public sealed class RoomBlockerSet : MonoBehaviour
     internal IReadOnlyList<(Room ownerRoom, Room targetRoom, RoomManager.RoomDirection side, float intervalMin, float intervalMax, bool isAmbiguous, string debugName)> GateSegmentsForDebug
         => gateSegments.ConvertAll(segment => (segment.ownerRoom, segment.targetRoom, segment.side, segment.intervalMin, segment.intervalMax, segment.isAmbiguous, segment.debugName));
 
+    private void Awake()
+    {
+        DisableLegacyDirectionBlockers();
+    }
+
     public BoxCollider GetBlocker(RoomManager.RoomDirection blockedDirection)
     {
+        // Legacy API: Step3 で Gate Collider 生成 API へ置き換える予定。
         // 指定された方向に対応する Blocker の Collider を返す。
         return blockedDirection switch
         {
@@ -59,6 +66,7 @@ public sealed class RoomBlockerSet : MonoBehaviour
 
     public void EnsureAllBlockersCreated()
     {
+        // Legacy API: Step3 で Gate Collider 生成 API へ置き換える予定。
         // 全方向の Blocker を用意して重複生成を防ぐ。
         GetOrCreateBlocker(BlockerLeftName);
         GetOrCreateBlocker(BlockerRightName);
@@ -68,6 +76,7 @@ public sealed class RoomBlockerSet : MonoBehaviour
 
     public void RebuildFromBounds(Bounds bounds)
     {
+        // Legacy API: Step3 で Gate Collider 生成 API へ置き換える予定。
         // RoomBounds 全面を塞ぐサイズ・位置で各 Blocker を更新する。
         ConfigureBlocker(GetOrCreateBlocker(BlockerLeftName), RoomManager.RoomDirection.Left, bounds);
         ConfigureBlocker(GetOrCreateBlocker(BlockerRightName), RoomManager.RoomDirection.Right, bounds);
@@ -143,6 +152,37 @@ public sealed class RoomBlockerSet : MonoBehaviour
         collider.transform.position = center;
         collider.transform.rotation = Quaternion.identity;
         collider.size = size;
+    }
+
+    private void DisableLegacyDirectionBlockers()
+    {
+        // 旧仕様の方向単位 Blocker が Scene に残っていても有効化しない。
+        for (int i = 0; i < LegacyBlockerNames.Length; i++)
+        {
+            string blockerName = LegacyBlockerNames[i];
+
+            Transform directChild = transform.Find(blockerName);
+            DisableColliderOnTransform(directChild);
+
+            Transform roomRoot = transform.parent;
+            Transform roomChild = roomRoot != null ? roomRoot.Find(blockerName) : null;
+            DisableColliderOnTransform(roomChild);
+        }
+    }
+
+    private static void DisableColliderOnTransform(Transform target)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        BoxCollider blocker = target.GetComponent<BoxCollider>();
+        if (blocker != null)
+        {
+            blocker.enabled = false;
+            blocker.isTrigger = false;
+        }
     }
 
     internal void RebuildGateSegments(Room ownerRoom, IReadOnlyList<Room> allRooms)
