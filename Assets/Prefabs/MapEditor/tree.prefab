@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 4117532304671002215}
   - component: {fileID: 6664086289110375170}
   - component: {fileID: -5280771476518974043}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: tree
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -126,7 +126,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cbefe0605652694094dc606600ca1df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TileType
-  type: 6
+  tileDefinition:
+    tileID: 
+    prefab: {fileID: 0}
+    icon: {fileID: 0}
   gimmickType: 0
   gimmickID: 0
 --- !u!65 &-5280771476518974043
