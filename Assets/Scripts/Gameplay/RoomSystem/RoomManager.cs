@@ -408,6 +408,7 @@ public sealed class RoomManager : MonoBehaviour
     private void InitializeRoomBlockers()
     {
         Room[] rooms = FindObjectsByType<Room>(FindObjectsSortMode.None);
+        List<(Room room, RoomBlockerSet blockerSet)> blockerSets = new();
         for (int i = 0; i < rooms.Length; i++)
         {
             Room room = rooms[i];
@@ -417,7 +418,18 @@ public sealed class RoomManager : MonoBehaviour
             }
 
             RoomBlockerSet blockerSet = EnsureRoomBlockerSet(room);
+            blockerSets.Add((room, blockerSet));
+        }
+
+        for (int i = 0; i < blockerSets.Count; i++)
+        {
+            (Room room, RoomBlockerSet blockerSet) = blockerSets[i];
             blockerSet.RebuildGateSegments(room, rooms);
+        }
+
+        for (int i = 0; i < blockerSets.Count; i++)
+        {
+            blockerSets[i].blockerSet.BuildReverseGateLinks();
         }
     }
 

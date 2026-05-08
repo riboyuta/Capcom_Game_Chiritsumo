@@ -229,7 +229,6 @@ public sealed class RoomBlockerSet : MonoBehaviour
 
         MarkAmbiguousSegments(ownerRoom);
         RebuildGateBlockerColliders(ownerRoom);
-        BuildReverseGateLinks();
 
         if (enableGateDebugLog && gateSegments.Count > 0)
         {
@@ -576,7 +575,7 @@ public sealed class RoomBlockerSet : MonoBehaviour
         }
     }
 
-    private void BuildReverseGateLinks()
+    internal void BuildReverseGateLinks()
     {
         for (int i = 0; i < gateSegments.Count; i++)
         {
@@ -639,6 +638,25 @@ public sealed class RoomBlockerSet : MonoBehaviour
 
             segment.reverseGateIndex = matchedIndex;
             gateSegments[i] = segment;
+        }
+
+        if (enableGateDebugLog && gateSegments.Count > 0)
+        {
+            for (int i = 0; i < gateSegments.Count; i++)
+            {
+                GateSegment segment = gateSegments[i];
+                string reverseDebugName = "None";
+                if (segment.reverseGateIndex >= 0)
+                {
+                    RoomBlockerSet reverseOwnerSet = GetBlockerSetForRoom(segment.targetRoom);
+                    if (reverseOwnerSet != null && segment.reverseGateIndex < reverseOwnerSet.gateSegments.Count)
+                    {
+                        reverseDebugName = reverseOwnerSet.gateSegments[segment.reverseGateIndex].debugName;
+                    }
+                }
+
+                Debug.Log($"RoomBlockerSet: ReverseGateLink gate='{segment.debugName}' -> reverseGate='{reverseDebugName}'", this);
+            }
         }
     }
 
