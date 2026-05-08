@@ -235,6 +235,60 @@ public sealed class RoomBlockerSet : MonoBehaviour
         });
     }
 
+    public bool TryFindGateTarget(
+        RoomManager.RoomDirection side,
+        Vector3 worldPosition,
+        out Room targetRoom,
+        out bool blockedByAmbiguous)
+    {
+        targetRoom = null;
+        blockedByAmbiguous = false;
+
+        float axisPosition = side == RoomManager.RoomDirection.Left || side == RoomManager.RoomDirection.Right
+            ? worldPosition.y
+            : worldPosition.x;
+
+        int matchedCount = 0;
+        GateSegment matchedSegment = default;
+
+        for (int i = 0; i < gateSegments.Count; i++)
+        {
+            GateSegment segment = gateSegments[i];
+            if (segment.side != side)
+            {
+                continue;
+            }
+
+            if (axisPosition < segment.intervalMin || axisPosition > segment.intervalMax)
+            {
+                continue;
+            }
+
+            matchedCount++;
+            matchedSegment = segment;
+
+            if (segment.isAmbiguous)
+            {
+                blockedByAmbiguous = true;
+            }
+        }
+
+        if (matchedCount == 0)
+        {
+            return false;
+        }
+
+        if (matchedCount > 1 || blockedByAmbiguous)
+        {
+            blockedByAmbiguous = true;
+            Debug.LogWarning($"RoomBlockerSet: side={side} axis={axisPosition:F2} に対する Gate が曖昧です。matchCount={matchedCount}", this);
+            return false;
+        }
+
+        targetRoom = matchedSegment.targetRoom;
+        return targetRoom != null;
+    }
+
     private void MarkAmbiguousSegments(Room ownerRoom)
     {
         for (int i = 0; i < gateSegments.Count; i++)

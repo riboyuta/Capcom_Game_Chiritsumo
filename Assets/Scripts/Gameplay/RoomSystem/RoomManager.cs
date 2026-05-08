@@ -170,7 +170,7 @@ public sealed class RoomManager : MonoBehaviour
 
         if (TryGetTransitionDirection(currentBounds, playerPosition, playerVelocity, out RoomDirection direction))
         {
-            TryTransition(direction);
+            TryTransition(direction, playerPosition);
         }
     }
 
@@ -525,7 +525,7 @@ public sealed class RoomManager : MonoBehaviour
         return false;
     }
 
-    private bool TryTransition(RoomDirection moveDirection)
+    private bool TryTransition(RoomDirection moveDirection, Vector3 playerPosition)
     {
         // 現在部屋が無い場合は遷移できない。
         if (currentRoom == null)
@@ -533,27 +533,19 @@ public sealed class RoomManager : MonoBehaviour
             return false;
         }
 
-        // 遷移方向に応じた隣接部屋を選ぶ。
+        RoomBlockerSet currentBlockerSet = EnsureRoomBlockerSet(currentRoom);
         Room nextRoom = null;
-        switch (moveDirection)
-        {
-            case RoomDirection.Left:
-                nextRoom = currentRoom.LeftRoom;
-                break;
-            case RoomDirection.Right:
-                nextRoom = currentRoom.RightRoom;
-                break;
-            case RoomDirection.Up:
-                nextRoom = currentRoom.UpRoom;
-                break;
-            case RoomDirection.Down:
-                nextRoom = currentRoom.DownRoom;
-                break;
-        }
+        bool blockedByAmbiguous = false;
+        bool foundByGate = currentBlockerSet.TryFindGateTarget(moveDirection, playerPosition, out nextRoom, out blockedByAmbiguous);
 
-        // 隣接部屋が未設定なら遷移しない。
-        if (nextRoom == null)
+        if (!foundByGate)
         {
+            if (enableDebugLog)
+            {
+                string reason = blockedByAmbiguous ? "ambiguous gate" : "no matching gate";
+                Debug.Log($"RoomManager: Gate 検索で遷移先を決定できませんでした。Direction={moveDirection}, reason={reason}", this);
+            }
+
             return false;
         }
 
@@ -593,10 +585,10 @@ public sealed class RoomManager : MonoBehaviour
 
             blockedInTarget.Add(blockedDirection);
 
-            RoomBlockerSet blockerSet = EnsureRoomBlockerSet(currentRoom);
-            blockerSet.RebuildFromBounds(currentRoom.RoomBounds.WorldBounds);
-            ApplyBlockerLayer(blockerSet.gameObject);
-            BoxCollider blocker = blockerSet.GetBlocker(blockedDirection);
+            RoomBlockerSet targetBlockerSet = EnsureRoomBlockerSet(currentRoom);
+            targetBlockerSet.RebuildFromBounds(currentRoom.RoomBounds.WorldBounds);
+            ApplyBlockerLayer(targetBlockerSet.gameObject);
+            BoxCollider blocker = targetBlockerSet.GetBlocker(blockedDirection);
             if (blocker != null)
             {
                 blocker.enabled = true;
