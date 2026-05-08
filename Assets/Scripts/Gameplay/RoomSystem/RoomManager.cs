@@ -423,6 +423,7 @@ public sealed class RoomManager : MonoBehaviour
             RoomBlockerSet blockerSet = EnsureRoomBlockerSet(room);
             blockerSet.EnsureAllBlockersCreated();
             blockerSet.RebuildFromBounds(room.RoomBounds.WorldBounds);
+            blockerSet.RebuildGateSegments(room, rooms);
             ApplyBlockerLayer(blockerSet.gameObject);
         }
     }
