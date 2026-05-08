@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: TileDatabase
   m_EditorClassIdentifier: Assembly-CSharp::TileDatabase
   tiles:
-  - tileID: PlayerRoot
-    prefab: {fileID: 3202484194985546700, guid: 12406671e451f804ab5515e5fe41761b, type: 3}
-    icon: {fileID: 2800000, guid: d75da9a588426e042a7d7d4c0de1ebbe, type: 3}
+  - tileID: tree
+    prefab: {fileID: 7338064284890883238, guid: 3adcee60bccfed4469d8fb125cee2eeb, type: 3}
+    icon: {fileID: 2800000, guid: 7506837e4338e4a4d8db99587640b24f, type: 3}
   - tileID: ground
     prefab: {fileID: 5409637655077809295, guid: 9c7aed6dd85cc384aa4f6e96d3d43986, type: 3}
     icon: {fileID: 2800000, guid: 29bb897056df7214293a9fb07793e72f, type: 3}
