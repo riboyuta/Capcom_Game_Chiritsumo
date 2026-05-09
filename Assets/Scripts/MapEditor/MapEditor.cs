@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using static MapEditor;
 using static UnityEditor.Rendering.InspectorCurveEditor;
 
 [ExecuteAlways]
@@ -29,6 +30,26 @@ public class MapEditor : MonoBehaviour
         public string comment;
     }
 
+    [System.Serializable] //変更できるグリッドサイズ
+    public enum GridSizeType
+    {
+        Normal = 0,
+        Quarter = 1
+    }
+
+    //グリッドサイズ変換
+    private float gridSize
+    {
+        get
+        {
+            switch (gridSizeType)
+            {
+                case GridSizeType.Quarter: return 0.25f;
+                default: return 1.0f;
+            }
+        }
+    }
+
 
     Dictionary<Vector3Int, GameObject> tiles =
         new Dictionary<Vector3Int, GameObject>();
@@ -42,13 +63,6 @@ public class MapEditor : MonoBehaviour
     Stack<MapData> undoStack = new Stack<MapData>(); //変更履歴のスタック
 
 
-   
-
-    [Header("TileDatabase")]
-    [Tooltip("TileDatabaseスクリプトをここにドラッグしてね")]
-    [SerializeField] private TileDatabase tileDatabase;
-
-
     [Header("現在のステージ番号")]
     [Tooltip("現在編集しているステージの番号")]
     [SerializeField] private int stageNumber = 1;
@@ -57,20 +71,23 @@ public class MapEditor : MonoBehaviour
     [Tooltip("現在選択されているファイルのマップに読み書きします")]
     [SerializeField] private string mapFolder = "MapData";
 
-
+    [Header("グリッドサイズ")]
+    [Tooltip("配置するグリッド間隔を変更できます")]
+    [SerializeField] private GridSizeType gridSizeType = GridSizeType.Normal;
 
     [Header("コメント")]
     [Tooltip("ステージ毎に保存されるメモ書き")]
     [TextArea(15, 30)]
     [SerializeField] private string comment;
 
+
     [Header("カメラシェイクプロファイル")]
     [Tooltip(" //マップエディタのデバッグ用カメラシェイクのプロファイルセット")]
-    [SerializeField]
-    private CameraShakeProfile CSMapeditorTestProfile;
+    [SerializeField] private CameraShakeProfile CSMapeditorTestProfile;
 
-
-    float gridSize = 1.0f;
+    [Header("TileDatabase")]
+    [Tooltip("TileDatabaseスクリプトをここにドラッグしてね")]
+    [SerializeField] private TileDatabase tileDatabase;
    
     bool showSaveConfirm = false;
     bool showLoadConfirm = false;
@@ -90,6 +107,8 @@ public class MapEditor : MonoBehaviour
 
     bool canPlaceTile = true;
     int PlaceTileFlagTimer = 0;
+
+    bool canGridVisualization = true;
 
 
     //フォルダ定義
@@ -173,6 +192,16 @@ public class MapEditor : MonoBehaviour
             }
 
 
+            //グリッドライン表示
+            GridVisualization();
+
+            //グリッドライン表示切り替え
+            if (Input.GetKeyDown(KeyCode.N))
+            {
+                canGridVisualization = !canGridVisualization;
+            }
+
+
             //範囲選択処理
             SelectRange();
 
@@ -230,6 +259,8 @@ public class MapEditor : MonoBehaviour
                 }
             }
 
+
+          
 
             //カメラシェイクのテスト
             if (Input.GetKeyDown(KeyCode.B))
@@ -1073,35 +1104,125 @@ public class MapEditor : MonoBehaviour
     //===========================-------
     //　　　　　   Gizmos
     //===========================-------
-    void OnDrawGizmos()
+
+    //void OnDrawGizmos()
+    //{
+    //    Gizmos.color = Color.green;
+
+    //    foreach (var tile in tiles)
+    //    {
+    //        Vector3 pos = new Vector3(
+    //            tile.Key.x * gridSize,
+    //            tile.Key.y * gridSize,
+    //            tile.Key.z * gridSize
+    //        );
+
+    //        Gizmos.DrawWireCube(pos, Vector3.one * gridSize);
+    //    }
+
+    //    if (selecting)
+    //    {
+    //        Gizmos.color = Color.yellow;
+
+    //        Vector3 center = ((Vector3)selectStart + (Vector3)selectEnd) / 2f * gridSize;
+    //        Vector3 size = new Vector3(
+    //            Mathf.Abs(selectEnd.x - selectStart.x) + 1,
+    //            Mathf.Abs(selectEnd.y - selectStart.y) + 1,
+    //            Mathf.Abs(selectEnd.z - selectStart.z) + 1
+    //        ) * gridSize;
+
+    //        Gizmos.DrawWireCube(center, size);
+    //    }
+    //}
+
+
+    void DrawWireCube(Vector3 center, Vector3 size, Color color)
     {
-        Gizmos.color = Color.green;
+        Vector3 half = size / 2f;
 
-        foreach (var tile in tiles)
+        Vector3 p1 = center + new Vector3(-half.x, -half.y, -half.z);
+        Vector3 p2 = center + new Vector3(half.x, -half.y, -half.z);
+        Vector3 p3 = center + new Vector3(half.x, half.y, -half.z);
+        Vector3 p4 = center + new Vector3(-half.x, half.y, -half.z);
+
+        //Vector3 p5 = center + new Vector3(-half.x, -half.y, half.z);
+        //Vector3 p6 = center + new Vector3(half.x, -half.y, half.z);
+        //Vector3 p7 = center + new Vector3(half.x, half.y, half.z);
+        //Vector3 p8 = center + new Vector3(-half.x, half.y, half.z);
+
+        // 前
+        Debug.DrawLine(p1, p2, color, 0.01f);
+        Debug.DrawLine(p2, p3, color, 0.01f);
+        Debug.DrawLine(p3, p4, color, 0.01f);
+        Debug.DrawLine(p4, p1, color, 0.01f);
+                                    
+        //// 後                       
+        //Debug.DrawLine(p5, p6, color, 0.01f);
+        //Debug.DrawLine(p6, p7, color, 0.01f);
+        //Debug.DrawLine(p7, p8, color, 0.01f);
+        //Debug.DrawLine(p8, p5, color, 0.01f);
+                                     
+        //// 接続                       
+        //Debug.DrawLine(p1, p5, color, 0.01f);
+        //Debug.DrawLine(p2, p6, color, 0.01f);
+        //Debug.DrawLine(p3, p7, color, 0.01f);
+        //Debug.DrawLine(p4, p8, color, 0.01f);
+    }
+
+
+    void GridVisualization()
+    {
+        if (!canGridVisualization) return;
+
+        //foreach (var tile in tiles)
+        //{
+        //    Vector3 pos = new Vector3(
+        //        tile.Key.x * gridSize,
+        //        tile.Key.y * gridSize,
+        //        tile.Key.z * gridSize
+        //    );
+
+        //    DrawWireCube(pos, Vector3.one * gridSize, Color.green);
+        //}
+
+
+
+        Vector3Int center = GetGridPosition();
+        int range = 10;
+
+        for (int x = -range; x <= range; x++)
         {
-            Vector3 pos = new Vector3(
-                tile.Key.x * gridSize,
-                tile.Key.y * gridSize,
-                tile.Key.z * gridSize
-            );
+            for (int y = -range; y <= range; y++)
+            {
+                Vector3 pos = new Vector3(
+                    (center.x + x) * gridSize,
+                    (center.y + y) * gridSize,
+                    (float)-0.1f
+                );
 
-            Gizmos.DrawWireCube(pos, Vector3.one * gridSize);
+                DrawWireCube(pos, Vector3.one * gridSize, Color.green);
+
+            }
         }
+
+
 
         if (selecting)
         {
-            Gizmos.color = Color.yellow;
-
-            Vector3 center = ((Vector3)selectStart + (Vector3)selectEnd) / 2f * gridSize;
+            
+            Vector3 center2 = ((Vector3)selectStart + (Vector3)selectEnd) / 2f * gridSize;
             Vector3 size = new Vector3(
                 Mathf.Abs(selectEnd.x - selectStart.x) + 1,
                 Mathf.Abs(selectEnd.y - selectStart.y) + 1,
                 Mathf.Abs(selectEnd.z - selectStart.z) + 1
             ) * gridSize;
-
-            Gizmos.DrawWireCube(center, size);
+            
+            DrawWireCube(center2, size, Color.yellow);
         }
+
     }
+
+   
 
 }
 

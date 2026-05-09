@@ -1,4 +1,197 @@
 {
-    "tiles": [],
+    "tiles": [
+        {
+            "x": -8,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -7,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -6,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -6,
+            "y": -2,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -5,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -5,
+            "y": -2,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -4,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -4,
+            "y": -2,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -3,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -3,
+            "y": -2,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -2,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -1,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": -1,
+            "y": -2,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 0,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 0,
+            "y": -2,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 1,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 1,
+            "y": -2,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 2,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 2,
+            "y": -2,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 3,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 3,
+            "y": -2,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 4,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 5,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 6,
+            "y": -3,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        }
+    ],
     "comment": "０＝ 通常ブロック\n１＝\n２＝\n３＝スイッチ（ギミック）\n４＝扉（ギミック）\n５＝崩れ床（ギミック）\n６＝\n７＝\n８＝\n９＝\n"
 }
