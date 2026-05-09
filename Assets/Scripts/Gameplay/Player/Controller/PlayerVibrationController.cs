@@ -393,14 +393,14 @@ public sealed class PlayerVibrationController : MonoBehaviour
     }
     // 死亡振動を再生する。
     // 死亡開始時は最優先で、残留振動を必ず停止してから単発再生する。
-    public void PlayDeath(PlayerController.DeathCause cause)
+    public void PlayDeath(PlayerDeathCause cause)
     {
         StopAllRumble();
 
         OneShotRumbleSettings settings;
         string rumbleName;
 
-        if (cause == PlayerController.DeathCause.Hazard)
+        if (cause == PlayerDeathCause.Hazard)
         {
             if (!enableHazardDeath)
             {

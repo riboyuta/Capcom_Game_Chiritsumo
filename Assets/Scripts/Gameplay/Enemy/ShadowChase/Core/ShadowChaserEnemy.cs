@@ -168,6 +168,13 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
     private bool initialVisibility;
     private bool initialWasActiveOnStart;
 
+    // インスペクター設定の初期値キャッシュ
+    private float initialDelayTime;
+    private bool initialUseInterpolation;
+    private float initialFollowSmoothSharpness;
+    private float initialSpawnDelay;
+    private float initialSpawnDuration;
+
     // View 参照口
     public bool HasSnapshot => hasLastAppliedSnapshot;
     public PlayerShadowSnapshot CurrentSnapshot => lastAppliedSnapshot;
@@ -218,6 +225,9 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         // 初期状態を Idle に設定
         state = ShadowChaserState.Idle;
         SetVisible(!hideDuringSpawnDelay);
+
+        // 初期状態をキャッシュ
+        CaptureInitialState();
     }
 
     // isActiveOnStart が true なら、シーン開始時に自動的に起動する。
@@ -272,6 +282,13 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             initialVisualScale = Vector3.one;
         }
 
+        // インスペクター設定値の初期値をキャッシュ
+        initialDelayTime = delayTime;
+        initialUseInterpolation = useInterpolation;
+        initialFollowSmoothSharpness = followSmoothSharpness;
+        initialSpawnDelay = spawnDelay;
+        initialSpawnDuration = spawnDuration;
+
         hasCapturedInitialState = true;
     }
 
@@ -301,6 +318,13 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             {
                 visualRoot.localScale = initialVisualScale;
             }
+
+            // パラメータを初期値に復元
+            delayTime = initialDelayTime;
+            useInterpolation = initialUseInterpolation;
+            followSmoothSharpness = initialFollowSmoothSharpness;
+            spawnDelay = initialSpawnDelay;
+            spawnDuration = initialSpawnDuration;
 
             SetVisible(initialVisibility);
 

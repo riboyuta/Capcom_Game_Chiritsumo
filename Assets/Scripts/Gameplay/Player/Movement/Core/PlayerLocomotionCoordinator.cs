@@ -16,6 +16,7 @@ internal sealed class PlayerLocomotionCoordinator
     private readonly PlayerWallActionSystem wallActionSystem;
     private readonly PlayerLedgeClimbSystem ledgeClimbSystem;
     private readonly PlayerInputAssistSystem inputAssistSystem;
+    private readonly PlayerStompSystem stompSystem;
 
     // ============================================================
     // 共有依存関係
@@ -99,6 +100,7 @@ internal sealed class PlayerLocomotionCoordinator
         wallActionSystem = new PlayerWallActionSystem(deps);
         ledgeClimbSystem = new PlayerLedgeClimbSystem(deps);
         inputAssistSystem = new PlayerInputAssistSystem(deps);
+        stompSystem = new PlayerStompSystem(deps);
     }
 
     // ============================================================
@@ -124,6 +126,7 @@ internal sealed class PlayerLocomotionCoordinator
         dashSystem.ResetRuntimeTimers();
         wallActionSystem.ResetRuntimeTimers();
         ledgeClimbSystem.ResetRuntimeTimers();
+        stompSystem.ResetRuntimeTimers();
         resolvedLocomotionModifier = PlayerLocomotionModifierRequest.Identity;
     }
 
@@ -218,16 +221,16 @@ internal sealed class PlayerLocomotionCoordinator
         wallActionSystem.ApplyWallSlide();
     }
 
-    // 急降下開始条件を満たす場合に状態を切り替える。
-    internal void TryStartFastFall()
-    {
-        movementCore.TryStartFastFall();
-    }
-
     // 壁捕まり状態の進入・離脱判定を更新する。
     internal void UpdateWallGrabState()
     {
+        bool wasStomping = deps.RuntimeState.isStomping;
         wallActionSystem.UpdateWallGrabState();
+
+        if (wasStomping && deps.RuntimeState.isWallGrabbing)
+        {
+            stompSystem.EndStompForWallGrab();
+        }
     }
 
     // 壁捕まり中の専用移動を適用する。
@@ -295,6 +298,63 @@ internal sealed class PlayerLocomotionCoordinator
         // DashSystem内部で判定されるため、ここでは常にfalseを返す（実装はEndDash内部）
         return false;
     }
+
+    // ============================================================
+    // ストンプ処理
+    // ============================================================
+
+    internal bool TryStartStomp()
+    {
+        bool wasDashing = deps.RuntimeState.isDashing;
+        bool started = stompSystem.TryStartStomp();
+        if (!started)
+        {
+            return false;
+        }
+
+        if (wasDashing)
+        {
+            dashSystem.CancelDashForStomp();
+        }
+
+        return true;
+    }
+
+    internal void UpdateStompTimer(float deltaTime)
+    {
+        stompSystem.UpdateStompTimer(deltaTime);
+    }
+
+    internal void UpdateStompCancelByInput()
+    {
+        stompSystem.UpdateStompCancelByInput();
+    }
+
+    internal void UpdateStompEndByLanding()
+    {
+        stompSystem.UpdateStompEndByLanding();
+    }
+
+    internal void ApplyStompVelocity()
+    {
+        stompSystem.ApplyStompVelocity();
+    }
+
+    internal void EndStompByLanding()
+    {
+        stompSystem.EndStompByLanding();
+    }
+
+    internal void EndStompForWallGrab()
+    {
+        stompSystem.EndStompForWallGrab();
+    }
+
+    internal void EndStomp()
+    {
+        stompSystem.EndStomp();
+    }
+
 
     // ============================================================
     // 崖乗り上げ

@@ -27,7 +27,6 @@ public sealed partial class PlayerController
 
         snapshot.isWallSliding = runtimeState.isWallSliding;
         snapshot.isDashing = runtimeState.isDashing;
-        snapshot.isFastFalling = runtimeState.isFastFalling;
 
         snapshot.isActionLocked = IsActionLocked;
         snapshot.isDead = IsDeadState;

@@ -210,7 +210,10 @@ internal sealed class PlayerJumpSystem
             return false;
         }
 
-        // ExitWallGrab は WallActionSystem で処理
+        // 壁掴まり状態を解除
+        deps.RuntimeState.isWallGrabbing = false;
+        deps.RuntimeState.wallGrabSide = 0;
+        deps.Rb.useGravity = true;
 
         deps.RuntimeState.wallGrabRemainingTime = Mathf.Max(
             0f,
@@ -223,7 +226,6 @@ internal sealed class PlayerJumpSystem
 
         deps.RuntimeState.isGrounded = false;
         deps.RuntimeState.isWallSliding = false;
-        deps.RuntimeState.isFastFalling = false;
         deps.RuntimeState.wallJumpControlLockTimer = deps.Settings.Wall.WallGrabJumpHorizontalLockTime;
         deps.RuntimeState.wallReattachLockTimer = deps.Settings.Wall.WallGrabJumpReattachLockTime;
 

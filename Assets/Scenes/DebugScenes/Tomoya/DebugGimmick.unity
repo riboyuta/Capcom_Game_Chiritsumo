@@ -685,7 +685,7 @@ Transform:
   m_GameObject: {fileID: 138549113}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -32, y: 14, z: 0}
+  m_LocalPosition: {x: -33.95, y: 16.07, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -737,22 +737,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 722702991}
-  zoneBounds: {fileID: 578944074}
-  priority: 3
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &203841174
 GameObject:
   m_ObjectHideFlags: 0
@@ -799,22 +783,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 892490373}
-  zoneBounds: {fileID: 1291791602}
-  priority: 1
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.8
-  enableTimeLimit: 0
-  activeDuration: 2
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &207851850
 GameObject:
   m_ObjectHideFlags: 0
@@ -861,22 +829,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 397810381}
-  zoneBounds: {fileID: 543635753}
-  priority: 3
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &240956370
 GameObject:
   m_ObjectHideFlags: 0
@@ -989,22 +941,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 1876522118}
-  zoneBounds: {fileID: 1873558615}
-  priority: 3
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &245726019
 GameObject:
   m_ObjectHideFlags: 0
@@ -1247,22 +1183,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 597570093}
-  zoneBounds: {fileID: 987936726}
-  priority: 2
-  overrideOrthographicSize: 1
-  orthographicSize: 3.5
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 2
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &304795535
 GameObject:
   m_ObjectHideFlags: 0
@@ -1569,22 +1489,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 931431529}
-  zoneBounds: {fileID: 1625487301}
-  priority: 2
-  overrideOrthographicSize: 1
-  orthographicSize: 3
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 2
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &395024894
 GameObject:
   m_ObjectHideFlags: 0
@@ -2012,22 +1916,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 473027509}
-  zoneBounds: {fileID: 509593393}
-  priority: 3
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &410927417
 GameObject:
   m_ObjectHideFlags: 0
@@ -3115,22 +3003,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 683127255}
-  zoneBounds: {fileID: 1498275794}
-  priority: 3
-  overrideOrthographicSize: 1
-  orthographicSize: 7
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &683127252
 GameObject:
   m_ObjectHideFlags: 0
@@ -3724,22 +3596,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 1799759272}
-  zoneBounds: {fileID: 1265108288}
-  priority: 3
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &802523753
 GameObject:
   m_ObjectHideFlags: 0
@@ -4816,22 +4672,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 882657941}
-  zoneBounds: {fileID: 1566921214}
-  priority: 4
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &987936724
 GameObject:
   m_ObjectHideFlags: 0
@@ -5081,22 +4921,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 240956373}
-  zoneBounds: {fileID: 410927419}
-  priority: 3
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &1043981907
 GameObject:
   m_ObjectHideFlags: 0
@@ -5143,22 +4967,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 43423295}
-  zoneBounds: {fileID: 1365339668}
-  priority: 3
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &1075999612
 GameObject:
   m_ObjectHideFlags: 0
@@ -6136,12 +5944,6 @@ MonoBehaviour:
       cornerCorrectionDistance: 0.1
       cornerCorrectionUpCheckDistance: 0.18
       cornerCorrectionProbeCount: 4
-  healthSettings:
-    maxHealth: 3
-    invincibilityDuration: 1
-    invincible: 0
-    debugRequestDeath: 0
-    debugRequestHazardDeath: 0
   checkpointSystem: {fileID: 1298716507}
   stageResetSystem: {fileID: 1934615090}
   playerCameraController: {fileID: 0}
@@ -6474,22 +6276,135 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 1201078058}
-  zoneBounds: {fileID: 598627987}
-  priority: 3
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.5
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
+--- !u!1 &1253215040
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1253215045}
+  - component: {fileID: 1253215044}
+  - component: {fileID: 1253215043}
+  - component: {fileID: 1253215042}
+  - component: {fileID: 1253215041}
+  m_Layer: 0
+  m_Name: Gimmick_SpringPad (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1253215041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253215040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 470af1c28a244fb4da6c026644bbd7fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpringPad
+  bounceHeight: 5
+  gravityScale: 3
+  bounceCooldown: 0.2
+  anim: {fileID: 0}
+--- !u!65 &1253215042
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253215040}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &1253215043
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253215040}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: dfb38cb6d7fef384dab0e08309e41f92, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1253215044
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253215040}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1253215045
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253215040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -40.2, y: 7.17, z: 0}
+  m_LocalScale: {x: 3, y: 1, z: 3}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1265108286
 GameObject:
   m_ObjectHideFlags: 0
@@ -7416,22 +7331,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 1961641463}
-  zoneBounds: {fileID: 1418274970}
-  priority: 3
-  overrideOrthographicSize: 1
-  orthographicSize: 5.5
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &1418274968
 GameObject:
   m_ObjectHideFlags: 0
@@ -7698,22 +7597,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 329703069}
-  zoneBounds: {fileID: 1722011549}
-  priority: 3
-  overrideOrthographicSize: 1
-  orthographicSize: 5
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &1486639672
 GameObject:
   m_ObjectHideFlags: 0
@@ -7959,22 +7842,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 1901770171}
-  zoneBounds: {fileID: 1225296266}
-  priority: 2
-  overrideOrthographicSize: 1
-  orthographicSize: 7.5
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &1566921212
 GameObject:
   m_ObjectHideFlags: 0
@@ -8516,22 +8383,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 1455065959}
-  zoneBounds: {fileID: 253487842}
-  priority: 1
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 1
-  activeDuration: 1
-  activateOnlyOnce: 1
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &1661912567
 GameObject:
   m_ObjectHideFlags: 0
@@ -8653,7 +8504,7 @@ Transform:
   m_GameObject: {fileID: 1661912567}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -27.37, y: 14, z: 0}
+  m_LocalPosition: {x: -27.37, y: 16.07, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9046,22 +8897,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 2035559738}
-  zoneBounds: {fileID: 1307179740}
-  priority: 10
-  overrideOrthographicSize: 1
-  orthographicSize: 2
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 2
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &1770131613
 GameObject:
   m_ObjectHideFlags: 0
@@ -9178,22 +9013,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 968583210}
-  zoneBounds: {fileID: 857784432}
-  priority: 5
-  overrideOrthographicSize: 1
-  orthographicSize: 4
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 1
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &1799759269
 GameObject:
   m_ObjectHideFlags: 0
@@ -10187,22 +10006,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce508139071dca04ca98f1f3424db5a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraZone
-  cameraController: {fileID: 2129389587}
-  zoneVolume: {fileID: 1647597201}
-  zoneBounds: {fileID: 827415786}
-  priority: 3
-  overrideOrthographicSize: 1
-  orthographicSize: 6
-  overrideFollowSmoothing: 1
-  smoothTimeX: 0.2
-  smoothTimeY: 0.2
-  overrideOrthographicSizeSmoothTime: 1
-  orthographicSizeSmoothTime: 0.2
-  enableTimeLimit: 0
-  activeDuration: 2
-  activateOnlyOnce: 0
-  playerTag: Player
-  drawDebugGizmos: 1
 --- !u!1 &2003300938
 GameObject:
   m_ObjectHideFlags: 0
@@ -10780,6 +10583,7 @@ SceneRoots:
   - {fileID: 1919946482}
   - {fileID: 1579336058}
   - {fileID: 2071674966}
+  - {fileID: 1253215045}
   - {fileID: 615407936}
   - {fileID: 1580682750}
   - {fileID: 1280803726}

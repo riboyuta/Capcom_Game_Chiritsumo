@@ -32,6 +32,10 @@ public sealed class PlayerMovementSettings
     [Tooltip("通常移動や方向入力のデッドゾーンなど、入力補助に関する設定です。")]
     [SerializeField] InputAssistSettings inputAssist = new();
 
+    [Header("ストンプ設定")]
+    [Tooltip("空中で下方向へ高速落下するストンプの入力・挙動方針をまとめた設定です。")]
+    [SerializeField] StompSettings stomp = new();
+
     public MoveSettings Move => move;
     public JumpSettings Jump => jump;
     public FallSettings Fall => fall;
@@ -39,6 +43,7 @@ public sealed class PlayerMovementSettings
     public WallSettings Wall => wall;
     public DashSettings Dash => dash;
     public InputAssistSettings InputAssist => inputAssist;
+    public StompSettings Stomp => stomp;
 }
 
 [Serializable]
@@ -198,25 +203,8 @@ public sealed class FallSettings
     [Min(0f)]
     [SerializeField] float maxSpeed = 20f;
 
-    [Header("急降下を使う")]
-    [Tooltip("下入力などで通常より速く落下する急降下機能を有効にします。")]
-    [SerializeField] bool useFastFall = true;
-
-    [Header("急降下時の落下重力倍率")]
-    [Tooltip("急降下中に掛ける重力倍率です。通常落下より強くして、意図的に素早く落ちる感触を作ります。")]
-    [Min(1f)]
-    [SerializeField] float fastFallGravityMultiplier = 2.6f;
-
-    [Header("急降下時の最大落下速度")]
-    [Tooltip("急降下中の下方向速度の上限です。通常落下より大きく設定して、速い落下を作る用途です。")]
-    [Min(0f)]
-    [SerializeField] float fastFallMaxSpeed = 28f;
-
     public float GravityMultiplier => gravityMultiplier;
     public float MaxSpeed => maxSpeed;
-    public bool UseFastFall => useFastFall;
-    public float FastFallGravityMultiplier => fastFallGravityMultiplier;
-    public float FastFallMaxSpeed => fastFallMaxSpeed;
 }
 
 [Serializable]
@@ -558,6 +546,61 @@ public sealed class DashSettings
     public bool UseEightWayInput => useEightWayInput;
     public float DirectionDeadZone => directionDeadZone;
     public float DiagonalAssistAngle => diagonalAssistAngle;
+}
+
+public enum StompHorizontalPolicy
+{
+    Zero,
+    Keep,
+    Damp,
+    AirControl
+}
+
+[Serializable]
+public sealed class StompSettings
+{
+    [Header("ストンプ機能を使う")]
+    [Tooltip("ストンプ機能を有効にするかどうかです。")]
+    [SerializeField] bool useStomp = true;
+
+    [Header("キーボード下入力のみでストンプ要求")]
+    [Tooltip("キーボードでは空中の下入力だけでストンプ要求を出せるようにするかです。")]
+    [SerializeField] bool useKeyboardDownOnly = true;
+
+    [Header("下入力+ダッシュ時にストンプ優先")]
+    [Tooltip("下入力 + Dash 入力時に、ダッシュ可能でもストンプを優先するかどうかです。")]
+    [SerializeField] bool preferStompOverDownStepDash = false;
+
+    [Header("ダッシュ中ストンプ開始を許可")]
+    [Tooltip("ダッシュ中でもストンプ開始を許可するかどうかです。")]
+    [SerializeField] bool allowStartWhileDashing = false;
+
+    [Header("ストンプ速度倍率")]
+    [Tooltip("Dash.Speed に掛けるストンプ速度倍率です。")]
+    [Min(0f)]
+    [SerializeField] float speedMultiplier = 1f;
+
+    [Header("ストンプ中の横速度方針")]
+    [Tooltip("ストンプ開始時の横速度を、ストンプ中にどう扱うかを指定します。Zero は真下へ落下、Keep は開始時の横速度を維持、Damp は開始時の横速度を減衰、AirControl は検証用に現在の横速度を維持します。")]
+    [SerializeField] private StompHorizontalPolicy horizontalPolicy = StompHorizontalPolicy.Zero;
+
+    [Header("横速度減衰倍率")]
+    [Tooltip("horizontalPolicy が Damp のときに使う横速度減衰倍率です。")]
+    [Range(0f, 1f)]
+    [SerializeField] float horizontalDampMultiplier = 0.35f;
+
+    [Header("入力離しでストンプ解除")]
+    [Tooltip("ストンプ入力を離したらストンプを解除するかどうかです。")]
+    [SerializeField] bool cancelOnRelease = true;
+
+    public bool UseStomp => useStomp;
+    public bool UseKeyboardDownOnly => useKeyboardDownOnly;
+    public bool PreferStompOverDownStepDash => preferStompOverDownStepDash;
+    public bool AllowStartWhileDashing => allowStartWhileDashing;
+    public float SpeedMultiplier => speedMultiplier;
+    public StompHorizontalPolicy HorizontalPolicy => horizontalPolicy;
+    public float HorizontalDampMultiplier => horizontalDampMultiplier;
+    public bool CancelOnRelease => cancelOnRelease;
 }
 
 [Serializable]

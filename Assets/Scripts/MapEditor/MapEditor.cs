@@ -1,3 +1,4 @@
+using Capcom_Game_Chiritsumo.Camera.CameraShake;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -41,7 +42,7 @@ public class MapEditor : MonoBehaviour
     Stack<MapData> undoStack = new Stack<MapData>(); //変更履歴のスタック
 
 
-
+   
 
     [Header("TileDatabase")]
     [Tooltip("TileDatabaseスクリプトをここにドラッグしてね")]
@@ -63,6 +64,10 @@ public class MapEditor : MonoBehaviour
     [TextArea(15, 30)]
     [SerializeField] private string comment;
 
+    [Header("カメラシェイクプロファイル")]
+    [Tooltip(" //マップエディタのデバッグ用カメラシェイクのプロファイルセット")]
+    [SerializeField]
+    private CameraShakeProfile CSMapeditorTestProfile;
 
 
     float gridSize = 1.0f;
@@ -70,6 +75,9 @@ public class MapEditor : MonoBehaviour
     bool showSaveConfirm = false;
     bool showLoadConfirm = false;
     bool showPrefabConfirm = false;
+
+    private bool IsLoaded = false;
+    private bool FinalSaveCheck = false;
 
     private int currentPage = 0;
     private int selectedKeyNumber = 0;
@@ -221,6 +229,17 @@ public class MapEditor : MonoBehaviour
                     PlaceTileFlagTimer = 0;
                 }
             }
+
+
+            //カメラシェイクのテスト
+            if (Input.GetKeyDown(KeyCode.B))
+            {
+                Debug.Log("カメラシェイク実行");
+                CameraShakeManager.Instance.ExecuteImpulseShake(CSMapeditorTestProfile);
+            }
+
+
+
         }
     
 
@@ -842,7 +861,9 @@ public class MapEditor : MonoBehaviour
             tiles.Add(gridPos, tile);
         }
 
-        Debug.Log("Map Loaded");
+
+        if (!IsLoaded) IsLoaded = true;
+        Debug.Log("Map Loaded :" + FilePath());
     }
 
 
@@ -880,12 +901,25 @@ public class MapEditor : MonoBehaviour
     void OnGUI()
     {
         // ===== セーブ＆ロードUI =====
+
         GUIStyle style = new GUIStyle(GUI.skin.box);
         style.fontSize = 160;
         style.alignment = TextAnchor.UpperCenter;
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
         buttonStyle.fontSize = 80;
+
+        GUIStyle warningButtonStyle = new GUIStyle(GUI.skin.button);
+        warningButtonStyle.fontSize = 80;
+        warningButtonStyle.normal.textColor = Color.red;
+
+
+
+
+
+
+
+   
 
         float w = Screen.width;
         float h = Screen.height;
@@ -896,12 +930,21 @@ public class MapEditor : MonoBehaviour
         float boxX = (w - boxWidth) / 2;
         float boxY = (h - boxHeight) / 2;
 
+      
+
         if (showSaveConfirm)
         {
             GUI.Box(new Rect(boxX, boxY, boxWidth, boxHeight), "Save Map?", style);
 
             if (GUI.Button(new Rect(boxX + 350, boxY + 450, 300, 120), "Yes", buttonStyle))
             {
+                if (!IsLoaded)
+                {
+                    FinalSaveCheck = true;
+                    showSaveConfirm = false;
+                    return;
+                }
+              
                 SaveMap();
                 showSaveConfirm = false;
                 
@@ -912,7 +955,38 @@ public class MapEditor : MonoBehaviour
                 showSaveConfirm = false;
                 
             }
+
         }
+
+        if (FinalSaveCheck)
+        {
+            Debug.Log("GUI.FinalSaveCheck");
+
+            style.fontSize = 120;
+
+            GUI.Box(new Rect(boxX, boxY, boxWidth + 100, boxHeight + 100), "まだロードされてないよ！？", style);
+            if (GUI.Button(new Rect(boxX + 200, boxY + 180, 1200, 100), "それでも上書き保存する！", warningButtonStyle))
+            {
+
+                SaveMap();
+                IsLoaded = true;
+                FinalSaveCheck = false;
+
+            }
+
+            if (GUI.Button(new Rect(boxX + 200, boxY + 290, 1200, 120), "キャンセル", buttonStyle))
+            {
+                FinalSaveCheck = false;
+            }
+
+            if (GUI.Button(new Rect(boxX + 200, boxY + 450, 1200, 360), "キャンセル", buttonStyle))
+            {
+                FinalSaveCheck = false;
+            }
+
+
+        }
+
 
         if (showLoadConfirm)
         {

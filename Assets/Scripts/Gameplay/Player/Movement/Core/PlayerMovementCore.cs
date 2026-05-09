@@ -157,13 +157,7 @@ internal sealed class PlayerMovementCore
 
         if (isFalling)
         {
-            float fallingMultiplier = deps.Settings.Fall.GravityMultiplier;
-            if (deps.RuntimeState.isFastFalling)
-            {
-                fallingMultiplier = deps.Settings.Fall.FastFallGravityMultiplier;
-            }
-
-            gravityMultiplier *= fallingMultiplier;
+            gravityMultiplier *= deps.Settings.Fall.GravityMultiplier;
         }
 
         if (!Mathf.Approximately(gravityMultiplier, 1f))
@@ -172,40 +166,12 @@ internal sealed class PlayerMovementCore
             deps.Rb.AddForce(extraGravity, ForceMode.Acceleration);
         }
 
-        float maxFallSpeed = deps.RuntimeState.isFastFalling && isFalling
-            ? deps.Settings.Fall.FastFallMaxSpeed
-            : deps.Settings.Fall.MaxSpeed;
+        float maxFallSpeed = deps.Settings.Fall.MaxSpeed;
         float minVelocityY = -maxFallSpeed;
         if (velocity.y < minVelocityY)
         {
             velocity.y = minVelocityY;
             deps.Rb.linearVelocity = velocity;
         }
-    }
-
-    // 急降下開始条件を満たす場合に状態を切り替える。
-    internal void TryStartFastFall()
-    {
-        if (!deps.CanAcceptMoveInput())
-        {
-            return;
-        }
-
-        if (!deps.Settings.Fall.UseFastFall)
-        {
-            return;
-        }
-
-        if (deps.RuntimeState.isGrounded || deps.RuntimeState.isDashing || deps.RuntimeState.isWallSliding)
-        {
-            return;
-        }
-
-        if (!deps.InputReader.DownPressed)
-        {
-            return;
-        }
-
-        deps.RuntimeState.isFastFalling = true;
     }
 }
