@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 332c2b9ae78b054489d71a3d942a294a, type: 3}
   m_Name: MapEditorTest
   m_EditorClassIdentifier: Assembly-CSharp::Capcom_Game_Chiritsumo.Camera.CameraShake.CameraShakeProfile
-  positionShake: {x: 0.5, y: 0.5, z: 0}
-  rotationShake: {x: 2, y: 2, z: 2}
-  shakeSpeed: 20
-  duration: 0.5
+  positionShake: {x: 30, y: 30, z: 100}
+  rotationShake: {x: 40, y: 40, z: 40}
+  shakeSpeed: 100
+  duration: 5
   dampingCurve:
     serializedVersion: 2
     m_Curve:
