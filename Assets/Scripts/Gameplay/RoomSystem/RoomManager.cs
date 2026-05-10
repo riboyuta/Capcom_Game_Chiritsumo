@@ -69,8 +69,6 @@ public sealed class RoomManager : MonoBehaviour
     private RoomDirection lastTransitionDirection = RoomDirection.None;
     private bool isTransitioning;
     private PlayerExternalControlSession roomTransitionControlSession = PlayerExternalControlSession.Invalid;
-    private readonly Dictionary<Room, HashSet<RoomDirection>> blockedDirectionsByRoom = new();
-    private int oneWayBlockerLayer = 0;
 
     public Room CurrentRoom => currentRoom;
     public Room PreviousRoom => previousRoom;
@@ -92,7 +90,7 @@ public sealed class RoomManager : MonoBehaviour
 
     private void Start()
     {
-        // 一方通行 Blocker の初期構築を行う。
+        // Gate 候補の初期構築を行う（方向単位 Blocker は Step3 まで無効化）。
         InitializeRoomBlockers();
 
         // 開始部屋が設定されている場合は現在部屋を確定する。
@@ -170,7 +168,7 @@ public sealed class RoomManager : MonoBehaviour
 
         if (TryGetTransitionDirection(currentBounds, playerPosition, playerVelocity, out RoomDirection direction))
         {
-            TryTransition(direction);
+            TryTransition(direction, playerPosition);
         }
     }
 
@@ -409,9 +407,8 @@ public sealed class RoomManager : MonoBehaviour
 
     private void InitializeRoomBlockers()
     {
-
-
         Room[] rooms = FindObjectsByType<Room>(FindObjectsSortMode.None);
+        List<(Room room, RoomBlockerSet blockerSet)> blockerSets = new();
         for (int i = 0; i < rooms.Length; i++)
         {
             Room room = rooms[i];
@@ -421,9 +418,18 @@ public sealed class RoomManager : MonoBehaviour
             }
 
             RoomBlockerSet blockerSet = EnsureRoomBlockerSet(room);
-            blockerSet.EnsureAllBlockersCreated();
-            blockerSet.RebuildFromBounds(room.RoomBounds.WorldBounds);
-            ApplyBlockerLayer(blockerSet.gameObject);
+            blockerSets.Add((room, blockerSet));
+        }
+
+        for (int i = 0; i < blockerSets.Count; i++)
+        {
+            (Room room, RoomBlockerSet blockerSet) = blockerSets[i];
+            blockerSet.RebuildGateSegments(room, rooms);
+        }
+
+        for (int i = 0; i < blockerSets.Count; i++)
+        {
+            blockerSets[i].blockerSet.BuildReverseGateLinks();
         }
     }
 
@@ -445,29 +451,6 @@ public sealed class RoomManager : MonoBehaviour
         }
 
         return blockerSet;
-    }
-
-    private void ApplyBlockerLayer(GameObject root)
-    {
-        // BlockerSet 配下すべてに Layer を設定する。
-        Transform[] transforms = root.GetComponentsInChildren<Transform>(true);
-        for (int i = 0; i < transforms.Length; i++)
-        {
-            transforms[i].gameObject.layer = oneWayBlockerLayer;
-        }
-    }
-
-    private RoomDirection GetOppositeDirection(RoomDirection moveDirection)
-    {
-        // 移動方向の反対側を、遷移先で塞ぐ方向として返す。
-        return moveDirection switch
-        {
-            RoomDirection.Left => RoomDirection.Right,
-            RoomDirection.Right => RoomDirection.Left,
-            RoomDirection.Up => RoomDirection.Down,
-            RoomDirection.Down => RoomDirection.Up,
-            _ => RoomDirection.None,
-        };
     }
 
     private bool TryGetTransitionDirection(
@@ -524,7 +507,7 @@ public sealed class RoomManager : MonoBehaviour
         return false;
     }
 
-    private bool TryTransition(RoomDirection moveDirection)
+    private bool TryTransition(RoomDirection moveDirection, Vector3 playerPosition)
     {
         // 現在部屋が無い場合は遷移できない。
         if (currentRoom == null)
@@ -532,34 +515,31 @@ public sealed class RoomManager : MonoBehaviour
             return false;
         }
 
-        // 遷移方向に応じた隣接部屋を選ぶ。
+        RoomBlockerSet currentBlockerSet = EnsureRoomBlockerSet(currentRoom);
+        RoomBlockerSet.GateHandle throughGate;
         Room nextRoom = null;
-        switch (moveDirection)
-        {
-            case RoomDirection.Left:
-                nextRoom = currentRoom.LeftRoom;
-                break;
-            case RoomDirection.Right:
-                nextRoom = currentRoom.RightRoom;
-                break;
-            case RoomDirection.Up:
-                nextRoom = currentRoom.UpRoom;
-                break;
-            case RoomDirection.Down:
-                nextRoom = currentRoom.DownRoom;
-                break;
-        }
+        bool blockedByAmbiguous = false;
+        bool blockedByOneWay = false;
+        bool foundByGate = currentBlockerSet.TryFindGate(
+            moveDirection,
+            playerPosition,
+            out throughGate,
+            out nextRoom,
+            out blockedByAmbiguous,
+            out blockedByOneWay);
 
-        // 隣接部屋が未設定なら遷移しない。
-        if (nextRoom == null)
+        if (!foundByGate)
         {
-            return false;
-        }
+            if (enableDebugLog)
+            {
+                string reason = blockedByAmbiguous
+                    ? "ambiguous gate"
+                    : blockedByOneWay
+                        ? "one-way blocked gate"
+                        : "no matching gate";
+                Debug.Log($"RoomManager: Gate 検索で遷移先を決定できませんでした。Direction={moveDirection}, reason={reason}", this);
+            }
 
-        // 一方通行有効時、現在部屋で禁止された方向への遷移は拒否する。
-        if (blockedDirectionsByRoom.TryGetValue(currentRoom, out HashSet<RoomDirection> blockedInCurrent)
-            && blockedInCurrent.Contains(moveDirection))
-        {
             return false;
         }
 
@@ -580,25 +560,16 @@ public sealed class RoomManager : MonoBehaviour
             Debug.LogWarning("RoomManager: playerCameraController が未設定のためカメラ遷移を開始できません。", this);
         }
 
-        // 遷移先 Room の設定が有効な場合のみ、反対方向 Blocker と論理禁止を登録する。
-        RoomDirection blockedDirection = GetOppositeDirection(moveDirection);
-        if (currentRoom.EnableOneWayBlockerOnEntry && blockedDirection != RoomDirection.None)
+        if (currentRoom.EnableOneWayBlockerOnEntry)
         {
-            if (!blockedDirectionsByRoom.TryGetValue(currentRoom, out HashSet<RoomDirection> blockedInTarget))
+            RoomBlockerSet enteredRoomBlockerSet = EnsureRoomBlockerSet(currentRoom);
+            if (enteredRoomBlockerSet.TryGetReverseGate(throughGate, out RoomBlockerSet.GateHandle reverseGate))
             {
-                blockedInTarget = new HashSet<RoomDirection>();
-                blockedDirectionsByRoom[currentRoom] = blockedInTarget;
+                reverseGate.ownerSet.SetGateBlocked(reverseGate, true);
             }
-
-            blockedInTarget.Add(blockedDirection);
-
-            RoomBlockerSet blockerSet = EnsureRoomBlockerSet(currentRoom);
-            blockerSet.RebuildFromBounds(currentRoom.RoomBounds.WorldBounds);
-            ApplyBlockerLayer(blockerSet.gameObject);
-            BoxCollider blocker = blockerSet.GetBlocker(blockedDirection);
-            if (blocker != null)
+            else
             {
-                blocker.enabled = true;
+                Debug.LogWarning($"RoomManager: ReverseGate が見つからないため one-way blocker を有効化できません。fromGateTarget='{nextRoom?.name}'", this);
             }
         }
 
