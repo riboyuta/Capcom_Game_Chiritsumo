@@ -367,6 +367,8 @@ public sealed partial class PlayerController : MonoBehaviour
 
         // ダッシュ残数管理の初期状態を設定する。
         runtimeState.currentDashCharges = Mathf.Max(1, movementSettings.Dash.MaxCharges);
+        // 壁掴まり制限時間の初期値を設定する（接地前でも使えるようにするため）。
+        runtimeState.wallGrabRemainingTime = movementSettings.Wall.WallGrabMaxHoldTime;
         runtimeState.wasGroundedLastFrame = false;
         frameRequests.requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
 
