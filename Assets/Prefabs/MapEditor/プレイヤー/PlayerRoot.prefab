@@ -191,7 +191,7 @@ MonoBehaviour:
     dash:
       useDash: 1
       speed: 19
-      duration: 0.15
+      duration: 0.17
       gravityMultiplier: 0
       restoreStartVerticalVelocity: 0
       upwardDashEndVerticalSpeedClamp: 8
