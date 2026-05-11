@@ -262,8 +262,8 @@ public sealed class PlayerCameraController : MonoBehaviour
         Vector3 baseDesiredPosition = effectiveTarget.position + cameraOffset;
         if (hasActiveRoomFocusOffset)
         {
-            // Inspector の意味を直感に合わせるため、適用時に符号を反転する（+X=右を見せる、+Y=上を見せる）。
-            Vector3 focusOffset3D = new Vector3(-activeRoomFocusOffset.x, -activeRoomFocusOffset.y, 0f);
+            // Inspector の意味を直感に合わせるため、適用時に符号を反転する（+X=右を見せる、+Y=下を見せる）。
+            Vector3 focusOffset3D = new Vector3(-activeRoomFocusOffset.x, activeRoomFocusOffset.y, 0f);
             desiredPosition = baseDesiredPosition + focusOffset3D;
         }
         else
