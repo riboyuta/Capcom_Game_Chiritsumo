@@ -18,6 +18,14 @@ public sealed class SpringPad : MonoBehaviour
     [Tooltip("同一オブジェクトが短時間で連続して跳ねられるのを防ぐクールダウン時間（秒）。値を大きくすると連続バウンスを減らせます。")]
     [SerializeField, Min(0f)] private float bounceCooldown = 0.2f;
 
+    [Header("上面判定: 法線しきい値")]
+    [Tooltip("OnCollisionEnter 時に使う上面判定のしきい値。接触法線とバネ上方向の内積がこの値以上のとき「上から踏んだ」と判定します。0.5 が推奨（45度以内）。")]
+    [SerializeField, Range(0f, 1f)] private float topNormalThreshold = 0.5f;
+
+
+    // バネ自身の Collider（上面高さ取得用）。
+    private Collider springCollider;
+
     private float lastBounceTime = -1f;
 
     [Header("アニメーション")]
@@ -33,15 +41,48 @@ public sealed class SpringPad : MonoBehaviour
     // どちらでも動作するよう両方を実装する。
     // ──────────────────────────────────────────────
 
+    private void Awake()
+    {
+        springCollider = GetComponent<Collider>();
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
+
+        // プレイヤー中心がバネ中心から見て「射出方向（transform.up）側」にあるかを確認する。
+        // 床バネ（transform.up = +Y）なら上方、横バネ（transform.up = +X 等）なら正面側。
+        // 反対側からの侵入は sideDot が負になるため弾く。
+        if (springCollider != null)
+        {
+            Vector3 toPlayer = (other.bounds.center - springCollider.bounds.center).normalized;
+            float sideDot = Vector3.Dot(toPlayer, transform.up);
+            if (sideDot < 0f)
+            {
+                return;
+            }
+        }
+
         TryBounce(other.attachedRigidbody);
     }
 
     private void OnCollisionEnter(Collision collision)
     {
         if (!collision.collider.CompareTag("Player")) return;
+
+        // 接触法線とバネ上方向の内積の絶対値が閾値未満なら横・下からの接触とみなして作動しない。
+        // Unity の ContactPoint.normal はバネ→プレイヤー方向を向くため、
+        // 上から踏んだ場合は -transform.up 方向（下向き）になる。
+        // Mathf.Abs で絶対値を取ることで向きに依存しない判定にする。
+        if (collision.contactCount > 0)
+        {
+            float dot = Vector3.Dot(collision.contacts[0].normal, transform.up);
+            if (Mathf.Abs(dot) < topNormalThreshold)
+            {
+                return;
+            }
+        }
+
         TryBounce(collision.rigidbody);
     }
 
