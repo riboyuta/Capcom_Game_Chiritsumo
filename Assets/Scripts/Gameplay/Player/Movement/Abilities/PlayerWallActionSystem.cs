@@ -311,7 +311,7 @@ internal sealed class PlayerWallActionSystem
     }
 
     // 壁捕まり中の専用移動を適用する。
-    internal void ApplyWallGrabMovement(System.Func<bool> tryStartLedgeClimb)
+    internal void ApplyWallGrabMovement(System.Func<bool> tryStartLedgeClimb, System.Func<bool> isHazardAbove)
     {
         if (!deps.RuntimeState.isWallGrabbing)
         {
@@ -327,11 +327,19 @@ internal sealed class PlayerWallActionSystem
 
         if (inputY > threshold)
         {
-            targetVerticalSpeed = deps.Settings.Wall.WallClimbUpSpeed;
-
-            if (tryStartLedgeClimb())
+            // 崖の上にとげがある場合は上方向の移動を停止
+            if (isHazardAbove())
             {
-                return;
+                targetVerticalSpeed = 0f;
+            }
+            else
+            {
+                targetVerticalSpeed = deps.Settings.Wall.WallClimbUpSpeed;
+
+                if (tryStartLedgeClimb())
+                {
+                    return;
+                }
             }
         }
         else if (inputY < -threshold)

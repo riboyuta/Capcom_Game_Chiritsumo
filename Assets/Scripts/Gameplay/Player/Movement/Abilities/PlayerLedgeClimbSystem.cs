@@ -25,6 +25,63 @@ internal sealed class PlayerLedgeClimbSystem
     // 崖乗り上げ処理
     // ============================================================
 
+    // 崖の上にとげなどのハザードがあるか判定する（壁登り時の判定用）
+    internal bool IsHazardAbove()
+    {
+        if (!deps.RuntimeState.isWallGrabbing)
+        {
+            return false;
+        }
+
+        int side = deps.RuntimeState.wallGrabSide;
+        if (side == 0)
+        {
+            return false;
+        }
+
+        Bounds bounds = deps.CapsuleCollider.bounds;
+        Vector3 wallDir = Vector3.right * side;
+
+        // 前方チェック
+        Vector3 forwardCheckOrigin = bounds.center;
+        forwardCheckOrigin.y += bounds.extents.y * 0.3f;
+        forwardCheckOrigin.x += wallDir.x * (bounds.extents.x - 0.01f);
+
+        bool hasWallAhead = Physics.Raycast(
+            forwardCheckOrigin,
+            wallDir,
+            deps.Settings.Wall.LedgeDetectForwardDistance,
+            deps.Settings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Ignore);
+
+        if (hasWallAhead)
+        {
+            return false; // 壁がまだ続いているので上にはとげがない
+        }
+
+        // 地面チェック
+        Vector3 groundCheckOrigin = forwardCheckOrigin;
+        groundCheckOrigin.x += wallDir.x * deps.Settings.Wall.LedgeDetectForwardDistance;
+
+        float groundCheckDistance = deps.Settings.Wall.LedgeGroundCheckDistance + bounds.extents.y;
+
+        bool foundGround = Physics.Raycast(
+            groundCheckOrigin,
+            Vector3.down,
+            out RaycastHit hit,
+            groundCheckDistance,
+            deps.Settings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Ignore);
+
+        if (foundGround)
+        {
+            // 崖の上にハザードがあるかチェック
+            return HasHazardAtLedgeTop(hit.point, side);
+        }
+
+        return false;
+    }
+
     // 崖乗り上げを開始できるか判定し、開始する。
     internal bool TryStartLedgeClimb()
     {
@@ -57,6 +114,7 @@ internal sealed class PlayerLedgeClimbSystem
     // 1. 頭上に障害物がないか確認
     // 2. 前方に壁が続いていないか確認
     // 3. 前方上部に地面があるか確認
+    // 4. 崖の上にとげなどのハザードがないか確認
     private bool CanDetectLedge(out Vector3 ledgeTopPosition)
     {
         ledgeTopPosition = Vector3.zero;
@@ -120,7 +178,40 @@ internal sealed class PlayerLedgeClimbSystem
         if (foundGround)
         {
             ledgeTopPosition = hit.point;
+
+            // 崖の上にとげなどのハザードがあるか確認
+            if (HasHazardAtLedgeTop(ledgeTopPosition, side))
+            {
+                return false;
+            }
+
             return true;
+        }
+
+        return false;
+    }
+
+    // 崖の頂上にとげなどのハザードがあるか確認する。
+    private bool HasHazardAtLedgeTop(Vector3 ledgeTopPosition, int side)
+    {
+        Vector3 checkPosition = ledgeTopPosition;
+        checkPosition.x += side * deps.Settings.Wall.LedgeClimbForwardOffset;
+        checkPosition.y += deps.Settings.Wall.LedgeClimbUpOffset;
+
+        float checkRadius = deps.CapsuleCollider.radius * 1.2f;
+
+        Collider[] hazards = Physics.OverlapSphere(
+            checkPosition,
+            checkRadius,
+            deps.Settings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Collide);
+
+        foreach (Collider col in hazards)
+        {
+            if (col.GetComponent<SpikeBlock>() != null)
+            {
+                return true;
+            }
         }
 
         return false;

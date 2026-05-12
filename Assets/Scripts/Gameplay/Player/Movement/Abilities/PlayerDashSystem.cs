@@ -297,6 +297,18 @@ internal sealed class PlayerDashSystem
     internal void ApplyDashVelocity(PlayerLocomotionModifierRequest modifier, System.Func<bool> tryApplyDashCornerCorrection)
     {
         tryApplyDashCornerCorrection();
+
+        // 斜め下ダッシュ中に地面に接触したら、即座に横ダッシュに切り替える
+        if (deps.RuntimeState.dashDirection.y < -0.1f && Mathf.Abs(deps.RuntimeState.dashDirection.x) > 0.1f)
+        {
+            if (deps.RuntimeState.isGrounded)
+            {
+                // 地面に接触した瞬間、ダッシュ方向を横に変換
+                float horizontalSign = Mathf.Sign(deps.RuntimeState.dashDirection.x);
+                deps.RuntimeState.dashDirection = new Vector2(horizontalSign, 0f);
+            }
+        }
+
         deps.Rb.linearVelocity = deps.RuntimeState.dashDirection * (deps.Settings.Dash.Speed * modifier.dashSpeedMultiplier);
     }
     internal void CancelDashForStomp()
@@ -334,11 +346,9 @@ internal sealed class PlayerDashSystem
             }
         }
 
-        {
-            Vector3 velocity = deps.Rb.linearVelocity;
-            velocity.x *= deps.Settings.Dash.DashEndHorizontalCarryMultiplier;
-            deps.Rb.linearVelocity = velocity;
-        }
+        Vector3 finalVelocity = deps.Rb.linearVelocity;
+        finalVelocity.x *= deps.Settings.Dash.DashEndHorizontalCarryMultiplier;
+        deps.Rb.linearVelocity = finalVelocity;
 
         setDashEndJumpCutLockTimer();
     }
