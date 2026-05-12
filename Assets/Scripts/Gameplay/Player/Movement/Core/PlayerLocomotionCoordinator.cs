@@ -236,7 +236,7 @@ internal sealed class PlayerLocomotionCoordinator
     // 壁捕まり中の専用移動を適用する。
     internal void ApplyWallGrabMovement()
     {
-        wallActionSystem.ApplyWallGrabMovement(() => ledgeClimbSystem.TryStartLedgeClimb());
+        wallActionSystem.ApplyWallGrabMovement(() => ledgeClimbSystem.TryStartLedgeClimb(), () => ledgeClimbSystem.IsHazardAbove());
     }
 
     // ============================================================
