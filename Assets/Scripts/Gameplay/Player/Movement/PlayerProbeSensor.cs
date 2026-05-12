@@ -161,7 +161,7 @@ internal sealed class PlayerProbeSensor
             -right,
             out _,
             castDistance + worldRadius,
-            movementSettings.Detection.GroundLayerMask,
+            movementSettings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
 
         // 右方向へ SphereCast して右壁の接触を調べる。
@@ -171,7 +171,7 @@ internal sealed class PlayerProbeSensor
             right,
             out _,
             castDistance + worldRadius,
-            movementSettings.Detection.GroundLayerMask,
+            movementSettings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
 
         leftWallCheckHit = hitLeft;
