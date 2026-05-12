@@ -219,6 +219,10 @@ public sealed class DetectionSettings
     [Tooltip("接地判定の対象にするレイヤーです。床や地形だけを含め、不要なオブジェクトを含めないように設定します。")]
     [SerializeField] LayerMask groundLayerMask = ~0;
 
+    [Header("壁判定レイヤー")]
+    [Tooltip("壁判定の対象にするレイヤーです。壁キックや壁掴みが可能な壁だけを含め、一方通行床などは除外します。")]
+    [SerializeField] LayerMask wallLayerMask = ~0;
+
     [Header("壁判定距離")]
     [Tooltip("左右方向への壁チェック距離です。短すぎると壁検出が不安定になり、長すぎると遠い壁に反応しやすくなります。")]
     [Min(0f)]
@@ -236,6 +240,7 @@ public sealed class DetectionSettings
 
     public float GroundCheckDistance => groundCheckDistance;
     public LayerMask GroundLayerMask => groundLayerMask;
+    public LayerMask WallLayerMask => wallLayerMask;
     public float WallCheckDistance => wallCheckDistance;
     public float WallCheckRadius => wallCheckRadius;
     public float WallInputThreshold => wallInputThreshold;
