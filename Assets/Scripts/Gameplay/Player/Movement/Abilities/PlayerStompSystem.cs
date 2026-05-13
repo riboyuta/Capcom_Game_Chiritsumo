@@ -210,4 +210,9 @@ internal sealed class PlayerStompSystem
     {
         EndStomp();
     }
+
+    internal void EndStompForDash()
+    {
+        EndStomp();
+    }
 }

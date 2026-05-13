@@ -283,7 +283,17 @@ internal sealed class PlayerLocomotionCoordinator
     // ダッシュ開始を試みる。
     internal void TryStartDash()
     {
+        bool wasStomping = deps.RuntimeState.isStomping;
+        bool wasDashing = deps.RuntimeState.isDashing;
+
         dashSystem.TryStartDash((side) => wallActionSystem.ExitWallGrab());
+
+        bool startedDashThisCall = !wasDashing && deps.RuntimeState.isDashing;
+
+        if (wasStomping && startedDashThisCall)
+        {
+            stompSystem.EndStompForDash();
+        }
     }
 
     // ダッシュ中の専用速度を適用する。

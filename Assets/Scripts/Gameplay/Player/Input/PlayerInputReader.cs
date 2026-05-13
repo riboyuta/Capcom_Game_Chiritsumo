@@ -132,15 +132,24 @@ namespace Game.Input
             DashReleased = dashState.ReleasedThisFrame;
 
             // Stomp アクションの統合状態を解決する。
-            RawButtonFrameState stompState = ResolveActionState(bindings.Stomp);
-            bool keyboardDownForStomp = settings.Stomp.UseKeyboardDownOnly;
-            bool keyboardStompPressed = keyboardDownForStomp && DownPressed;
-            bool keyboardStompHeld = keyboardDownForStomp && DownHeld;
-            bool keyboardStompReleased = keyboardDownForStomp && DownReleased;
+            RawButtonFrameState primaryStompState = ResolveActionState(bindings.Stomp);
+            RawButtonFrameState alternateStompState = ResolveActionState(bindings.StompAlternate);
 
-            StompPressed = stompState.PressedThisFrame || keyboardStompPressed;
-            StompHeld = stompState.Held || keyboardStompHeld;
-            StompReleased = stompState.ReleasedThisFrame || keyboardStompReleased;
+            bool primaryPreviousHeld = ReconstructPreviousHeld(
+                primaryStompState.Held,
+                primaryStompState.PressedThisFrame,
+                primaryStompState.ReleasedThisFrame);
+            bool alternatePreviousHeld = ReconstructPreviousHeld(
+                alternateStompState.Held,
+                alternateStompState.PressedThisFrame,
+                alternateStompState.ReleasedThisFrame);
+
+            bool currentHeld = primaryStompState.Held || alternateStompState.Held;
+            bool previousHeld = primaryPreviousHeld || alternatePreviousHeld;
+
+            StompPressed = currentHeld && !previousHeld;
+            StompHeld = currentHeld;
+            StompReleased = !currentHeld && previousHeld;
 
             // Dash を押している間、常に最新の方向入力を更新する。
             // これにより、ダッシュボタンを押した後に方向を微調整できる。
