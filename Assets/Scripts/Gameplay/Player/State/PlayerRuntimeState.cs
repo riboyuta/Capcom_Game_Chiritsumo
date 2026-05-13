@@ -50,13 +50,13 @@ internal sealed class PlayerRuntimeState
     // ダッシュ開始時のY速度。
     public float dashStartVerticalVelocity;
 
-    // 現在ストンプ中かどうか。
+    // 現在ストンピング中かどうか。
     public bool isStomping;
 
-    // ストンプ継続時間。
+    // ストンピング継続時間。
     public float stompTimer;
 
-    // ストンプ開始時の横速度。
+    // ストンピング開始時の横速度。
     public float stompStartHorizontalVelocity;
 
     // 最後に向いていた左右方向。(-1:left / +1:right)
