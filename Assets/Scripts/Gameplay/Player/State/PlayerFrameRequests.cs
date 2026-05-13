@@ -6,7 +6,7 @@ internal sealed class PlayerFrameRequests
     // Update で検出したダッシュ押下を FixedUpdate まで保持する要求。
     public bool dashRequested;
 
-    // Update で検出したストンプ押下を FixedUpdate まで保持する要求。
+    // Update で検出したストンピング押下を FixedUpdate まで保持する要求。
     public bool stompRequested;
 
     // このフレームで積まれた入力ブロック要求の合算フラグ。

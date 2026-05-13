@@ -25,8 +25,8 @@ namespace Game.Input
                 secondaryKeyboardKey: Key.LeftShift,
                 gamepadButton: RawGamepadButton.X);
 
-        [Header("入力設定: ストンプ")]
-        [Tooltip("ストンプ操作に割り当てる入力設定です。キーボード Stomp は Down 入力で扱うため、専用キーは基本使用しません。")]
+        [Header("入力設定: ストンピング")]
+        [Tooltip("ストンピング操作に割り当てる入力設定です。キーボード Stomp は Down 入力で扱うため、専用キーは基本使用しません。")]
         [SerializeField]
         private InputActionBinding stomp =
           new InputActionBinding(

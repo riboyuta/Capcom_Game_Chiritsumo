@@ -64,7 +64,7 @@ namespace Game.Input
         public bool DashHeld { get; private set; }
         public bool DashReleased { get; private set; }
 
-        // ストンプ入力のフレーム状態。
+        // ストンピング入力のフレーム状態。
         public bool StompPressed { get; private set; }
         public bool StompHeld { get; private set; }
         public bool StompReleased { get; private set; }

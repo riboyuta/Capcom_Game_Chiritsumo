@@ -32,8 +32,8 @@ public sealed class PlayerMovementSettings
     [Tooltip("通常移動や方向入力のデッドゾーンなど、入力補助に関する設定です。")]
     [SerializeField] InputAssistSettings inputAssist = new();
 
-    [Header("ストンプ設定")]
-    [Tooltip("空中で下方向へ高速落下するストンプの入力・挙動方針をまとめた設定です。")]
+    [Header("ストンピング設定")]
+    [Tooltip("空中で下方向へ高速落下するストンピングの入力・挙動方針をまとめた設定です。")]
     [SerializeField] StompSettings stomp = new();
 
     public MoveSettings Move => move;
@@ -564,29 +564,29 @@ public enum StompHorizontalPolicy
 [Serializable]
 public sealed class StompSettings
 {
-    [Header("ストンプ機能を使う")]
-    [Tooltip("ストンプ機能を有効にするかどうかです。")]
+    [Header("ストンピング機能を使う")]
+    [Tooltip("ストンピング機能を有効にするかどうかです。")]
     [SerializeField] bool useStomp = true;
 
-    [Header("キーボード下入力のみでストンプ要求")]
-    [Tooltip("キーボードでは空中の下入力だけでストンプ要求を出せるようにするかです。")]
+    [Header("キーボード下入力のみでストンピング要求")]
+    [Tooltip("キーボードでは空中の下入力だけでストンピング要求を出せるようにするかです。")]
     [SerializeField] bool useKeyboardDownOnly = true;
 
-    [Header("下入力+ダッシュ時にストンプ優先")]
-    [Tooltip("下入力 + Dash 入力時に、ダッシュ可能でもストンプを優先するかどうかです。")]
+    [Header("下入力+ダッシュ時にストンピング優先")]
+    [Tooltip("下入力 + Dash 入力時に、ダッシュ可能でもストンピングを優先するかどうかです。")]
     [SerializeField] bool preferStompOverDownStepDash = false;
 
-    [Header("ダッシュ中ストンプ開始を許可")]
-    [Tooltip("ダッシュ中でもストンプ開始を許可するかどうかです。")]
+    [Header("ダッシュ中ストンピング開始を許可")]
+    [Tooltip("ダッシュ中でもストンピング開始を許可するかどうかです。")]
     [SerializeField] bool allowStartWhileDashing = false;
 
-    [Header("ストンプ速度倍率")]
-    [Tooltip("Dash.Speed に掛けるストンプ速度倍率です。")]
+    [Header("ストンピング速度倍率")]
+    [Tooltip("Dash.Speed に掛けるストンピング速度倍率です。")]
     [Min(0f)]
     [SerializeField] float speedMultiplier = 1f;
 
-    [Header("ストンプ中の横速度方針")]
-    [Tooltip("ストンプ開始時の横速度を、ストンプ中にどう扱うかを指定します。Zero は真下へ落下、Keep は開始時の横速度を維持、Damp は開始時の横速度を減衰、AirControl は検証用に現在の横速度を維持します。")]
+    [Header("ストンピング中の横速度方針")]
+    [Tooltip("ストンピング開始時の横速度を、ストンピング中にどう扱うかを指定します。Zero は真下へ落下、Keep は開始時の横速度を維持、Damp は開始時の横速度を減衰、AirControl は検証用に現在の横速度を維持します。")]
     [SerializeField] private StompHorizontalPolicy horizontalPolicy = StompHorizontalPolicy.Zero;
 
     [Header("横速度減衰倍率")]
@@ -594,8 +594,8 @@ public sealed class StompSettings
     [Range(0f, 1f)]
     [SerializeField] float horizontalDampMultiplier = 0.35f;
 
-    [Header("入力離しでストンプ解除")]
-    [Tooltip("ストンプ入力を離したらストンプを解除するかどうかです。")]
+    [Header("入力離しでストンピング解除")]
+    [Tooltip("ストンピング入力を離したらストンピングを解除するかどうかです。")]
     [SerializeField] bool cancelOnRelease = true;
 
     public bool UseStomp => useStomp;

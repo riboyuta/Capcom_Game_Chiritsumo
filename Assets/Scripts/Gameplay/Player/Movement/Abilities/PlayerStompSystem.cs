@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// ストンプ開始判定・状態管理・速度計算を担当するシステム。
+// ストンピング開始判定・状態管理・速度計算を担当するシステム。
 internal sealed class PlayerStompSystem
 {
     private readonly PlayerLocomotionDependencies deps;
@@ -10,7 +10,7 @@ internal sealed class PlayerStompSystem
         this.deps = deps;
     }
 
-    // 復帰時やリセット時にストンプ関連状態を初期化する。
+    // 復帰時やリセット時にストンピング関連状態を初期化する。
     internal void ResetRuntimeTimers()
     {
         deps.RuntimeState.isStomping = false;
@@ -18,7 +18,7 @@ internal sealed class PlayerStompSystem
         deps.RuntimeState.stompStartHorizontalVelocity = 0f;
     }
 
-    // ストンプ開始可否を判定する。
+    // ストンピング開始可否を判定する。
     internal bool CanStartStomp()
     {
         if (!deps.Settings.Stomp.UseStomp)
@@ -74,7 +74,7 @@ internal sealed class PlayerStompSystem
         return true;
     }
 
-    // ストンプ開始を試みる。成否に関わらず stompRequested は消費する。
+    // ストンピング開始を試みる。成否に関わらず stompRequested は消費する。
     internal bool TryStartStomp()
     {
         bool canStart = CanStartStomp();
@@ -101,7 +101,7 @@ internal sealed class PlayerStompSystem
         return true;
     }
 
-    // ストンプ中に適用する速度を計算して反映する。
+    // ストンピング中に適用する速度を計算して反映する。
     internal void ApplyStompVelocity()
     {
         if (!deps.RuntimeState.isStomping)
@@ -140,7 +140,7 @@ internal sealed class PlayerStompSystem
         deps.Rb.linearVelocity = velocity;
     }
 
-    // ストンプ入力離しで終了する設定を処理する。
+    // ストンピング入力離しで終了する設定を処理する。
     internal void UpdateStompCancelByInput()
     {
         if (!deps.RuntimeState.isStomping)
@@ -159,7 +159,7 @@ internal sealed class PlayerStompSystem
         }
     }
 
-    // 着地によるストンプ終了を更新する。
+    // 着地によるストンピング終了を更新する。
     internal void UpdateStompEndByLanding()
     {
         if (!deps.RuntimeState.isStomping)
@@ -175,7 +175,7 @@ internal sealed class PlayerStompSystem
         EndStompByLanding();
     }
 
-    // ストンプ継続時間を更新する。
+    // ストンピング継続時間を更新する。
     internal void UpdateStompTimer(float deltaTime)
     {
         if (!deps.RuntimeState.isStomping)
@@ -186,7 +186,7 @@ internal sealed class PlayerStompSystem
         deps.RuntimeState.stompTimer += deltaTime;
     }
 
-    // ストンプ状態を終了する。
+    // ストンピング状態を終了する。
     internal void EndStomp()
     {
         deps.RuntimeState.isStomping = false;
@@ -194,7 +194,7 @@ internal sealed class PlayerStompSystem
         deps.RuntimeState.stompStartHorizontalVelocity = 0f;
     }
 
-    // 通常着地時のストンプ終了口。
+    // 通常着地時のストンピング終了口。
     internal void EndStompByLanding()
     {
         if (!deps.RuntimeState.isStomping)
@@ -205,7 +205,7 @@ internal sealed class PlayerStompSystem
         EndStomp();
     }
 
-    // 壁掴まり遷移優先時のストンプ終了口。
+    // 壁掴まり遷移優先時のストンピング終了口。
     internal void EndStompForWallGrab()
     {
         EndStomp();

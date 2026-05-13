@@ -117,7 +117,7 @@ internal sealed class PlayerLocomotionSystem
     internal bool CanSnapToGroundAfterDash() => coordinator.CanSnapToGroundAfterDash();
 
     // ============================================================
-    // ストンプ処理（コーディネーターへ委譲）
+    // ストンピング処理（コーディネーターへ委譲）
     // ============================================================
 
     internal bool TryStartStomp() => coordinator.TryStartStomp();

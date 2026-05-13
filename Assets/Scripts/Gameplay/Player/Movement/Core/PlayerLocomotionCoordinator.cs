@@ -300,7 +300,7 @@ internal sealed class PlayerLocomotionCoordinator
     }
 
     // ============================================================
-    // ストンプ処理
+    // ストンピング処理
     // ============================================================
 
     internal bool TryStartStomp()
