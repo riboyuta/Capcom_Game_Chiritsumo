@@ -108,7 +108,7 @@ public class MapEditor : MonoBehaviour
     bool canPlaceTile = true;
     int PlaceTileFlagTimer = 0;
 
-    bool canGridVisualization = true;
+    bool canGridVisualization = false;
 
 
     //フォルダ定義
@@ -192,8 +192,17 @@ public class MapEditor : MonoBehaviour
             }
 
 
-            //グリッドライン表示
-            GridVisualization();
+            //Gizmo表示
+            {
+                //範囲選択時ライン表示
+
+                RangeVisualization();
+
+                //グリッドライン表示
+                GridVisualization();
+            }
+
+           
 
             //グリッドライン表示切り替え
             if (Input.GetKeyDown(KeyCode.N))
@@ -452,12 +461,14 @@ public class MapEditor : MonoBehaviour
         //コピー範囲開始
         if ((Input.GetKeyDown(KeyCode.Space)))
         {
+            //一時保存バッファをクリア
+            temporaryBuffer.Clear();
+
             selecting = true;
             selectStart = GetGridPosition();
             Debug.Log("範囲選択開始");
 
-            //一時保存バッファをクリア
-            temporaryBuffer.Clear();
+           
         }
 
         //ドラッグ中
@@ -1105,35 +1116,7 @@ public class MapEditor : MonoBehaviour
     //　　　　　   Gizmos
     //===========================-------
 
-    //void OnDrawGizmos()
-    //{
-    //    Gizmos.color = Color.green;
 
-    //    foreach (var tile in tiles)
-    //    {
-    //        Vector3 pos = new Vector3(
-    //            tile.Key.x * gridSize,
-    //            tile.Key.y * gridSize,
-    //            tile.Key.z * gridSize
-    //        );
-
-    //        Gizmos.DrawWireCube(pos, Vector3.one * gridSize);
-    //    }
-
-    //    if (selecting)
-    //    {
-    //        Gizmos.color = Color.yellow;
-
-    //        Vector3 center = ((Vector3)selectStart + (Vector3)selectEnd) / 2f * gridSize;
-    //        Vector3 size = new Vector3(
-    //            Mathf.Abs(selectEnd.x - selectStart.x) + 1,
-    //            Mathf.Abs(selectEnd.y - selectStart.y) + 1,
-    //            Mathf.Abs(selectEnd.z - selectStart.z) + 1
-    //        ) * gridSize;
-
-    //        Gizmos.DrawWireCube(center, size);
-    //    }
-    //}
 
 
     void DrawWireCube(Vector3 center, Vector3 size, Color color)
@@ -1145,10 +1128,7 @@ public class MapEditor : MonoBehaviour
         Vector3 p3 = center + new Vector3(half.x, half.y, -half.z);
         Vector3 p4 = center + new Vector3(-half.x, half.y, -half.z);
 
-        //Vector3 p5 = center + new Vector3(-half.x, -half.y, half.z);
-        //Vector3 p6 = center + new Vector3(half.x, -half.y, half.z);
-        //Vector3 p7 = center + new Vector3(half.x, half.y, half.z);
-        //Vector3 p8 = center + new Vector3(-half.x, half.y, half.z);
+      
 
         // 前
         Debug.DrawLine(p1, p2, color, 0.01f);
@@ -1156,17 +1136,7 @@ public class MapEditor : MonoBehaviour
         Debug.DrawLine(p3, p4, color, 0.01f);
         Debug.DrawLine(p4, p1, color, 0.01f);
                                     
-        //// 後                       
-        //Debug.DrawLine(p5, p6, color, 0.01f);
-        //Debug.DrawLine(p6, p7, color, 0.01f);
-        //Debug.DrawLine(p7, p8, color, 0.01f);
-        //Debug.DrawLine(p8, p5, color, 0.01f);
-                                     
-        //// 接続                       
-        //Debug.DrawLine(p1, p5, color, 0.01f);
-        //Debug.DrawLine(p2, p6, color, 0.01f);
-        //Debug.DrawLine(p3, p7, color, 0.01f);
-        //Debug.DrawLine(p4, p8, color, 0.01f);
+     
     }
 
 
@@ -1206,22 +1176,37 @@ public class MapEditor : MonoBehaviour
         }
 
 
+    }
 
+
+    void RangeVisualization()
+    {
         if (selecting)
         {
-            
+
             Vector3 center2 = ((Vector3)selectStart + (Vector3)selectEnd) / 2f * gridSize;
             Vector3 size = new Vector3(
                 Mathf.Abs(selectEnd.x - selectStart.x) + 1,
                 Mathf.Abs(selectEnd.y - selectStart.y) + 1,
                 Mathf.Abs(selectEnd.z - selectStart.z) + 1
             ) * gridSize;
-            
+
             DrawWireCube(center2, size, Color.yellow);
         }
 
-    }
+        if (!selecting && temporaryBuffer != null && temporaryBuffer.Count > 0)
+        {
 
+            Vector3 center2 = ((Vector3)selectStart + (Vector3)selectEnd) / 2f * gridSize;
+            Vector3 size = new Vector3(
+                Mathf.Abs(selectEnd.x - selectStart.x) + 1,
+                Mathf.Abs(selectEnd.y - selectStart.y) + 1,
+                Mathf.Abs(selectEnd.z - selectStart.z) + 1
+            ) * gridSize;
+
+            DrawWireCube(center2, size, Color.red);
+        }
+    }
    
 
 }
