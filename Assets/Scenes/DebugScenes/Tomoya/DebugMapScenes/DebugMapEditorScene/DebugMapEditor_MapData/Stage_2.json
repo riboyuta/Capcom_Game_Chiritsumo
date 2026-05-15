@@ -42809,18 +42809,18 @@
             "gimmickID": 0
         },
         {
-            "x": 309,
-            "y": -41,
+            "x": 292,
+            "y": -35,
             "z": 0,
             "tileID": "Gimmick_Springpad_Left",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 287,
-            "y": -41,
+            "x": 292,
+            "y": -36,
             "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -42916,7 +42916,7 @@
             "x": 298,
             "y": -28,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "Gimmick_Springpad_Left",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -42929,210 +42929,210 @@
             "gimmickID": 0
         },
         {
-            "x": 285,
-            "y": -41,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 286,
-            "y": -41,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 284,
-            "y": -41,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 305,
-            "y": -34,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 292,
-            "y": -35,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 285,
-            "y": -45,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 285,
-            "y": -46,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 286,
-            "y": -46,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 286,
-            "y": -45,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 286,
-            "y": -44,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 286,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 285,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 284,
-            "y": -44,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 284,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 285,
-            "y": -44,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 284,
-            "y": -45,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 284,
-            "y": -46,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 283,
-            "y": -46,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 283,
-            "y": -45,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 283,
-            "y": -44,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 283,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 283,
-            "y": -42,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 284,
-            "y": -42,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 285,
-            "y": -42,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 286,
-            "y": -42,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 287,
             "y": -42,
             "z": 0,
+            "tileID": "Gimmick_Springpad_Left",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 304,
+            "y": -36,
+            "z": 0,
             "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 285,
+            "y": -42,
+            "z": 0,
+            "tileID": "Gimmick_Springpad_Left",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 297,
+            "y": -28,
+            "z": 0,
+            "tileID": "Gimmick_Springpad_Left",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 291,
+            "y": -35,
+            "z": 0,
+            "tileID": "Gimmick_Springpad_Left",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 285,
+            "y": -45,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 285,
+            "y": -46,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 286,
+            "y": -46,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 286,
+            "y": -45,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 286,
+            "y": -44,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 286,
+            "y": -43,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 285,
+            "y": -43,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 284,
+            "y": -44,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 284,
+            "y": -43,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 285,
+            "y": -44,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 284,
+            "y": -45,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 284,
+            "y": -46,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 283,
+            "y": -46,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 283,
+            "y": -45,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 283,
+            "y": -44,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 283,
+            "y": -43,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 283,
+            "y": -42,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 284,
+            "y": -42,
+            "z": 0,
+            "tileID": "Gimmick_Springpad_Left",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 286,
+            "y": -42,
+            "z": 0,
+            "tileID": "Gimmick_Springpad_Left",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 304,
+            "y": -35,
+            "z": 0,
+            "tileID": "Gimmick_Springpad_Left",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 303,
+            "y": -35,
+            "z": 0,
+            "tileID": "Gimmick_Springpad_Left",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -91756,7 +91756,7 @@
             "x": 310,
             "y": -42,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "Gimmick_Springpad_Left",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -91764,7 +91764,7 @@
             "x": 311,
             "y": -42,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "Gimmick_Springpad_Left",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -91772,7 +91772,7 @@
             "x": 312,
             "y": -42,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "Gimmick_Springpad_Left",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -91917,382 +91917,318 @@
             "y": -43,
             "z": 0,
             "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 312,
-            "y": -41,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 311,
-            "y": -41,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 297,
-            "y": -27,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 309,
-            "y": -42,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 298,
-            "y": -27,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 299,
-            "y": -27,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 309,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 304,
-            "y": -34,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 304,
-            "y": -35,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 303,
-            "y": -34,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 309,
-            "y": -44,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 309,
-            "y": -45,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 309,
-            "y": -46,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 310,
-            "y": -41,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": 41,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": 40,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": 39,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": 39,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": 40,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": 40,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": 40,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": 40,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": 39,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 252,
-            "y": 39,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 251,
-            "y": 39,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 250,
-            "y": 40,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 251,
-            "y": 40,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 252,
-            "y": 40,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": 40,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": 41,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": 41,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": 41,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": 40,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": 41,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": 41,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": 41,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 252,
-            "y": 41,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 251,
-            "y": 41,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 250,
-            "y": 41,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 250,
-            "y": 39,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": 39,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": 39,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": 39,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": 39,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 291,
-            "y": -34,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 292,
-            "y": -34,
-            "z": 0,
-            "tileID": "Gimmick_Springpad_Left",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 293,
-            "y": -34,
+            "y": -35,
             "z": 0,
             "tileID": "Gimmick_Springpad_Left",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 309,
+            "y": -42,
+            "z": 0,
+            "tileID": "Gimmick_Springpad_Left",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 309,
+            "y": -43,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 299,
+            "y": -28,
+            "z": 0,
+            "tileID": "Gimmick_Springpad_Left",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 305,
+            "y": -35,
+            "z": 0,
+            "tileID": "Gimmick_Springpad_Left",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 298,
+            "y": -29,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 309,
+            "y": -44,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 309,
+            "y": -45,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 309,
+            "y": -46,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": 41,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": 40,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": 39,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 258,
+            "y": 39,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": 40,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": 40,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": 40,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": 40,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 253,
+            "y": 39,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 252,
+            "y": 39,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 251,
+            "y": 39,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 250,
+            "y": 40,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 251,
+            "y": 40,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 252,
+            "y": 40,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 253,
+            "y": 40,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": 41,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": 41,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": 41,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 258,
+            "y": 40,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 258,
+            "y": 41,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": 41,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 253,
+            "y": 41,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 252,
+            "y": 41,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 251,
+            "y": 41,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 250,
+            "y": 41,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 250,
+            "y": 39,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": 39,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": 39,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": 39,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": 39,
+            "z": 0,
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
