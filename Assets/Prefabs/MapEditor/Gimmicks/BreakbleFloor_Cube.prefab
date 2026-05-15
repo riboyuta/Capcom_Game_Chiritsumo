@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2359802621397819976}
   - component: {fileID: 1361439948427074722}
   - component: {fileID: 2646225579069338225}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BreakbleFloor_Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
