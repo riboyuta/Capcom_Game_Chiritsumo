@@ -117,6 +117,7 @@ internal sealed class PlayerLocomotionCoordinator
     internal void ResetOneShotFlags()
     {
         jumpSystem.ResetOneShotFlags();
+        dashSystem.ResetOneShotFlags();
     }
 
     // 復帰時に Locomotion 内部タイマーを初期化する。

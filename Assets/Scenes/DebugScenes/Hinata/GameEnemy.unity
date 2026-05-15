@@ -410,6 +410,9 @@ MonoBehaviour:
   oneShot: 1
   usePlayerTag: 1
   playerTag: Player
+  spawnMode: 0
+  spawnDelay: 2
+  parentRoom: {fileID: 0}
 --- !u!114 &152479015
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -426,6 +429,9 @@ MonoBehaviour:
   gameRoot: {fileID: 1603009781}
   playerTag: Player
   triggerOnlyOnce: 1
+  spawnMode: 0
+  spawnDelay: 2
+  parentRoom: {fileID: 0}
 --- !u!1 &155527367
 GameObject:
   m_ObjectHideFlags: 0
@@ -844,6 +850,7 @@ GameObject:
   - component: {fileID: 395024897}
   - component: {fileID: 395024896}
   - component: {fileID: 395024898}
+  - component: {fileID: 395024899}
   m_Layer: 0
   m_Name: ViewRoot
   m_TagString: Untagged
@@ -863,7 +870,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: -0.6}
   m_LocalScale: {x: 0.4, y: 0.4, z: 1}
   m_ConstrainProportionsScale: 1
-  m_Children: []
+  m_Children:
+  - {fileID: 964372221}
   m_Father: {fileID: 1189614814}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &395024896
@@ -1116,6 +1124,58 @@ MonoBehaviour:
   hazardBlackInDuration: 3
   hazardBlackOutDuration: 1
   blackRespawnThreshold: 1
+--- !u!114 &395024899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 395024894}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3321c9b13175884587ed28bcb8f8739, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerModelView
+  playerController: {fileID: 1189614811}
+  animator: {fileID: 964372222}
+  modelRoot: {fileID: 964372221}
+  hoodUpRoot: {fileID: 0}
+  hoodDownRoot: {fileID: 0}
+  resolverSettings:
+    runVelocityThreshold: 0.05
+    riseVelocityThreshold: 0.05
+    wallClimbInputThreshold: 0.1
+    landMinimumDuration: 0.08
+    jumpStartMinimumDuration: 0.1
+    jumpToFallMinimumDuration: 0.08
+    wallJumpMinimumDuration: 0.1
+    ledgeClimbMinimumDuration: 0.1
+    stompMinimumDuration: 0.05
+  baseLayerIndex: 0
+  defaultTransitionDuration: 0.06
+  urgentTransitionDuration: 0.02
+  flipByScaleX: 1
+  invertFacing: 0
+  stateNames:
+    idle: Idle
+    run: Run
+    land: Land
+    jumpStart: JumpStart
+    jumpRise: JumpRise
+    jumpToFall: JumpToFall
+    fall: Fall
+    wallSlide: WallSlide
+    wallGrabIdle: WallGrabIdle
+    wallClimb: WallClimb
+    wallJump: WallJump
+    dash: Dash
+    ledgeClimb: LedgeClimb
+    stomp: Stomp
+  currentState: 0
+  desiredState: 0
+  currentHoodState: 0
+  currentStateElapsed: 0
+  currentStateLockRemaining: 0
 --- !u!1 &423597737
 GameObject:
   m_ObjectHideFlags: 0
@@ -1151,6 +1211,9 @@ MonoBehaviour:
   oneShot: 1
   usePlayerTag: 1
   playerTag: Player
+  spawnMode: 0
+  spawnDelay: 2
+  parentRoom: {fileID: 0}
 --- !u!65 &423597740
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1642,6 +1705,60 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9c0dd60151bd6247b1744826606d689, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandChaserEnemy
+--- !u!1 &964372220
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 964372221}
+  - component: {fileID: 964372222}
+  m_Layer: 0
+  m_Name: ModelRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &964372221
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 964372220}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 395024895}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &964372222
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 964372220}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &996175063
 GameObject:
   m_ObjectHideFlags: 0
@@ -1846,6 +1963,7 @@ GameObject:
   - component: {fileID: 1189614809}
   - component: {fileID: 1189614815}
   - component: {fileID: 1189614816}
+  - component: {fileID: 1189614817}
   m_Layer: 0
   m_Name: PlayerRoot
   m_TagString: Player
@@ -1953,6 +2071,14 @@ MonoBehaviour:
       _primaryKeyboardKey: 38
       _secondaryKeyboardKey: 51
       _gamepadButton: 2
+    stomp:
+      _primaryKeyboardKey: 0
+      _secondaryKeyboardKey: 0
+      _gamepadButton: 1
+    stompAlternate:
+      _primaryKeyboardKey: 0
+      _secondaryKeyboardKey: 0
+      _gamepadButton: 10
     grab:
       _primaryKeyboardKey: 40
       _secondaryKeyboardKey: 55
@@ -1986,12 +2112,12 @@ MonoBehaviour:
     fall:
       gravityMultiplier: 1.75
       maxSpeed: 20
-      useFastFall: 1
-      fastFallGravityMultiplier: 2.6
-      fastFallMaxSpeed: 28
     detection:
       groundCheckDistance: 0.1
       groundLayerMask:
+        serializedVersion: 2
+        m_Bits: 4294967295
+      wallLayerMask:
         serializedVersion: 2
         m_Bits: 4294967295
       wallCheckDistance: 0.15
@@ -2058,6 +2184,15 @@ MonoBehaviour:
       cornerCorrectionDistance: 0.1
       cornerCorrectionUpCheckDistance: 5
       cornerCorrectionProbeCount: 4
+    stomp:
+      useStomp: 1
+      useKeyboardDownOnly: 1
+      preferStompOverDownStepDash: 0
+      allowStartWhileDashing: 0
+      speedMultiplier: 1
+      horizontalPolicy: 0
+      horizontalDampMultiplier: 0.35
+      cancelOnRelease: 1
   checkpointSystem: {fileID: 1298716507}
   stageResetSystem: {fileID: 1934615090}
   playerCameraController: {fileID: 1882003663}
@@ -2183,6 +2318,18 @@ MonoBehaviour:
   debugPathColor: {r: 1, g: 0, b: 1, a: 1}
   lastRecordedTime: 0
   debugHistoryCount: 0
+--- !u!114 &1189614817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1189614808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b64a9ecd6764a34f880f38d72ab4c9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFacade
 --- !u!1 &1270173005
 GameObject:
   m_ObjectHideFlags: 0
