@@ -117,13 +117,17 @@ MonoBehaviour:
       _primaryKeyboardKey: 0
       _secondaryKeyboardKey: 0
       _gamepadButton: 1
+    stompAlternate:
+      _primaryKeyboardKey: 0
+      _secondaryKeyboardKey: 0
+      _gamepadButton: 10
     grab:
       _primaryKeyboardKey: 40
       _secondaryKeyboardKey: 55
       _gamepadButton: 11
   movementSettings:
     move:
-      maxSpeed: 11
+      maxSpeed: 11.5
       groundAcceleration: 78
       groundTurnAcceleration: 108
       groundDeceleration: 92
@@ -155,6 +159,9 @@ MonoBehaviour:
       groundLayerMask:
         serializedVersion: 2
         m_Bits: 4294967295
+      wallLayerMask:
+        serializedVersion: 2
+        m_Bits: 887
       wallCheckDistance: 0.15
       wallCheckRadius: 0.2
       wallInputThreshold: 0.12
@@ -162,22 +169,22 @@ MonoBehaviour:
       useWallSlide: 1
       wallSlideMaxSpeed: 3
       useWallGrab: 1
-      wallGrabMaxHoldTime: 7
+      wallGrabMaxHoldTime: 6
       wallGrabIdleDrainPerSecond: 1
       wallGrabClimbDrainPerSecond: 1.8
       wallGrabJumpCost: 2.5
       wallGrabVerticalSpeed: 0
       wallGrabEnterDistance: 0.04
       wallGrabExitDistance: 0.06
-      wallClimbUpSpeed: 3
+      wallClimbUpSpeed: 6
       wallClimbDownSpeed: 2.5
       wallClimbInputThreshold: 0.8
-      wallGrabJumpVerticalVelocity: 10
+      wallGrabJumpVerticalVelocity: 17
       wallGrabJumpHorizontalLockTime: 0.08
       wallGrabJumpReattachLockTime: 0.3
       useWallKick: 1
-      wallJumpHorizontalVelocity: 10
-      wallJumpVerticalVelocity: 12.8
+      wallJumpHorizontalVelocity: 13
+      wallJumpVerticalVelocity: 16
       wallJumpControlLockTime: 0.07
       wallReattachLockTime: 0.12
       wallDetachGraceTime: 0.08
@@ -190,7 +197,7 @@ MonoBehaviour:
       ledgeClimbUpOffset: 1
     dash:
       useDash: 1
-      speed: 19
+      speed: 25
       duration: 0.17
       gravityMultiplier: 0
       restoreStartVerticalVelocity: 0
@@ -227,7 +234,7 @@ MonoBehaviour:
       speedMultiplier: 1
       horizontalPolicy: 0
       horizontalDampMultiplier: 0.35
-      cancelOnRelease: 1
+      cancelOnRelease: 0
   checkpointSystem: {fileID: 0}
   stageResetSystem: {fileID: 0}
   playerCameraController: {fileID: 0}
