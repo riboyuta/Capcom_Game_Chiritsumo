@@ -129,7 +129,6 @@ public sealed class RoomManager : MonoBehaviour
 
             if (!playerCameraController.IsRoomTransitionRunning || playerCameraController.HasReachedRoomTransitionTarget)
             {
-                ResetStageOnRoomTransitionComplete();
                 EndRoomTransitionExternalControl();
                 pendingRoom = null;
                 isTransitioning = false;
@@ -280,22 +279,22 @@ public sealed class RoomManager : MonoBehaviour
         }
     }
 
-    private void ResetStageOnRoomTransitionComplete()
+    private void ResetStageOnRoomTransitionBegin()
     {
         // ステージ初期化システムが無い場合は安全のため何もしない。
         if (stageResetSystem == null)
         {
-            Debug.LogWarning("RoomManager: stageResetSystem が未設定のため部屋遷移完了時の全初期化を実行できません。", this);
+            Debug.LogWarning("RoomManager: stageResetSystem が未設定のため部屋遷移開始時の全初期化を実行できません。", this);
             return;
         }
 
-        // カメラ遷移完了直後にステージ全体の復帰状態リセットを行う。
+        // カメラ遷移開始直前にステージ全体の復帰状態リセットを行う。
         stageResetSystem.ResetAllToRespawnState();
 
-        // デバッグ有効時のみ、部屋遷移完了境界で全初期化を呼んだことを記録する。
+        // デバッグ有効時のみ、部屋遷移開始境界で全初期化を呼んだことを記録する。
         if (enableDebugLog)
         {
-            Debug.Log("RoomManager: 部屋遷移完了境界で StageResetSystem.ResetAllToRespawnState() を実行しました。", this);
+            Debug.Log("RoomManager: 部屋遷移開始境界で StageResetSystem.ResetAllToRespawnState() を実行しました。", this);
         }
     }
 
@@ -543,7 +542,10 @@ public sealed class RoomManager : MonoBehaviour
             return false;
         }
 
-        // 状態切り替え直後にカメラ設定反映と遷移開始を行う。
+        // 状態切り替え直後にステージ全体をリセット（カメラ遷移直前に敵を消すため）
+        ResetStageOnRoomTransitionBegin();
+
+        // カメラ設定反映と遷移開始を行う。
         isTransitioning = true;
         previousRoom = currentRoom;
         pendingRoom = nextRoom;

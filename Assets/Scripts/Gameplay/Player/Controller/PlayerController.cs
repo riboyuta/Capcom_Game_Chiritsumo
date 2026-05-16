@@ -136,6 +136,10 @@ public sealed partial class PlayerController : MonoBehaviour
     internal void NotifyExternalLaunch()
     {
         frameRequests.wasExternallyLaunchedThisFrame = true;
+
+        // 外部から打ち上げが入った瞬間は、下降固定のストンピングを終了する。
+        // これを行わないと同 tick / 次 tick のストンピング速度適用で上向き速度が上書きされる。
+        locomotionSystem?.EndStomp();
     }
 
     // Facade 向け最小 bridge: この tick の移動補正要求。
