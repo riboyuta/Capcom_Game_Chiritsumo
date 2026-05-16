@@ -24,6 +24,16 @@ internal sealed class PlayerDashSystem
     internal void ResetRuntimeTimers()
     {
         dashBufferTimer = 0f;
+        deps.RuntimeState.justDashStartedThisFrame = false;
+        deps.RuntimeState.requestHoodRecoverThisFrame = false;
+        deps.RuntimeState.hoodVisualState = PlayerHoodVisualState.Up;
+    }
+
+    // 見た目用単発フラグをリセットする。
+    internal void ResetOneShotFlags()
+    {
+        deps.RuntimeState.justDashStartedThisFrame = false;
+        deps.RuntimeState.requestHoodRecoverThisFrame = false;
     }
 
     // ============================================================
@@ -113,6 +123,14 @@ internal sealed class PlayerDashSystem
         }
 
         deps.RuntimeState.currentDashCharges = maxCharges;
+
+        // フードが下がっている状態から回復したときだけ、
+        // 上半身の HoodRecover 演出要求を立てる。
+        if (deps.RuntimeState.hoodVisualState == PlayerHoodVisualState.Down)
+        {
+            deps.RuntimeState.requestHoodRecoverThisFrame = true;
+        }
+
         return true;
     }
 
@@ -181,6 +199,12 @@ internal sealed class PlayerDashSystem
         onWallGrabExit?.Invoke(0);
         deps.RuntimeState.isDashing = true;
         deps.RuntimeState.dashTimer = deps.Settings.Dash.Duration;
+
+        // 見た目用の単発イベントとフード状態を更新する。
+        deps.RuntimeState.justDashStartedThisFrame = true;
+        deps.RuntimeState.requestHoodRecoverThisFrame = false;
+        deps.RuntimeState.hoodVisualState = PlayerHoodVisualState.Down;
+
         if (deps.RuntimeState.isGrounded)
         {
             deps.RuntimeState.groundDashCooldownTimer = deps.Settings.Dash.GroundCooldownTime;
@@ -311,6 +335,7 @@ internal sealed class PlayerDashSystem
 
         deps.Rb.linearVelocity = deps.RuntimeState.dashDirection * (deps.Settings.Dash.Speed * modifier.dashSpeedMultiplier);
     }
+
     internal void CancelDashForStomp()
     {
         if (!deps.RuntimeState.isDashing)
@@ -321,6 +346,7 @@ internal sealed class PlayerDashSystem
         deps.RuntimeState.isDashing = false;
         deps.RuntimeState.dashTimer = 0f;
     }
+
     // ダッシュ終了処理を実行する。
     internal void EndDash(System.Action setDashEndJumpCutLockTimer)
     {
