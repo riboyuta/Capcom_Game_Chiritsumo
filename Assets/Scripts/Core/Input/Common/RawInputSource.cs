@@ -31,6 +31,8 @@ namespace Game.Input
         DpadLeft,          // 十字キー左
         DpadRight,         // 十字キー右
 
+        None,
+
         Count              // 要素数。実ボタンではない。
     }
 
@@ -464,12 +466,18 @@ namespace Game.Input
         }
 
         // RawGamepadButton enum を配列インデックスへ安全に変換する。
+        // RawGamepadButton enum を配列インデックスへ安全に変換する。
         private static bool TryGetGamepadButtonIndex(RawGamepadButton button, out int index)
         {
             index = (int)button;
+
+            if (button == RawGamepadButton.None)
+            {
+                return false;
+            }
+
             return index >= 0 && index < GamepadButtonCount;
         }
-
         // すべてのスナップショット状態を初期化する。
         private void ClearAllSnapshots()
         {

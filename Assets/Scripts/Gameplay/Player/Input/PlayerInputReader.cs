@@ -6,9 +6,9 @@ namespace Game.Input
     // 生入力(RawInputSource)をゲーム側で扱いやすい形へ変換する責務を持つ。
     // 例:
     // - キーボードとゲームパッドの移動入力を1つの Move にまとめる
-    // - Jump / Dash / Grab の Pressed, Held, Released を毎フレーム更新する
+    // - Jump / Dash / Stomp / Grab の Pressed, Held, Released を毎フレーム更新する
     // - Move から上下左右の入力意図を導出する
-    // - Dash 押下フレームにダッシュ方向入力を確定する
+    // - Dash 押下中にダッシュ方向入力を更新する
     public sealed class PlayerInputReader
     {
         // 0.5f 以上なら UpHeld、-0.5f 以下なら DownHeld と判定する。
@@ -24,7 +24,7 @@ namespace Game.Input
         // Unity Input などから取得した生入力の供給元。
         private readonly RawInputSource rawInputSource;
 
-        // Jump / Dash / Grab の入力割り当て情報。
+        // Jump / Dash / Stomp / Grab の入力割り当て情報。
         private readonly PlayerInputBindings bindings;
 
         // プレイヤーの移動・ダッシュに関する調整値。
@@ -74,7 +74,7 @@ namespace Game.Input
         public bool GrabHeld { get; private set; }
         public bool GrabReleased { get; private set; }
 
-        // ダッシュ押下フレームに確定した方向入力。
+        // ダッシュ入力中に使う方向入力。
         // 例:
         // - 右上入力 + DashPressed なら (1, 1)
         // - 無入力 + DashPressed なら (0, 0)
@@ -104,7 +104,7 @@ namespace Game.Input
             bool rightHeld = Move.x >= HorizontalIntentThreshold;
             bool downHeld = Move.y <= -VerticalIntentThreshold;
 
-            // 方向入力の立ち上がり(Pressed)を判定する。
+            // 方向入力の立ち上がり / 立ち下がりを判定する。
             LeftPressed = leftHeld && !previousLeftHeld;
             RightPressed = rightHeld && !previousRightHeld;
             DownPressed = downHeld && !previousDownHeld;
@@ -132,24 +132,11 @@ namespace Game.Input
             DashReleased = dashState.ReleasedThisFrame;
 
             // Stomp アクションの統合状態を解決する。
-            RawButtonFrameState primaryStompState = ResolveActionState(bindings.Stomp);
-            RawButtonFrameState alternateStompState = ResolveActionState(bindings.StompAlternate);
-
-            bool primaryPreviousHeld = ReconstructPreviousHeld(
-                primaryStompState.Held,
-                primaryStompState.PressedThisFrame,
-                primaryStompState.ReleasedThisFrame);
-            bool alternatePreviousHeld = ReconstructPreviousHeld(
-                alternateStompState.Held,
-                alternateStompState.PressedThisFrame,
-                alternateStompState.ReleasedThisFrame);
-
-            bool currentHeld = primaryStompState.Held || alternateStompState.Held;
-            bool previousHeld = primaryPreviousHeld || alternatePreviousHeld;
-
-            StompPressed = currentHeld && !previousHeld;
-            StompHeld = currentHeld;
-            StompReleased = !currentHeld && previousHeld;
+            // Stomp も Jump / Dash / Grab と同じ ResolveActionState に統一する。
+            RawButtonFrameState stompState = ResolveActionState(bindings.Stomp);
+            StompPressed = stompState.PressedThisFrame;
+            StompHeld = stompState.Held;
+            StompReleased = stompState.ReleasedThisFrame;
 
             // Dash を押している間、常に最新の方向入力を更新する。
             // これにより、ダッシュボタンを押した後に方向を微調整できる。
@@ -160,10 +147,10 @@ namespace Game.Input
             }
             else if (DashReleased)
             {
-                // ダッシュボタンを離した瞬間にリセット
+                // ダッシュボタンを離した瞬間にリセットする。
                 DashDirectionInput = Vector2.zero;
             }
-            // それ以外（何も押していない）は前フレームの値を保持
+            // それ以外（何も押していない）は前フレームの値を保持する。
 
             // Grab アクションの統合状態を解決する。
             RawButtonFrameState grabState = ResolveActionState(bindings.Grab);
@@ -297,35 +284,51 @@ namespace Game.Input
         }
 
         // 1つのアクション(binding)について、
-        // キーボード主キー / 副キー / ゲームパッドボタンを統合し、
+        // キーボード主キー / キーボード副キー / ゲームパッド主ボタン / ゲームパッド副ボタンを統合し、
         // Pressed / Held / Released を 1 つの状態として返す。
         private RawButtonFrameState ResolveActionState(InputActionBinding binding)
         {
-            // 主キーの現在状態と、このフレームでの押下 / 離しを取得。
-            bool primaryCurrent = rawInputSource.IsKeyHeld(binding.PrimaryKeyboardKey);
-            bool primaryPressed = rawInputSource.WasKeyPressedThisFrame(binding.PrimaryKeyboardKey);
-            bool primaryReleased = rawInputSource.WasKeyReleasedThisFrame(binding.PrimaryKeyboardKey);
+            RawButtonFrameState primaryKeyboardState =
+                rawInputSource.GetKeyState(binding.PrimaryKeyboardKey);
 
-            // 副キーの現在状態と、このフレームでの押下 / 離しを取得。
-            bool secondaryCurrent = rawInputSource.IsKeyHeld(binding.SecondaryKeyboardKey);
-            bool secondaryPressed = rawInputSource.WasKeyPressedThisFrame(binding.SecondaryKeyboardKey);
-            bool secondaryReleased = rawInputSource.WasKeyReleasedThisFrame(binding.SecondaryKeyboardKey);
+            RawButtonFrameState secondaryKeyboardState =
+                rawInputSource.GetKeyState(binding.SecondaryKeyboardKey);
 
-            // ゲームパッドボタンの現在状態と、このフレームでの押下 / 離しを取得。
-            bool gamepadCurrent = rawInputSource.IsGamepadButtonHeld(binding.GamepadButton);
-            bool gamepadPressed = rawInputSource.WasGamepadButtonPressedThisFrame(binding.GamepadButton);
-            bool gamepadReleased = rawInputSource.WasGamepadButtonReleasedThisFrame(binding.GamepadButton);
+            RawButtonFrameState primaryGamepadState =
+                rawInputSource.GetGamepadButtonState(binding.GamepadButton);
 
-            // 各入力経路について「前フレームで held だったか」を再構築する。
-            bool primaryPrevious = ReconstructPreviousHeld(primaryCurrent, primaryPressed, primaryReleased);
-            bool secondaryPrevious = ReconstructPreviousHeld(secondaryCurrent, secondaryPressed, secondaryReleased);
-            bool gamepadPrevious = ReconstructPreviousHeld(gamepadCurrent, gamepadPressed, gamepadReleased);
+            RawButtonFrameState secondaryGamepadState =
+                rawInputSource.GetGamepadButtonState(binding.SecondaryGamepadButton);
 
-            // 現在フレームで、どれか1つでも押されていれば Held。
-            bool currentHeld = primaryCurrent || secondaryCurrent || gamepadCurrent;
+            return MergeActionStates(
+                primaryKeyboardState,
+                secondaryKeyboardState,
+                primaryGamepadState,
+                secondaryGamepadState);
+        }
 
-            // 前フレームで、どれか1つでも押されていれば PreviousHeld。
-            bool previousHeld = primaryPrevious || secondaryPrevious || gamepadPrevious;
+        // 複数の入力経路を1つのアクション状態へ統合する。
+        // 例:
+        // - 主ボタンを押しっぱなし中に副ボタンを押しても Pressed は二重発火しない
+        // - 主ボタンを離しても副ボタンが押されていれば Released は出ない
+        // - すべての入力経路が離れた瞬間だけ Released が出る
+        private static RawButtonFrameState MergeActionStates(
+            RawButtonFrameState first,
+            RawButtonFrameState second,
+            RawButtonFrameState third,
+            RawButtonFrameState fourth)
+        {
+            bool currentHeld =
+                first.Held ||
+                second.Held ||
+                third.Held ||
+                fourth.Held;
+
+            bool previousHeld =
+                ReconstructPreviousHeld(first.Held, first.PressedThisFrame, first.ReleasedThisFrame) ||
+                ReconstructPreviousHeld(second.Held, second.PressedThisFrame, second.ReleasedThisFrame) ||
+                ReconstructPreviousHeld(third.Held, third.PressedThisFrame, third.ReleasedThisFrame) ||
+                ReconstructPreviousHeld(fourth.Held, fourth.PressedThisFrame, fourth.ReleasedThisFrame);
 
             return new RawButtonFrameState(
                 held: currentHeld,
