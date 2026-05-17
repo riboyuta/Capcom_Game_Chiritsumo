@@ -200,7 +200,7 @@ internal sealed class PlayerWallActionSystem
             return false;
         }
 
-        if (!deps.InputReader.GrabHeld)
+        if (!IsWallGrabInputHeld())
         {
             return false;
         }
@@ -231,7 +231,7 @@ internal sealed class PlayerWallActionSystem
             return true;
         }
 
-        if (!deps.InputReader.GrabHeld)
+        if (!IsWallGrabInputHeld())
         {
             return true;
         }
@@ -285,6 +285,18 @@ internal sealed class PlayerWallActionSystem
             maxDistance + 0.01f,
             deps.Settings.Detection.GroundLayerMask,
             QueryTriggerInteraction.Ignore);
+    }
+
+    // 壁掴まり専用の入力解決。
+    // 左クリック押下フレームでは「左クリック由来の Grab 要求」のみ抑制し、
+    // キーボード/ゲームパッド由来 Grab は従来どおり有効にする。
+    private bool IsWallGrabInputHeld()
+    {
+        bool dedicatedGrabHeld = deps.InputReader.GrabHeld;
+        bool mouseGrabRequestHeld = deps.InputReader.MouseGrabRequestHeld;
+        bool suppressMouseGrabThisFrame = deps.InputReader.LeftMouseDashPressedThisFrame;
+
+        return dedicatedGrabHeld || (mouseGrabRequestHeld && !suppressMouseGrabThisFrame);
     }
 
     // 壁捕まり状態へ遷移させる。

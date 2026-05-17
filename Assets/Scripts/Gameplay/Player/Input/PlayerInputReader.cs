@@ -63,6 +63,7 @@ namespace Game.Input
         public bool DashPressed { get; private set; }
         public bool DashHeld { get; private set; }
         public bool DashReleased { get; private set; }
+        public bool LeftMouseDashPressedThisFrame { get; private set; }
 
         // ストンピング入力のフレーム状態。
         public bool StompPressed { get; private set; }
@@ -73,6 +74,7 @@ namespace Game.Input
         public bool GrabPressed { get; private set; }
         public bool GrabHeld { get; private set; }
         public bool GrabReleased { get; private set; }
+        public bool MouseGrabRequestHeld { get; private set; }
 
         // ダッシュ入力中に使う方向入力。
         // 例:
@@ -125,15 +127,21 @@ namespace Game.Input
             JumpHeld = jumpState.Held;
             JumpReleased = jumpState.ReleasedThisFrame;
 
+            RawButtonFrameState leftMouseState = rawInputSource.LeftMouseButtonState;
+            RawButtonFrameState rightMouseState = rawInputSource.RightMouseButtonState;
+
             // Dash アクションの統合状態を解決する。
             RawButtonFrameState dashState = ResolveActionState(bindings.Dash);
+            dashState = MergeActionStates(dashState, leftMouseState, default, default);
             DashPressed = dashState.PressedThisFrame;
             DashHeld = dashState.Held;
             DashReleased = dashState.ReleasedThisFrame;
+            LeftMouseDashPressedThisFrame = leftMouseState.PressedThisFrame;
 
             // Stomp アクションの統合状態を解決する。
             // Stomp も Jump / Dash / Grab と同じ ResolveActionState に統一する。
             RawButtonFrameState stompState = ResolveActionState(bindings.Stomp);
+            stompState = MergeActionStates(stompState, rightMouseState, default, default);
             StompPressed = stompState.PressedThisFrame;
             StompHeld = stompState.Held;
             StompReleased = stompState.ReleasedThisFrame;
@@ -157,6 +165,9 @@ namespace Game.Input
             GrabPressed = grabState.PressedThisFrame;
             GrabHeld = grabState.Held;
             GrabReleased = grabState.ReleasedThisFrame;
+            // 左クリック保持は GrabHeld へ直接合流しない。
+            // 壁掴まり可否は壁システム側で判定するため、要求状態だけを公開する。
+            MouseGrabRequestHeld = leftMouseState.Held;
         }
 
         // 移動入力を 1 つの Vector2 にまとめる。
