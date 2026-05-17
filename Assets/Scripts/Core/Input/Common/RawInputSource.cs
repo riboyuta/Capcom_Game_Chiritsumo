@@ -31,6 +31,8 @@ namespace Game.Input
         DpadLeft,          // 十字キー左
         DpadRight,         // 十字キー右
 
+        None,
+
         Count              // 要素数。実ボタンではない。
     }
 
@@ -102,6 +104,10 @@ namespace Game.Input
         // インデックスは RawGamepadButton enum の int 値を使う。
         private bool[] _currentGamepadHeld = new bool[GamepadButtonCount];
         private bool[] _previousGamepadHeld = new bool[GamepadButtonCount];
+        private bool _currentLeftMouseHeld;
+        private bool _previousLeftMouseHeld;
+        private bool _currentRightMouseHeld;
+        private bool _previousRightMouseHeld;
 
         // 毎フレーム計算して保持する低レベル値。
         private Vector2 _keyboardMoveVector;
@@ -142,12 +148,19 @@ namespace Game.Input
         // 0..1 の右トリガー入力値。
         public float RightTriggerValue => _rightTriggerValue;
 
+        // このフレームの左マウスボタン状態。
+        public RawButtonFrameState LeftMouseButtonState => BuildMouseButtonState(_currentLeftMouseHeld, _previousLeftMouseHeld);
+
+        // このフレームの右マウスボタン状態。
+        public RawButtonFrameState RightMouseButtonState => BuildMouseButtonState(_currentRightMouseHeld, _previousRightMouseHeld);
+
         private void Update()
         {
             // 低レベル入力は毎フレーム1回だけ収集する。
             // 他の Reader はこのスナップショットを参照する。
             UpdateKeyboardSnapshot();
             UpdateGamepadSnapshot();
+            UpdateMouseSnapshot();
             SnapshotFrame = Time.frameCount;
         }
 
@@ -364,6 +377,24 @@ namespace Game.Input
             _gamepadMoveVector = Vector2.ClampMagnitude(_gamepadLeftStickVector + _gamepadDpadVector, 1.0f);
         }
 
+        // マウス左右ボタンの押下状態を更新する。
+        private void UpdateMouseSnapshot()
+        {
+            _previousLeftMouseHeld = _currentLeftMouseHeld;
+            _previousRightMouseHeld = _currentRightMouseHeld;
+
+            Mouse mouse = Mouse.current;
+            if (mouse == null)
+            {
+                _currentLeftMouseHeld = false;
+                _currentRightMouseHeld = false;
+                return;
+            }
+
+            _currentLeftMouseHeld = mouse.leftButton.isPressed;
+            _currentRightMouseHeld = mouse.rightButton.isPressed;
+        }
+
         // ---------------------------------------------------------------------
         // Read Helpers
         // ---------------------------------------------------------------------
@@ -464,12 +495,18 @@ namespace Game.Input
         }
 
         // RawGamepadButton enum を配列インデックスへ安全に変換する。
+        // RawGamepadButton enum を配列インデックスへ安全に変換する。
         private static bool TryGetGamepadButtonIndex(RawGamepadButton button, out int index)
         {
             index = (int)button;
+
+            if (button == RawGamepadButton.None)
+            {
+                return false;
+            }
+
             return index >= 0 && index < GamepadButtonCount;
         }
-
         // すべてのスナップショット状態を初期化する。
         private void ClearAllSnapshots()
         {
@@ -486,6 +523,10 @@ namespace Game.Input
             _gamepadMoveVector = Vector2.zero;
             _leftTriggerValue = 0.0f;
             _rightTriggerValue = 0.0f;
+            _currentLeftMouseHeld = false;
+            _previousLeftMouseHeld = false;
+            _currentRightMouseHeld = false;
+            _previousRightMouseHeld = false;
 
             HasKeyboard = false;
             HasGamepad = false;
@@ -518,6 +559,14 @@ namespace Game.Input
 
             // Key enum の最大値に合わせて配列サイズを決める。
             return max + 1;
+        }
+
+        private static RawButtonFrameState BuildMouseButtonState(bool currentHeld, bool previousHeld)
+        {
+            return new RawButtonFrameState(
+                held: currentHeld,
+                pressedThisFrame: currentHeld && !previousHeld,
+                releasedThisFrame: !currentHeld && previousHeld);
         }
     }
 }
