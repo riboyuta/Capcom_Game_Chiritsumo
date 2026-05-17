@@ -43,6 +43,18 @@ internal sealed class PlayerRuntimeState
     // 現在のダッシュ残数。
     public int currentDashCharges;
 
+    // 見た目用: フードの表示状態。
+    // ダッシュ残数とは分離し、純粋に見た目の状態として扱う。
+    public PlayerHoodVisualState hoodVisualState = PlayerHoodVisualState.Up;
+
+    // 見た目用: この物理フレームでダッシュ開始したか。
+    // Snapshot 側で justDashStarted として読むための単発フラグ。
+    public bool justDashStartedThisFrame;
+
+    // 見た目用: この物理フレームで HoodRecover を要求するか。
+    // ダッシュ回復演出の起点として使う単発フラグ。
+    public bool requestHoodRecoverThisFrame;
+
     // 前フレームの接地状態。
     // 接地遷移を検出して、必要時のみダッシュ回復させるために使う。
     public bool wasGroundedLastFrame;
@@ -94,5 +106,4 @@ internal sealed class PlayerRuntimeState
 
     // 崖乗り上げ目標位置。
     public Vector3 ledgeClimbTargetPosition;
-
 }

@@ -22,8 +22,12 @@ public sealed partial class PlayerController
     private void ResetVisualOneShotFlags()
     {
         justLandedThisFrame = false;
-        locomotionSystem?.ResetOneShotFlags();
         justCrossedApexThisFrame = false;
+
+        if (locomotionSystem != null)
+        {
+            locomotionSystem.ResetOneShotFlags();
+        }
     }
 
     // その物理フレームの最終状態から、見た目向けスナップショットを確定する。
@@ -64,6 +68,9 @@ public sealed partial class PlayerController
             currentVelocityX,
             currentVelocityY
         );
+
+        // モデル表示用スナップショットも同じタイミングで確定する。
+        FinalizeAnimationSnapshot();
     }
 
     // PlayerView 用の見た目スナップショット。

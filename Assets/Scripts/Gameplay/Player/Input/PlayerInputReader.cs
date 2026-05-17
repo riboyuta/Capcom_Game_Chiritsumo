@@ -213,7 +213,15 @@ namespace Game.Input
                     ? 1.0f
                     : 0.0f;
 
-            return new Vector2(x, y);
+            Vector2 result = new Vector2(x, y);
+
+            // 斜め入力の場合は正規化して、コントローラーと同じ長さにする
+            if (result.sqrMagnitude > 1.0f)
+            {
+                result.Normalize();
+            }
+
+            return result;
         }
 
         // ゲームパッド方向入力を、8方向へスナップして返す。

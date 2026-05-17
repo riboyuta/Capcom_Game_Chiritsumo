@@ -64,6 +64,10 @@ public sealed partial class PlayerController : MonoBehaviour
     // 通常移動を担当する内部システム。
     private PlayerLocomotionSystem locomotionSystem;
 
+    // モデル表示用の見た目スナップショット。
+    // 既存の CurrentVisualState は残しつつ、モデル系はこちらを参照する。
+    private PlayerAnimationSnapshot currentAnimationSnapshot = PlayerAnimationSnapshot.Default;
+
     private readonly PlayerRuntimeState runtimeState = new PlayerRuntimeState();
     private readonly PlayerFrameRequests frameRequests = new PlayerFrameRequests();
     internal bool IsDashActive => runtimeState.isDashing;
@@ -78,6 +82,9 @@ public sealed partial class PlayerController : MonoBehaviour
         externalControlSystem != null ? externalControlSystem.CurrentExternalControlMode : ExternalControlMode.None;
     internal Vector2 MoveInputDirection => playerInputReader != null ? playerInputReader.Move : Vector2.zero;
     internal bool IsMoveInputDiagonal => ComputeIsMoveInputDiagonal();
+
+    // モデル表示側が読む読み取り専用公開口。
+    internal PlayerAnimationSnapshot CurrentAnimationSnapshot => currentAnimationSnapshot;
 
     // 死亡状態プロパティ
     public bool IsDeadState => deathCoordinator != null && deathCoordinator.IsDeadState;
@@ -375,6 +382,8 @@ public sealed partial class PlayerController : MonoBehaviour
         runtimeState.wallGrabRemainingTime = movementSettings.Wall.WallGrabMaxHoldTime;
         runtimeState.wasGroundedLastFrame = false;
         frameRequests.requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
+
+        currentAnimationSnapshot = PlayerAnimationSnapshot.Default;
 
         deathCoordinator = new PlayerDeathCoordinator(
             this,
