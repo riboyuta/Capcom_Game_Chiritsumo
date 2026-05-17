@@ -74,6 +74,8 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
         {
             parentRoom = GetComponentInParent<Room>();
         }
+
+        roomManager = FindFirstObjectByType<RoomManager>();
     }
 
     private void Start()
@@ -81,7 +83,6 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
         // 時間モードの場合、RoomManagerのイベントを監視
         if (spawnMode == SpawnMode.Time)
         {
-            roomManager = FindFirstObjectByType<RoomManager>();
             if (roomManager != null)
             {
                 roomManager.OnRoomTransitionComplete += OnRoomTransitionComplete;
@@ -123,6 +124,12 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
     {
         // 時間モードの場合はトリガー判定を無視
         if (spawnMode == SpawnMode.Time)
+        {
+            return;
+        }
+
+        // 部屋遷移中は誤発火を防ぐため無視
+        if (roomManager != null && roomManager.IsTransitioning)
         {
             return;
         }
@@ -286,9 +293,10 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
         }
 
         // 時間モードで現在の部屋にいる場合、リスポーン後に再度スポーンをトリガー
+        // (ただし、部屋遷移中はその完了イベントでトリガーされるため除外)
         if (spawnMode == SpawnMode.Time && !hasTriggered)
         {
-            if (roomManager != null && parentRoom != null && roomManager.CurrentRoom == parentRoom)
+            if (roomManager != null && parentRoom != null && roomManager.CurrentRoom == parentRoom && !roomManager.IsTransitioning)
             {
                 TriggerSpawn();
             }
