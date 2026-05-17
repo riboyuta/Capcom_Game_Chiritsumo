@@ -7,6 +7,7 @@ public class HandChaserHitboxAdjuster
     private readonly Transform enemyTransform;
     private readonly Collider cachedCollider;
     private readonly HandChaserMovement movement;
+    private readonly HandChaserModelView wallModelView;
 
     private Room assignedRoom;
     private RoomManager roomManager;
@@ -17,11 +18,12 @@ public class HandChaserHitboxAdjuster
     private readonly bool enableDebugLog;
 
     // コンストラクタ
-    public HandChaserHitboxAdjuster(Transform enemy, Collider collider, HandChaserMovement movement, bool enableDebugLog = false)
+    public HandChaserHitboxAdjuster(Transform enemy, Collider collider, HandChaserMovement movement, HandChaserModelView wallModelView, bool enableDebugLog = false)
     {
         this.enemyTransform = enemy;
         this.cachedCollider = collider;
         this.movement = movement;
+        this.wallModelView = wallModelView;
         this.enableDebugLog = enableDebugLog;
     }
 
@@ -159,7 +161,7 @@ public class HandChaserHitboxAdjuster
         {
             if (enableDebugLog)
             {
-                Debug.Log($"[HandChaserHitboxAdjuster] Direction is Custom. Skipping hitbox adjustment.", enemyTransform);
+                Debug.Log("[HandChaserHitboxAdjuster] Direction is Custom. Skipping hitbox adjustment.", enemyTransform);
             }
             return;
         }
@@ -169,11 +171,33 @@ public class HandChaserHitboxAdjuster
 
         if (cachedCollider is BoxCollider boxCollider)
         {
+            // 先に即死判定用のBoxColliderを部屋サイズに合わせる。
             AdjustBoxCollider(boxCollider, roomBounds, direction);
+
+            // モデル表示はRoomBoundsではなく、調整後のBoxColliderを基準にする。
+            if (wallModelView != null)
+            {
+                wallModelView.RebuildFromCollider(boxCollider, direction);
+            }
+
+            if (enableDebugLog)
+            {
+                Debug.Log(
+                    $"[HandChaserHitboxAdjuster] ModelView rebuilt from collider. " +
+                    $"roomSize={roomBounds.size}, colliderSize={boxCollider.size}, colliderCenter={boxCollider.center}, direction={direction}",
+                    enemyTransform);
+            }
         }
         else if (cachedCollider is CapsuleCollider capsuleCollider)
         {
             AdjustCapsuleCollider(capsuleCollider, roomBounds, direction);
+
+            if (enableDebugLog)
+            {
+                Debug.LogWarning(
+                    "[HandChaserHitboxAdjuster] CapsuleCollider はモデル生成基準に未対応です。壁モデル生成を使う場合は BoxCollider 推奨です。",
+                    enemyTransform);
+            }
         }
     }
 
