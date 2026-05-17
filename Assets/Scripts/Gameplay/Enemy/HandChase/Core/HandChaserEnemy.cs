@@ -12,6 +12,10 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
     [Tooltip("見た目制御コンポーネントです。未設定時は自動取得します。")]
     [SerializeField] private HandChaserView view;
 
+    [Header("壁モデル表示")]
+    [Tooltip("部屋サイズに合わせて複数の手モデルを生成するViewです。未設定時は自動取得します。")]
+    [SerializeField] private HandChaserModelView wallModelView;
+
     [Header("接近エフェクト")]
     [Tooltip("接近エフェクト制御コンポーネントです。未設定時は自動取得します。")]
     [SerializeField] private ProximityEffectController proximityEffects;
@@ -105,7 +109,7 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         // ヒットボックス調整ヘルパーを初期化
         if (autoAdjustHitbox)
         {
-            hitboxAdjuster = new HandChaserHitboxAdjuster(transform, cachedCollider, movement, enableDebugLog);
+            hitboxAdjuster = new HandChaserHitboxAdjuster(transform, cachedCollider, movement, wallModelView, enableDebugLog);
             hitboxAdjuster.Initialize();
         }
 
@@ -352,6 +356,11 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
                 }
             }
         }
+
+        if (wallModelView != null)
+        {
+            wallModelView.SetVisible(visible);
+        }
     }
 
     private void DisableSelf()
@@ -386,6 +395,11 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         if (view == null)
         {
             view = GetComponent<HandChaserView>();
+        }
+
+        if (wallModelView == null)
+        {
+            wallModelView = GetComponent<HandChaserModelView>();
         }
 
         if (proximityEffects == null)
