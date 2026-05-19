@@ -25,6 +25,7 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
     private PlayerFacade playerFacade;
     private float dropThroughTimer;
     private bool hasCapturedInitialState;
+    private bool wasBelowPlatform;
 
     private void Awake()
     {
@@ -35,6 +36,11 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
     {
         // プレイヤーを検索してキャッシュする。
         TryFindPlayer();
+
+        if (playerCollider != null && platformCollider != null)
+        {
+            wasBelowPlatform = playerCollider.bounds.min.y < platformCollider.bounds.max.y - tolerance;
+        }
     }
 
     // ──────────────────────────────────────────────
@@ -97,7 +103,24 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
             currentTolerance += Mathf.Min(1.0f, fallDistancePerFrame * 1.5f);
         }
 
+        // 下からすり抜け中かどうかの状態を更新する。
+        if (playerBottom < platformTop - currentTolerance)
+        {
+            wasBelowPlatform = true;
+        }
+        else if (playerBottom >= platformTop)
+        {
+            wasBelowPlatform = false;
+        }
+
         bool playerAbove = playerBottom >= platformTop - currentTolerance;
+
+        // ダッシュによるすり抜け中の引っかかり防止
+        // 下からすり抜け中にダッシュするとY速度が0になり着地判定が誤爆するため、ダッシュ中は上にいると判定しない
+        if (playerFacade != null && playerFacade.IsDashActive && wasBelowPlatform)
+        {
+            playerAbove = false;
+        }
 
         // 落下入力によるすり抜け判定。
         // プレイヤーが床の上にいて、下入力を入れている場合にすり抜けを開始する。
