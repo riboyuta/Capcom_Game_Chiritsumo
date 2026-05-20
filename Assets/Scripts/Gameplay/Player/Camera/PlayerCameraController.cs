@@ -79,6 +79,13 @@ public sealed class PlayerCameraController : MonoBehaviour
     // 実際の遷移終了判定は時間基準で行う。
     [SerializeField] private float roomTransitionCompleteDistance = 0.005f;
 
+    [Header("ルーム確認カメラ")]
+    [Tooltip("ルーム確認モード中のカメラ移動速度です。")]
+    [SerializeField] private float roomLookMoveSpeed = 14.0f;
+
+    [Tooltip("ルーム確認モード終了時にプレイヤー追従位置へ戻る時間です。")]
+    [SerializeField] private float roomLookReturnDuration = 0.20f;
+
     [Header("デバッグGizmoを描画するか")]
     [Tooltip("有効にすると、Scene ビュー上に目標位置・Clamp 後位置・追従対象位置の Gizmo を描画します。カメラ挙動確認用です。")]
     // Scene ビュー上にデバッグ用 Gizmo を描画するか。
@@ -155,6 +162,15 @@ public sealed class PlayerCameraController : MonoBehaviour
     private Vector3 roomTransitionStartPosition;
     private Vector3 roomTransitionTargetPosition;
 
+    // ルーム確認カメラモードのランタイム状態。
+    private bool isRoomLookRunning;
+    private bool isRoomLookReturning;
+    private Bounds roomLookBounds;
+    private Vector3 roomLookManualPosition;
+    private Vector3 roomLookReturnStartPosition;
+    private Vector3 roomLookReturnTargetPosition;
+    private float roomLookReturnElapsed;
+
     // -----------------------------
     // 読み取り専用公開プロパティ
     // -----------------------------
@@ -207,6 +223,9 @@ public sealed class PlayerCameraController : MonoBehaviour
     public Transform TemporaryTargetAnchor => temporaryTargetAnchor;
     public float TemporaryTargetExpireTime => temporaryTargetExpireTime;
     public bool IsRoomTransitionRunning => isRoomTransitionRunning;
+    public bool IsRoomLookRunning => isRoomLookRunning;
+    public bool IsRoomLookReturning => isRoomLookReturning;
+    public bool IsRoomLookActive => isRoomLookRunning || isRoomLookReturning;
 
     // 遷移中でなければ到達済み扱い。
     // 遷移中は現在位置と目標位置の距離で外部から確認できるようにする。
@@ -252,6 +271,20 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         ApplyOrthographicSize();
 
+        if (isRoomLookRunning)
+        {
+            // ルーム確認モード中は RoomLookModeController 側から
+            // UpdateRoomLookInput が呼ばれてカメラ位置を更新する。
+            // 通常追従は止める。
+            return;
+        }
+
+        if (isRoomLookReturning)
+        {
+            TickRoomLookReturn();
+            return;
+        }
+
         Transform effectiveTarget = GetEffectiveTargetAnchor();
         if (effectiveTarget == null)
         {
@@ -259,17 +292,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         }
 
         // 追従対象位置 + カメラオフセット(+必要なら部屋注視オフセット) で理想位置を作る。
-        Vector3 baseDesiredPosition = effectiveTarget.position + cameraOffset;
-        if (hasActiveRoomFocusOffset)
-        {
-            // Inspector の意味を直感に合わせるため、適用時に符号を反転する（+X=右を見せる、+Y=下を見せる）。
-            Vector3 focusOffset3D = new Vector3(-activeRoomFocusOffset.x, activeRoomFocusOffset.y, 0f);
-            desiredPosition = baseDesiredPosition + focusOffset3D;
-        }
-        else
-        {
-            desiredPosition = baseDesiredPosition;
-        }
+        desiredPosition = BuildFollowDesiredPosition(effectiveTarget);
 
         // 理想位置をカメラ境界内に収めた最終候補位置を作る。
         clampedPosition = GetClampedPosition(desiredPosition);
@@ -465,6 +488,12 @@ public sealed class PlayerCameraController : MonoBehaviour
         velocityY = 0f;
         orthographicSizeVelocity = 0f;
 
+        // ルーム確認モード中なら通常追従位置へ戻す。
+        if (isRoomLookRunning || isRoomLookReturning)
+        {
+            CancelRoomLookAndSnapToFollow();
+        }
+
         // 部屋遷移中なら現在の目標位置へスナップして遷移を終了する。
         if (isRoomTransitionRunning)
         {
@@ -591,6 +620,157 @@ public sealed class PlayerCameraController : MonoBehaviour
         return EffectiveWorldBounds;
     }
 
+    // -----------------------------
+    // ルーム確認カメラモード
+    // -----------------------------
+
+    public bool BeginRoomLook(Bounds lookBounds)
+    {
+        if (!ValidateRuntimeReferences())
+        {
+            return false;
+        }
+
+        if (isRoomTransitionRunning)
+        {
+            Debug.LogWarning("PlayerCameraController: 部屋遷移中のため RoomLook を開始できません。", this);
+            return false;
+        }
+
+        roomLookBounds = lookBounds;
+        isRoomLookRunning = true;
+        isRoomLookReturning = false;
+        roomLookReturnElapsed = 0f;
+
+        // 現在位置を基準に、RoomLook 用 Bounds 内へ収める。
+        desiredPosition = transform.position;
+        clampedPosition = GetClampedPositionInBounds(desiredPosition, roomLookBounds);
+
+        roomLookManualPosition = clampedPosition;
+        transform.position = roomLookManualPosition;
+
+        // 通常追従の慣性を持ち越さない。
+        velocityX = 0f;
+        velocityY = 0f;
+
+        return true;
+    }
+
+    public void UpdateRoomLookInput(Vector2 lookInput, float deltaTime)
+    {
+        if (!isRoomLookRunning)
+        {
+            return;
+        }
+
+        Vector2 clampedInput = Vector2.ClampMagnitude(lookInput, 1.0f);
+
+        Vector3 moveDelta = new Vector3(
+            clampedInput.x,
+            clampedInput.y,
+            0f) * Mathf.Max(0f, roomLookMoveSpeed) * Mathf.Max(0f, deltaTime);
+
+        desiredPosition = roomLookManualPosition + moveDelta;
+        desiredPosition.z = transform.position.z;
+
+        clampedPosition = GetClampedPositionInBounds(desiredPosition, roomLookBounds);
+
+        roomLookManualPosition = clampedPosition;
+        transform.position = roomLookManualPosition;
+    }
+
+    public void EndRoomLook()
+    {
+        if (!isRoomLookRunning)
+        {
+            return;
+        }
+
+        isRoomLookRunning = false;
+        isRoomLookReturning = true;
+        roomLookReturnElapsed = 0f;
+
+        roomLookReturnStartPosition = transform.position;
+        roomLookReturnTargetPosition = ComputeFollowClampedPosition();
+
+        velocityX = 0f;
+        velocityY = 0f;
+    }
+
+    public void CancelRoomLookAndSnapToFollow()
+    {
+        isRoomLookRunning = false;
+        isRoomLookReturning = false;
+
+        Vector3 targetPosition = ComputeFollowClampedPosition();
+        transform.position = targetPosition;
+
+        desiredPosition = targetPosition;
+        clampedPosition = targetPosition;
+
+        velocityX = 0f;
+        velocityY = 0f;
+    }
+
+    private void TickRoomLookReturn()
+    {
+        // 戻り中も、プレイヤー追従位置を取り直す。
+        // プレイヤーは外部制御で止まっている想定だが、復帰位置ズレ対策として毎フレーム再計算する。
+        roomLookReturnTargetPosition = ComputeFollowClampedPosition();
+
+        roomLookReturnElapsed += Time.deltaTime;
+
+        float duration = Mathf.Max(0f, roomLookReturnDuration);
+        float linearT = duration <= 0f
+            ? 1f
+            : Mathf.Clamp01(roomLookReturnElapsed / duration);
+
+        float easedT = EvaluateRoomTransitionEaseInOut(linearT);
+
+        transform.position = Vector3.Lerp(
+            roomLookReturnStartPosition,
+            roomLookReturnTargetPosition,
+            easedT);
+
+        desiredPosition = roomLookReturnTargetPosition;
+        clampedPosition = roomLookReturnTargetPosition;
+
+        if (linearT >= 1f)
+        {
+            isRoomLookReturning = false;
+            transform.position = roomLookReturnTargetPosition;
+
+            velocityX = 0f;
+            velocityY = 0f;
+        }
+    }
+
+    private Vector3 ComputeFollowClampedPosition()
+    {
+        Transform effectiveTarget = GetEffectiveTargetAnchor();
+        if (effectiveTarget == null)
+        {
+            return transform.position;
+        }
+
+        Vector3 followDesired = BuildFollowDesiredPosition(effectiveTarget);
+        return GetClampedPosition(followDesired);
+    }
+
+    private Vector3 BuildFollowDesiredPosition(Transform effectiveTarget)
+    {
+        Vector3 baseDesiredPosition = effectiveTarget.position + cameraOffset;
+
+        if (hasActiveRoomFocusOffset)
+        {
+            // Inspector の意味を直感に合わせるため、適用時に符号を反転する（+X=右を見せる、+Y=下を見せる）。
+            Vector3 focusOffset3D = new Vector3(-activeRoomFocusOffset.x, activeRoomFocusOffset.y, 0f);
+            return baseDesiredPosition + focusOffset3D;
+        }
+
+        return baseDesiredPosition;
+    }
+
     public void BeginRoomTransition(Room room)
     {
         // 部屋情報がない場合は遷移を開始できない。
@@ -700,6 +880,27 @@ public sealed class PlayerCameraController : MonoBehaviour
         // 現在使うべきワールド境界を取得する。
         Bounds bounds = EffectiveWorldBounds;
 
+        // Orthographic カメラの画面半サイズを求める。
+        float halfHeight = targetCamera.orthographicSize;
+        float halfWidth = halfHeight * targetCamera.aspect;
+
+        // カメラ中心が取りうる最小・最大位置を計算する。
+        // 画面端が境界をはみ出さないよう、半画面サイズ分を内側に寄せる。
+        float minX = bounds.min.x + halfWidth;
+        float maxX = bounds.max.x - halfWidth;
+        float minY = bounds.min.y + halfHeight;
+        float maxY = bounds.max.y - halfHeight;
+
+        // 境界が画面より狭い場合は Clamp 不能になるので、中心固定にする。
+        float clampedX = (minX > maxX) ? bounds.center.x : Mathf.Clamp(desired.x, minX, maxX);
+        float clampedY = (minY > maxY) ? bounds.center.y : Mathf.Clamp(desired.y, minY, maxY);
+
+        // Z は desired 側の値をそのまま使う。
+        return new Vector3(clampedX, clampedY, desired.z);
+    }
+
+    private Vector3 GetClampedPositionInBounds(Vector3 desired, Bounds bounds)
+    {
         // Orthographic カメラの画面半サイズを求める。
         float halfHeight = targetCamera.orthographicSize;
         float halfWidth = halfHeight * targetCamera.aspect;
