@@ -474,6 +474,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraController
   speed: 10
+  dushCoef: 2
+  doubleTapThreshold: 0.3
 --- !u!1 &1440362082
 GameObject:
   m_ObjectHideFlags: 0
@@ -630,7 +632,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c2892f1cdcd4874ba1db4dd8327b387, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapEditor
-  stageNumber: 2
+  stageNumber: 3
   mapFolder: Scenes/DebugScenes/Tomoya/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData
   gridSizeType: 0
   comment: "\uFF10\uFF1D \u901A\u5E38\u30D6\u30ED\u30C3\u30AF\n\uFF11\uFF1D\n\uFF12\uFF1D\n\uFF13\uFF1D\u30B9\u30A4\u30C3\u30C1\uFF08\u30AE\u30DF\u30C3\u30AF\uFF09\n\uFF14\uFF1D\u6249\uFF08\u30AE\u30DF\u30C3\u30AF\uFF09\n\uFF15\uFF1D\u5D29\u308C\u5E8A\uFF08\u30AE\u30DF\u30C3\u30AF\uFF09\n\uFF16\uFF1D\n\uFF17\uFF1D\n\uFF18\uFF1D\n\uFF19\uFF1D\n"
