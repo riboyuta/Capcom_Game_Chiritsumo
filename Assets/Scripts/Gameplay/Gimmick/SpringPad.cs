@@ -8,6 +8,7 @@ public sealed class SpringPad : MonoBehaviour
 {
     private const string InteractedTriggerName = "Interacted";
     private const string SpringPadSfxName = "SFX_gimmick_springpad";
+    private const float UpwardGravityModifierThreshold = 0.5f;
 
     [Header("射出: 距離")]
     [Tooltip("バネ方向へ進ませたい距離です。上向きバネなら高さ、横向きバネなら押し出し距離として扱います。")]
@@ -28,6 +29,22 @@ public sealed class SpringPad : MonoBehaviour
     [Header("射出: 保護時間")]
     [Tooltip("外部射出として扱い、可変ジャンプカット等に潰されないようにする時間です。")]
     [SerializeField, Min(0f)] private float launchProtectionDuration = 0.5f;
+
+    [Header("射出後補正: 重力")]
+    [Tooltip("上向き・斜め上向きの射出後に重力補正を使うかどうかです。ふんわり感を減らしたい場合に有効にします。")]
+    [SerializeField] private bool useLaunchGravityModifier = true;
+
+    [Header("射出後補正: 上昇重力倍率")]
+    [Tooltip("固定射出後の上昇中に使う重力倍率です。1が通常、値を大きくすると頂点到達が早くなります。")]
+    [SerializeField, Min(0.1f)] private float ascendingGravityMultiplier = 1.15f;
+
+    [Header("射出後補正: 落下重力倍率")]
+    [Tooltip("固定射出後の落下中に使う重力倍率です。1が通常、値を大きくすると頂点後の落下が速くなります。")]
+    [SerializeField, Min(0.1f)] private float fallingGravityMultiplier = 1.6f;
+
+    [Header("射出後補正: 継続時間")]
+    [Tooltip("固定射出後に重力補正を適用する最大時間です。長すぎると通常空中挙動へ戻りにくくなります。")]
+    [SerializeField, Min(0f)] private float gravityModifierDuration = 0.6f;
 
     [Header("跳ね返し: クールダウン（秒）")]
     [Tooltip("同一オブジェクトが短時間で連続して跳ねられるのを防ぐクールダウン時間（秒）。値を大きくすると連続バウンスを減らせます。")]
@@ -151,6 +168,9 @@ public sealed class SpringPad : MonoBehaviour
         facade.TryRefillDash(DashRefillReason.Gimmick);
 
         Vector3 launchDirection = transform.up.normalized;
+        bool shouldApplyGravityModifier =
+            useLaunchGravityModifier &&
+            Vector3.Dot(launchDirection, Vector3.up) > UpwardGravityModifierThreshold;
         PlayerFixedLaunchRequest request = new PlayerFixedLaunchRequest
         {
             Owner = this,
@@ -162,6 +182,13 @@ public sealed class SpringPad : MonoBehaviour
             LaunchProtectionDuration = launchProtectionDuration,
             CancelDash = true,
             NotifyExternalLaunch = true,
+            GravityModifier = new PlayerFixedLaunchGravityModifier
+            {
+                Enabled = shouldApplyGravityModifier,
+                Duration = gravityModifierDuration,
+                AscendingMultiplier = ascendingGravityMultiplier,
+                FallingMultiplier = fallingGravityMultiplier
+            },
             ForceUnground = true
         };
 

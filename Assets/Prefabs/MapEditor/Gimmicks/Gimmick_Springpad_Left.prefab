@@ -126,9 +126,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 470af1c28a244fb4da6c026644bbd7fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpringPad
-  bounceHeight: 12
-  gravityScale: 3
+  launchDistance: 9
+  timeToTarget: 0.25
+  inputBlockDuration: 0
+  tangentVelocityKeepRate: 0.85
+  launchProtectionDuration: 0.5
+  useLaunchGravityModifier: 1
+  ascendingGravityMultiplier: 2
+  fallingGravityMultiplier: 1.7
+  gravityModifierDuration: 0.6
   bounceCooldown: 0.2
+  activationNormalThreshold: 0.5
   anim: {fileID: 0}
 --- !u!114 &5838003294165485150
 MonoBehaviour:

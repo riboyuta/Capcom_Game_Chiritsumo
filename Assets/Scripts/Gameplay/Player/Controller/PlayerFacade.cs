@@ -178,8 +178,27 @@ public struct PlayerFixedLaunchRequest
     // 可変ジャンプカット抑制などのために外部射出通知を行うか。
     public bool NotifyExternalLaunch;
 
+    // 固定射出中に適用する重力補正。不要な場合は Enabled=false にする。
+    public PlayerFixedLaunchGravityModifier GravityModifier;
+
     // 射出時に接地・壁関連状態を解除するためのフック。
     public bool ForceUnground;
+}
+
+// 固定射出中に適用する重力補正情報。
+public struct PlayerFixedLaunchGravityModifier
+{
+    // 重力補正を有効にするか。
+    public bool Enabled;
+
+    // 補正を適用する最大秒数。
+    public float Duration;
+
+    // 上昇中に使う重力倍率。
+    public float AscendingMultiplier;
+
+    // 落下中に使う重力倍率。
+    public float FallingMultiplier;
 }
 
 #endregion
@@ -528,6 +547,18 @@ public sealed class PlayerFacade : MonoBehaviour
     // 固定射出中に外部射出通知を継続するか。
     private bool fixedLaunchNotifyExternalLaunch;
 
+    // 固定射出中の重力補正を使うか。
+    private bool fixedLaunchUseGravityModifier;
+
+    // 固定射出中の重力補正残り時間。
+    private float fixedLaunchGravityModifierTimer;
+
+    // 固定射出中の上昇時重力倍率。
+    private float fixedLaunchAscendingGravityMultiplier;
+
+    // 固定射出中の落下時重力倍率。
+    private float fixedLaunchFallingGravityMultiplier;
+
     // 外部から固定射出を適用する。
     public void ApplyFixedLaunch(in PlayerFixedLaunchRequest request)
     {
@@ -565,6 +596,13 @@ public sealed class PlayerFacade : MonoBehaviour
         fixedLaunchInputBlockTimer = Mathf.Max(0f, request.InputBlockDuration);
         fixedLaunchProtectionTimer = Mathf.Max(0f, request.LaunchProtectionDuration);
         fixedLaunchNotifyExternalLaunch = request.NotifyExternalLaunch;
+
+        PlayerFixedLaunchGravityModifier gravityModifier = request.GravityModifier;
+        float gravityModifierDuration = Mathf.Max(0f, gravityModifier.Duration);
+        fixedLaunchUseGravityModifier = gravityModifier.Enabled && gravityModifierDuration > 0f;
+        fixedLaunchGravityModifierTimer = fixedLaunchUseGravityModifier ? gravityModifierDuration : 0f;
+        fixedLaunchAscendingGravityMultiplier = Mathf.Max(0.1f, gravityModifier.AscendingMultiplier);
+        fixedLaunchFallingGravityMultiplier = Mathf.Max(0.1f, gravityModifier.FallingMultiplier);
     }
 
     // 外部から固定ジャンプを適用する。
@@ -592,6 +630,13 @@ public sealed class PlayerFacade : MonoBehaviour
             LaunchProtectionDuration = Mathf.Max(inputLockTime, 0.6f),
             CancelDash = true,
             NotifyExternalLaunch = true,
+            GravityModifier = new PlayerFixedLaunchGravityModifier
+            {
+                Enabled = false,
+                Duration = 0f,
+                AscendingMultiplier = 1f,
+                FallingMultiplier = 1f
+            },
             ForceUnground = true
         };
 
@@ -612,8 +657,26 @@ public sealed class PlayerFacade : MonoBehaviour
         // ダッシュ（ステップ）入力でいつでも固定状態をキャンセル可能
         if (rb == null || playerController.IsDashActive)
         {
-            isFixedLaunch = false;
+            ClearFixedLaunchState();
             return;
+        }
+
+        if (fixedLaunchUseGravityModifier && fixedLaunchGravityModifierTimer > 0f)
+        {
+            float selectedMultiplier = rb.linearVelocity.y < 0f
+                ? fixedLaunchFallingGravityMultiplier
+                : fixedLaunchAscendingGravityMultiplier;
+
+            PlayerLocomotionModifierRequest modifier = PlayerLocomotionModifierRequest.Identity;
+            modifier.gravityScaleMultiplier = selectedMultiplier;
+            playerController.RequestLocomotionModifierThisTick(modifier);
+
+            fixedLaunchGravityModifierTimer -= Time.fixedDeltaTime;
+            if (fixedLaunchGravityModifierTimer <= 0f)
+            {
+                fixedLaunchUseGravityModifier = false;
+                fixedLaunchGravityModifierTimer = 0f;
+            }
         }
 
         if (fixedLaunchInputBlockTimer > 0f)
@@ -636,8 +699,15 @@ public sealed class PlayerFacade : MonoBehaviour
 
         if (fixedLaunchInputBlockTimer <= 0f && fixedLaunchProtectionTimer <= 0f)
         {
-            isFixedLaunch = false;
+            ClearFixedLaunchState();
         }
+    }
+
+    private void ClearFixedLaunchState()
+    {
+        isFixedLaunch = false;
+        fixedLaunchUseGravityModifier = false;
+        fixedLaunchGravityModifierTimer = 0f;
     }
 
     // ハザード由来の死亡を要求する。
