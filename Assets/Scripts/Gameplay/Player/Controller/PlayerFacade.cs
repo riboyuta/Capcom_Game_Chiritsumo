@@ -147,6 +147,60 @@ public struct WarpOptions
     public int Facing;
 }
 
+// 外部ギミックからの入力非依存な固定射出要求。
+// バネ床専用ではなく、発射台・ノックバック等にも使う汎用 request。
+public struct PlayerFixedLaunchRequest
+{
+    // 要求元。デバッグや将来の優先度判定に使う。
+    public Object Owner;
+
+    // 射出方向。内部で正規化して使う。
+    public Vector3 Direction;
+
+    // 射出速度。0 未満は 0 として扱う。
+    public float Speed;
+
+    // 射出方向に直交する既存速度をどれだけ残すか（0〜1）。
+    public float TangentVelocityKeepRate;
+
+    // 射出直後に一時的にブロックする入力種別。
+    public InputBlockFlags InputBlockFlags;
+
+    // 入力ブロック継続秒数。
+    public float InputBlockDuration;
+
+    // 外部射出として保護する秒数。外部射出通知の継続に使う。
+    public float LaunchProtectionDuration;
+
+    // 射出時にダッシュ中ならキャンセルするか。
+    public bool CancelDash;
+
+    // 可変ジャンプカット抑制などのために外部射出通知を行うか。
+    public bool NotifyExternalLaunch;
+
+    // 固定射出中に適用する重力補正。不要な場合は Enabled=false にする。
+    public PlayerFixedLaunchGravityModifier GravityModifier;
+
+    // 射出時に接地・壁関連状態を解除するためのフック。
+    public bool ForceUnground;
+}
+
+// 固定射出中に適用する重力補正情報。
+public struct PlayerFixedLaunchGravityModifier
+{
+    // 重力補正を有効にするか。
+    public bool Enabled;
+
+    // 補正を適用する最大秒数。
+    public float Duration;
+
+    // 上昇中に使う重力倍率。
+    public float AscendingMultiplier;
+
+    // 落下中に使う重力倍率。
+    public float FallingMultiplier;
+}
+
 #endregion
 
 #region 外部制御セッション
@@ -472,16 +526,84 @@ public sealed class PlayerFacade : MonoBehaviour
         playerController.RequestFacing(facing);
     }
     // ──────────────────────────────────────────────
-    // 固定ジャンプ（バネ床等の外部打ち上げ用）
+    // 固定射出（外部からの入力非依存 launch 用）
     // ──────────────────────────────────────────────
 
-    // 固定ジャンプ中かどうか。
-    // true の間は毎 physics tick で NotifyExternalLaunch を呼び、
-    // 可変ジャンプカットを上昇中ずっと抑制する。
-    private bool isFixedJump;
+    // 固定射出中かどうか。
+    private bool isFixedLaunch;
 
-    // 固定ジャンプ中の入力ロック残り時間。
-    private float fixedJumpInputLockTimer;
+    // 固定射出方向。
+    private Vector3 fixedLaunchDirection;
+
+    // 固定射出中の入力ブロック残り時間。
+    private float fixedLaunchInputBlockTimer;
+
+    // 固定射出保護の残り時間。
+    private float fixedLaunchProtectionTimer;
+
+    // 固定射出中に毎 tick ブロックする入力種別。
+    private InputBlockFlags fixedLaunchInputBlockFlags;
+
+    // 固定射出中に外部射出通知を継続するか。
+    private bool fixedLaunchNotifyExternalLaunch;
+
+    // 固定射出中の重力補正を使うか。
+    private bool fixedLaunchUseGravityModifier;
+
+    // 固定射出中の重力補正残り時間。
+    private float fixedLaunchGravityModifierTimer;
+
+    // 固定射出中の上昇時重力倍率。
+    private float fixedLaunchAscendingGravityMultiplier;
+
+    // 固定射出中の落下時重力倍率。
+    private float fixedLaunchFallingGravityMultiplier;
+
+    // 外部から固定射出を適用する。
+    public void ApplyFixedLaunch(in PlayerFixedLaunchRequest request)
+    {
+        Rigidbody rb = playerController.Rigidbody;
+        if (rb == null) return;
+        if (request.Direction.sqrMagnitude <= Mathf.Epsilon) return;
+
+        Vector3 direction = request.Direction.normalized;
+        float speed = Mathf.Max(0f, request.Speed);
+        float tangentKeepRate = Mathf.Clamp01(request.TangentVelocityKeepRate);
+
+        // ステップ（ダッシュ）中に外部射出へ入る場合、外部射出を優先する。
+        if (request.CancelDash && playerController.IsDashActive && playerController.RuntimeState != null)
+        {
+            playerController.RuntimeState.isDashing = false;
+        }
+
+        Vector3 currentVelocity = rb.linearVelocity;
+        float currentDirectionSpeed = Vector3.Dot(currentVelocity, direction);
+        Vector3 directionVelocity = direction * currentDirectionSpeed;
+        Vector3 tangentVelocity = currentVelocity - directionVelocity;
+        rb.linearVelocity = direction * speed + tangentVelocity * tangentKeepRate;
+
+        // TODO: ForceUnground を使った接地・壁状態解除は、安全な既存窓口を確認した上で Phase 2 以降で実装する。
+        _ = request.ForceUnground;
+
+        if (request.NotifyExternalLaunch)
+        {
+            playerController.NotifyExternalLaunch();
+        }
+
+        isFixedLaunch = true;
+        fixedLaunchDirection = direction;
+        fixedLaunchInputBlockFlags = request.InputBlockFlags;
+        fixedLaunchInputBlockTimer = Mathf.Max(0f, request.InputBlockDuration);
+        fixedLaunchProtectionTimer = Mathf.Max(0f, request.LaunchProtectionDuration);
+        fixedLaunchNotifyExternalLaunch = request.NotifyExternalLaunch;
+
+        PlayerFixedLaunchGravityModifier gravityModifier = request.GravityModifier;
+        float gravityModifierDuration = Mathf.Max(0f, gravityModifier.Duration);
+        fixedLaunchUseGravityModifier = gravityModifier.Enabled && gravityModifierDuration > 0f;
+        fixedLaunchGravityModifierTimer = fixedLaunchUseGravityModifier ? gravityModifierDuration : 0f;
+        fixedLaunchAscendingGravityMultiplier = Mathf.Max(0.1f, gravityModifier.AscendingMultiplier);
+        fixedLaunchFallingGravityMultiplier = Mathf.Max(0.1f, gravityModifier.FallingMultiplier);
+    }
 
     // 外部から固定ジャンプを適用する。
     // 用途例:
@@ -494,56 +616,98 @@ public sealed class PlayerFacade : MonoBehaviour
     // - inputLockTime を指定すると、その時間は横移動入力をブロックし強制移動させる
     public void ApplyFixedJump(Vector3 velocity, float inputLockTime = 0f)
     {
-        Rigidbody rb = playerController.Rigidbody;
-        if (rb == null) return;
+        float speed = velocity.magnitude;
+        if (speed <= Mathf.Epsilon) return;
 
-        // ステップ（ダッシュ）中にバネに触れた場合、バネの挙動を優先するためダッシュを強制終了する
-        if (playerController.IsDashActive && playerController.RuntimeState != null)
+        PlayerFixedLaunchRequest request = new PlayerFixedLaunchRequest
         {
-            playerController.RuntimeState.isDashing = false;
-        }
+            Owner = this,
+            Direction = velocity / speed,
+            Speed = speed,
+            TangentVelocityKeepRate = 0f,
+            InputBlockFlags = PlayerController.InputBlockFlags.Move,
+            InputBlockDuration = inputLockTime,
+            LaunchProtectionDuration = Mathf.Max(inputLockTime, 0.6f),
+            CancelDash = true,
+            NotifyExternalLaunch = true,
+            GravityModifier = new PlayerFixedLaunchGravityModifier
+            {
+                Enabled = false,
+                Duration = 0f,
+                AscendingMultiplier = 1f,
+                FallingMultiplier = 1f
+            },
+            ForceUnground = true
+        };
 
-        rb.linearVelocity = velocity;
-        playerController.NotifyExternalLaunch();
-        isFixedJump = true;
-        fixedJumpInputLockTimer = inputLockTime;
+        ApplyFixedLaunch(in request);
     }
 
     private void FixedUpdate()
     {
-        if (!isFixedJump) return;
+        UpdateFixedLaunch();
+    }
 
-        if (fixedJumpInputLockTimer > 0f)
-        {
-            fixedJumpInputLockTimer -= Time.fixedDeltaTime;
-        }
+    private void UpdateFixedLaunch()
+    {
+        if (!isFixedLaunch) return;
 
         Rigidbody rb = playerController.Rigidbody;
 
         // ダッシュ（ステップ）入力でいつでも固定状態をキャンセル可能
         if (rb == null || playerController.IsDashActive)
         {
-            isFixedJump = false;
+            ClearFixedLaunchState();
             return;
         }
 
-        // 上昇中（velocity.y > 0）か、ロック時間が残っていれば固定状態を継続
-        bool isAscending = rb.linearVelocity.y > 0.01f;
-        
-        if (!isAscending && fixedJumpInputLockTimer <= 0f)
+        if (fixedLaunchUseGravityModifier && fixedLaunchGravityModifierTimer > 0f)
         {
-            isFixedJump = false;
-            return;
+            float selectedMultiplier = rb.linearVelocity.y < 0f
+                ? fixedLaunchFallingGravityMultiplier
+                : fixedLaunchAscendingGravityMultiplier;
+
+            PlayerLocomotionModifierRequest modifier = PlayerLocomotionModifierRequest.Identity;
+            modifier.gravityScaleMultiplier = selectedMultiplier;
+            playerController.RequestLocomotionModifierThisTick(modifier);
+
+            fixedLaunchGravityModifierTimer -= Time.fixedDeltaTime;
+            if (fixedLaunchGravityModifierTimer <= 0f)
+            {
+                fixedLaunchUseGravityModifier = false;
+                fixedLaunchGravityModifierTimer = 0f;
+            }
         }
 
-        // 状態継続中は毎 tick 外部打ち上げ通知を送り、可変ジャンプカットを抑制し続ける。
-        playerController.NotifyExternalLaunch();
-
-        // ロック時間が残っている間は横移動入力をブロックし、慣性を維持させる（Celeste風）
-        if (fixedJumpInputLockTimer > 0f)
+        if (fixedLaunchInputBlockTimer > 0f)
         {
-            playerController.RequestInputBlockThisFrame(PlayerController.InputBlockFlags.Move);
+            fixedLaunchInputBlockTimer -= Time.fixedDeltaTime;
+            RequestInputBlockThisFrame(fixedLaunchInputBlockFlags);
         }
+
+        if (fixedLaunchProtectionTimer > 0f)
+        {
+            fixedLaunchProtectionTimer -= Time.fixedDeltaTime;
+            float directionSpeed = Vector3.Dot(rb.linearVelocity, fixedLaunchDirection);
+            _ = directionSpeed;
+
+            if (fixedLaunchNotifyExternalLaunch)
+            {
+                playerController.NotifyExternalLaunch();
+            }
+        }
+
+        if (fixedLaunchInputBlockTimer <= 0f && fixedLaunchProtectionTimer <= 0f)
+        {
+            ClearFixedLaunchState();
+        }
+    }
+
+    private void ClearFixedLaunchState()
+    {
+        isFixedLaunch = false;
+        fixedLaunchUseGravityModifier = false;
+        fixedLaunchGravityModifierTimer = 0f;
     }
 
     // ハザード由来の死亡を要求する。
