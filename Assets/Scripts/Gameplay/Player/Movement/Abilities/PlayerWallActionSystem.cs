@@ -288,15 +288,10 @@ internal sealed class PlayerWallActionSystem
     }
 
     // 壁掴まり専用の入力解決。
-    // 左クリック押下フレームでは「左クリック由来の Grab 要求」のみ抑制し、
-    // キーボード/ゲームパッド由来 Grab は従来どおり有効にする。
+    // 左クリック長押しは対象外にし、専用 Grab 入力のみを参照する。
     private bool IsWallGrabInputHeld()
     {
-        bool dedicatedGrabHeld = deps.InputReader.GrabHeld;
-        bool mouseGrabRequestHeld = deps.InputReader.MouseGrabRequestHeld;
-        bool suppressMouseGrabThisFrame = deps.InputReader.LeftMouseDashPressedThisFrame;
-
-        return dedicatedGrabHeld || (mouseGrabRequestHeld && !suppressMouseGrabThisFrame);
+        return deps.InputReader.GrabHeld;
     }
 
     // 壁捕まり状態へ遷移させる。

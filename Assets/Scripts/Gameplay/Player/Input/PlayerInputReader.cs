@@ -121,14 +121,16 @@ namespace Game.Input
             previousRightHeld = rightHeld;
             previousDownHeld = downHeld;
 
+            RawButtonFrameState leftMouseState = rawInputSource.LeftMouseButtonState;
+            RawButtonFrameState rightMouseState = rawInputSource.RightMouseButtonState;
+
             // Jump アクションの統合状態を解決する。
+            // 右クリックは Jump 入力として扱う。
             RawButtonFrameState jumpState = ResolveActionState(bindings.Jump);
+            jumpState = MergeActionStates(jumpState, rightMouseState, default, default);
             JumpPressed = jumpState.PressedThisFrame;
             JumpHeld = jumpState.Held;
             JumpReleased = jumpState.ReleasedThisFrame;
-
-            RawButtonFrameState leftMouseState = rawInputSource.LeftMouseButtonState;
-            RawButtonFrameState rightMouseState = rawInputSource.RightMouseButtonState;
 
             // Dash アクションの統合状態を解決する。
             RawButtonFrameState dashState = ResolveActionState(bindings.Dash);
@@ -139,9 +141,7 @@ namespace Game.Input
             LeftMouseDashPressedThisFrame = leftMouseState.PressedThisFrame;
 
             // Stomp アクションの統合状態を解決する。
-            // Stomp も Jump / Dash / Grab と同じ ResolveActionState に統一する。
             RawButtonFrameState stompState = ResolveActionState(bindings.Stomp);
-            stompState = MergeActionStates(stompState, rightMouseState, default, default);
             StompPressed = stompState.PressedThisFrame;
             StompHeld = stompState.Held;
             StompReleased = stompState.ReleasedThisFrame;
@@ -165,9 +165,9 @@ namespace Game.Input
             GrabPressed = grabState.PressedThisFrame;
             GrabHeld = grabState.Held;
             GrabReleased = grabState.ReleasedThisFrame;
-            // 左クリック保持は GrabHeld へ直接合流しない。
-            // 壁掴まり可否は壁システム側で判定するため、要求状態だけを公開する。
-            MouseGrabRequestHeld = leftMouseState.Held;
+            // 左クリック長押しによる壁掴まり要求は廃止。
+            // 互換性のためプロパティは残すが、常に false を返す。
+            MouseGrabRequestHeld = false;
         }
 
         // 移動入力を 1 つの Vector2 にまとめる。
