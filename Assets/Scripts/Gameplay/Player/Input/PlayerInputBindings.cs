@@ -7,6 +7,17 @@ namespace Game.Input
     [Serializable]
     public sealed class PlayerInputBindings
     {
+
+        public enum PlayerMouseInputAction
+        {
+            None,
+            Jump,
+            Dash,
+            Stomp,
+            Grab
+        }
+
+
         [Header("入力設定: ジャンプ")]
         [Tooltip("ジャンプ操作に割り当てる入力設定です。Celeste寄りの配置として、キーボードはCを主キー、Spaceを副キーにしています。")]
         [SerializeField]
@@ -47,9 +58,21 @@ namespace Game.Input
                 gamepadButton: RawGamepadButton.RightTrigger,
                 secondaryGamepadButton: RawGamepadButton.None);
 
+        [Header("入力設定: マウス")]
+        [Tooltip("左クリックで実行するプレイヤーアクションです。None の場合、左クリックはどのアクションにも使いません。")]
+        [SerializeField]
+        private PlayerMouseInputAction leftMouseAction = PlayerMouseInputAction.Dash;
+
+        [Header("入力設定: マウス")]
+        [Tooltip("右クリックで実行するプレイヤーアクションです。None の場合、右クリックはどのアクションにも使いません。")]
+        [SerializeField]
+        private PlayerMouseInputAction rightMouseAction = PlayerMouseInputAction.Jump;
+
         public InputActionBinding Jump => jump;
         public InputActionBinding Dash => dash;
         public InputActionBinding Stomp => stomp;
         public InputActionBinding Grab => grab;
+        public PlayerMouseInputAction LeftMouseAction => leftMouseAction;
+        public PlayerMouseInputAction RightMouseAction => rightMouseAction;
     }
 }

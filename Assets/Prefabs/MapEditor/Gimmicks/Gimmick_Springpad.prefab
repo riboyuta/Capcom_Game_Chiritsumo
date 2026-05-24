@@ -133,7 +133,7 @@ MonoBehaviour:
   launchProtectionDuration: 0.5
   useLaunchGravityModifier: 1
   ascendingGravityMultiplier: 2
-  fallingGravityMultiplier: 1.7
+  fallingGravityMultiplier: 1.1
   gravityModifierDuration: 0.6
   bounceCooldown: 0.2
   activationNormalThreshold: 0.5
