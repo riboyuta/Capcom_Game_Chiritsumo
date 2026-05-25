@@ -54,6 +54,9 @@ public class MapEditor : MonoBehaviour
     Dictionary<Vector3Int, GameObject> tiles =
         new Dictionary<Vector3Int, GameObject>();
 
+    private Dictionary<Vector2Int, List<GameObject>> chunks
+    = new Dictionary<Vector2Int, List<GameObject>>();
+
     List<TileData> copyBuffer = new List<TileData>(); //コピーバッファ
     Vector3Int copyOrigin;
 
@@ -71,9 +74,13 @@ public class MapEditor : MonoBehaviour
     [Tooltip("現在選択されているファイルのマップに読み書きします")]
     [SerializeField] private string mapFolder = "MapData";
 
-    [Header("グリッドサイズ")]
-    [Tooltip("配置するグリッド間隔を変更できます")]
+    //[Header("グリッドサイズ")]
+    //[Tooltip("配置するグリッド間隔を変更できます")]
     [SerializeField] private GridSizeType gridSizeType = GridSizeType.Normal;
+
+    [Header("描写範囲")]
+    [Tooltip("描写するチャンクの範囲の係数を変更できます。値が大きいほど広がります。")]
+    [SerializeField] private float chunkDrawDistance = 1.0f;
 
     [Header("コメント")]
     [Tooltip("ステージ毎に保存されるメモ書き")]
@@ -88,7 +95,10 @@ public class MapEditor : MonoBehaviour
     [Header("TileDatabase")]
     [Tooltip("TileDatabaseスクリプトをここにドラッグしてね")]
     [SerializeField] private TileDatabase tileDatabase;
-   
+
+
+    [SerializeField] private int chunkSize = 16;
+
     bool showSaveConfirm = false;
     bool showLoadConfirm = false;
     bool showPrefabConfirm = false;
@@ -109,6 +119,9 @@ public class MapEditor : MonoBehaviour
     int PlaceTileFlagTimer = 0;
 
     bool canGridVisualization = false;
+
+
+
 
 
     //フォルダ定義
@@ -210,6 +223,8 @@ public class MapEditor : MonoBehaviour
                 canGridVisualization = !canGridVisualization;
             }
 
+            //チャンク描写
+            ChunkVisibilityUpdate();
 
             //範囲選択処理
             SelectRange();
@@ -318,7 +333,6 @@ public class MapEditor : MonoBehaviour
 
 
 
-
     void PlaceTile()
     {
         if (showPrefabConfirm)
@@ -356,19 +370,23 @@ public class MapEditor : MonoBehaviour
         );
 
 
-        GameObject tile = Instantiate(currentTile.prefab, spawnPos, Quaternion.identity);
+        TileType prefabTileType =
+        currentTile.prefab.GetComponent<TileType>();
 
-        TileType tileType = tile.GetComponent<TileType>();
-        if (tileType == null)
+        if (prefabTileType == null)
         {
             Debug.LogError("TileTypeが付いてない！");
             return;
         }
 
+        GameObject tile = Instantiate(currentTile.prefab, spawnPos, Quaternion.identity);
+        TileType tileType = tile.GetComponent<TileType>();
         tileType.tileDefinition = currentTile;
 
         tiles.Add(gridPos, tile);
-       
+        RegisterChunk(gridPos, tile);
+
+
     }
 
 
@@ -387,10 +405,16 @@ public class MapEditor : MonoBehaviour
             SaveUndo();
         }
 
+        GameObject tile = tiles[gridPos]; 
+        UnregisterChunk(gridPos, tile);
+
         Destroy(tiles[gridPos]);
         tiles.Remove(gridPos);
 
-      
+       
+
+
+
     }
 
 
@@ -438,6 +462,7 @@ public class MapEditor : MonoBehaviour
         }
 
         tiles.Clear();
+        chunks.Clear();
 
         Debug.Log("Loaded Map Cleared");
     }
@@ -527,11 +552,10 @@ public class MapEditor : MonoBehaviour
                     continue;
 
                 GameObject tile = tiles[gridPos];
+                UnregisterChunk(gridPos, tile);
 
-                if (Application.isPlaying)
-                    Destroy(tile);
-                else
-                    DestroyImmediate(tile);
+                if (Application.isPlaying)  Destroy(tile);
+                else DestroyImmediate(tile);
 
                 tiles.Remove(gridPos);
             }
@@ -569,6 +593,7 @@ public class MapEditor : MonoBehaviour
             data.gimmickID = type.gimmickID;
 
             snapshot.tiles.Add(data);
+
         }
 
         undoStack.Push(snapshot);
@@ -593,6 +618,7 @@ public class MapEditor : MonoBehaviour
         }
 
         tiles.Clear();
+        chunks.Clear();
 
         foreach (TileData data in mapData.tiles)
         {
@@ -621,11 +647,101 @@ public class MapEditor : MonoBehaviour
             tileType.gimmickID = data.gimmickID;
 
             tiles.Add(gridPos, tile);
+            RegisterChunk(gridPos, tile);
         }
 
         Debug.Log("Undoしました");
     }
 
+
+    //===========================-------
+    //　　　 チャンク描画システム
+    //===========================-------
+
+
+    // チャンク座標の生成・登録
+    void RegisterChunk(Vector3Int gridpos, GameObject tile)
+    {
+        Vector2Int chunkPos = new Vector2Int(
+        Mathf.FloorToInt((float)gridpos.x / chunkSize),
+        Mathf.FloorToInt((float)gridpos.y / chunkSize)
+        );
+
+        if (!chunks.ContainsKey(chunkPos))
+        {
+            chunks.Add(chunkPos, new List<GameObject>());
+        }
+
+        chunks[chunkPos].Add(tile);
+    }
+
+    // チャンク座標の削除
+    void UnregisterChunk(Vector3Int gridpos, GameObject tile)
+    {
+        Vector2Int chunkPos = new Vector2Int(
+        Mathf.FloorToInt((float)gridpos.x / chunkSize),
+        Mathf.FloorToInt((float)gridpos.y / chunkSize)
+        );
+
+        if (chunks.ContainsKey(chunkPos))
+        {
+            chunks[chunkPos].Remove(tile);
+            if (chunks[chunkPos].Count == 0)
+            {
+                chunks.Remove(chunkPos);
+            }
+        }
+    }
+
+    //　チャンク毎の描写アップデート
+    void ChunkVisibilityUpdate()
+    {
+
+        float cameraZ = Mathf.Abs(Camera.main.transform.position.z);
+        float distance = cameraZ * chunkDrawDistance;
+        if (distance < 1.0f) { distance = 1.0f; }
+
+        Vector3 bottomLeft =
+            Camera.main.ViewportToWorldPoint(
+                new Vector3(0, 0, distance));
+
+        Vector3 topRight =
+            Camera.main.ViewportToWorldPoint(
+                new Vector3(1, 1, distance));
+
+      
+
+        int minChunkX =
+            Mathf.FloorToInt(bottomLeft.x / chunkSize);
+
+        int maxChunkX =
+            Mathf.FloorToInt(topRight.x / chunkSize);
+
+        int minChunkY =
+            Mathf.FloorToInt(bottomLeft.y / chunkSize);
+
+        int maxChunkY =
+            Mathf.FloorToInt(topRight.y / chunkSize);
+
+        foreach (var chunk in chunks)
+        {
+            Vector2Int chunkPos = chunk.Key;
+
+            bool visible =
+                chunkPos.x >= minChunkX &&
+                chunkPos.x <= maxChunkX &&
+                chunkPos.y >= minChunkY &&
+                chunkPos.y <= maxChunkY;
+
+            foreach (GameObject tile in chunk.Value)
+            {
+                if (tile != null)
+                {
+                    tile.SetActive(visible);
+                }
+            }
+        }
+    }
 
 
     //===========================-------
@@ -744,6 +860,7 @@ public class MapEditor : MonoBehaviour
             tileType.gimmickID = data.gimmickID;
 
             tiles.Add(gridPos, tile);
+            RegisterChunk(gridPos, tile);
         }
 
         Debug.Log("Paste Complete");
@@ -854,10 +971,7 @@ public class MapEditor : MonoBehaviour
         }
 
         tiles.Clear();
-
-
-
-
+        chunks.Clear();
 
         if (!File.Exists(FilePath()))
         {
@@ -901,6 +1015,7 @@ public class MapEditor : MonoBehaviour
             tileType.gimmickID = data.gimmickID;
 
             tiles.Add(gridPos, tile);
+            RegisterChunk(gridPos, tile);
         }
 
 
@@ -915,6 +1030,7 @@ public class MapEditor : MonoBehaviour
     void RegisterExistingTiles()
     {
         tiles.Clear();
+        chunks.Clear();
 
         TileType[] allTiles = FindObjectsByType<TileType>(FindObjectsSortMode.None);
 
@@ -931,6 +1047,7 @@ public class MapEditor : MonoBehaviour
             if (!tiles.ContainsKey(gridPos))
             {
                 tiles.Add(gridPos, tile.gameObject);
+                RegisterChunk(gridPos, tile.gameObject);
             }
         }
     }
