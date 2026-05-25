@@ -302,7 +302,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0298a361fda381948bcb9ef1e9c3ec5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazardVolume
-  targetTag: Player
 --- !u!65 &82181430
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2815,7 +2814,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d57d6a31c87bc1a44aee7d296782fec0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CheckpointSystem
-  initialCheckpoint: {fileID: 0}
 --- !u!4 &1298716508
 Transform:
   m_ObjectHideFlags: 0
