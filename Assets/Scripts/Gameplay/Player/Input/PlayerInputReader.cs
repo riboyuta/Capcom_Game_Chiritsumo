@@ -121,27 +121,41 @@ namespace Game.Input
             previousRightHeld = rightHeld;
             previousDownHeld = downHeld;
 
-            // Jump アクションの統合状態を解決する。
+            RawButtonFrameState leftMouseState = rawInputSource.LeftMouseButtonState;
+            RawButtonFrameState rightMouseState = rawInputSource.RightMouseButtonState;
+
+            // マウス左右クリックは bindings の設定に従って各アクションへ合流する。
             RawButtonFrameState jumpState = ResolveActionState(bindings.Jump);
+            RawButtonFrameState mouseJumpState = ResolveMouseActionState(
+                PlayerInputBindings.PlayerMouseInputAction.Jump,
+                leftMouseState,
+                rightMouseState);
+            jumpState = MergeActionStates(jumpState, mouseJumpState, default, default);
             JumpPressed = jumpState.PressedThisFrame;
             JumpHeld = jumpState.Held;
             JumpReleased = jumpState.ReleasedThisFrame;
 
-            RawButtonFrameState leftMouseState = rawInputSource.LeftMouseButtonState;
-            RawButtonFrameState rightMouseState = rawInputSource.RightMouseButtonState;
-
             // Dash アクションの統合状態を解決する。
             RawButtonFrameState dashState = ResolveActionState(bindings.Dash);
-            dashState = MergeActionStates(dashState, leftMouseState, default, default);
+            RawButtonFrameState mouseDashState = ResolveMouseActionState(
+                PlayerInputBindings.PlayerMouseInputAction.Dash,
+                leftMouseState,
+                rightMouseState);
+            dashState = MergeActionStates(dashState, mouseDashState, default, default);
             DashPressed = dashState.PressedThisFrame;
             DashHeld = dashState.Held;
             DashReleased = dashState.ReleasedThisFrame;
-            LeftMouseDashPressedThisFrame = leftMouseState.PressedThisFrame;
+            LeftMouseDashPressedThisFrame =
+                bindings.LeftMouseAction == PlayerInputBindings.PlayerMouseInputAction.Dash &&
+                leftMouseState.PressedThisFrame;
 
             // Stomp アクションの統合状態を解決する。
-            // Stomp も Jump / Dash / Grab と同じ ResolveActionState に統一する。
             RawButtonFrameState stompState = ResolveActionState(bindings.Stomp);
-            stompState = MergeActionStates(stompState, rightMouseState, default, default);
+            RawButtonFrameState mouseStompState = ResolveMouseActionState(
+                PlayerInputBindings.PlayerMouseInputAction.Stomp,
+                leftMouseState,
+                rightMouseState);
+            stompState = MergeActionStates(stompState, mouseStompState, default, default);
             StompPressed = stompState.PressedThisFrame;
             StompHeld = stompState.Held;
             StompReleased = stompState.ReleasedThisFrame;
@@ -162,12 +176,16 @@ namespace Game.Input
 
             // Grab アクションの統合状態を解決する。
             RawButtonFrameState grabState = ResolveActionState(bindings.Grab);
+            RawButtonFrameState mouseGrabState = ResolveMouseActionState(
+                PlayerInputBindings.PlayerMouseInputAction.Grab,
+                leftMouseState,
+                rightMouseState);
+            grabState = MergeActionStates(grabState, mouseGrabState, default, default);
             GrabPressed = grabState.PressedThisFrame;
             GrabHeld = grabState.Held;
             GrabReleased = grabState.ReleasedThisFrame;
-            // 左クリック保持は GrabHeld へ直接合流しない。
-            // 壁掴まり可否は壁システム側で判定するため、要求状態だけを公開する。
-            MouseGrabRequestHeld = leftMouseState.Held;
+            // 互換性のためプロパティは残し、Grab に割り当てられたマウス入力のホールドを返す。
+            MouseGrabRequestHeld = mouseGrabState.Held;
         }
 
         // 移動入力を 1 つの Vector2 にまとめる。
@@ -324,6 +342,25 @@ namespace Game.Input
                 secondaryKeyboardState,
                 primaryGamepadState,
                 secondaryGamepadState);
+        }
+
+        // マウス左右の割り当て設定から、対象アクションに該当する入力状態だけを取り出す。
+        private RawButtonFrameState ResolveMouseActionState(
+            PlayerInputBindings.PlayerMouseInputAction targetAction,
+            RawButtonFrameState leftMouseState,
+            RawButtonFrameState rightMouseState)
+        {
+            RawButtonFrameState leftState =
+                bindings.LeftMouseAction == targetAction
+                    ? leftMouseState
+                    : default;
+
+            RawButtonFrameState rightState =
+                bindings.RightMouseAction == targetAction
+                    ? rightMouseState
+                    : default;
+
+            return MergeActionStates(leftState, rightState, default, default);
         }
 
         // 複数の入力経路を1つのアクション状態へ統合する。
