@@ -9,25 +9,27 @@ public sealed class SonarChargerActivator : MonoBehaviour, IRespawnResettable
     [Tooltip("起動対象の SonarChargerEnemy です。")]
     [SerializeField] private SonarChargerEnemy targetEnemy;
 
-    [Header("ゲーム進行")]
+    [Header("ゲーム進行管理")]
     [Tooltip("初回有効発動時に経過時間計測の開始通知を送る GameRoot です。未使用なら未設定で構いません。")]
     [SerializeField] private GameRoot gameRoot;
 
-    [Header("スポーン位置")]
+    [Header("スポーン位置使用フラグ")]
     [Tooltip("起動時に敵をこの位置へ移動させるかです。")]
     [SerializeField] private bool useSpawnPointOnActivate = false;
 
+    [Header("スポーン位置")]
     [Tooltip("起動時のスポーン位置です。未設定時はこの GameObject の Transform を使います。")]
     [SerializeField] private Transform spawnPoint;
 
-    [Header("判定設定")]
+    [Header("プレイヤー判定タグ")]
     [Tooltip("プレイヤーとして判定するタグ名です。")]
     [SerializeField] private string playerTag = "Player";
 
-    [Header("セーフゾーン設定")]
+    [Header("敵起動までの遅延時間")]
     [Tooltip("プレイヤーがこのセーフゾーンから出てから、敵が起動するまでの遅延時間です。0なら出た瞬間に起動します。")]
     [SerializeField] private float spawnDelay = 0.0f;
 
+    [Header("所属する部屋")]
     [Tooltip("このセーフゾーンが属する Room です。未設定時は親階層から自動検索します。")]
     [SerializeField] private Room parentRoom;
 
