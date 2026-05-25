@@ -28,7 +28,7 @@ public class MapLoader : MonoBehaviour
     private readonly float gridSize = 1.0f;
 
     // JSON フォルダのフルパス
-    private string FolderPath => Path.Combine(Application.dataPath, mapFolder);
+    private string FolderPath => Path.Combine(Application.streamingAssetsPath, mapFolder);
 
     // ステージ JSON のフルパス
     private string FilePath => Path.Combine(FolderPath, "Stage_" + stageNumber + ".json");
