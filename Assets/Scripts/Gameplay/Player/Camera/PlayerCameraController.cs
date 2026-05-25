@@ -939,6 +939,27 @@ public sealed class PlayerCameraController : MonoBehaviour
             smoothTime: smoothTime);
     }
 
+    // 現在カメラに映っているワールド座標範囲を返す。
+    // SonarChargerEnemy の突進停止境界など、画面端基準の判定に使う。
+    public Bounds GetCurrentViewBounds()
+    {
+        Camera cam = targetCamera != null ? targetCamera : GetComponent<Camera>();
+
+        if (cam == null)
+        {
+            return new Bounds(transform.position, Vector3.zero);
+        }
+
+        float halfHeight = Mathf.Max(0.01f, EffectiveSize);
+        float halfWidth = halfHeight * cam.aspect;
+
+        Vector3 center = transform.position;
+
+        return new Bounds(
+            new Vector3(center.x, center.y, center.z),
+            new Vector3(halfWidth * 2.0f, halfHeight * 2.0f, 1000.0f));
+    }
+
     // -----------------------------
     // debug / gizmo
     // -----------------------------
