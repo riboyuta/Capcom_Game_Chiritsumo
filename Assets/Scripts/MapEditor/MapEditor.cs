@@ -3,19 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 #if UNITY_EDITOR
 using UnityEditor;
-<<<<<<< Updated upstream
 #endif
 using UnityEngine;
 using static MapEditor;
 #if UNITY_EDITOR
 using static UnityEditor.Rendering.InspectorCurveEditor;
 #endif
-=======
-using static UnityEditor.Rendering.InspectorCurveEditor;
-#endif
-using UnityEngine;
-using static MapEditor;
->>>>>>> Stashed changes
 
 [ExecuteAlways]
 public class MapEditor : MonoBehaviour
@@ -65,12 +58,9 @@ public class MapEditor : MonoBehaviour
     Dictionary<Vector3Int, GameObject> tiles =
         new Dictionary<Vector3Int, GameObject>();
 
-<<<<<<< Updated upstream
     private Dictionary<Vector2Int, List<GameObject>> chunks
     = new Dictionary<Vector2Int, List<GameObject>>();
 
-=======
->>>>>>> Stashed changes
     List<TileData> copyBuffer = new List<TileData>(); //コピーバッファ
     Vector3Int copyOrigin;
 
@@ -88,7 +78,6 @@ public class MapEditor : MonoBehaviour
     [Tooltip("現在選択されているファイルのマップに読み書きします")]
     [SerializeField] private string mapFolder = "MapData";
 
-<<<<<<< Updated upstream
     //[Header("グリッドサイズ")]
     //[Tooltip("配置するグリッド間隔を変更できます")]
     [SerializeField] private GridSizeType gridSizeType = GridSizeType.Normal;
@@ -97,12 +86,6 @@ public class MapEditor : MonoBehaviour
     [Tooltip("描写するチャンクの範囲の係数を変更できます。値が大きいほど広がります。")]
     [SerializeField] private float chunkDrawDistance = 1.0f;
 
-=======
-    [Header("グリッドサイズ")]
-    [Tooltip("配置するグリッド間隔を変更できます")]
-    [SerializeField] private GridSizeType gridSizeType = GridSizeType.Normal;
-
->>>>>>> Stashed changes
     [Header("コメント")]
     [Tooltip("ステージ毎に保存されるメモ書き")]
     [TextArea(15, 30)]
@@ -142,7 +125,6 @@ public class MapEditor : MonoBehaviour
     bool canGridVisualization = false;
 
 
-<<<<<<< Updated upstream
 
 
 
@@ -150,12 +132,6 @@ public class MapEditor : MonoBehaviour
     string folderPath =>
   Application.streamingAssetsPath + "/" + mapFolder;
 
-=======
-    //フォルダ定義
-    string folderPath =>
-  Application.streamingAssetsPath + "/" + mapFolder;
-
->>>>>>> Stashed changes
     //完全パス
     string FilePath()
     {
