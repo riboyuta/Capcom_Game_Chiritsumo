@@ -19,6 +19,18 @@ internal sealed class PlayerLedgeClimbSystem
     {
         deps.RuntimeState.isLedgeClimbing = false;
         deps.RuntimeState.ledgeClimbStartTime = 0f;
+
+        if (deps.CapsuleCollider != null)
+        {
+            deps.CapsuleCollider.enabled = true;
+        }
+
+        if (deps.Rb != null)
+        {
+            deps.Rb.isKinematic = false;
+            deps.Rb.useGravity = true;
+            deps.Rb.linearVelocity = Vector3.zero;
+        }
     }
 
     // ============================================================
@@ -234,13 +246,14 @@ internal sealed class PlayerLedgeClimbSystem
         // ExitWallGrab は WallActionSystem で処理されるべきだが、ここでは直接呼ぶ
         deps.RuntimeState.isWallGrabbing = false;
         deps.RuntimeState.wallGrabSide = 0;
-        deps.Rb.useGravity = true;
-
         deps.RuntimeState.wallReattachLockTimer = deps.Settings.Wall.LedgeClimbDuration + 0.2f;
-
         deps.Rb.linearVelocity = Vector3.zero;
-        deps.Rb.isKinematic = true;
-        deps.CapsuleCollider.enabled = false;
+
+        // 崖のぼり中はスクリプト制御にする。
+        // ただし当たり判定は残す。
+        deps.Rb.useGravity = false;
+        deps.Rb.isKinematic = false;
+        deps.CapsuleCollider.enabled = true;
     }
 
     // 崖乗り上げ中の移動を更新する。
@@ -268,23 +281,35 @@ internal sealed class PlayerLedgeClimbSystem
             deps.RuntimeState.ledgeClimbTargetPosition,
             easedT);
 
-        deps.Transform.position = currentPosition;
+        MovePlayerPosition(currentPosition);
     }
 
     // 崖乗り上げを完了する。
     private void CompleteLedgeClimb()
     {
         deps.RuntimeState.isLedgeClimbing = false;
-        deps.Transform.position = deps.RuntimeState.ledgeClimbTargetPosition;
+        MovePlayerPosition(deps.RuntimeState.ledgeClimbTargetPosition);
 
         deps.CapsuleCollider.enabled = true;
         deps.Rb.isKinematic = false;
+        deps.Rb.useGravity = true;
         deps.Rb.linearVelocity = Vector3.zero;
         deps.RuntimeState.isGrounded = false;
 
         deps.RuntimeState.isWallGrabbing = false;
         deps.RuntimeState.wallGrabSide = 0;
         deps.RuntimeState.isWallSliding = false;
+    }
+
+    private void MovePlayerPosition(Vector3 position)
+    {
+        if (deps.Rb != null)
+        {
+            deps.Rb.MovePosition(position);
+            return;
+        }
+
+        deps.Transform.position = position;
     }
 
     // イージング関数: EaseOutCubic（滑らかな減速）
