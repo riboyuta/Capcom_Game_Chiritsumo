@@ -1,11 +1,9 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// ゴールオブジェクト用のシーン遷移スクリプト。
-/// Player（Tag="Player"）が Trigger に接触すると
-/// 指定されたシーンへ遷移する。
-/// </summary>
+
+// ゴールオブジェクト用のシーン遷移スクリプト。
+// Player（Tag="Player"）が Trigger に接触すると指定されたシーンへ遷移する。
 [RequireComponent(typeof(Collider))]
 public sealed class GoalSceneTransition : MonoBehaviour
 {
