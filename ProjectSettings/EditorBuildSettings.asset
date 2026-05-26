@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MainScenes/Result.unity
     guid: 370940ae0cdc67b46b5a1d9ab6e3c769
+  - enabled: 1
+    path: Assets/Scenes/DebugScenes/Tomoya/DebugMapScenes/TestPlay/DebugMapTestPlay_v4.unity
+    guid: d09b6fc1b2b621e48bd54c23f2681ab9
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
