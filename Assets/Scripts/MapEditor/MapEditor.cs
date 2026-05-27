@@ -636,7 +636,7 @@ public class MapEditor : MonoBehaviour
 
 
             //定義されてるタイルを探す
-            TileDefinition def = tileDatabase.tiles.Find(t => t.tileID == data.tileID);
+            TileDefinition def = tileDatabase.tiles.Find(t => t != null && t.tileID == data.tileID);
             if (def == null)
             {
                 Debug.LogError("TileIDが見当たりませぬ" + data.tileID);
@@ -965,6 +965,12 @@ public class MapEditor : MonoBehaviour
 
     public void LoadMap()
     {
+        if (tileDatabase == null)
+        {
+            Debug.LogError("[MapEditor] TileDatabaseが未設定です。Inspectorでセットしてください。", this);
+            return;
+        }
+
         //現在読み込まれてるマップを全て消す
         foreach (var tile in tiles)
         {
@@ -1004,7 +1010,7 @@ public class MapEditor : MonoBehaviour
 
 
             //定義されてるタイルを探す
-            TileDefinition def = tileDatabase.tiles.Find(t => t.tileID == data.tileID);
+            TileDefinition def = tileDatabase.tiles.Find(t => t != null && t.tileID == data.tileID);
             if (def == null)
             {
                 Debug.LogError("TileIDが見当たりませぬ" + data.tileID);
