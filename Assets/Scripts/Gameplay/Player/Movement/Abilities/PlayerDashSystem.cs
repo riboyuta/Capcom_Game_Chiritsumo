@@ -318,24 +318,39 @@ internal sealed class PlayerDashSystem
     // ============================================================
 
     // ダッシュ中の専用速度を適用する。
+    // ダッシュ中の専用速度を適用する。
+    // ダッシュ中の専用速度を適用する。
+    // ダッシュ中の専用速度を適用する。
     internal void ApplyDashVelocity(PlayerLocomotionModifierRequest modifier, System.Func<bool> tryApplyDashCornerCorrection)
     {
         tryApplyDashCornerCorrection();
 
-        // 斜め下ダッシュ中に地面に接触したら、即座に横ダッシュに切り替える
+        // 斜め下ダッシュ中に地面に接触したら、即座に横ダッシュに切り替える。
         if (deps.RuntimeState.dashDirection.y < -0.1f && Mathf.Abs(deps.RuntimeState.dashDirection.x) > 0.1f)
         {
             if (deps.RuntimeState.isGrounded)
             {
-                // 地面に接触した瞬間、ダッシュ方向を横に変換
+                // 地面に接触した瞬間、ダッシュ方向を横に変換する。
                 float horizontalSign = Mathf.Sign(deps.RuntimeState.dashDirection.x);
                 deps.RuntimeState.dashDirection = new Vector2(horizontalSign, 0f);
             }
         }
 
-        deps.Rb.linearVelocity = deps.RuntimeState.dashDirection * (deps.Settings.Dash.Speed * modifier.dashSpeedMultiplier);
-    }
+        float dashDuration = Mathf.Max(0.0001f, deps.Settings.Dash.Duration);
+        float dashProgress = 1f - Mathf.Clamp01(deps.RuntimeState.dashTimer / dashDuration);
 
+        // EaseOutCubic。
+        float ease = 1f - Mathf.Pow(1f - dashProgress, 3f);
+
+        // 初速を 85% 残して、入力直後の重さを避ける。
+        float dashCurveMultiplier = Mathf.Lerp(0.85f, 1f, ease);
+
+        float dashSpeed = deps.Settings.Dash.Speed
+            * dashCurveMultiplier
+            * modifier.dashSpeedMultiplier;
+
+        deps.Rb.linearVelocity = deps.RuntimeState.dashDirection * dashSpeed;
+    }
     internal void CancelDashForStomp()
     {
         if (!deps.RuntimeState.isDashing)
