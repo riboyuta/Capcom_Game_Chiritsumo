@@ -134,6 +134,16 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
             return;
         }
 
+        // すでに接地中で床上面にいる場合は、微小な速度ブレで衝突を切らない。
+        // 落下入力によるすり抜け判定は、この前で処理済みにする。
+        if (playerFacade != null && playerFacade.IsGrounded && playerAbove)
+        {
+            wasBelowPlatform = false;
+            SetCollisionIgnored(false);
+            return;
+        }
+
+
         // プレイヤーが床の上にいて、落下中または静止中なら衝突を有効にする。
         // それ以外（下にいる、上昇中）なら衝突を無効にして通過させる。
         bool shouldCollide = playerAbove && playerFallingOrStill;
