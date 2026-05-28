@@ -26,6 +26,7 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
     private float dropThroughTimer;
     private bool hasCapturedInitialState;
     private bool wasBelowPlatform;
+    private bool isCollisionIgnored;
 
     private void Awake()
     {
@@ -62,6 +63,8 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         {
             Physics.IgnoreCollision(playerCollider, platformCollider, false);
         }
+
+        isCollisionIgnored = false;
     }
 
     // ──────────────────────────────────────────────
@@ -83,7 +86,7 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         if (dropThroughTimer > 0f)
         {
             dropThroughTimer -= Time.fixedDeltaTime;
-            Physics.IgnoreCollision(playerCollider, platformCollider, true);
+            SetCollisionIgnored(true);
             return;
         }
 
@@ -127,14 +130,14 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         if (allowDropThrough && playerAbove && playerFacade != null && playerFacade.IsDownInputHeld)
         {
             dropThroughTimer = dropThroughDuration;
-            Physics.IgnoreCollision(playerCollider, platformCollider, true);
+            SetCollisionIgnored(true);
             return;
         }
 
         // プレイヤーが床の上にいて、落下中または静止中なら衝突を有効にする。
         // それ以外（下にいる、上昇中）なら衝突を無効にして通過させる。
         bool shouldCollide = playerAbove && playerFallingOrStill;
-        Physics.IgnoreCollision(playerCollider, platformCollider, !shouldCollide);
+        SetCollisionIgnored(!shouldCollide);
     }
 
     // ──────────────────────────────────────────────
@@ -153,5 +156,16 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         playerFacade = facades[0];
         playerRb = playerFacade.GetComponent<Rigidbody>();
         playerCollider = playerFacade.GetComponent<Collider>();
+    }
+
+    // プレイヤーと床の衝突無効状態を切り替える。
+    // 同じ状態で毎物理フレーム Physics.IgnoreCollision を呼ばないようにする。
+    private void SetCollisionIgnored(bool shouldIgnore)
+    {
+        if (playerCollider == null || platformCollider == null) return;
+        if (isCollisionIgnored == shouldIgnore) return;
+
+        Physics.IgnoreCollision(playerCollider, platformCollider, shouldIgnore);
+        isCollisionIgnored = shouldIgnore;
     }
 }
