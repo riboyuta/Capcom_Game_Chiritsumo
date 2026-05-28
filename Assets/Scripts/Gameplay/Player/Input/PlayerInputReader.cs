@@ -1,0 +1,410 @@
+using System;
+using UnityEngine;
+
+namespace Game.Input
+{
+    // 生入力(RawInputSource)をゲーム側で扱いやすい形へ変換する責務を持つ。
+    // 例:
+    // - キーボードとゲームパッドの移動入力を1つの Move にまとめる
+    // - Jump / Dash / Stomp / Grab の Pressed, Held, Released を毎フレーム更新する
+    // - Move から上下左右の入力意図を導出する
+    // - Dash 押下中にダッシュ方向入力を更新する
+    public sealed class PlayerInputReader
+    {
+        // 0.5f 以上なら UpHeld、-0.5f 以下なら DownHeld と判定する。
+        private const float VerticalIntentThreshold = 0.5f;
+
+        // -0.5f 以下なら LeftHeld、0.5f 以上なら RightHeld と判定する。
+        private const float HorizontalIntentThreshold = 0.5f;
+
+        // キーボード方向入力を -1 / 0 / 1 に丸めるしきい値。
+        // デジタル入力前提なので固定値で十分。
+        private const float KeyboardDirectionThreshold = 0.5f;
+
+        // Unity Input などから取得した生入力の供給元。
+        private readonly RawInputSource rawInputSource;
+
+        // Jump / Dash / Stomp / Grab の入力割り当て情報。
+        private readonly PlayerInputBindings bindings;
+
+        // プレイヤーの移動・ダッシュに関する調整値。
+        // インスペクター上で編集される値をここから参照する。
+        private readonly PlayerMovementSettings settings;
+
+        // 現在の移動入力。
+        // 優先順位は GamepadMoveVector → KeyboardMoveVector。
+        public Vector2 Move { get; private set; }
+
+        // Move から導出した上下入力意図。
+        public bool UpHeld { get; private set; }
+        public bool DownHeld { get; private set; }
+
+        // Move から導出した左右入力意図。
+        public bool LeftHeld { get; private set; }
+        public bool RightHeld { get; private set; }
+
+        // 方向入力の押下エッジ。
+        public bool LeftPressed { get; private set; }
+        public bool RightPressed { get; private set; }
+        public bool DownPressed { get; private set; }
+        public bool DownReleased { get; private set; }
+
+        // 方向入力の押下エッジ算出に使う前フレーム状態。
+        private bool previousLeftHeld;
+        private bool previousRightHeld;
+        private bool previousDownHeld;
+
+        // ジャンプ入力のフレーム状態。
+        public bool JumpPressed { get; private set; }
+        public bool JumpHeld { get; private set; }
+        public bool JumpReleased { get; private set; }
+
+        // ダッシュ入力のフレーム状態。
+        public bool DashPressed { get; private set; }
+        public bool DashHeld { get; private set; }
+        public bool DashReleased { get; private set; }
+        public bool LeftMouseDashPressedThisFrame { get; private set; }
+
+        // ストンピング入力のフレーム状態。
+        public bool StompPressed { get; private set; }
+        public bool StompHeld { get; private set; }
+        public bool StompReleased { get; private set; }
+
+        // つかみ入力のフレーム状態。
+        public bool GrabPressed { get; private set; }
+        public bool GrabHeld { get; private set; }
+        public bool GrabReleased { get; private set; }
+        public bool MouseGrabRequestHeld { get; private set; }
+
+        // ダッシュ入力中に使う方向入力。
+        // 例:
+        // - 右上入力 + DashPressed なら (1, 1)
+        // - 無入力 + DashPressed なら (0, 0)
+        public Vector2 DashDirectionInput { get; private set; }
+
+        public PlayerInputReader(
+            RawInputSource rawInputSource,
+            PlayerInputBindings bindings,
+            PlayerMovementSettings settings)
+        {
+            // null だと以後の入力解決が成立しないので、コンストラクタで即検出する。
+            this.rawInputSource = rawInputSource ?? throw new ArgumentNullException(nameof(rawInputSource));
+            this.bindings = bindings ?? throw new ArgumentNullException(nameof(bindings));
+            this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        }
+
+        // 毎フレーム呼ばれて、公開プロパティ群を最新状態へ更新する。
+        public void Update()
+        {
+            // 移動入力を解決する。
+            Move = ResolveMove();
+
+            // Move から上下左右の入力意図を導出する。
+            UpHeld = Move.y >= VerticalIntentThreshold;
+
+            bool leftHeld = Move.x <= -HorizontalIntentThreshold;
+            bool rightHeld = Move.x >= HorizontalIntentThreshold;
+            bool downHeld = Move.y <= -VerticalIntentThreshold;
+
+            // 方向入力の立ち上がり / 立ち下がりを判定する。
+            LeftPressed = leftHeld && !previousLeftHeld;
+            RightPressed = rightHeld && !previousRightHeld;
+            DownPressed = downHeld && !previousDownHeld;
+            DownReleased = !downHeld && previousDownHeld;
+
+            LeftHeld = leftHeld;
+            RightHeld = rightHeld;
+            DownHeld = downHeld;
+
+            // 次フレームの edge 判定に向けて現在状態を保持する。
+            previousLeftHeld = leftHeld;
+            previousRightHeld = rightHeld;
+            previousDownHeld = downHeld;
+
+            RawButtonFrameState leftMouseState = rawInputSource.LeftMouseButtonState;
+            RawButtonFrameState rightMouseState = rawInputSource.RightMouseButtonState;
+
+            // マウス左右クリックは bindings の設定に従って各アクションへ合流する。
+            RawButtonFrameState jumpState = ResolveActionState(bindings.Jump);
+            RawButtonFrameState mouseJumpState = ResolveMouseActionState(
+                PlayerInputBindings.PlayerMouseInputAction.Jump,
+                leftMouseState,
+                rightMouseState);
+            jumpState = MergeActionStates(jumpState, mouseJumpState, default, default);
+            JumpPressed = jumpState.PressedThisFrame;
+            JumpHeld = jumpState.Held;
+            JumpReleased = jumpState.ReleasedThisFrame;
+
+            // Dash アクションの統合状態を解決する。
+            RawButtonFrameState dashState = ResolveActionState(bindings.Dash);
+            RawButtonFrameState mouseDashState = ResolveMouseActionState(
+                PlayerInputBindings.PlayerMouseInputAction.Dash,
+                leftMouseState,
+                rightMouseState);
+            dashState = MergeActionStates(dashState, mouseDashState, default, default);
+            DashPressed = dashState.PressedThisFrame;
+            DashHeld = dashState.Held;
+            DashReleased = dashState.ReleasedThisFrame;
+            LeftMouseDashPressedThisFrame =
+                bindings.LeftMouseAction == PlayerInputBindings.PlayerMouseInputAction.Dash &&
+                leftMouseState.PressedThisFrame;
+
+            // Stomp アクションの統合状態を解決する。
+            RawButtonFrameState stompState = ResolveActionState(bindings.Stomp);
+            RawButtonFrameState mouseStompState = ResolveMouseActionState(
+                PlayerInputBindings.PlayerMouseInputAction.Stomp,
+                leftMouseState,
+                rightMouseState);
+            stompState = MergeActionStates(stompState, mouseStompState, default, default);
+            StompPressed = stompState.PressedThisFrame;
+            StompHeld = stompState.Held;
+            StompReleased = stompState.ReleasedThisFrame;
+
+            // Dash を押している間、常に最新の方向入力を更新する。
+            // これにより、ダッシュボタンを押した後に方向を微調整できる。
+            // 実際にダッシュを開始するかどうかは PlayerController 側の責務。
+            if (DashPressed || DashHeld)
+            {
+                DashDirectionInput = ResolveDashDirectionInput();
+            }
+            else if (DashReleased)
+            {
+                // ダッシュボタンを離した瞬間にリセットする。
+                DashDirectionInput = Vector2.zero;
+            }
+            // それ以外（何も押していない）は前フレームの値を保持する。
+
+            // Grab アクションの統合状態を解決する。
+            RawButtonFrameState grabState = ResolveActionState(bindings.Grab);
+            RawButtonFrameState mouseGrabState = ResolveMouseActionState(
+                PlayerInputBindings.PlayerMouseInputAction.Grab,
+                leftMouseState,
+                rightMouseState);
+            grabState = MergeActionStates(grabState, mouseGrabState, default, default);
+            GrabPressed = grabState.PressedThisFrame;
+            GrabHeld = grabState.Held;
+            GrabReleased = grabState.ReleasedThisFrame;
+            // 互換性のためプロパティは残し、Grab に割り当てられたマウス入力のホールドを返す。
+            MouseGrabRequestHeld = mouseGrabState.Held;
+        }
+
+        // 移動入力を 1 つの Vector2 にまとめる。
+        // 仕様:
+        // - ゲームパッド入力が十分に入っていればゲームパッド優先
+        // - そうでなければキーボード入力を使う
+        private Vector2 ResolveMove()
+        {
+            Vector2 gamepadMove = rawInputSource.GamepadMoveVector;
+            float deadZone = Mathf.Clamp01(settings.InputAssist.MoveInputGamepadDeadZone);
+            float deadZoneSqr = deadZone * deadZone;
+
+            // ゲームパッドの入力が十分に入っているなら、そちらを採用する。
+            if (gamepadMove.sqrMagnitude > deadZoneSqr)
+            {
+                return gamepadMove;
+            }
+
+            // ゲームパッド入力が実質ゼロならキーボード入力へフォールバックする。
+            return rawInputSource.KeyboardMoveVector;
+        }
+
+        // ダッシュ専用の方向入力を解決する。
+        // ゲームパッド入力が十分に入っていれば 8 方向スナップで解釈し、
+        // そうでなければキーボード方向入力をそのまま使う。
+        private Vector2 ResolveDashDirectionInput()
+        {
+            Vector2 gamepadMove = rawInputSource.GamepadMoveVector;
+            float deadZone = Mathf.Clamp01(settings.Dash.DirectionDeadZone);
+            float deadZoneSqr = deadZone * deadZone;
+
+            if (gamepadMove.sqrMagnitude >= deadZoneSqr)
+            {
+                return ResolveGamepadDashDirection(gamepadMove);
+            }
+
+            Vector2 keyboardMove = rawInputSource.KeyboardMoveVector;
+            return ResolveKeyboardDashDirection(keyboardMove);
+        }
+
+        // キーボード方向入力を、ダッシュ用の -1 / 0 / 1 ベクトルへ変換する。
+        // キーボードはデジタル入力前提なので、単純な符号化で十分。
+        private static Vector2 ResolveKeyboardDashDirection(Vector2 keyboardMove)
+        {
+            float x = keyboardMove.x <= -KeyboardDirectionThreshold
+                ? -1.0f
+                : keyboardMove.x >= KeyboardDirectionThreshold
+                    ? 1.0f
+                    : 0.0f;
+
+            float y = keyboardMove.y <= -KeyboardDirectionThreshold
+                ? -1.0f
+                : keyboardMove.y >= KeyboardDirectionThreshold
+                    ? 1.0f
+                    : 0.0f;
+
+            Vector2 result = new Vector2(x, y);
+
+            // 斜め入力の場合は正規化して、コントローラーと同じ長さにする
+            if (result.sqrMagnitude > 1.0f)
+            {
+                result.Normalize();
+            }
+
+            return result;
+        }
+
+        // ゲームパッド方向入力を、8方向へスナップして返す。
+        // dashDiagonalAssistAngle を加味して、斜め方向を少し取りやすくする。
+        private Vector2 ResolveGamepadDashDirection(Vector2 gamepadMove)
+        {
+            float inputAngle = Mathf.Atan2(gamepadMove.y, gamepadMove.x) * Mathf.Rad2Deg;
+
+            if (inputAngle < 0.0f)
+            {
+                inputAngle += 360.0f;
+            }
+
+            float diagonalAssistAngle = Mathf.Clamp(settings.Dash.DiagonalAssistAngle, 0.0f, 22.5f);
+
+            float bestScore = float.MaxValue;
+            int bestDirectionIndex = 0;
+
+            for (int directionIndex = 0; directionIndex < 8; directionIndex++)
+            {
+                float candidateAngle = directionIndex * 45.0f;
+                float deltaAngle = Mathf.Abs(Mathf.DeltaAngle(inputAngle, candidateAngle));
+
+                bool isDiagonal = (directionIndex % 2) == 1;
+
+                // 斜め方向には少し補正を入れて、候補として選ばれやすくする。
+                float adjustedScore = isDiagonal
+                    ? Mathf.Max(0.0f, deltaAngle - diagonalAssistAngle)
+                    : deltaAngle;
+
+                if (adjustedScore < bestScore)
+                {
+                    bestScore = adjustedScore;
+                    bestDirectionIndex = directionIndex;
+                }
+            }
+
+            return DirectionIndexToVector(bestDirectionIndex);
+        }
+
+        // 8方向インデックスをダッシュ方向ベクトルへ変換する。
+        // 正規化済みのベクトルを返す（斜めも長さ1.0）
+        private static Vector2 DirectionIndexToVector(int directionIndex)
+        {
+            const float diagonal = 0.707106781f; // 1/√2
+
+            switch (directionIndex)
+            {
+                case 0:
+                    return Vector2.right;                       // 右: 0度
+                case 1:
+                    return new Vector2(diagonal, diagonal);     // 右上: 45度
+                case 2:
+                    return Vector2.up;                          // 上: 90度
+                case 3:
+                    return new Vector2(-diagonal, diagonal);    // 左上: 135度
+                case 4:
+                    return Vector2.left;                        // 左: 180度
+                case 5:
+                    return new Vector2(-diagonal, -diagonal);   // 左下: 225度
+                case 6:
+                    return Vector2.down;                        // 下: 270度
+                case 7:
+                    return new Vector2(diagonal, -diagonal);    // 右下: 315度
+                default:
+                    return Vector2.zero;
+            }
+        }
+
+        // 1つのアクション(binding)について、
+        // キーボード主キー / キーボード副キー / ゲームパッド主ボタン / ゲームパッド副ボタンを統合し、
+        // Pressed / Held / Released を 1 つの状態として返す。
+        private RawButtonFrameState ResolveActionState(InputActionBinding binding)
+        {
+            RawButtonFrameState primaryKeyboardState =
+                rawInputSource.GetKeyState(binding.PrimaryKeyboardKey);
+
+            RawButtonFrameState secondaryKeyboardState =
+                rawInputSource.GetKeyState(binding.SecondaryKeyboardKey);
+
+            RawButtonFrameState primaryGamepadState =
+                rawInputSource.GetGamepadButtonState(binding.GamepadButton);
+
+            RawButtonFrameState secondaryGamepadState =
+                rawInputSource.GetGamepadButtonState(binding.SecondaryGamepadButton);
+
+            return MergeActionStates(
+                primaryKeyboardState,
+                secondaryKeyboardState,
+                primaryGamepadState,
+                secondaryGamepadState);
+        }
+
+        // マウス左右の割り当て設定から、対象アクションに該当する入力状態だけを取り出す。
+        private RawButtonFrameState ResolveMouseActionState(
+            PlayerInputBindings.PlayerMouseInputAction targetAction,
+            RawButtonFrameState leftMouseState,
+            RawButtonFrameState rightMouseState)
+        {
+            RawButtonFrameState leftState =
+                bindings.LeftMouseAction == targetAction
+                    ? leftMouseState
+                    : default;
+
+            RawButtonFrameState rightState =
+                bindings.RightMouseAction == targetAction
+                    ? rightMouseState
+                    : default;
+
+            return MergeActionStates(leftState, rightState, default, default);
+        }
+
+        // 複数の入力経路を1つのアクション状態へ統合する。
+        // 例:
+        // - 主ボタンを押しっぱなし中に副ボタンを押しても Pressed は二重発火しない
+        // - 主ボタンを離しても副ボタンが押されていれば Released は出ない
+        // - すべての入力経路が離れた瞬間だけ Released が出る
+        private static RawButtonFrameState MergeActionStates(
+            RawButtonFrameState first,
+            RawButtonFrameState second,
+            RawButtonFrameState third,
+            RawButtonFrameState fourth)
+        {
+            bool currentHeld =
+                first.Held ||
+                second.Held ||
+                third.Held ||
+                fourth.Held;
+
+            bool previousHeld =
+                ReconstructPreviousHeld(first.Held, first.PressedThisFrame, first.ReleasedThisFrame) ||
+                ReconstructPreviousHeld(second.Held, second.PressedThisFrame, second.ReleasedThisFrame) ||
+                ReconstructPreviousHeld(third.Held, third.PressedThisFrame, third.ReleasedThisFrame) ||
+                ReconstructPreviousHeld(fourth.Held, fourth.PressedThisFrame, fourth.ReleasedThisFrame);
+
+            return new RawButtonFrameState(
+                held: currentHeld,
+                pressedThisFrame: currentHeld && !previousHeld,
+                releasedThisFrame: !currentHeld && previousHeld);
+        }
+
+        // current / pressedThisFrame / releasedThisFrame から
+        // 前フレームで Held だったかを推定する補助関数。
+        private static bool ReconstructPreviousHeld(
+            bool currentHeld,
+            bool pressedThisFrame,
+            bool releasedThisFrame)
+        {
+            if (currentHeld)
+            {
+                return !pressedThisFrame;
+            }
+
+            return releasedThisFrame;
+        }
+    }
+}

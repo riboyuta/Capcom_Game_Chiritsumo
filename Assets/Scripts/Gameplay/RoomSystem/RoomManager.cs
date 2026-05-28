@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -11,6 +13,9 @@ public sealed class RoomManager : MonoBehaviour
         Up = 3,
         Down = 4,
     }
+
+    // 部屋遷移が完了した時に発火するイベント
+    public event Action<Room> OnRoomTransitionComplete;
 
     [Header("開始部屋")]
     [Tooltip("ゲーム開始時に現在部屋として扱う Room です。")]
@@ -85,11 +90,18 @@ public sealed class RoomManager : MonoBehaviour
 
     private void Start()
     {
+        // Gate 候補の初期構築を行う（方向単位 Blocker は Step3 まで無効化）。
+        InitializeRoomBlockers();
+
         // 開始部屋が設定されている場合は現在部屋を確定する。
         if (initialRoom != null)
         {
             ForceSetCurrentRoom(initialRoom);
             ApplyCurrentRoomCameraSettings();
+
+            // 初期部屋設定完了イベントを発火
+            OnRoomTransitionComplete?.Invoke(currentRoom);
+
             return;
         }
 
@@ -117,10 +129,12 @@ public sealed class RoomManager : MonoBehaviour
 
             if (!playerCameraController.IsRoomTransitionRunning || playerCameraController.HasReachedRoomTransitionTarget)
             {
-                ResetStageOnRoomTransitionComplete();
                 EndRoomTransitionExternalControl();
                 pendingRoom = null;
                 isTransitioning = false;
+
+                // 部屋遷移完了イベントを発火
+                OnRoomTransitionComplete?.Invoke(currentRoom);
 
                 if (enableDebugLog)
                 {
@@ -153,7 +167,7 @@ public sealed class RoomManager : MonoBehaviour
 
         if (TryGetTransitionDirection(currentBounds, playerPosition, playerVelocity, out RoomDirection direction))
         {
-            TryTransition(direction);
+            TryTransition(direction, playerPosition);
         }
     }
 
@@ -265,22 +279,22 @@ public sealed class RoomManager : MonoBehaviour
         }
     }
 
-    private void ResetStageOnRoomTransitionComplete()
+    private void ResetStageOnRoomTransitionBegin()
     {
         // ステージ初期化システムが無い場合は安全のため何もしない。
         if (stageResetSystem == null)
         {
-            Debug.LogWarning("RoomManager: stageResetSystem が未設定のため部屋遷移完了時の全初期化を実行できません。", this);
+            Debug.LogWarning("RoomManager: stageResetSystem が未設定のため部屋遷移開始時の全初期化を実行できません。", this);
             return;
         }
 
-        // カメラ遷移完了直後にステージ全体の復帰状態リセットを行う。
+        // カメラ遷移開始直前にステージ全体の復帰状態リセットを行う。
         stageResetSystem.ResetAllToRespawnState();
 
-        // デバッグ有効時のみ、部屋遷移完了境界で全初期化を呼んだことを記録する。
+        // デバッグ有効時のみ、部屋遷移開始境界で全初期化を呼んだことを記録する。
         if (enableDebugLog)
         {
-            Debug.Log("RoomManager: 部屋遷移完了境界で StageResetSystem.ResetAllToRespawnState() を実行しました。", this);
+            Debug.Log("RoomManager: 部屋遷移開始境界で StageResetSystem.ResetAllToRespawnState() を実行しました。", this);
         }
     }
 
@@ -390,6 +404,54 @@ public sealed class RoomManager : MonoBehaviour
         }
     }
 
+    private void InitializeRoomBlockers()
+    {
+        Room[] rooms = FindObjectsByType<Room>(FindObjectsSortMode.None);
+        List<(Room room, RoomBlockerSet blockerSet)> blockerSets = new();
+        for (int i = 0; i < rooms.Length; i++)
+        {
+            Room room = rooms[i];
+            if (room == null || room.RoomBounds == null)
+            {
+                continue;
+            }
+
+            RoomBlockerSet blockerSet = EnsureRoomBlockerSet(room);
+            blockerSets.Add((room, blockerSet));
+        }
+
+        for (int i = 0; i < blockerSets.Count; i++)
+        {
+            (Room room, RoomBlockerSet blockerSet) = blockerSets[i];
+            blockerSet.RebuildGateSegments(room, rooms);
+        }
+
+        for (int i = 0; i < blockerSets.Count; i++)
+        {
+            blockerSets[i].blockerSet.BuildReverseGateLinks();
+        }
+    }
+
+    private RoomBlockerSet EnsureRoomBlockerSet(Room room)
+    {
+        // Room 配下の専用子 "RoomBlockerSet" を再利用または生成する。
+        Transform blockerSetTransform = room.transform.Find("RoomBlockerSet");
+        if (blockerSetTransform == null)
+        {
+            GameObject blockerSetObject = new GameObject("RoomBlockerSet");
+            blockerSetObject.transform.SetParent(room.transform, false);
+            blockerSetTransform = blockerSetObject.transform;
+        }
+
+        RoomBlockerSet blockerSet = blockerSetTransform.GetComponent<RoomBlockerSet>();
+        if (blockerSet == null)
+        {
+            blockerSet = blockerSetTransform.gameObject.AddComponent<RoomBlockerSet>();
+        }
+
+        return blockerSet;
+    }
+
     private bool TryGetTransitionDirection(
         Bounds bounds,
         Vector3 playerPosition,
@@ -444,7 +506,7 @@ public sealed class RoomManager : MonoBehaviour
         return false;
     }
 
-    private bool TryTransition(RoomDirection direction)
+    private bool TryTransition(RoomDirection moveDirection, Vector3 playerPosition)
     {
         // 現在部屋が無い場合は遷移できない。
         if (currentRoom == null)
@@ -452,38 +514,45 @@ public sealed class RoomManager : MonoBehaviour
             return false;
         }
 
-        // 遷移方向に応じた隣接部屋を選ぶ。
+        RoomBlockerSet currentBlockerSet = EnsureRoomBlockerSet(currentRoom);
+        RoomBlockerSet.GateHandle throughGate;
         Room nextRoom = null;
-        switch (direction)
-        {
-            case RoomDirection.Left:
-                nextRoom = currentRoom.LeftRoom;
-                break;
-            case RoomDirection.Right:
-                nextRoom = currentRoom.RightRoom;
-                break;
-            case RoomDirection.Up:
-                nextRoom = currentRoom.UpRoom;
-                break;
-            case RoomDirection.Down:
-                nextRoom = currentRoom.DownRoom;
-                break;
-        }
+        bool blockedByAmbiguous = false;
+        bool blockedByOneWay = false;
+        bool foundByGate = currentBlockerSet.TryFindGate(
+            moveDirection,
+            playerPosition,
+            out throughGate,
+            out nextRoom,
+            out blockedByAmbiguous,
+            out blockedByOneWay);
 
-        // 隣接部屋が未設定なら遷移しない。
-        if (nextRoom == null)
+        if (!foundByGate)
         {
+            if (enableDebugLog)
+            {
+                string reason = blockedByAmbiguous
+                    ? "ambiguous gate"
+                    : blockedByOneWay
+                        ? "one-way blocked gate"
+                        : "no matching gate";
+                Debug.Log($"RoomManager: Gate 検索で遷移先を決定できませんでした。Direction={moveDirection}, reason={reason}", this);
+            }
+
             return false;
         }
 
-        // 状態切り替え直後にカメラ設定反映と遷移開始を行う。
+        // 状態切り替え直後にステージ全体をリセット（カメラ遷移直前に敵を消すため）
+        ResetStageOnRoomTransitionBegin();
+
+        // カメラ設定反映と遷移開始を行う。
         isTransitioning = true;
         previousRoom = currentRoom;
         pendingRoom = nextRoom;
         currentRoom = nextRoom;
-        lastTransitionDirection = direction;
+        lastTransitionDirection = moveDirection;
         ApplyCurrentRoomCameraSettings();
-        UpdateCheckpointForRoomEntry(currentRoom, direction);
+        UpdateCheckpointForRoomEntry(currentRoom, moveDirection);
         if (playerCameraController != null)
         {
             playerCameraController.BeginRoomTransition(currentRoom);
@@ -493,12 +562,25 @@ public sealed class RoomManager : MonoBehaviour
             Debug.LogWarning("RoomManager: playerCameraController が未設定のためカメラ遷移を開始できません。", this);
         }
 
+        if (currentRoom.EnableOneWayBlockerOnEntry)
+        {
+            RoomBlockerSet enteredRoomBlockerSet = EnsureRoomBlockerSet(currentRoom);
+            if (enteredRoomBlockerSet.TryGetReverseGate(throughGate, out RoomBlockerSet.GateHandle reverseGate))
+            {
+                reverseGate.ownerSet.SetGateBlocked(reverseGate, true);
+            }
+            else
+            {
+                Debug.LogWarning($"RoomManager: ReverseGate が見つからないため one-way blocker を有効化できません。fromGateTarget='{nextRoom?.name}'", this);
+            }
+        }
+
         BeginRoomTransitionExternalControl();
 
         if (enableDebugLog)
         {
             Debug.Log(
-                $"RoomManager: '{previousRoom.name}' -> '{currentRoom.name}' に遷移しました。Direction={direction}",
+                $"RoomManager: '{previousRoom.name}' -> '{currentRoom.name}' に遷移しました。Direction={moveDirection}",
                 this);
         }
 

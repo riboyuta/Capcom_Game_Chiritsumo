@@ -1,43 +1,98 @@
+using System;
 using UnityEngine;
+
+public enum MoveDirection
+{
+    Right,   // 右
+    Left,    // 左
+    Up,      // 上
+    Down,    // 下
+    Custom   // カスタム
+}
+
+[Serializable]
+public struct HandChaserMovementSettings
+{
+    [Tooltip("移動速度です。（変速機能 OFF 時に使用）")]
+    [Min(0f)] public float moveSpeed;
+
+    [Tooltip("移動方向を選択します。")]
+    public MoveDirection moveDirection;
+
+    [Tooltip("MoveDirection が Custom の場合に使用される移動方向です。")]
+    public Vector3 customMoveAxis;
+
+    public static HandChaserMovementSettings Default => new HandChaserMovementSettings
+    {
+        moveSpeed = 9.0f,
+        moveDirection = MoveDirection.Right,
+        customMoveAxis = Vector3.right
+    };
+}
 
 [RequireComponent(typeof(Rigidbody))]
 public sealed class HandChaserMovement : MonoBehaviour
 {
-    [Header("基準移動速度")]
-    [Tooltip("基準となる移動速度です。")]
-    [SerializeField, Min(0f)] private float moveSpeed = 2.0f;
-
-    [Header("移動方向")]
-    [Tooltip("移動方向です。正規化されます。")]
-    [SerializeField] private Vector3 moveAxis = Vector3.right;
-
-    [Header("距離ベース速度使用")]
-    [Tooltip("true のとき、プレイヤーとの距離に応じて移動速度を変化させます。")]
-    [SerializeField] private bool useDistanceBasedSpeed = true;
-
-    [Header("最低移動速度")]
-    [Tooltip("プレイヤーに十分近いときの最低移動速度です。")]
-    [SerializeField, Min(0f)] private float minMoveSpeed = 1.5f;
-
-    [Header("最大移動速度")]
-    [Tooltip("プレイヤーから十分離れているときの最大移動速度です。")]
-    [SerializeField, Min(0f)] private float maxMoveSpeed = 4.5f;
-
-    [Header("最大速度距離")]
-    [Tooltip("この X 距離以上で最大移動速度になります。")]
-    [SerializeField, Min(0.01f)] private float distanceForMaxSpeed = 10.0f;
-
-    [Header("最低速度距離")]
-    [Tooltip("この X 距離以下では最低移動速度のままにします。")]
-    [SerializeField, Min(0f)] private float distanceForMinSpeed = 1.5f;
-
-    [Header("Gizmo表示")]
-    [Tooltip("移動速度範囲をGizmoで表示します。")]
-    [SerializeField] private bool showSpeedRangeGizmos = true;
-
     private Rigidbody rb;
-    private Transform playerTransform;
     private bool isActive;
+
+    // 変速 OFF 時に使う設定
+    private float moveSpeed = 9.0f;
+    private MoveDirection moveDirection = MoveDirection.Right;
+    private Vector3 customMoveAxis = Vector3.right;
+
+    // 初期状態のキャッシュ（リセット用）
+    private float initialMoveSpeed;
+    private MoveDirection initialMoveDirection;
+    private Vector3 initialCustomMoveAxis;
+    private bool hasCapturedInitialState;
+
+    // ──────────────────────────────────────────
+    // 変速機能
+    // ──────────────────────────────────────────
+
+    [Header("変速機能")]
+    [Tooltip("プレイヤーとの距離に応じて速度を変化させるかどうかです。false にすると等速になります。")]
+    [SerializeField] private bool enableAdaptiveSpeed = true;
+
+    [Header("各ゾーンの速度 (m/s)")]
+    [Tooltip("近すぎる時の速度です（壁がプレイヤーに接近しすぎた場合）。")]
+    [SerializeField] private float nearSpeed = 7f;
+
+    [Tooltip("理想距離にいる時の速度です。")]
+    [SerializeField] private float idealSpeed = 9f;
+
+    [Tooltip("遠すぎる時の速度です（壁がプレイヤーから大きく離れた場合）。")]
+    [SerializeField] private float farSpeed = 12f;
+
+    [Header("距離ゾーン境界 (m)")]
+    [Tooltip(
+        "この距離より後ろにいる → 「近すぎ」扱い。nearSpeed を適用。\n" +
+        "（オフセット = 移動軸方向のプレイヤーと壁の距離）")]
+    [SerializeField] private float nearThreshold = 4f;
+
+    [Tooltip("理想距離の近側の境界です。nearThreshold ～ idealMinDistance の間は nearSpeed と idealSpeed を補間します。")]
+    [SerializeField] private float idealMinDistance = 6f;
+
+    [Tooltip("理想距離の遠側の境界です。idealMinDistance ～ idealMaxDistance の間は idealSpeed を維持します。")]
+    [SerializeField] private float idealMaxDistance = 8f;
+
+    [Tooltip("この距離より遠い → 「遠すぎ」扱い。farSpeed を適用。\nidealMaxDistance ～ farThreshold の間は idealSpeed と farSpeed を補間します。")]
+    [SerializeField] private float farThreshold = 12f;
+
+    [Header("速度変化スムーズ")]
+    [Tooltip("速度変化を SmoothDamp で滑らかにするスムーズ時間です。小さいほど速度変化が鋭くなります。")]
+    [SerializeField] private float speedSmoothTime = 0.15f;
+
+    // 変速ロジック用の内部変数
+    private Transform playerTarget;
+    private float currentSpeed;
+    private float speedVelocity;
+    private bool currentSpeedInitialized;
+
+    // ──────────────────────────────────────────
+    // プロパティ
+    // ──────────────────────────────────────────
 
     public bool IsActive
     {
@@ -45,50 +100,67 @@ public sealed class HandChaserMovement : MonoBehaviour
         set => isActive = value;
     }
 
+    public float MoveSpeed
+    {
+        get => moveSpeed;
+        set => moveSpeed = Mathf.Max(0f, value);
+    }
+
+    public MoveDirection Direction
+    {
+        get => moveDirection;
+        set => moveDirection = value;
+    }
+
+    public Vector3 CustomMoveAxis
+    {
+        get => customMoveAxis;
+        set => customMoveAxis = value.sqrMagnitude > 0f ? value.normalized : Vector3.right;
+    }
+
+    // 現在の実効速度（デバッグ・外部参照用）
+    public float CurrentSpeed => currentSpeed;
+
+    // ──────────────────────────────────────────
+    // 外部 API
+    // ──────────────────────────────────────────
+
+    // 外部から設定を適用する（Room.cs から呼ばれる）
+    public void ApplySettings(HandChaserMovementSettings settings)
+    {
+        moveSpeed     = Mathf.Max(0f, settings.moveSpeed);
+        moveDirection = settings.moveDirection;
+        customMoveAxis = settings.customMoveAxis.sqrMagnitude > 0f
+            ? settings.customMoveAxis.normalized
+            : Vector3.right;
+    }
+
+    // プレイヤーの Transform を設定する（HandChaserEnemy から呼ばれる）
+    public void SetPlayerTarget(Transform player)
+    {
+        playerTarget = player;
+    }
+
+    // ──────────────────────────────────────────
+    // Unity ライフサイクル
+    // ──────────────────────────────────────────
+
     private void Awake()
     {
-        // Rigidbodyを取得してKinematicに設定
         rb = GetComponent<Rigidbody>();
         if (rb != null)
         {
-            rb.isKinematic = true;  // MovePositionで移動するためKinematic
-            rb.useGravity = false;  // 重力は使わない
-        }
-    }
-
-    private void OnValidate()
-    {
-        // 各パラメータを有効な範囲に制限
-        moveSpeed = Mathf.Max(0f, moveSpeed);
-        minMoveSpeed = Mathf.Max(0f, minMoveSpeed);
-        maxMoveSpeed = Mathf.Max(0f, maxMoveSpeed);
-        distanceForMaxSpeed = Mathf.Max(0.01f, distanceForMaxSpeed);
-        distanceForMinSpeed = Mathf.Max(0f, distanceForMinSpeed);
-
-        // 最大速度が最小速度より小さい場合は修正
-        if (maxMoveSpeed < minMoveSpeed)
-        {
-            maxMoveSpeed = minMoveSpeed;
+            rb.isKinematic = true;
+            rb.useGravity  = false;
         }
 
-        // 最小距離が最大距離より大きい場合は修正
-        if (distanceForMinSpeed > distanceForMaxSpeed)
-        {
-            distanceForMinSpeed = distanceForMaxSpeed;
-        }
-
-        // 移動軸を正規化
-        if (moveAxis.sqrMagnitude > 0f)
-        {
-            moveAxis = moveAxis.normalized;
-        }
+        CaptureInitialState();
     }
 
     private void FixedUpdate()
     {
         Debug.Log($"[HandChaserMovement] FixedUpdate enabled={enabled} isActive={isActive}", this);
 
-        // 非アクティブなら移動しない
         if (!isActive)
         {
             Debug.Log("[HandChaserMovement] isActive false", this);
@@ -101,91 +173,128 @@ public sealed class HandChaserMovement : MonoBehaviour
             return;
         }
 
-        // 現在の移動速度を計算
-        float currentSpeed = GetCurrentMoveSpeed();
-        Vector3 before = rb.position;
-        Vector3 next = rb.position + moveAxis * (currentSpeed * Time.fixedDeltaTime);
+        float effectiveSpeed = ComputeEffectiveSpeed();
 
-        Debug.Log($"[HandChaserMovement] before={before} next={next} axis={moveAxis} speed={currentSpeed} isKinematic={rb.isKinematic}", this);
+        Vector3 moveAxis = GetMoveAxis();
+        Vector3 before   = rb.position;
+        Vector3 next     = rb.position + moveAxis * (effectiveSpeed * Time.fixedDeltaTime);
 
-        // Rigidbodyを移動
+        Debug.Log($"[HandChaserMovement] before={before} next={next} axis={moveAxis} speed={effectiveSpeed:F2} isKinematic={rb.isKinematic}", this);
+
         rb.MovePosition(next);
 
         Debug.Log($"[HandChaserMovement] after MovePosition rb.position={rb.position} transform.position={transform.position}", this);
     }
 
-    public void SetPlayerTarget(Transform player)
+    // ──────────────────────────────────────────
+    // 変速計算
+    // ──────────────────────────────────────────
+
+    // プレイヤーとの距離に応じて実効速度を計算する。
+    // 変速 OFF またはプレイヤー未設定の場合は moveSpeed を返す。
+    private float ComputeEffectiveSpeed()
     {
-        // プレイヤーの参照を保持（距離ベースの速度調整に使用）
-        playerTransform = player;
+        float targetSpeed = GetTargetSpeed();
+
+        // 初回は即座に合わせる（SmoothDamp の立ち上がりガタつき防止）
+        if (!currentSpeedInitialized)
+        {
+            currentSpeed          = targetSpeed;
+            speedVelocity         = 0f;
+            currentSpeedInitialized = true;
+            return currentSpeed;
+        }
+
+        float smoothTime = speedSmoothTime > 0f ? speedSmoothTime : 0.001f;
+        currentSpeed = Mathf.SmoothDamp(currentSpeed, targetSpeed, ref speedVelocity, smoothTime);
+        return currentSpeed;
     }
 
-    // 現在の移動速度を取得
-    public float GetCurrentMoveSpeed()
+    // オフセット距離からゾーン判定して目標速度を返す。
+    private float GetTargetSpeed()
     {
-        return CalculateBaseSpeed();
-    }
-
-    // プレイヤーとの距離に応じた基本移動速度を計算
-    private float CalculateBaseSpeed()
-    {
-        // 距離ベースの速度調整が無効、またはプレイヤーがいない場合は固定速度
-        if (!useDistanceBasedSpeed || playerTransform == null)
+        if (!enableAdaptiveSpeed || playerTarget == null)
         {
             return moveSpeed;
         }
 
-        // X軸での距離を計算
-        float dx = Mathf.Abs(playerTransform.position.x - transform.position.x);
+        // 移動軸方向のオフセット（正 = 壁がプレイヤーの後ろ、負 = 行き過ぎ）
+        Vector3 moveAxis = GetMoveAxis();
+        float offset = Vector3.Dot(playerTarget.position - rb.position, moveAxis);
 
-        // 最小距離以下なら最低速度
-        if (dx <= distanceForMinSpeed)
+        // ゾーン判定
+        if (offset <= nearThreshold)
         {
-            return minMoveSpeed;
+            // 近すぎ（または壁が先行している）→ 最低速
+            return nearSpeed;
         }
 
-        // 距離に応じて速度を補間
-        float t = Mathf.InverseLerp(distanceForMinSpeed, distanceForMaxSpeed, dx);
-        return Mathf.Lerp(minMoveSpeed, maxMoveSpeed, t);
+        if (offset <= idealMinDistance)
+        {
+            // nearThreshold ～ idealMinDistance: 近すぎ速度 → 理想速度 へ線形補間
+            float t = Mathf.InverseLerp(nearThreshold, idealMinDistance, offset);
+            return Mathf.Lerp(nearSpeed, idealSpeed, t);
+        }
+
+        if (offset <= idealMaxDistance)
+        {
+            // 理想距離範囲内 → 理想速度を維持
+            return idealSpeed;
+        }
+
+        if (offset <= farThreshold)
+        {
+            // idealMaxDistance ～ farThreshold: 理想速度 → 最大速度 へ線形補間
+            float t = Mathf.InverseLerp(idealMaxDistance, farThreshold, offset);
+            return Mathf.Lerp(idealSpeed, farSpeed, t);
+        }
+
+        // 遠すぎ → 最大速度
+        return farSpeed;
     }
 
-    private void OnDrawGizmosSelected()
+    // ──────────────────────────────────────────
+    // 内部ユーティリティ
+    // ──────────────────────────────────────────
+
+    private Vector3 GetMoveAxis()
     {
-        if (!showSpeedRangeGizmos)
+        switch (moveDirection)
         {
-            return;
+            case MoveDirection.Right:  return Vector3.right;
+            case MoveDirection.Left:   return Vector3.left;
+            case MoveDirection.Up:     return Vector3.up;
+            case MoveDirection.Down:   return Vector3.down;
+            case MoveDirection.Custom: return customMoveAxis.normalized;
+            default:                   return Vector3.right;
         }
+    }
 
-        Vector3 origin = transform.position;
+    // ──────────────────────────────────────────
+    // 初期状態キャプチャ / リセット
+    // ──────────────────────────────────────────
 
-        float minDist = Mathf.Max(0f, distanceForMinSpeed);
-        float maxDist = Mathf.Max(minDist, distanceForMaxSpeed);
+    public void CaptureInitialState()
+    {
+        if (hasCapturedInitialState)
+            return;
 
-        float yOffset = 0.25f;
-        Vector3 leftMin = origin + Vector3.left * minDist + Vector3.up * yOffset;
-        Vector3 rightMin = origin + Vector3.right * minDist + Vector3.up * yOffset;
+        initialMoveSpeed      = moveSpeed;
+        initialMoveDirection  = moveDirection;
+        initialCustomMoveAxis = customMoveAxis;
+        hasCapturedInitialState = true;
+    }
 
-        Vector3 leftMax = origin + Vector3.left * maxDist + Vector3.up * yOffset;
-        Vector3 rightMax = origin + Vector3.right * maxDist + Vector3.up * yOffset;
+    public void ResetToInitialState()
+    {
+        moveSpeed      = initialMoveSpeed;
+        moveDirection  = initialMoveDirection;
+        customMoveAxis = initialCustomMoveAxis;
+        isActive       = false;
 
-        Vector3 lineTopOffset = Vector3.up * 1.5f;
-        Vector3 lineBottomOffset = Vector3.down * 1.5f;
-
-        // 最低速度範囲
-        Gizmos.color = Color.green;
-        Gizmos.DrawLine(leftMin, rightMin);
-        Gizmos.DrawLine(leftMin + lineBottomOffset, leftMin + lineTopOffset);
-        Gizmos.DrawLine(rightMin + lineBottomOffset, rightMin + lineTopOffset);
-
-        // 最大速度到達範囲
-        Gizmos.color = Color.red;
-        Gizmos.DrawLine(leftMax, rightMax);
-        Gizmos.DrawLine(leftMax + lineBottomOffset, leftMax + lineTopOffset);
-        Gizmos.DrawLine(rightMax + lineBottomOffset, rightMax + lineTopOffset);
-
-        // 中間補間エリア
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(leftMin, leftMax);
-        Gizmos.DrawLine(rightMin, rightMax);
+        // 変速の内部状態もリセット
+        currentSpeed            = 0f;
+        speedVelocity           = 0f;
+        currentSpeedInitialized = false;
     }
 }

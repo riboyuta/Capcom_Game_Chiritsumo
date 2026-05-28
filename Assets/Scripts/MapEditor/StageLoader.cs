@@ -1,274 +1,274 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using UnityEngine;
-using UnityEngine.Networking;
-using static MapEditor;
-using static UnityEditor.PlayerSettings;
+//using System.Collections;
+//using System.Collections.Generic;
+//using System.IO;
+//using UnityEngine;
+//using UnityEngine.Networking;
+//using static MapEditor;
+//using static UnityEditor.PlayerSettings;
 
-public class StageLoader : MonoBehaviour
-{
-    [Header("プレハブパレット")]
-    [Tooltip("キー毎に割り当てられているプレハブ")]
-    [SerializeField] private GameObject[] tilePrefab;
+//public class StageLoader : MonoBehaviour
+//{
+//    [Header("プレハブパレット")]
+//    [Tooltip("キー毎に割り当てられているプレハブ")]
+//    [SerializeField] private GameObject[] tilePrefab;
 
-    [Header("現在のステージ番号")]
-    [Tooltip("現在編集しているステージの番号")]
-    [SerializeField] private int stageNumber = 5;
+//    [Header("現在のステージ番号")]
+//    [Tooltip("現在編集しているステージの番号")]
+//    [SerializeField] private int stageNumber = 5;
 
-    [Header("マップフォルダ")]
-    [Tooltip("現在選択されているファイルのマップに読み書きします")]
-    [SerializeField] private string mapFolder = "MapData";
+//    [Header("マップフォルダ")]
+//    [Tooltip("現在選択されているファイルのマップに読み書きします")]
+//    [SerializeField] private string mapFolder = "MapData";
 
-    [Header("登録されているマップルート")]
-    [Tooltip("このオブジェを親としてマップが生成されます")]
-    [SerializeField] private Transform mapRoot;
+//    [Header("登録されているマップルート")]
+//    [Tooltip("このオブジェを親としてマップが生成されます")]
+//    [SerializeField] private Transform mapRoot;
 
 
 
-    private float gridSize = 1.0f;
-    private readonly List<GameObject> spawnedTiles = new List<GameObject>();
-    void Start()
-    {
-        LoadMap();
+//    private float gridSize = 1.0f;
+//    private readonly List<GameObject> spawnedTiles = new List<GameObject>();
+//    void Start()
+//    {
+//        LoadMap();
 
-    }
+//    }
 
-    void LoadMap()
-    {
+//    void LoadMap()
+//    {
 
-#if UNITY_WEBGL && !UNITY_EDITOR //ビルド時でWebGL版
-    //StartCoroutine(BuildStageMapFromJsonWeb());
-     BuildStageMapFromJsonResources(); //Resourceからの読み込み
-#else
-        BuildStageMapFromJson();
-#endif
+//#if UNITY_WEBGL && !UNITY_EDITOR //ビルド時でWebGL版
+//    //StartCoroutine(BuildStageMapFromJsonWeb());
+//     BuildStageMapFromJsonResources(); //Resourceからの読み込み
+//#else
+//        BuildStageMapFromJson();
+//#endif
 
-    }
+//    }
 
-    // 死亡復帰向けに既存ランタイムマップを破棄してから再生成します。
-    public void RebuildStageForRespawn()
-    {
-        ClearSpawnedTiles();
-        LoadMap();        
-    }
+//    // 死亡復帰向けに既存ランタイムマップを破棄してから再生成します。
+//    public void RebuildStageForRespawn()
+//    {
+//        ClearSpawnedTiles();
+//        LoadMap();
+//    }
 
-    // JSON 読み込みとタイル生成の本体処理です。
-    void BuildStageMapFromJson()
-    {
+//    // JSON 読み込みとタイル生成の本体処理です。
+//    void BuildStageMapFromJson()
+//    {
 
-        string folder;
-        string path;
+//        string folder;
+//        string path;
 
-#if UNITY_EDITOR
-        // Unityエディターで実行されている場合
+//#if UNITY_EDITOR
+//        // Unityエディターで実行されている場合
 
-        folder = Path.Combine(Application.dataPath, mapFolder);
-        //folder = Application.dataPath +
-        // "/Scenes/DebugScenes/koki/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData";
-#else
-// ビルドされたゲームで実行されている場合
-folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData");
-#endif
+//        folder = Path.Combine(Application.dataPath, mapFolder);
+//        //folder = Application.dataPath +
+//        // "/Scenes/DebugScenes/koki/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData";
+//#else
+//// ビルドされたゲームで実行されている場合
+//folder = Path.Combine(Application.streamingAssetsPath, "DebugMapEditor_MapData");
+//#endif
 
-        path = Path.Combine(folder, "Stage_" + stageNumber + ".json");
+//        path = Path.Combine(folder, "Stage_" + stageNumber + ".json");
 
 
-        if (!File.Exists(path))
-        {
-            Debug.LogWarning("マップファイルが見つかりません。");
-            return;
-        }
+//        if (!File.Exists(path))
+//        {
+//            Debug.LogWarning("マップファイルが見つかりません。");
+//            return;
+//        }
 
-        string json = File.ReadAllText(path);
+//        string json = File.ReadAllText(path);
 
-        MapData mapData = JsonUtility.FromJson<MapData>(json);
+//        MapData mapData = JsonUtility.FromJson<MapData>(json);
 
-        //spawnedTiles.Clear();
-        ClearSpawnedTiles();
+//        //spawnedTiles.Clear();
+//        ClearSpawnedTiles();
 
-        foreach (TileData data in mapData.tiles)
-        {
-            Vector3 spawnPos = new Vector3(
-                data.x * gridSize,
-                data.y * gridSize,
-                data.z * gridSize - 0.01f
-            );
+//        foreach (TileData data in mapData.tiles)
+//        {
+//            Vector3 spawnPos = new Vector3(
+//                data.x * gridSize,
+//                data.y * gridSize,
+//                data.z * gridSize - 0.01f
+//            );
 
 
-        
-            //GameObject tile =
-            //    Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
-            GameObject tile =
-                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity, mapRoot);
 
-            TileType tileType = tile.GetComponent<TileType>();
+//            //GameObject tile =
+//            //    Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
+//            GameObject tile =
+//                Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity, mapRoot);
 
-            tileType.type = data.type;
-            tileType.gimmickID = data.gimmickID;
+//            TileType tileType = tile.GetComponent<TileType>();
 
-            spawnedTiles.Add(tile);
-        }
+//            tileType.type = data.type;
+//            tileType.gimmickID = data.gimmickID;
 
-        ConnectGimmicks(spawnedTiles); //   ギミックの接続
-    }
+//            spawnedTiles.Add(tile);
+//        }
 
+//        ConnectGimmicks(spawnedTiles); //   ギミックの接続
+//    }
 
-    IEnumerator BuildStageMapFromJsonWeb()
-    {
-        string path = Application.streamingAssetsPath + "/" + mapFolder + "/Stage_" + stageNumber + ".json";
 
-        UnityWebRequest request = UnityWebRequest.Get(path);
-        yield return request.SendWebRequest();
+//    IEnumerator BuildStageMapFromJsonWeb()
+//    {
+//        string path = Application.streamingAssetsPath + "/" + mapFolder + "/Stage_" + stageNumber + ".json";
 
-        if (request.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError("Map Load Error: " + request.error);
-            yield break;
-        }
+//        UnityWebRequest request = UnityWebRequest.Get(path);
+//        yield return request.SendWebRequest();
 
-        string json = request.downloadHandler.text;
+//        if (request.result != UnityWebRequest.Result.Success)
+//        {
+//            Debug.LogError("Map Load Error: " + request.error);
+//            yield break;
+//        }
 
-        ClearSpawnedTiles();
+//        string json = request.downloadHandler.text;
 
-        MapData mapData = JsonUtility.FromJson<MapData>(json);
-        if (mapData == null || mapData.tiles == null)
-        {
-            Debug.LogError("MapData parse error");
-            yield break;
-        }
+//        ClearSpawnedTiles();
 
-        foreach (TileData data in mapData.tiles)
-        {
-            Vector3 spawnPos = new Vector3(
-                data.x * gridSize,
-                data.y * gridSize,
-                data.z * gridSize - 0.01f
-            );
+//        MapData mapData = JsonUtility.FromJson<MapData>(json);
+//        if (mapData == null || mapData.tiles == null)
+//        {
+//            Debug.LogError("MapData parse error");
+//            yield break;
+//        }
 
-            GameObject tile =
-            Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity, mapRoot);
+//        foreach (TileData data in mapData.tiles)
+//        {
+//            Vector3 spawnPos = new Vector3(
+//                data.x * gridSize,
+//                data.y * gridSize,
+//                data.z * gridSize - 0.01f
+//            );
 
-            TileType tileType = tile.GetComponent<TileType>();
-            tileType.type = data.type;
-            tileType.gimmickID = data.gimmickID;
+//            GameObject tile =
+//            Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity, mapRoot);
 
-            spawnedTiles.Add(tile);
-        }
+//            TileType tileType = tile.GetComponent<TileType>();
+//            tileType.type = data.type;
+//            tileType.gimmickID = data.gimmickID;
 
-        ConnectGimmicks(spawnedTiles);
-    }
+//            spawnedTiles.Add(tile);
+//        }
 
+//        ConnectGimmicks(spawnedTiles);
+//    }
 
-    void BuildStageMapFromJsonResources() //Resourceからの読み込み (ファイル場所に注意)
-    {
-        TextAsset jsonFile = Resources.Load<TextAsset>("Maps/Stage_" + stageNumber);
 
-        if (jsonFile == null)
-        {
-            Debug.LogError("Map not found: Stage_" + stageNumber);
-            return;
-        }
+//    void BuildStageMapFromJsonResources() //Resourceからの読み込み (ファイル場所に注意)
+//    {
+//        TextAsset jsonFile = Resources.Load<TextAsset>("Maps/Stage_" + stageNumber);
 
-        string json = jsonFile.text;
+//        if (jsonFile == null)
+//        {
+//            Debug.LogError("Map not found: Stage_" + stageNumber);
+//            return;
+//        }
 
-        ClearSpawnedTiles();
+//        string json = jsonFile.text;
 
-        MapData mapData = JsonUtility.FromJson<MapData>(json);
+//        ClearSpawnedTiles();
 
-        foreach (TileData data in mapData.tiles)
-        {
-            Vector3 spawnPos = new Vector3(
-                data.x * gridSize,
-                data.y * gridSize,
-                data.z * gridSize - 0.01f
-            );
+//        MapData mapData = JsonUtility.FromJson<MapData>(json);
 
-            //GameObject tile =
-            //    Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
-            GameObject tile =
-               Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity, mapRoot);
+//        foreach (TileData data in mapData.tiles)
+//        {
+//            Vector3 spawnPos = new Vector3(
+//                data.x * gridSize,
+//                data.y * gridSize,
+//                data.z * gridSize - 0.01f
+//            );
 
-            TileType tileType = tile.GetComponent<TileType>();
-            tileType.type = data.type;
-            tileType.gimmickID = data.gimmickID;
+//            //GameObject tile =
+//            //    Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity);
+//            GameObject tile =
+//               Instantiate(tilePrefab[(int)data.type], spawnPos, Quaternion.identity, mapRoot);
 
-            spawnedTiles.Add(tile);
-        }
+//            TileType tileType = tile.GetComponent<TileType>();
+//            tileType.type = data.type;
+//            tileType.gimmickID = data.gimmickID;
 
-        ConnectGimmicks(spawnedTiles);
-    }
+//            spawnedTiles.Add(tile);
+//        }
 
+//        ConnectGimmicks(spawnedTiles);
+//    }
 
 
 
-    
-    // StageLoader が生成したランタイムタイルのみを明示的に破棄します。
-    void ClearSpawnedTiles()
-    {
-  
-        for (int i = mapRoot.childCount - 1; i >= 0; i--)
-        {
-            GameObject obj = mapRoot.GetChild(i).gameObject;
 
-            //実行外かプレイ中かに応じて消去方法を変更する
-            if (Application.isPlaying)
-                Destroy(obj);
-            else
-                DestroyImmediate(obj);
-        }
 
-        spawnedTiles.Clear();
-    }
+//    // StageLoader が生成したランタイムタイルのみを明示的に破棄します。
+//    void ClearSpawnedTiles()
+//    {
 
-    // 生成済みタイル同士の関連を見て Slide と Switch の接続を組み直します。
+//        for (int i = mapRoot.childCount - 1; i >= 0; i--)
+//        {
+//            GameObject obj = mapRoot.GetChild(i).gameObject;
 
+//            //実行外かプレイ中かに応じて消去方法を変更する
+//            if (Application.isPlaying)
+//                Destroy(obj);
+//            else
+//                DestroyImmediate(obj);
+//        }
 
-    void ConnectGimmicks(List<GameObject> tiles)
-    {
-        foreach (var tile in tiles)
-        {
-            SlideGimmick slide = tile.GetComponent<SlideGimmick>();
+//        spawnedTiles.Clear();
+//    }
 
-            if (slide == null) continue;
+//    // 生成済みタイル同士の関連を見て Slide と Switch の接続を組み直します。
 
-            TileType slideTile = tile.GetComponent<TileType>();
 
-            foreach (var other in tiles)
-            {
-                SwitchGimmick sw = other.GetComponent<SwitchGimmick>();
+//    void ConnectGimmicks(List<GameObject> tiles)
+//    {
+//        foreach (var tile in tiles)
+//        {
+//            SlideGimmick slide = tile.GetComponent<SlideGimmick>();
 
-                if (sw == null) continue;
+//            if (slide == null) continue;
 
-                TileType swTile = other.GetComponent<TileType>();
+//            TileType slideTile = tile.GetComponent<TileType>();
 
-                if (slideTile.gimmickID == swTile.gimmickID)
-                {
-                    slide.SetSwitch(sw);
-                }
-            }
-        }
-    }
+//            foreach (var other in tiles)
+//            {
+//                SwitchGimmick sw = other.GetComponent<SwitchGimmick>();
 
+//                if (sw == null) continue;
 
-    //===========================-------
-    //　　　　　実行外関数
-    //===========================-------
-    [ContextMenu("Load Map (Editor)")]
-    void LoadMapOutPlaying()
-    {
-        Debug.Log("spawnedTiles count = " + spawnedTiles.Count);
-        ClearSpawnedTiles();
-        LoadMap();
-        Debug.Log("spawnedTiles count = " + spawnedTiles.Count);
-    }
+//                TileType swTile = other.GetComponent<TileType>();
 
+//                if (slideTile.gimmickID == swTile.gimmickID)
+//                {
+//                    slide.SetSwitch(sw);
+//                }
+//            }
+//        }
+//    }
 
-    [ContextMenu("Clear Loaded Map (Editor)")]
-    void ClearLoadedMapOutPlaying()
-    {
-        ClearSpawnedTiles();
-        spawnedTiles.Clear();
-        Debug.Log("Loaded Map Cleared");
-    }
-}
+
+//    //===========================-------
+//    //　　　　　実行外関数
+//    //===========================-------
+//    [ContextMenu("Load Map (Editor)")]
+//    void LoadMapOutPlaying()
+//    {
+//        Debug.Log("spawnedTiles count = " + spawnedTiles.Count);
+//        ClearSpawnedTiles();
+//        LoadMap();
+//        Debug.Log("spawnedTiles count = " + spawnedTiles.Count);
+//    }
+
+
+//    [ContextMenu("Clear Loaded Map (Editor)")]
+//    void ClearLoadedMapOutPlaying()
+//    {
+//        ClearSpawnedTiles();
+//        spawnedTiles.Clear();
+//        Debug.Log("Loaded Map Cleared");
+//    }
+//}

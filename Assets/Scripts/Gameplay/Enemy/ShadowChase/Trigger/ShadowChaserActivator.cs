@@ -1,7 +1,7 @@
+using System.Collections;
 using UnityEngine;
 
-// 特定エリア侵入で ShadowChaserEnemy を有効化するトリガー。
-// トリガーごとに別のスポーン位置を持てる。
+// 各部屋のセーフゾーンからプレイヤーが出た時に ShadowChaserEnemy を有効化する。
 // StageResetSystem からは IRespawnResettable 経由で未使用状態へ戻される。
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider))]
@@ -12,12 +12,8 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
     [SerializeField] private ShadowChaserEnemy targetEnemy;
 
     [Header("スポーン位置")]
-    [Tooltip("このトリガーから起動した時のスポーン位置です。未設定時はこのトリガー自身の Transform を使います。")]
+    [Tooltip("セーフゾーン退出後に敵を出現させる位置です。未設定時はこの GameObject の Transform を使います。")]
     [SerializeField] private Transform spawnPoint;
-
-    [Header("ワンショットモード")]
-    [Tooltip("一度起動したらこのトリガーを無効化するかです。")]
-    [SerializeField] private bool oneShot = true;
 
     [Header("プレイヤータグ判定使用")]
     [Tooltip("Player タグで判定するかです。")]
@@ -27,133 +23,233 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
     [Tooltip("Player タグ判定に使うタグ名です。")]
     [SerializeField] private string playerTag = "Player";
 
-    private Collider triggerCollider;
-    private bool hasTriggered = false;
+    [Header("セーフゾーン設定")]
+    [Tooltip("プレイヤーがこのセーフゾーンから出てから、敵がスポーンするまでの遅延時間です。0なら出た瞬間にスポーンします。")]
+    [SerializeField] private float spawnDelay = 0.0f;
 
-    // Respawn 用に保存する初期状態
+    [Tooltip("このセーフゾーンが属する Room です。未設定時は親階層から自動検索します。")]
+    [SerializeField] private Room parentRoom;
+
+    private Collider safeZoneCollider;
+    private RoomManager roomManager;
+    private Coroutine spawnCoroutine;
+
+    private bool isRoomActive;
+    private bool hasStartedSpawn;
+
     private bool hasCapturedInitialState;
     private bool initialEnabled;
     private bool initialColliderEnabled;
-    private bool initialHasTriggered;
+    private bool initialHasStartedSpawn;
 
-    // 初期化処理。
-    // Collider を Trigger として設定し、スポーン位置の初期化を行う。
     private void Awake()
     {
-        triggerCollider = GetComponent<Collider>();
-        triggerCollider.isTrigger = true;
+        safeZoneCollider = GetComponent<Collider>();
+        safeZoneCollider.isTrigger = true;
 
-        // スポーン位置が未設定の場合は自身の Transform を使用
         if (spawnPoint == null)
         {
             spawnPoint = transform;
         }
+
+        if (parentRoom == null)
+        {
+            parentRoom = GetComponentInParent<Room>();
+        }
+
+        roomManager = FindFirstObjectByType<RoomManager>();
     }
 
-    // トリガーに何かが侵入した時の処理。
-    // プレイヤーが侵入したら ShadowChaserEnemy を起動する。
-    private void OnTriggerEnter(Collider other)
+    private void Start()
     {
-        // ターゲットの敵が未設定なら何もしない
+        if (roomManager != null)
+        {
+            roomManager.OnRoomTransitionComplete += OnRoomTransitionComplete;
+        }
+
+        RefreshRoomActiveState();
+    }
+
+    private void OnDestroy()
+    {
+        if (roomManager != null)
+        {
+            roomManager.OnRoomTransitionComplete -= OnRoomTransitionComplete;
+        }
+    }
+
+    private void OnRoomTransitionComplete(Room newRoom)
+    {
+        if (parentRoom == null)
+        {
+            isRoomActive = true;
+            return;
+        }
+
+        isRoomActive = newRoom == parentRoom;
+
+        // この部屋に入った時点ではスポーンしない。
+        // セーフゾーンを出た時にだけスポーン処理を開始する。
+        if (isRoomActive)
+        {
+            StopSpawnCoroutine();
+            hasStartedSpawn = false;
+        }
+        else
+        {
+            StopSpawnCoroutine();
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (!isRoomActive)
+        {
+            return;
+        }
+
+        if (roomManager != null && roomManager.IsTransitioning)
+        {
+            return;
+        }
+
         if (targetEnemy == null)
         {
             return;
         }
 
-        // プレイヤーでなければ無視
         if (!IsPlayer(other))
         {
             return;
         }
 
-        // oneShot モードで既に発動済みなら無視
-        if (hasTriggered && oneShot)
+        if (hasStartedSpawn)
         {
             return;
         }
 
-        // トリガー発動フラグを立てる
-        hasTriggered = true;
+        StartSpawnAfterSafeZoneExit();
+    }
 
-        // スポーン要求を作成し、敵を起動
+    private void StartSpawnAfterSafeZoneExit()
+    {
+        hasStartedSpawn = true;
+
+        if (spawnDelay > 0f)
+        {
+            StopSpawnCoroutine();
+            spawnCoroutine = StartCoroutine(DelayedSpawnCoroutine());
+        }
+        else
+        {
+            ActivateEnemy();
+        }
+    }
+
+    private IEnumerator DelayedSpawnCoroutine()
+    {
+        yield return new WaitForSeconds(spawnDelay);
+
+        ActivateEnemy();
+
+        spawnCoroutine = null;
+    }
+
+    private void ActivateEnemy()
+    {
+        if (targetEnemy == null)
+        {
+            return;
+        }
+
         ShadowChaserSpawnRequest request = new ShadowChaserSpawnRequest(
             spawnPoint.position,
             spawnPoint.rotation);
 
         targetEnemy.Activate(request);
-
-        // oneShot モードなら、このトリガーを無効化
-        if (oneShot)
-        {
-            enabled = false;
-
-            if (triggerCollider != null)
-            {
-                triggerCollider.enabled = false;
-            }
-        }
     }
 
-    // Respawn システム用：初期状態をキャプチャする。
-    // リスポーン時にこの状態に戻すことができる。
     public void CaptureInitialState()
     {
-        // 既にキャプチャ済みなら何もしない
         if (hasCapturedInitialState)
         {
             return;
         }
 
-        if (triggerCollider == null)
+        if (safeZoneCollider == null)
         {
-            triggerCollider = GetComponent<Collider>();
+            safeZoneCollider = GetComponent<Collider>();
         }
 
-        // 初期状態を保存
         initialEnabled = enabled;
-        initialColliderEnabled = triggerCollider != null && triggerCollider.enabled;
-        initialHasTriggered = hasTriggered;
+        initialColliderEnabled = safeZoneCollider != null && safeZoneCollider.enabled;
+        initialHasStartedSpawn = hasStartedSpawn;
 
         hasCapturedInitialState = true;
     }
 
-    // Respawn システム用：キャプチャした初期状態にリセットする。
-    // キャプチャしていない場合はデフォルトの状態にリセットする。
     public void ResetToRespawnState()
     {
-        if (triggerCollider == null)
+        if (safeZoneCollider == null)
         {
-            triggerCollider = GetComponent<Collider>();
+            safeZoneCollider = GetComponent<Collider>();
         }
 
-        // 初期状態がキャプチャされている場合はそれを復元
+        StopSpawnCoroutine();
+
         if (hasCapturedInitialState)
         {
             enabled = initialEnabled;
-            hasTriggered = initialHasTriggered;
+            hasStartedSpawn = initialHasStartedSpawn;
 
-            if (triggerCollider != null)
+            if (safeZoneCollider != null)
             {
-                triggerCollider.enabled = initialColliderEnabled;
-                triggerCollider.isTrigger = true;
+                safeZoneCollider.enabled = initialColliderEnabled;
+                safeZoneCollider.isTrigger = true;
             }
         }
         else
         {
-            // キャプチャされていない場合はデフォルトの状態に
-            hasTriggered = false;
             enabled = true;
+            hasStartedSpawn = false;
 
-            if (triggerCollider != null)
+            if (safeZoneCollider != null)
             {
-                triggerCollider.enabled = true;
-                triggerCollider.isTrigger = true;
+                safeZoneCollider.enabled = true;
+                safeZoneCollider.isTrigger = true;
             }
+        }
+
+        // リスポーン時に即スポーンしない。
+        // 現在部屋なら、セーフゾーン退出待ちに戻す。
+        RefreshRoomActiveState();
+    }
+
+    private void RefreshRoomActiveState()
+    {
+        if (roomManager == null || parentRoom == null)
+        {
+            isRoomActive = true;
+            return;
+        }
+
+        isRoomActive = roomManager.CurrentRoom == parentRoom && !roomManager.IsTransitioning;
+    }
+
+    private void StopSpawnCoroutine()
+    {
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
         }
     }
 
-    // プレイヤーかどうかを判定する。
-    // タグ判定と PlayerController コンポーネントの有無で判定する。
+    private void OnDisable()
+    {
+        StopSpawnCoroutine();
+    }
+
     private bool IsPlayer(Collider other)
     {
         if (other == null)
@@ -161,13 +257,11 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
             return false;
         }
 
-        // タグ判定が有効な場合はタグで判定
         if (usePlayerTag && other.CompareTag(playerTag))
         {
             return true;
         }
 
-        // タグが無い場合は PlayerController コンポーネントの有無で判定
         PlayerController player = other.GetComponentInParent<PlayerController>();
         return player != null;
     }

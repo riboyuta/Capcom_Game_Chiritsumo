@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Rigidbody))]
@@ -11,6 +11,10 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
     [Header("見た目制御")]
     [Tooltip("見た目制御コンポーネントです。未設定時は自動取得します。")]
     [SerializeField] private HandChaserView view;
+
+    [Header("壁モデル表示")]
+    [Tooltip("部屋サイズに合わせて複数の手モデルを生成するViewです。未設定時は自動取得します。")]
+    [SerializeField] private HandChaserModelView wallModelView;
 
     [Header("接近エフェクト")]
     [Tooltip("接近エフェクト制御コンポーネントです。未設定時は自動取得します。")]
@@ -52,6 +56,20 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
     [Tooltip("デバッグログを有効にします。")]
     [SerializeField] private bool enableDebugLog;
 
+    [Header("ヒットボックス自動調整")]
+    [Tooltip("部屋のサイズに応じてヒットボックスを自動調整するかどうかです。")]
+    [SerializeField] private bool autoAdjustHitbox = true;
+
+    [Header("ヒットボックス視覚化")]
+    [Tooltip("ヒットボックスをワイヤーフレームで視覚化します。")]
+    [SerializeField] private bool visualizeHitbox = true;
+
+    [Tooltip("ワイヤーフレームの表示色です。")]
+    [SerializeField] private Color hitboxColor = new Color(1f, 0f, 0f, 0.8f);
+
+    private Material lineMaterial;
+    private Camera mainCamera;
+
     private Rigidbody rb;
     private Collider cachedCollider;
     private Renderer[] cachedRenderers;
@@ -61,6 +79,9 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
     private Vector3 initialPosition;
     private Quaternion initialRotation;
     private bool hasCapturedInitialState;
+
+    // ヒットボックス調整ヘルパー
+    private HandChaserHitboxAdjuster hitboxAdjuster;
 
     private void Reset()
     {
@@ -81,13 +102,26 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         cachedCollider = GetComponent<Collider>();
         cachedRenderers = GetComponentsInChildren<Renderer>(true);
 
-        // 初期位置を保存
-        initialPosition = transform.position;
-        initialRotation = transform.rotation;
-
         // 必要なコンポーネントを取得
         TryGetComponents();
         ResolvePlayerIfNeeded();
+
+        // ヒットボックス調整ヘルパーを初期化
+        if (autoAdjustHitbox)
+        {
+            hitboxAdjuster = new HandChaserHitboxAdjuster(transform, cachedCollider, movement, wallModelView, enableDebugLog);
+            hitboxAdjuster.Initialize();
+        }
+
+        // 視覚化用のマテリアル作成
+        if (visualizeHitbox)
+        {
+            CreateLineMaterial();
+            mainCamera = Camera.main;
+        }
+
+        // 初期状態をキャッシュ（位置・回転・設定値）
+        CaptureInitialState();
 
         // 起動状態を設定
         isActivated = startActive;
@@ -105,6 +139,15 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             {
                 proximityEffects.IsActive = true;
             }
+        }
+    }
+
+    private void Start()
+    {
+        // 初期部屋に既にいる場合、ヒットボックスを調整
+        if (autoAdjustHitbox && hitboxAdjuster != null)
+        {
+            hitboxAdjuster.AdjustIfInCurrentRoom();
         }
     }
 
@@ -217,6 +260,19 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         // 現在の位置と回転を初期状態として保存
         initialPosition = transform.position;
         initialRotation = transform.rotation;
+
+        // Movement の初期状態もキャッシュ
+        if (movement != null)
+        {
+            movement.CaptureInitialState();
+        }
+
+        // ヒットボックス調整ヘルパーのイベント購読
+        if (autoAdjustHitbox && hitboxAdjuster != null)
+        {
+            hitboxAdjuster.SubscribeToRoomEvents();
+        }
+
         hasCapturedInitialState = true;
     }
 
@@ -245,9 +301,10 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             rb.isKinematic = wasKinematic;
         }
 
-        // 各コンポーネントをリセット
+        // Movement の初期状態をリセット
         if (movement != null)
         {
+            movement.ResetToInitialState();
             movement.IsActive = isActivated;
         }
 
@@ -262,6 +319,18 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         if (!gameObject.activeSelf)
         {
             gameObject.SetActive(true);
+        }
+
+        // ヒットボックスをリセットしてから、必要なら再調整
+        if (autoAdjustHitbox && hitboxAdjuster != null)
+        {
+            hitboxAdjuster.ResetHitboxSize();
+            hitboxAdjuster.AdjustIfInCurrentRoom();
+
+            if (enableDebugLog)
+            {
+                Debug.Log($"[HandChaserEnemy] Re-adjusted hitbox after reset", this);
+            }
         }
     }
 
@@ -286,6 +355,11 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
                     cachedRenderers[i].enabled = visible;
                 }
             }
+        }
+
+        if (wallModelView != null)
+        {
+            wallModelView.SetVisible(visible);
         }
     }
 
@@ -323,6 +397,11 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
             view = GetComponent<HandChaserView>();
         }
 
+        if (wallModelView == null)
+        {
+            wallModelView = GetComponent<HandChaserModelView>();
+        }
+
         if (proximityEffects == null)
         {
             proximityEffects = GetComponent<ProximityEffectController>();
@@ -345,6 +424,21 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         }
     }
 
+    private void OnDestroy()
+    {
+        // イベント購読解除
+        if (autoAdjustHitbox && hitboxAdjuster != null)
+        {
+            hitboxAdjuster.UnsubscribeFromRoomEvents();
+        }
+
+        // マテリアルの破棄
+        if (lineMaterial != null)
+        {
+            Destroy(lineMaterial);
+        }
+    }
+
     private void SetPlayerTarget(Transform target)
     {
         if (movement != null)
@@ -356,5 +450,98 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         {
             proximityEffects.SetPlayerTarget(target);
         }
+    }
+
+    private void CreateLineMaterial()
+    {
+        Shader shader = Shader.Find("Hidden/Internal-Colored");
+        lineMaterial = new Material(shader);
+        lineMaterial.hideFlags = HideFlags.HideAndDontSave;
+        lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        lineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        lineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+        lineMaterial.SetInt("_ZWrite", 0);
+    }
+
+    private void OnRenderObject()
+    {
+        if (!visualizeHitbox || lineMaterial == null)
+        {
+            return;
+        }
+
+        Collider collider = cachedCollider;
+        if (collider == null || !(collider is BoxCollider))
+        {
+            return;
+        }
+
+        BoxCollider boxCollider = collider as BoxCollider;
+
+        lineMaterial.SetPass(0);
+
+        GL.PushMatrix();
+        GL.MultMatrix(transform.localToWorldMatrix);
+        GL.Begin(GL.LINES);
+        GL.Color(hitboxColor);
+
+        Vector3 center = boxCollider.center;
+        Vector3 size = boxCollider.size;
+        Vector3 halfSize = size * 0.5f;
+
+        // 8つの頂点を計算
+        Vector3 v0 = center + new Vector3(-halfSize.x, -halfSize.y, -halfSize.z);
+        Vector3 v1 = center + new Vector3(halfSize.x, -halfSize.y, -halfSize.z);
+        Vector3 v2 = center + new Vector3(halfSize.x, halfSize.y, -halfSize.z);
+        Vector3 v3 = center + new Vector3(-halfSize.x, halfSize.y, -halfSize.z);
+        Vector3 v4 = center + new Vector3(-halfSize.x, -halfSize.y, halfSize.z);
+        Vector3 v5 = center + new Vector3(halfSize.x, -halfSize.y, halfSize.z);
+        Vector3 v6 = center + new Vector3(halfSize.x, halfSize.y, halfSize.z);
+        Vector3 v7 = center + new Vector3(-halfSize.x, halfSize.y, halfSize.z);
+
+        // 底面
+        GL.Vertex(v0); GL.Vertex(v1);
+        GL.Vertex(v1); GL.Vertex(v5);
+        GL.Vertex(v5); GL.Vertex(v4);
+        GL.Vertex(v4); GL.Vertex(v0);
+
+        // 上面
+        GL.Vertex(v3); GL.Vertex(v2);
+        GL.Vertex(v2); GL.Vertex(v6);
+        GL.Vertex(v6); GL.Vertex(v7);
+        GL.Vertex(v7); GL.Vertex(v3);
+
+        // 縦のエッジ
+        GL.Vertex(v0); GL.Vertex(v3);
+        GL.Vertex(v1); GL.Vertex(v2);
+        GL.Vertex(v5); GL.Vertex(v6);
+        GL.Vertex(v4); GL.Vertex(v7);
+
+        GL.End();
+        GL.PopMatrix();
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (!visualizeHitbox)
+        {
+            return;
+        }
+
+        Collider collider = cachedCollider != null ? cachedCollider : GetComponent<Collider>();
+        if (collider == null || !(collider is BoxCollider))
+        {
+            return;
+        }
+
+        BoxCollider boxCollider = collider as BoxCollider;
+
+        Gizmos.color = hitboxColor;
+        Matrix4x4 originalMatrix = Gizmos.matrix;
+        Gizmos.matrix = transform.localToWorldMatrix;
+
+        Gizmos.DrawWireCube(boxCollider.center, boxCollider.size);
+
+        Gizmos.matrix = originalMatrix;
     }
 }

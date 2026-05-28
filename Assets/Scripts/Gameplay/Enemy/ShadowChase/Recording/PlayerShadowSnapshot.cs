@@ -24,7 +24,6 @@ public struct PlayerShadowSnapshot
     // 行動状態
     public bool isWallSliding;
     public bool isDashing;
-    public bool isFastFalling;
 
     // 制約状態
     public bool isActionLocked;

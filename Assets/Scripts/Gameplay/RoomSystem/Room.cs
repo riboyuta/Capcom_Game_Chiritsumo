@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -8,8 +9,8 @@ public sealed class Room : MonoBehaviour
     [SerializeField] private string roomId = "Room_01";
 
     [Header("部屋境界")]
-    [Tooltip("この部屋のカメラ境界と部屋矩形を表す CameraBounds です。")]
-    [SerializeField] private CameraBounds roomBounds;
+    [Tooltip("この部屋のカメラ境界と部屋矩形を表す RoomBounds です。")]
+    [SerializeField] private RoomBounds roomBounds;
 
     [Header("隣接部屋: 左右")]
     [Tooltip("この部屋の左へ抜けた時の遷移先です。未設定なら左遷移はできません。")]
@@ -38,6 +39,10 @@ public sealed class Room : MonoBehaviour
 
     [Tooltip("下側からこの部屋へ入った時、または下遷移に対応する復帰位置です。未使用なら未設定で構いません。")]
     [SerializeField] private Transform respawnFromDown;
+
+    [Header("一方通行設定")]
+    [Tooltip("この Room へ入った時、入ってきた面の戻り防止 Blocker を有効化するかを設定します。")]
+    [SerializeField] private bool enableOneWayBlockerOnEntry = false;
 
     [Header("カメラ注視位置")]
     [Tooltip("この部屋で使うカメラ注視オフセットです。Xで左右寄せ、Yで上下寄せを調整します。")]
@@ -74,8 +79,15 @@ public sealed class Room : MonoBehaviour
     [Tooltip("overrideRoomTransitionDuration が有効な時に使う遷移時間です。")]
     [SerializeField] private float roomTransitionDuration = 0.20f;
 
+    [Header("HandChaser 設定")]
+    [Tooltip("有効にすると、子階層の HandChaserMovement に設定を適用します。")]
+    [SerializeField] private bool useHandChaserSettings = false;
+
+    [Tooltip("この部屋の HandChaserMovement に適用する設定です。")]
+    [SerializeField] private HandChaserMovementSettings handChaserSettings = HandChaserMovementSettings.Default;
+
     public string RoomId => roomId;
-    public CameraBounds RoomBounds => roomBounds;
+    public RoomBounds RoomBounds => roomBounds;
     public Vector2 RoomFocusOffset => roomFocusOffset;
 
     public Room LeftRoom => leftRoom;
@@ -88,6 +100,7 @@ public sealed class Room : MonoBehaviour
     public Transform RespawnFromUp => respawnFromUp;
     public Transform RespawnFromDown => respawnFromDown;
 
+    public bool EnableOneWayBlockerOnEntry => enableOneWayBlockerOnEntry;
     public bool HasFollowSmoothingOverride => overrideFollowSmoothing;
     public float SmoothTimeX => smoothTimeX;
     public float SmoothTimeY => smoothTimeY;
@@ -99,4 +112,45 @@ public sealed class Room : MonoBehaviour
     public float OrthographicSizeSmoothTime => orthographicSizeSmoothTime;
     public bool HasRoomTransitionDurationOverride => overrideRoomTransitionDuration;
     public float RoomTransitionDuration => roomTransitionDuration;
+
+    private void Awake()
+    {
+        // HandChaserMovement に設定を適用
+        ApplyHandChaserSettings();
+    }
+
+    private void ApplyHandChaserSettings()
+    {
+        // 設定適用が無効なら何もしない
+        if (!useHandChaserSettings)
+        {
+            return;
+        }
+
+        // 子階層から HandChaserMovement を自動検索
+        HandChaserMovement[] handChasers = GetComponentsInChildren<HandChaserMovement>(true);
+
+        if (handChasers == null || handChasers.Length == 0)
+        {
+            return;
+        }
+
+        // 見つかった全ての HandChaserMovement に設定を適用
+        foreach (var handChaser in handChasers)
+        {
+            if (handChaser != null)
+            {
+                handChaser.ApplySettings(handChaserSettings);
+            }
+        }
+    }
+
+    // エディタでの変更を即座に反映
+    private void OnValidate()
+    {
+        if (Application.isPlaying)
+        {
+            ApplyHandChaserSettings();
+        }
+    }
 }

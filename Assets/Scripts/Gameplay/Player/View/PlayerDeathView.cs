@@ -3,7 +3,7 @@ using UnityEngine;
 // 責務:
 // - プレイヤー死亡時の見た目演出を管理する
 // - Damage 死亡時の倒れイントロ演出を再生する
-// - DeathCause に応じた黒トランジション開始 / 終了を DeathTransitionView へ中継する
+// - PlayerDeathCause に応じた黒トランジション開始 / 終了を DeathTransitionView へ中継する
 // - 回転対象となる PlayerView.ViewRoot を解決し、演出後に見た目を初期状態へ戻す
 //
 // 非責務:
@@ -14,7 +14,7 @@ using UnityEngine;
 // 依存先:
 // - PlayerView: 倒れ演出の回転対象取得に使用
 // - DeathTransitionView: 黒フェードの表示制御に使用
-// - PlayerController.DeathCause: Damage / Hazard の演出分岐キーとして使用
+// - PlayerDeathCause: Damage / Hazard の演出分岐キーとして使用
 //
 // 前提条件:
 // - PlayerView.ViewRoot が倒れ演出の回転対象として使える
@@ -36,41 +36,41 @@ public sealed class PlayerDeathView : MonoBehaviour
     [SerializeField] private DeathTransitionView deathTransitionView;
 
     [Header("Damage演出: イントロ時間(秒)")]
-    [Tooltip("DeathCause.Damage 時に倒れ演出を進める時間です。PlayDamageDeathIntro 後の Update で進行に使います。長くするとゆっくり倒れ、小さくすると素早く倒れます。0 の場合は即時で完了します。")]
+    [Tooltip("PlayerDeathCause.Damage 時に倒れ演出を進める時間です。PlayDamageDeathIntro 後の Update で進行に使います。長くするとゆっくり倒れ、小さくすると素早く倒れます。0 の場合は即時で完了します。")]
     [Min(0f)]
     [SerializeField] private float damageDeathIntroDuration = 0.12f;
 
     [Header("Damage演出: 倒れ角度")]
-    [Tooltip("DeathCause.Damage 時に viewRoot を Z 回転でどこまで倒すかの目標角度です。Update 中の補間終点として使います。大きくすると大きく倒れ、小さくすると控えめな倒れ方になります。")]
+    [Tooltip("PlayerDeathCause.Damage 時に viewRoot を Z 回転でどこまで倒すかの目標角度です。Update 中の補間終点として使います。大きくすると大きく倒れ、小さくすると控えめな倒れ方になります。")]
     [Range(0f, 120f)]
     [SerializeField] private float damageDeathTiltAngle = 80f;
 
     [Header("Damage演出: ズーム量オフセット")]
-    [Tooltip("DeathCause.Damage 時に現在の orthographicSize へ加算するズーム量です。主にカメラ側のズーム上書き値として参照されます。負値にするとズームイン寄りになり、正値にするとズームアウト寄りになります。")]
+    [Tooltip("PlayerDeathCause.Damage 時に現在の orthographicSize へ加算するズーム量です。主にカメラ側のズーム上書き値として参照されます。負値にするとズームイン寄りになり、正値にするとズームアウト寄りになります。")]
     [SerializeField] private float damageDeathZoomSizeOffset = -0.35f;
 
     [Header("Damage演出: ズーム補間時間(秒)")]
-    [Tooltip("DeathCause.Damage 時にズーム上書きへ切り替える際の補間時間です。主にカメラ側で参照される設定値です。大きくするとゆっくり切り替わり、小さくすると素早く切り替わります。0 で即時反映です。")]
+    [Tooltip("PlayerDeathCause.Damage 時にズーム上書きへ切り替える際の補間時間です。主にカメラ側で参照される設定値です。大きくするとゆっくり切り替わり、小さくすると素早く切り替わります。0 で即時反映です。")]
     [Min(0f)]
     [SerializeField] private float damageDeathZoomSmoothTime = 0.08f;
 
     [Header("Damage遷移: 黒入り時間(秒)")]
-    [Tooltip("DeathCause.Damage 時の透明から黒へ入る時間です。PlayTransitionIn(Damage) から DeathTransitionView へ渡します。長くするとゆっくり暗転し、小さくすると素早く暗転します。")]
+    [Tooltip("PlayerDeathCause.Damage 時の透明から黒へ入る時間です。PlayTransitionIn(Damage) から DeathTransitionView へ渡します。長くするとゆっくり暗転し、小さくすると素早く暗転します。")]
     [Min(0f)]
     [SerializeField] private float damageBlackInDuration = 0.2f;
 
     [Header("Damage遷移: 黒戻り時間(秒)")]
-    [Tooltip("DeathCause.Damage 時の黒から透明へ戻る時間です。PlayTransitionOut(Damage) から DeathTransitionView へ渡します。長くするとゆっくり復帰し、小さくすると素早く復帰します。")]
+    [Tooltip("PlayerDeathCause.Damage 時の黒から透明へ戻る時間です。PlayTransitionOut(Damage) から DeathTransitionView へ渡します。長くするとゆっくり復帰し、小さくすると素早く復帰します。")]
     [Min(0f)]
     [SerializeField] private float damageBlackOutDuration = 0.25f;
 
     [Header("Hazard遷移: 黒入り時間(秒)")]
-    [Tooltip("DeathCause.Hazard 時の透明から黒へ入る時間です。PlayTransitionIn(Hazard) から DeathTransitionView へ渡します。Damage 用より短くすると、奈落や即死ギミック向けの素早い暗転にできます。")]
+    [Tooltip("PlayerDeathCause.Hazard 時の透明から黒へ入る時間です。PlayTransitionIn(Hazard) から DeathTransitionView へ渡します。Damage 用より短くすると、奈落や即死ギミック向けの素早い暗転にできます。")]
     [Min(0f)]
     [SerializeField] private float hazardBlackInDuration = 0.12f;
 
     [Header("Hazard遷移: 黒戻り時間(秒)")]
-    [Tooltip("DeathCause.Hazard 時の黒から透明へ戻る時間です。PlayTransitionOut(Hazard) から DeathTransitionView へ渡します。Damage 用より短くすると、素早い復帰演出にできます。")]
+    [Tooltip("PlayerDeathCause.Hazard 時の黒から透明へ戻る時間です。PlayTransitionOut(Hazard) から DeathTransitionView へ渡します。Damage 用より短くすると、素早い復帰演出にできます。")]
     [Min(0f)]
     [SerializeField] private float hazardBlackOutDuration = 0.16f;
 
@@ -241,30 +241,30 @@ public sealed class PlayerDeathView : MonoBehaviour
     // 黒トランジション中継
     // =====================================================================
 
-    // DeathCause に応じた黒入り時間を選び、DeathTransitionView へ開始要求を中継する。
-    public void PlayTransitionIn(PlayerController.DeathCause cause)
+    // PlayerDeathCause に応じた黒入り時間を選び、DeathTransitionView へ開始要求を中継する。
+    public void PlayTransitionIn(PlayerDeathCause cause)
     {
         if (deathTransitionView == null)
         {
             deathTransitionView = GetComponentInChildren<DeathTransitionView>();
         }
 
-        float duration = cause == PlayerController.DeathCause.Hazard
+        float duration = cause == PlayerDeathCause.Hazard
             ? HazardBlackInDuration
             : DamageBlackInDuration;
 
         deathTransitionView?.PlayTransitionIn(duration);
     }
 
-    // DeathCause に応じた黒戻り時間を選び、DeathTransitionView へ終了要求を中継する。
-    public void PlayTransitionOut(PlayerController.DeathCause cause)
+    // PlayerDeathCause に応じた黒戻り時間を選び、DeathTransitionView へ終了要求を中継する。
+    public void PlayTransitionOut(PlayerDeathCause cause)
     {
         if (deathTransitionView == null)
         {
             deathTransitionView = GetComponentInChildren<DeathTransitionView>();
         }
 
-        float duration = cause == PlayerController.DeathCause.Hazard
+        float duration = cause == PlayerDeathCause.Hazard
             ? HazardBlackOutDuration
             : DamageBlackOutDuration;
 

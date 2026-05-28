@@ -13,9 +13,9 @@ TagManager:
   - Water
   - UI
   - Ground
+  - One Way Platform
   - Wall
   - Player
-  - 
   - 
   - 
   - 
@@ -41,6 +41,9 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: UseGimmick
+    uniqueID: 2988768659
     locked: 0
   - name: Player
     uniqueID: 3188537091

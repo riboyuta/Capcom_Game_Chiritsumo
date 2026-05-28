@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -16,126 +17,454 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
     [Tooltip("プレイヤーとして判定するタグ名です。")]
     [SerializeField] private string playerTag = "Player";
 
-    [Header("発動設定")]
-    [Tooltip("一度発動した後に再発動させない場合は ON にします。")]
-    [SerializeField] private bool triggerOnlyOnce = true;
+    [Header("セーフゾーン設定")]
+    [Tooltip("プレイヤーがこのセーフゾーンから出てから、敵がスポーンするまでの遅延時間です。0なら出た瞬間にスポーンします。")]
+    [SerializeField] private float spawnDelay = 0.0f;
 
-    private Collider triggerCollider;
-    private bool hasTriggered;
+    [Tooltip("このセーフゾーンが属する Room です。未設定時は親階層から自動検索します。")]
+    [SerializeField] private Room parentRoom;
+
+    [Header("セーフゾーン視覚化")]
+    [Tooltip("セーフゾーンをワイヤーフレームで視覚化します。")]
+    [SerializeField] private bool visualizeSafeZone = true;
+
+    [Tooltip("ワイヤーフレームの表示色です。")]
+    [SerializeField] private Color safeZoneColor = new Color(0f, 1f, 0f, 0.8f);
+
+    private Material lineMaterial;
+    private Collider safeZoneCollider;
+    private RoomManager roomManager;
+    private Coroutine spawnCoroutine;
+
+    private bool isRoomActive;
+    private bool hasStartedSpawn;
 
     private bool hasCapturedInitialState;
     private bool initialEnabled;
     private bool initialColliderEnabled;
-    private bool initialHasTriggered;
+    private bool initialHasStartedSpawn;
 
     private void Awake()
     {
-        // Colliderを取得してトリガーとして設定
-        triggerCollider = GetComponent<Collider>();
-        triggerCollider.isTrigger = true;
+        safeZoneCollider = GetComponent<Collider>();
+        safeZoneCollider.isTrigger = true;
+
+        if (parentRoom == null)
+        {
+            parentRoom = GetComponentInParent<Room>();
+        }
+
+        roomManager = FindFirstObjectByType<RoomManager>();
+
+        if (visualizeSafeZone)
+        {
+            CreateLineMaterial();
+        }
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void Start()
     {
-        // 対象の敵が未設定なら何もしない
+        if (roomManager != null)
+        {
+            roomManager.OnRoomTransitionComplete += OnRoomTransitionComplete;
+        }
+
+        RefreshRoomActiveState();
+    }
+
+    private void OnDestroy()
+    {
+        if (roomManager != null)
+        {
+            roomManager.OnRoomTransitionComplete -= OnRoomTransitionComplete;
+        }
+
+        if (lineMaterial != null)
+        {
+            if (Application.isPlaying)
+            {
+                Destroy(lineMaterial);
+            }
+            else
+            {
+                DestroyImmediate(lineMaterial);
+            }
+        }
+    }
+
+    private void OnRoomTransitionComplete(Room newRoom)
+    {
+        if (parentRoom == null)
+        {
+            isRoomActive = true;
+            return;
+        }
+
+        isRoomActive = newRoom == parentRoom;
+
+        // この部屋に入った時点ではスポーンしない。
+        // セーフゾーンを出た時にだけスポーン処理を開始する。
+        if (isRoomActive)
+        {
+            StopSpawnCoroutine();
+            hasStartedSpawn = false;
+        }
+        else
+        {
+            StopSpawnCoroutine();
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (!isRoomActive)
+        {
+            return;
+        }
+
+        if (roomManager != null && roomManager.IsTransitioning)
+        {
+            return;
+        }
+
         if (targetEnemy == null)
         {
             return;
         }
 
-        // プレイヤー以外は反応しない
         if (!other.CompareTag(playerTag))
         {
             return;
         }
 
-        // 一度だけ発動する設定の場合、既に発動済みならスキップ
-        if (hasTriggered && triggerOnlyOnce)
+        if (hasStartedSpawn)
         {
             return;
         }
 
-        hasTriggered = true;
+        StartSpawnAfterSafeZoneExit();
+    }
 
-        // 初回有効発動時に経過時間計測を開始する
+    private void StartSpawnAfterSafeZoneExit()
+    {
+        hasStartedSpawn = true;
+
         if (gameRoot != null)
         {
             gameRoot.StartElapsedTimeIfNeeded();
         }
 
-        // 敵の追跡を開始する
-        targetEnemy.BeginChase();
-
-        // oneShot モードなら、このトリガーを無効化
-        if (triggerOnlyOnce)
+        if (spawnDelay > 0f)
         {
-            enabled = false;
-
-            if (triggerCollider != null)
-            {
-                triggerCollider.enabled = false;
-            }
+            StopSpawnCoroutine();
+            spawnCoroutine = StartCoroutine(DelayedSpawnCoroutine());
         }
+        else
+        {
+            SpawnEnemy();
+        }
+    }
+
+    private IEnumerator DelayedSpawnCoroutine()
+    {
+        yield return new WaitForSeconds(spawnDelay);
+
+        SpawnEnemy();
+
+        spawnCoroutine = null;
+    }
+
+    private void SpawnEnemy()
+    {
+        if (targetEnemy == null)
+        {
+            return;
+        }
+
+        targetEnemy.BeginChase();
     }
 
     public void CaptureInitialState()
     {
-        // 既にキャプチャ済みなら何もしない
         if (hasCapturedInitialState)
         {
             return;
         }
 
-        // Colliderが未取得なら取得
-        if (triggerCollider == null)
+        if (safeZoneCollider == null)
         {
-            triggerCollider = GetComponent<Collider>();
+            safeZoneCollider = GetComponent<Collider>();
         }
 
-        // 現在の状態を保存
         initialEnabled = enabled;
-        initialColliderEnabled = triggerCollider != null && triggerCollider.enabled;
-        initialHasTriggered = hasTriggered;
+        initialColliderEnabled = safeZoneCollider != null && safeZoneCollider.enabled;
+        initialHasStartedSpawn = hasStartedSpawn;
 
         hasCapturedInitialState = true;
     }
 
     public void ResetToRespawnState()
     {
-        if (triggerCollider == null)
+        if (safeZoneCollider == null)
         {
-            triggerCollider = GetComponent<Collider>();
+            safeZoneCollider = GetComponent<Collider>();
         }
 
-        // 初期状態が保存されていればそれに従う
+        StopSpawnCoroutine();
+
         if (hasCapturedInitialState)
         {
             enabled = initialEnabled;
-            hasTriggered = initialHasTriggered;
+            hasStartedSpawn = initialHasStartedSpawn;
 
-            if (triggerCollider != null)
+            if (safeZoneCollider != null)
             {
-                triggerCollider.enabled = initialColliderEnabled;
-                triggerCollider.isTrigger = true;
+                safeZoneCollider.enabled = initialColliderEnabled;
+                safeZoneCollider.isTrigger = true;
             }
         }
         else
         {
-            // 初期状態がなければデフォルトにリセット
-            hasTriggered = false;
             enabled = true;
+            hasStartedSpawn = false;
 
-            if (triggerCollider != null)
+            if (safeZoneCollider != null)
             {
-                triggerCollider.enabled = true;
-                triggerCollider.isTrigger = true;
+                safeZoneCollider.enabled = true;
+                safeZoneCollider.isTrigger = true;
             }
         }
 
-        // 敵もリセット
         if (targetEnemy != null)
         {
             targetEnemy.ResetEncounterForRespawn();
+        }
+
+        // リスポーン時に即スポーンしない。
+        // 現在部屋なら、セーフゾーン退出待ちに戻す。
+        RefreshRoomActiveState();
+    }
+
+    private void RefreshRoomActiveState()
+    {
+        if (roomManager == null || parentRoom == null)
+        {
+            isRoomActive = true;
+            return;
+        }
+
+        isRoomActive = roomManager.CurrentRoom == parentRoom && !roomManager.IsTransitioning;
+    }
+
+    private void StopSpawnCoroutine()
+    {
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
+        }
+    }
+
+    private void OnDisable()
+    {
+        StopSpawnCoroutine();
+    }
+
+    private void CreateLineMaterial()
+    {
+        Shader shader = Shader.Find("Hidden/Internal-Colored");
+        lineMaterial = new Material(shader);
+        lineMaterial.hideFlags = HideFlags.HideAndDontSave;
+        lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        lineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        lineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+        lineMaterial.SetInt("_ZWrite", 0);
+    }
+
+    private void OnRenderObject()
+    {
+        if (!visualizeSafeZone || lineMaterial == null || safeZoneCollider == null)
+        {
+            return;
+        }
+
+        lineMaterial.SetPass(0);
+
+        GL.PushMatrix();
+        GL.MultMatrix(transform.localToWorldMatrix);
+        GL.Begin(GL.LINES);
+        GL.Color(safeZoneColor);
+
+        if (safeZoneCollider is BoxCollider boxCollider)
+        {
+            DrawBoxColliderWireframe(boxCollider);
+        }
+        else if (safeZoneCollider is SphereCollider sphereCollider)
+        {
+            DrawSphereColliderWireframe(sphereCollider);
+        }
+        else if (safeZoneCollider is CapsuleCollider capsuleCollider)
+        {
+            DrawCapsuleColliderWireframe(capsuleCollider);
+        }
+
+        GL.End();
+        GL.PopMatrix();
+    }
+
+    private void DrawBoxColliderWireframe(BoxCollider boxCollider)
+    {
+        Vector3 center = boxCollider.center;
+        Vector3 size = boxCollider.size;
+        Vector3 halfSize = size * 0.5f;
+
+        // 8つの頂点を計算
+        Vector3 v0 = center + new Vector3(-halfSize.x, -halfSize.y, -halfSize.z);
+        Vector3 v1 = center + new Vector3(halfSize.x, -halfSize.y, -halfSize.z);
+        Vector3 v2 = center + new Vector3(halfSize.x, halfSize.y, -halfSize.z);
+        Vector3 v3 = center + new Vector3(-halfSize.x, halfSize.y, -halfSize.z);
+        Vector3 v4 = center + new Vector3(-halfSize.x, -halfSize.y, halfSize.z);
+        Vector3 v5 = center + new Vector3(halfSize.x, -halfSize.y, halfSize.z);
+        Vector3 v6 = center + new Vector3(halfSize.x, halfSize.y, halfSize.z);
+        Vector3 v7 = center + new Vector3(-halfSize.x, halfSize.y, halfSize.z);
+
+        // 底面
+        GL.Vertex(v0); GL.Vertex(v1);
+        GL.Vertex(v1); GL.Vertex(v5);
+        GL.Vertex(v5); GL.Vertex(v4);
+        GL.Vertex(v4); GL.Vertex(v0);
+
+        // 上面
+        GL.Vertex(v3); GL.Vertex(v2);
+        GL.Vertex(v2); GL.Vertex(v6);
+        GL.Vertex(v6); GL.Vertex(v7);
+        GL.Vertex(v7); GL.Vertex(v3);
+
+        // 縦のエッジ
+        GL.Vertex(v0); GL.Vertex(v3);
+        GL.Vertex(v1); GL.Vertex(v2);
+        GL.Vertex(v5); GL.Vertex(v6);
+        GL.Vertex(v4); GL.Vertex(v7);
+    }
+
+    private void DrawSphereColliderWireframe(SphereCollider sphereCollider)
+    {
+        Vector3 center = sphereCollider.center;
+        float radius = sphereCollider.radius;
+        int segments = 24;
+
+        // XY平面の円
+        for (int i = 0; i < segments; i++)
+        {
+            float angle1 = (i / (float)segments) * Mathf.PI * 2f;
+            float angle2 = ((i + 1) / (float)segments) * Mathf.PI * 2f;
+
+            Vector3 p1 = center + new Vector3(Mathf.Cos(angle1) * radius, Mathf.Sin(angle1) * radius, 0f);
+            Vector3 p2 = center + new Vector3(Mathf.Cos(angle2) * radius, Mathf.Sin(angle2) * radius, 0f);
+
+            GL.Vertex(p1);
+            GL.Vertex(p2);
+        }
+
+        // XZ平面の円
+        for (int i = 0; i < segments; i++)
+        {
+            float angle1 = (i / (float)segments) * Mathf.PI * 2f;
+            float angle2 = ((i + 1) / (float)segments) * Mathf.PI * 2f;
+
+            Vector3 p1 = center + new Vector3(Mathf.Cos(angle1) * radius, 0f, Mathf.Sin(angle1) * radius);
+            Vector3 p2 = center + new Vector3(Mathf.Cos(angle2) * radius, 0f, Mathf.Sin(angle2) * radius);
+
+            GL.Vertex(p1);
+            GL.Vertex(p2);
+        }
+
+        // YZ平面の円
+        for (int i = 0; i < segments; i++)
+        {
+            float angle1 = (i / (float)segments) * Mathf.PI * 2f;
+            float angle2 = ((i + 1) / (float)segments) * Mathf.PI * 2f;
+
+            Vector3 p1 = center + new Vector3(0f, Mathf.Cos(angle1) * radius, Mathf.Sin(angle1) * radius);
+            Vector3 p2 = center + new Vector3(0f, Mathf.Cos(angle2) * radius, Mathf.Sin(angle2) * radius);
+
+            GL.Vertex(p1);
+            GL.Vertex(p2);
+        }
+    }
+
+    private void DrawCapsuleColliderWireframe(CapsuleCollider capsuleCollider)
+    {
+        Vector3 center = capsuleCollider.center;
+        float radius = capsuleCollider.radius;
+        float height = capsuleCollider.height;
+        int direction = capsuleCollider.direction; // 0:X, 1:Y, 2:Z
+        int segments = 24;
+
+        float cylinderHeight = Mathf.Max(0f, height - radius * 2f);
+        Vector3 offset = Vector3.zero;
+
+        switch (direction)
+        {
+            case 0: offset = new Vector3(cylinderHeight * 0.5f, 0f, 0f); break;
+            case 1: offset = new Vector3(0f, cylinderHeight * 0.5f, 0f); break;
+            case 2: offset = new Vector3(0f, 0f, cylinderHeight * 0.5f); break;
+        }
+
+        Vector3 top = center + offset;
+        Vector3 bottom = center - offset;
+
+        // 円周の描画（上下）
+        for (int i = 0; i < segments; i++)
+        {
+            float angle1 = (i / (float)segments) * Mathf.PI * 2f;
+            float angle2 = ((i + 1) / (float)segments) * Mathf.PI * 2f;
+
+            Vector3 p1, p2;
+
+            if (direction == 0) // X軸
+            {
+                p1 = new Vector3(0f, Mathf.Cos(angle1) * radius, Mathf.Sin(angle1) * radius);
+                p2 = new Vector3(0f, Mathf.Cos(angle2) * radius, Mathf.Sin(angle2) * radius);
+            }
+            else if (direction == 1) // Y軸
+            {
+                p1 = new Vector3(Mathf.Cos(angle1) * radius, 0f, Mathf.Sin(angle1) * radius);
+                p2 = new Vector3(Mathf.Cos(angle2) * radius, 0f, Mathf.Sin(angle2) * radius);
+            }
+            else // Z軸
+            {
+                p1 = new Vector3(Mathf.Cos(angle1) * radius, Mathf.Sin(angle1) * radius, 0f);
+                p2 = new Vector3(Mathf.Cos(angle2) * radius, Mathf.Sin(angle2) * radius, 0f);
+            }
+
+            GL.Vertex(top + p1);
+            GL.Vertex(top + p2);
+            GL.Vertex(bottom + p1);
+            GL.Vertex(bottom + p2);
+        }
+
+        // 縦のエッジ（4本）
+        for (int i = 0; i < 4; i++)
+        {
+            float angle = (i / 4f) * Mathf.PI * 2f;
+            Vector3 edgeOffset;
+
+            if (direction == 0) // X軸
+            {
+                edgeOffset = new Vector3(0f, Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius);
+            }
+            else if (direction == 1) // Y軸
+            {
+                edgeOffset = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+            }
+            else // Z軸
+            {
+                edgeOffset = new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0f);
+            }
+
+            GL.Vertex(top + edgeOffset);
+            GL.Vertex(bottom + edgeOffset);
         }
     }
 }
