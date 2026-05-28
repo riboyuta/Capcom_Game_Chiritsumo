@@ -21,7 +21,6 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
 
     private Collider platformCollider;
     private Collider playerCollider;
-    private Rigidbody playerRb;
     private PlayerFacade playerFacade;
     private float dropThroughTimer;
     private bool hasCapturedInitialState;
@@ -93,16 +92,17 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         // プレイヤーの足元位置と床上面の位置関係を調べる。
         float platformTop = platformCollider.bounds.max.y;
         float playerBottom = playerCollider.bounds.min.y;
-        bool playerFallingOrStill = playerRb == null || playerRb.linearVelocity.y <= 0.01f;
+        float verticalVelocity = playerFacade != null ? playerFacade.CurrentVelocity.y : 0f;
+        bool playerFallingOrStill = verticalVelocity <= 0.01f;
 
         // 急降下など高速落下時のすっぽ抜け（トンネリング）対策
         // 落下速度が速い場合、1物理フレームで移動する距離が tolerance を超えてしまい
         // 「床の下にいる」と誤認されて衝突判定が外れるのを防ぎます。
         float currentTolerance = tolerance;
-        if (playerFallingOrStill && playerRb != null && playerRb.linearVelocity.y < -0.1f)
+        if (playerFallingOrStill && verticalVelocity < -0.1f)
         {
             // 現在の落下速度に基づき、次フレームの移動距離を予測して許容範囲を広げる（最大 1.0m 拡張）
-            float fallDistancePerFrame = Mathf.Abs(playerRb.linearVelocity.y) * Time.fixedDeltaTime;
+            float fallDistancePerFrame = Mathf.Abs(verticalVelocity) * Time.fixedDeltaTime;
             currentTolerance += Mathf.Min(1.0f, fallDistancePerFrame * 1.5f);
         }
 
@@ -154,7 +154,6 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         if (facades.Length == 0) return;
 
         playerFacade = facades[0];
-        playerRb = playerFacade.GetComponent<Rigidbody>();
         playerCollider = playerFacade.GetComponent<Collider>();
     }
 
