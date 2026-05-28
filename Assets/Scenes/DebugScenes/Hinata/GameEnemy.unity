@@ -160,7 +160,7 @@ MonoBehaviour:
   followSmoothSharpness: 300
   isActiveOnStart: 0
   useSpawnSequence: 1
-  spawnDelay: 0.2
+  spawnDelay: 0
   spawnDuration: 1
   spawnOffset: {x: 0, y: 0, z: 0}
   spawnStartScale: {x: 0.6, y: 0.6, z: 1}
@@ -194,7 +194,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  contactRadius: 0.4
+  contactRadius: 0.8
   applyFacingToVisual: 0
   showTargetGizmo: 1
   targetGizmoColor: {r: 0, g: 1, b: 1, a: 1}
@@ -2426,6 +2426,8 @@ MonoBehaviour:
       _secondaryKeyboardKey: 55
       _gamepadButton: 11
       _secondaryGamepadButton: 16
+    leftMouseAction: 2
+    rightMouseAction: 1
   movementSettings:
     move:
       maxSpeed: 11

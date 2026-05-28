@@ -143,6 +143,34 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         }
     }
 
+    public void ApplySettings(SonarChargerSettings nextSettings)
+    {
+        if (nextSettings == null)
+        {
+            return;
+        }
+
+        // RoomEnemySystem 側の Settings インスタンスを直接共有せず、
+        // この敵が持つ Settings に値だけコピーする。
+        Settings.CopyFrom(nextSettings);
+
+        ResolveComponents();
+        ResolveReferences();
+
+        // Idle 中なら検知器も新しい設定で初期化する。
+        // Follow / Alert / Charge 中にリセットすると挙動が飛ぶので、状態が Idle の時だけ行う。
+        if (Application.isPlaying && state == SonarChargerState.Idle)
+        {
+            ResetDetectors();
+            ApplyActivationVisualState();
+
+            if (Settings.startActive && !isActivated && !isDisabled)
+            {
+                BeginChase();
+            }
+        }
+    }
+
     // 敵を起動し、Follow状態でプレイヤーの追跡を開始する
     public void BeginChase()
     {

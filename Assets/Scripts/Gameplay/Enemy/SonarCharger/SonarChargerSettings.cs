@@ -145,4 +145,54 @@ public sealed class SonarChargerSettings
     [Header("デバッグログ出力")]
     [Tooltip("デバッグログを出すかです。")]
     public bool enableDebugLog = false;
+
+    public void CopyFrom(SonarChargerSettings source)
+    {
+        if (source == null)
+        {
+            return;
+        }
+
+        startActive = source.startActive;
+        hideUntilActivated = source.hideUntilActivated;
+
+        playerTag = string.IsNullOrWhiteSpace(source.playerTag)
+            ? "Player"
+            : source.playerTag;
+
+        killPlayerOnContact = source.killPlayerOnContact;
+        disableAfterKill = source.disableAfterKill;
+
+        followSpeed = Mathf.Max(0.0f, source.followSpeed);
+
+        firstSonarDelay = Mathf.Max(0.0f, source.firstSonarDelay);
+        sonarInterval = Mathf.Max(0.01f, source.sonarInterval);
+        sonarExpandSpeed = Mathf.Max(0.01f, source.sonarExpandSpeed);
+        sonarMaxRadius = Mathf.Max(0.01f, source.sonarMaxRadius);
+        sonarRingThickness = Mathf.Max(0.01f, source.sonarRingThickness);
+
+        moveDetectMode = source.moveDetectMode;
+        inputMoveThreshold = Mathf.Max(0.0f, source.inputMoveThreshold);
+        positionMoveThreshold = Mathf.Max(0.0f, source.positionMoveThreshold);
+
+        enableDashInputAlertTrigger = source.enableDashInputAlertTrigger;
+
+        alertTime = Mathf.Max(0.0f, source.alertTime);
+        minChargeTargetDistance = Mathf.Max(0.001f, source.minChargeTargetDistance);
+        chargeSpeed = Mathf.Max(0.0f, source.chargeSpeed);
+        cameraBoundaryPadding = Mathf.Max(0.0f, source.cameraBoundaryPadding);
+
+        maxChargeDistance = Mathf.Max(0.0f, source.maxChargeDistance);
+        maxChargeTime = Mathf.Max(0.0f, source.maxChargeTime);
+
+        reboundDistance = Mathf.Max(0.0f, source.reboundDistance);
+        reboundDuration = Mathf.Max(0.001f, source.reboundDuration);
+        stunTime = Mathf.Max(0.0f, source.stunTime);
+
+        alertShakeAmplitude = Mathf.Max(0.0f, source.alertShakeAmplitude);
+        alertShakeFrequency = Mathf.Max(0.0f, source.alertShakeFrequency);
+        growShakeTowardCharge = source.growShakeTowardCharge;
+
+        enableDebugLog = source.enableDebugLog;
+    }
 }
