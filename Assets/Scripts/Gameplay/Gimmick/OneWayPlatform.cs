@@ -37,10 +37,7 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         // プレイヤーを検索してキャッシュする。
         TryFindPlayer();
 
-        if (playerCollider != null && platformCollider != null)
-        {
-            wasBelowPlatform = playerCollider.bounds.min.y < platformCollider.bounds.max.y - tolerance;
-        }
+        RecalculateWasBelowPlatform();
     }
 
     // ──────────────────────────────────────────────
@@ -58,12 +55,18 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         // すり抜けタイマーをリセットし、衝突判定を復帰させる。
         dropThroughTimer = 0f;
 
+        if (playerCollider == null || playerFacade == null)
+        {
+            TryFindPlayer();
+        }
+
         if (playerCollider != null && platformCollider != null)
         {
             Physics.IgnoreCollision(playerCollider, platformCollider, false);
         }
 
         isCollisionIgnored = false;
+        RecalculateWasBelowPlatform();
     }
 
     // ──────────────────────────────────────────────
@@ -165,6 +168,20 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
 
         playerFacade = facades[0];
         playerCollider = playerFacade.GetComponent<Collider>();
+    }
+
+    // 現在の位置関係から、プレイヤーが床の下側にいるかを再計算する。
+    private void RecalculateWasBelowPlatform()
+    {
+        if (playerCollider == null || platformCollider == null)
+        {
+            wasBelowPlatform = false;
+            return;
+        }
+
+        float platformTop = platformCollider.bounds.max.y;
+        float playerBottom = playerCollider.bounds.min.y;
+        wasBelowPlatform = playerBottom < platformTop - tolerance;
     }
 
     // プレイヤーと床の衝突無効状態を切り替える。
