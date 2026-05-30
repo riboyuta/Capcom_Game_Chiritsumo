@@ -270,7 +270,8 @@ public sealed class RoomEnemySystem : MonoBehaviour
                 continue;
             }
 
-            enemies[i].ApplySettings(defaultHandChaserSettings);
+            HandChaserSettings finalSettings = BuildHandChaserSettings(setting);
+            enemies[i].ApplySettings(finalSettings);
         }
 
         LogApply($"[RoomEnemySystem] {setting.name} の HandChaserEnemy にデフォルト設定を適用しました。count={enemies.Length}");
@@ -324,6 +325,30 @@ public sealed class RoomEnemySystem : MonoBehaviour
         }
 
         LogApply($"[RoomEnemySystem] {setting.name} の SonarChargerEnemy にデフォルト設定を適用しました。count={enemies.Length}");
+    }
+
+    private HandChaserSettings BuildHandChaserSettings(RoomEnemySetting setting)
+    {
+        HandChaserSettings result = HandChaserSettings.CloneFrom(defaultHandChaserSettings);
+
+        if (setting == null)
+        {
+            return result;
+        }
+
+        HandChaserMovementSettings movement = setting.HandMovementSettings;
+
+        movement.moveSpeed = Mathf.Max(0.0f, movement.moveSpeed);
+
+        if (movement.moveDirection == MoveDirection.Custom)
+        {
+            movement.customMoveAxis = movement.customMoveAxis.sqrMagnitude > 0.0f
+                ? movement.customMoveAxis.normalized
+                : Vector3.right;
+        }
+
+        result.movement = movement;
+        return result;
     }
 
     // 敵コンポーネントが見つからなかった場合の警告ログを出力します。

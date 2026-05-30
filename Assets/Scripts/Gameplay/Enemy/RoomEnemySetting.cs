@@ -31,6 +31,12 @@ public sealed class RoomEnemySetting : MonoBehaviour
     [Tooltip("指定した敵タイプの敵が見つからなかった場合に警告を出すかです。")]
     [SerializeField] private bool logMissingTarget = true;
 
+    [Header("HandChaser 移動設定")]
+    [Tooltip("この Room の HandChaser に使う移動設定です。")]
+    [SerializeField]
+    private HandChaserMovementSettings handMovementSettings =
+    HandChaserMovementSettings.Default;
+
     // この Room で使用する敵タイプを取得します。
     public RoomEnemyType EnemyType => enemyType;
 
@@ -39,6 +45,9 @@ public sealed class RoomEnemySetting : MonoBehaviour
 
     // 敵が見つからなかった場合に警告ログを出すかどうかを取得します。
     public bool LogMissingTarget => logMissingTarget;
+
+    // HandChaser に使う移動設定を取得します。
+    public HandChaserMovementSettings HandMovementSettings => handMovementSettings;
 
     // 敵を検索する起点の Transform を取得します。
     // enemyRoot が設定されていればそれを返し、未設定なら自身の transform を返します。

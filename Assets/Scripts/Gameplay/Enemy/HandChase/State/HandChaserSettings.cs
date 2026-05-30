@@ -104,4 +104,41 @@ public sealed class HandChaserSettings
     public bool enableDebugLog = false;
 
     public static HandChaserSettings Default => new HandChaserSettings();
+
+    public void CopyFrom(HandChaserSettings source)
+    {
+        if (source == null)
+        {
+            return;
+        }
+
+        startActive = source.startActive;
+        hideUntilActivated = source.hideUntilActivated;
+
+        useSpawnPositionOnActivate = source.useSpawnPositionOnActivate;
+        spawnPositionOnActivate = source.spawnPositionOnActivate;
+
+        playerTag = string.IsNullOrWhiteSpace(source.playerTag)
+            ? "Player"
+            : source.playerTag;
+
+        killPlayerOnContact = source.killPlayerOnContact;
+        disableAfterKill = source.disableAfterKill;
+
+        movement = source.movement;
+        adaptiveSpeed = source.adaptiveSpeed;
+
+        autoAdjustHitbox = source.autoAdjustHitbox;
+        visualizeHitbox = source.visualizeHitbox;
+        hitboxColor = source.hitboxColor;
+
+        enableDebugLog = source.enableDebugLog;
+    }
+
+    public static HandChaserSettings CloneFrom(HandChaserSettings source)
+    {
+        HandChaserSettings clone = new HandChaserSettings();
+        clone.CopyFrom(source);
+        return clone;
+    }
 }
