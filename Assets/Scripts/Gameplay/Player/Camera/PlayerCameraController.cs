@@ -132,6 +132,18 @@ public sealed class PlayerCameraController : MonoBehaviour
 [Tooltip("上下方向ダッシュ LookAhead を滑らかに反映し、ダッシュ終了後に 0 へ戻す SmoothDamp 時間です。")]
 [SerializeField] private float verticalDashLookAheadReturnTime = 0.14f;
 
+[Header("斜め方向ダッシュカメラ補正を使うか")]
+[Tooltip("有効にすると、斜め方向ダッシュ時に X / Y 両軸のダッシュカメラ補正を同時に使います。横方向と上下方向の補正が両方有効な場合のみ動作します。")]
+[SerializeField] private bool diagonalDashCameraEnabled = true;
+
+[Header("斜め方向ダッシュ判定 X / Y しきい値")]
+[Tooltip("ダッシュ方向の X / Y 絶対値が両方この値以上の場合に、斜め方向ダッシュ候補として扱います。")]
+[SerializeField] private float diagonalDashThreshold = 0.5f;
+
+    [Header("斜め方向ダッシュ LookAhead 倍率")]
+    [Tooltip("斜め方向ダッシュ時の X / Y LookAhead に掛ける倍率です。両軸を同時に動かすため、横方向・上下方向単体より弱める目的で使います。")]
+    [SerializeField] private float diagonalDashLookAheadMultiplier = 1.0f;
+
     [Header("Orthographic Size 補間時間")]
     [Tooltip("Room ベースの orthographicSize 上書きが切り替わる際の補間時間です。0 のときは即時反映します。")]
     // orthographicSize の切り替えをどれくらい滑らかにするか。
@@ -305,6 +317,10 @@ public sealed class PlayerCameraController : MonoBehaviour
     private bool EffectiveVerticalDashCameraEnabled => hasActiveDashCameraOverride
         ? activeVerticalDashCameraEnabledOverride
         : verticalDashCameraEnabled;
+
+    private bool EffectiveDiagonalDashCameraEnabled => diagonalDashCameraEnabled
+        && EffectiveHorizontalDashCameraEnabled
+        && EffectiveVerticalDashCameraEnabled;
 
     // デバッグや外部参照用の読み取り専用公開プロパティ。
     public Vector3 DesiredPosition => desiredPosition;
@@ -935,20 +951,28 @@ public sealed class PlayerCameraController : MonoBehaviour
             && (playerFacade.JustDashStartedThisFrame || (!wasDashActivePreviousFrame && isDashActive));
         Vector2 dashDirection = playerFacade != null ? playerFacade.DashDirection : Vector2.zero;
 
-        // 横・上下の条件を別々に判定する。
-        // どちらにも入らない斜め方向ダッシュにはカメラ補正を適用しない。
-        bool isHorizontalDash = Mathf.Abs(dashDirection.x) >= horizontalDashThreshold
-            && Mathf.Abs(dashDirection.y) <= verticalDashIgnoreThreshold;
-        bool isVerticalDash = !isHorizontalDash
-            && Mathf.Abs(dashDirection.y) >= verticalDashThreshold
-            && Mathf.Abs(dashDirection.x) <= horizontalDashIgnoreThreshold;
+        // 斜め方向を先に判定し、斜めの場合は横・上下方向単体の判定から除外する。
+        float absX = Mathf.Abs(dashDirection.x);
+        float absY = Mathf.Abs(dashDirection.y);
+        bool isDiagonalDash = absX >= diagonalDashThreshold && absY >= diagonalDashThreshold;
+        bool isHorizontalDash = !isDiagonalDash
+            && absX >= horizontalDashThreshold
+            && absY <= verticalDashIgnoreThreshold;
+        bool isVerticalDash = !isDiagonalDash
+            && absY >= verticalDashThreshold
+            && absX <= horizontalDashIgnoreThreshold;
+        bool isDiagonalDashForCamera = EffectiveDiagonalDashCameraEnabled && isDiagonalDash;
+        bool shouldUseHorizontalDashCamera = isHorizontalDash || isDiagonalDashForCamera;
+        bool shouldUseVerticalDashCamera = isVerticalDash || isDiagonalDashForCamera;
+        float horizontalLookAheadMultiplier = isDiagonalDashForCamera ? diagonalDashLookAheadMultiplier : 1f;
+        float verticalLookAheadMultiplier = isDiagonalDashForCamera ? diagonalDashLookAheadMultiplier : 1f;
 
-        TickHorizontalDashCamera(isDashActive, didDashStart, dashDirection, isHorizontalDash);
-        TickVerticalDashCamera(isDashActive, didDashStart, dashDirection, isVerticalDash);
+        TickHorizontalDashCamera(isDashActive, didDashStart, dashDirection, shouldUseHorizontalDashCamera, horizontalLookAheadMultiplier);
+        TickVerticalDashCamera(isDashActive, didDashStart, dashDirection, shouldUseVerticalDashCamera, verticalLookAheadMultiplier);
         wasDashActivePreviousFrame = isDashActive;
     }
 
-    private void TickHorizontalDashCamera(bool isDashActive, bool didDashStart, Vector2 dashDirection, bool isHorizontalDash)
+    private void TickHorizontalDashCamera(bool isDashActive, bool didDashStart, Vector2 dashDirection, bool shouldUseHorizontalDashCamera, float lookAheadMultiplier)
     {
         activeSmoothTimeXForDebug = EffectiveSmoothTimeX;
 
@@ -962,7 +986,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         {
             isHorizontalDashCameraActive = false;
 
-            if (isHorizontalDash)
+            if (shouldUseHorizontalDashCamera)
             {
                 dashHorizontalDirectionSign = dashDirection.x >= 0f ? 1 : -1;
                 dashStartLagTimer = Mathf.Max(0f, dashStartLagDuration);
@@ -986,7 +1010,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         }
 
         float dashLookAheadTargetX = isHorizontalDashCameraActive
-            ? dashHorizontalDirectionSign * dashLookAheadX
+            ? dashHorizontalDirectionSign * dashLookAheadX * lookAheadMultiplier
             : 0f;
         dashLookAheadCurrentX = Mathf.SmoothDamp(
             current: dashLookAheadCurrentX,
@@ -995,7 +1019,7 @@ public sealed class PlayerCameraController : MonoBehaviour
             smoothTime: Mathf.Max(0f, dashLookAheadReturnTime));
     }
 
-    private void TickVerticalDashCamera(bool isDashActive, bool didDashStart, Vector2 dashDirection, bool isVerticalDash)
+    private void TickVerticalDashCamera(bool isDashActive, bool didDashStart, Vector2 dashDirection, bool shouldUseVerticalDashCamera, float lookAheadMultiplier)
     {
         activeSmoothTimeYForDebug = EffectiveSmoothTimeY;
 
@@ -1009,7 +1033,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         {
             isVerticalDashCameraActive = false;
 
-            if (isVerticalDash)
+            if (shouldUseVerticalDashCamera)
             {
                 verticalDashDirectionSign = dashDirection.y >= 0f ? 1 : -1;
                 verticalDashStartLagTimer = Mathf.Max(0f, verticalDashStartLagDuration);
@@ -1033,7 +1057,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         }
 
         float dashLookAheadTargetY = isVerticalDashCameraActive
-            ? verticalDashDirectionSign * verticalDashLookAheadY
+            ? verticalDashDirectionSign * verticalDashLookAheadY * lookAheadMultiplier
             : 0f;
         verticalDashLookAheadCurrentY = Mathf.SmoothDamp(
             current: verticalDashLookAheadCurrentY,
