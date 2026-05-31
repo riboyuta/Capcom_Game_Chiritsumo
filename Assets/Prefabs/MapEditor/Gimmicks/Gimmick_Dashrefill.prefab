@@ -126,7 +126,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 191dcbe5665e68b4e92be11f39ed2645, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DashRefillGimmick
-  cooldownDuration: 2.5
+  cooldownDuration: 0.5
   visualTransform: {fileID: 7698803625507151086}
 --- !u!114 &-8577416019632356907
 MonoBehaviour:
