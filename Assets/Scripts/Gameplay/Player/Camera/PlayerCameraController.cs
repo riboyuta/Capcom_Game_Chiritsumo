@@ -133,7 +133,7 @@ public sealed class PlayerCameraController : MonoBehaviour
 [SerializeField] private float verticalDashLookAheadReturnTime = 0.14f;
 
 [Header("斜め方向ダッシュカメラ補正を使うか")]
-[Tooltip("有効にすると、斜め方向ダッシュ時に X / Y 両軸のダッシュカメラ補正を同時に使います。横方向と上下方向の補正が両方有効な場合のみ動作します。")]
+[Tooltip("有効にすると、斜め方向ダッシュ時に X / Y 軸それぞれで有効なダッシュカメラ補正を使います。横方向と上下方向の補正は軸ごとに個別判定されます。")]
 [SerializeField] private bool diagonalDashCameraEnabled = true;
 
 [Header("斜め方向ダッシュ判定 X / Y しきい値")]
@@ -317,10 +317,6 @@ public sealed class PlayerCameraController : MonoBehaviour
     private bool EffectiveVerticalDashCameraEnabled => hasActiveDashCameraOverride
         ? activeVerticalDashCameraEnabledOverride
         : verticalDashCameraEnabled;
-
-    private bool EffectiveDiagonalDashCameraEnabled => diagonalDashCameraEnabled
-        && EffectiveHorizontalDashCameraEnabled
-        && EffectiveVerticalDashCameraEnabled;
 
     // デバッグや外部参照用の読み取り専用公開プロパティ。
     public Vector3 DesiredPosition => desiredPosition;
@@ -961,11 +957,16 @@ public sealed class PlayerCameraController : MonoBehaviour
         bool isVerticalDash = !isDiagonalDash
             && absY >= verticalDashThreshold
             && absX <= horizontalDashIgnoreThreshold;
-        bool isDiagonalDashForCamera = EffectiveDiagonalDashCameraEnabled && isDiagonalDash;
-        bool shouldUseHorizontalDashCamera = isHorizontalDash || isDiagonalDashForCamera;
-        bool shouldUseVerticalDashCamera = isVerticalDash || isDiagonalDashForCamera;
-        float horizontalLookAheadMultiplier = isDiagonalDashForCamera ? diagonalDashLookAheadMultiplier : 1f;
-        float verticalLookAheadMultiplier = isDiagonalDashForCamera ? diagonalDashLookAheadMultiplier : 1f;
+        bool isDiagonalDashForHorizontalCamera = diagonalDashCameraEnabled
+            && isDiagonalDash
+            && EffectiveHorizontalDashCameraEnabled;
+        bool isDiagonalDashForVerticalCamera = diagonalDashCameraEnabled
+            && isDiagonalDash
+            && EffectiveVerticalDashCameraEnabled;
+        bool shouldUseHorizontalDashCamera = isHorizontalDash || isDiagonalDashForHorizontalCamera;
+        bool shouldUseVerticalDashCamera = isVerticalDash || isDiagonalDashForVerticalCamera;
+        float horizontalLookAheadMultiplier = isDiagonalDashForHorizontalCamera ? diagonalDashLookAheadMultiplier : 1f;
+        float verticalLookAheadMultiplier = isDiagonalDashForVerticalCamera ? diagonalDashLookAheadMultiplier : 1f;
 
         TickHorizontalDashCamera(isDashActive, didDashStart, dashDirection, shouldUseHorizontalDashCamera, horizontalLookAheadMultiplier);
         TickVerticalDashCamera(isDashActive, didDashStart, dashDirection, shouldUseVerticalDashCamera, verticalLookAheadMultiplier);
