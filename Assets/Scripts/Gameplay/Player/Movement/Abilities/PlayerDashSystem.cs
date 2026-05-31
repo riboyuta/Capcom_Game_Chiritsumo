@@ -15,6 +15,10 @@ internal sealed class PlayerDashSystem
     // 1フレームではなく短時間だけ要求を保持する。
     private const float HoodRecoverRequestHoldDuration = 0.12f;
 
+    // ダッシュ方向ベクトルの成分が有効かを判定するしきい値。
+    // 入力デッドゾーンではなく、0 に近い方向成分を無視するために使う。
+    private const float DashDirectionConversionThreshold = 0.1f;
+
     // デバッグ表示用のダッシュバッファタイマー。
     internal float DashBufferTimer => dashBufferTimer;
 
@@ -351,39 +355,130 @@ internal sealed class PlayerDashSystem
     // ============================================================
 
     // ダッシュ中の専用速度を適用する。
-    // ダッシュ中の専用速度を適用する。
-    // ダッシュ中の専用速度を適用する。
-    // ダッシュ中の専用速度を適用する。
     internal void ApplyDashVelocity(PlayerLocomotionModifierRequest modifier, System.Func<bool> tryApplyDashCornerCorrection)
     {
-        tryApplyDashCornerCorrection();
+        // ダッシュ中に壁角へ引っかかった場合、先に位置補正を試す。
+        // 成功した場合は、この Tick の壁接触情報が補正前の古い情報になるため、後続の壁方向変換では使わない。
+        bool appliedDashCornerCorrection = tryApplyDashCornerCorrection();
 
-        // 斜め下ダッシュ中に地面に接触したら、即座に横ダッシュに切り替える。
-        if (deps.RuntimeState.dashDirection.y < -0.1f && Mathf.Abs(deps.RuntimeState.dashDirection.x) > 0.1f)
+        // 斜め下ダッシュで地面に触れた場合、下方向成分を消して横ダッシュへ変換する。
+        // 既存仕様を維持するため、壁接触による縦変換より先に処理する。
+        ConvertDiagonalDownDashOnGround();
+
+        // 角補正に成功していない場合だけ、壁接触による縦ダッシュ変換を試す。
+        // 角補正成功時に古い wallSide / isTouchingWall を使って誤変換するのを避ける。
+        if (!appliedDashCornerCorrection)
         {
-            if (deps.RuntimeState.isGrounded)
-            {
-                // 地面に接触した瞬間、ダッシュ方向を横に変換する。
-                float horizontalSign = Mathf.Sign(deps.RuntimeState.dashDirection.x);
-                deps.RuntimeState.dashDirection = new Vector2(horizontalSign, 0f);
-            }
+            ConvertDiagonalDashOnWall();
         }
 
+        // ダッシュ時間が 0 に近すぎると除算が不安定になるため、最低値を保証する。
         float dashDuration = Mathf.Max(0.0001f, deps.Settings.Dash.Duration);
+
+        // ダッシュ開始からどれだけ進んだかを 0 ～ 1 に正規化する。
         float dashProgress = 1f - Mathf.Clamp01(deps.RuntimeState.dashTimer / dashDuration);
 
         // EaseOutCubic。
+        // ダッシュ後半ほど速度倍率が 1 に近づく。
         float ease = 1f - Mathf.Pow(1f - dashProgress, 3f);
 
         // 初速を 85% 残して、入力直後の重さを避ける。
         float dashCurveMultiplier = Mathf.Lerp(0.85f, 1f, ease);
 
+        // 基本ダッシュ速度に、時間カーブと外部補正を掛けた最終速度を求める。
         float dashSpeed = deps.Settings.Dash.Speed
             * dashCurveMultiplier
             * modifier.dashSpeedMultiplier;
 
+        // 現在のダッシュ方向へ速度を適用する。
+        // dashDirection は長さ 1 の方向ベクトル前提なので、斜めだけ速くならない。
         deps.Rb.linearVelocity = deps.RuntimeState.dashDirection * dashSpeed;
     }
+
+    // 斜め下ダッシュ中に地面へ接触したら、横ダッシュへ変換する。
+    private void ConvertDiagonalDownDashOnGround()
+    {
+        // 現在のダッシュ方向をローカル変数へ退避する。
+        // 判定中に deps.RuntimeState.dashDirection を何度も直接読むのを避け、条件の読みやすさを上げる。
+        Vector2 dashDirection = deps.RuntimeState.dashDirection;
+
+        // 下方向へ向かっていないなら、地面接触による横変換の対象外。
+        if (dashDirection.y >= -DashDirectionConversionThreshold)
+        {
+            return;
+        }
+
+        // 横成分がほぼ無い真下ダッシュなら、横方向へ変換できないので対象外。
+        if (Mathf.Abs(dashDirection.x) <= DashDirectionConversionThreshold)
+        {
+            return;
+        }
+
+        // 地面に触れていないなら、既存の地面変換は行わない。
+        if (!deps.RuntimeState.isGrounded)
+        {
+            return;
+        }
+
+        // 右下なら右、左下なら左へ横ダッシュ化する。
+        // 下方向成分を消すことで、地面へ押し付け続ける挙動を避ける。
+        float horizontalSign = Mathf.Sign(dashDirection.x);
+        deps.RuntimeState.dashDirection = new Vector2(horizontalSign, 0f);
+    }
+
+    // 斜めダッシュ中に進行方向側の壁へ接触したら、縦ダッシュへ変換する。
+    private void ConvertDiagonalDashOnWall()
+    {
+        // ダッシュ中以外は、ダッシュ方向変換の対象外。
+        if (!deps.RuntimeState.isDashing)
+        {
+            return;
+        }
+
+        // 壁掴まり中や崖登り中は、それぞれ専用挙動が主導するため変換しない。
+        if (deps.RuntimeState.isWallGrabbing || deps.RuntimeState.isLedgeClimbing)
+        {
+            return;
+        }
+
+        // 壁に触れていない、または壁の左右方向が確定していない場合は変換しない。
+        if (!deps.RuntimeState.isTouchingWall || deps.RuntimeState.wallSide == 0)
+        {
+            return;
+        }
+
+        // 現在のダッシュ方向をローカル変数へ退避する。
+        Vector2 dashDirection = deps.RuntimeState.dashDirection;
+
+        // 横成分と縦成分の両方がある場合だけ、斜めダッシュとして扱う。
+        // 横・上・下などの単方向ダッシュは変換対象にしない。
+        bool isDiagonalDash =
+            Mathf.Abs(dashDirection.x) > DashDirectionConversionThreshold &&
+            Mathf.Abs(dashDirection.y) > DashDirectionConversionThreshold;
+
+        if (!isDiagonalDash)
+        {
+            return;
+        }
+
+        // 進行方向側の壁に向かっているときだけ変換する。
+        // 例:
+        // - 右壁 + 右向き成分あり → 変換する
+        // - 右壁 + 左向き成分あり → 壁から離れているので変換しない
+        bool movingIntoWall =
+            dashDirection.x * deps.RuntimeState.wallSide > DashDirectionConversionThreshold;
+
+        if (!movingIntoWall)
+        {
+            return;
+        }
+
+        // 壁で潰れる横成分だけを捨て、縦方向の意図を維持する。
+        // Sign を使って (0, 1) または (0, -1) にすることで、速度の大きさを dashSpeed のまま保つ。
+        float verticalSign = Mathf.Sign(dashDirection.y);
+        deps.RuntimeState.dashDirection = new Vector2(0f, verticalSign);
+    }
+
     internal void CancelDashForStomp()
     {
         if (!deps.RuntimeState.isDashing)
