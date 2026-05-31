@@ -71,6 +71,7 @@ internal sealed class PlayerMovementCore
     // ============================================================
 
     // 通常の横移動速度を更新する。
+    // 通常の横移動速度を更新する。
     internal void ApplyHorizontalMovement(float deltaTime, PlayerLocomotionModifierRequest modifier, bool isNearApex)
     {
         if (!deps.CanAcceptMoveInput())
@@ -78,15 +79,17 @@ internal sealed class PlayerMovementCore
             return;
         }
 
-        float inputX = Mathf.Clamp(deps.InputReader.Move.x, -1f, 1f);
-        float targetSpeed = inputX * (deps.Settings.Move.MaxSpeed * modifier.moveSpeedMultiplier);
-        bool hasMoveInput = Mathf.Abs(inputX) > 0.01f;
+        float rawInputX = Mathf.Clamp(deps.InputReader.Move.x, -1f, 1f);
+        float moveDirection = ResolveHorizontalMoveDirection(rawInputX);
+
+        float targetSpeed = moveDirection * (deps.Settings.Move.MaxSpeed * modifier.moveSpeedMultiplier);
+        bool hasMoveInput = moveDirection != 0f;
         bool isLandingAssistActive = deps.RuntimeState.isGrounded && landingControlAssistTimer > 0f;
 
         float accel;
         if (hasMoveInput)
         {
-            bool isTurning = deps.Rb.linearVelocity.x * inputX < 0f;
+            bool isTurning = deps.Rb.linearVelocity.x * moveDirection < 0f;
             if (isTurning)
             {
                 accel = deps.RuntimeState.isGrounded
@@ -130,6 +133,25 @@ internal sealed class PlayerMovementCore
         Vector3 velocity = deps.Rb.linearVelocity;
         velocity.x = Mathf.MoveTowards(velocity.x, targetSpeed, accel * deltaTime);
         deps.Rb.linearVelocity = velocity;
+    }
+
+    // 通常移動用に、横入力を -1 / 0 / 1 に変換する。
+    // 入力の強さではなく「左右どちらへ向かうか」だけを速度計算に使う。
+    private static float ResolveHorizontalMoveDirection(float rawInputX)
+    {
+        const float horizontalMoveThreshold = 0.5f;
+
+        if (rawInputX >= horizontalMoveThreshold)
+        {
+            return 1f;
+        }
+
+        if (rawInputX <= -horizontalMoveThreshold)
+        {
+            return -1f;
+        }
+
+        return 0f;
     }
 
     // ============================================================
