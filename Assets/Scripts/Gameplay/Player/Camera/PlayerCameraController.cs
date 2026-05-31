@@ -211,6 +211,12 @@ public sealed class PlayerCameraController : MonoBehaviour
     private float velocityX;
     private float velocityY;
 
+    // Room ベースのダッシュカメラ補正 有効 / 無効の一時上書き。
+    // hasActiveDashCameraOverride が true のときだけ、Room 側の横 / 上下設定を優先する。
+    private bool hasActiveDashCameraOverride;
+    private bool activeHorizontalDashCameraEnabledOverride;
+    private bool activeVerticalDashCameraEnabledOverride;
+
     // 横方向ダッシュカメラ補正のランタイム状態。
     private float dashStartLagTimer;
     private int dashHorizontalDirectionSign;
@@ -288,6 +294,17 @@ public sealed class PlayerCameraController : MonoBehaviour
     private float EffectiveOrthographicSizeSmoothTime => hasActiveOrthographicSizeSmoothTimeOverride
         ? activeOrthographicSizeSmoothTimeOverride
         : worldOrthographicSizeSmoothTime;
+
+    // 実際に使用する方向別ダッシュカメラ補正の有効状態。
+    // Room の override が有効なら、横 / 上下の両方を Room 側の値でまとめて上書きする。
+    // override が無効なら PlayerCameraController 側の共通設定を使う。
+    private bool EffectiveHorizontalDashCameraEnabled => hasActiveDashCameraOverride
+        ? activeHorizontalDashCameraEnabledOverride
+        : horizontalDashCameraEnabled;
+
+    private bool EffectiveVerticalDashCameraEnabled => hasActiveDashCameraOverride
+        ? activeVerticalDashCameraEnabledOverride
+        : verticalDashCameraEnabled;
 
     // デバッグや外部参照用の読み取り専用公開プロパティ。
     public Vector3 DesiredPosition => desiredPosition;
@@ -670,12 +687,44 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     public void ApplyRoomCameraSettings(Room room)
     {
-        // null の部屋は反映せずに警告だけ出す。
+        // null の部屋ではダッシュカメラ補正の Room 上書きを解除する。
         if (room == null)
         {
+            hasActiveDashCameraOverride = false;
+            activeHorizontalDashCameraEnabledOverride = false;
+            activeVerticalDashCameraEnabledOverride = false;
+
+            // override解除時も前Roomのダッシュカメラ状態を残さない。
+            ResetDashCameraState();
+
             Debug.LogWarning("PlayerCameraController: ApplyRoomCameraSettings に null が渡されました。", this);
             return;
         }
+
+
+
+        // ダッシュカメラ補正の Room override を反映する。
+        // Room 側で override が有効な場合だけ、横 / 上下の有効設定をまとめて上書きする。
+        if (room.HasDashCameraOverride)
+        {
+
+            hasActiveDashCameraOverride = true;
+            activeHorizontalDashCameraEnabledOverride = room.HorizontalDashCameraEnabledInRoom;
+            activeVerticalDashCameraEnabledOverride = room.VerticalDashCameraEnabledInRoom;
+
+            // Room切り替え直後に前Roomのダッシュカメラ状態が残らないようにする。
+            ResetDashCameraState();
+        }
+        else
+        {
+            hasActiveDashCameraOverride = false;
+            activeHorizontalDashCameraEnabledOverride = false;
+            activeVerticalDashCameraEnabledOverride = false;
+
+            // override解除時も前Roomのダッシュカメラ状態を残さない。
+            ResetDashCameraState();
+        }
+
 
         // 部屋境界がある場合は境界 override を反映し、無い場合は world 境界に戻す。
         if (room.RoomBounds != null)
@@ -903,7 +952,7 @@ public sealed class PlayerCameraController : MonoBehaviour
     {
         activeSmoothTimeXForDebug = EffectiveSmoothTimeX;
 
-        if (!horizontalDashCameraEnabled || playerFacade == null)
+        if (!EffectiveHorizontalDashCameraEnabled || playerFacade == null)
         {
             ResetHorizontalDashCameraState();
             return;
@@ -950,7 +999,7 @@ public sealed class PlayerCameraController : MonoBehaviour
     {
         activeSmoothTimeYForDebug = EffectiveSmoothTimeY;
 
-        if (!verticalDashCameraEnabled || playerFacade == null)
+        if (!EffectiveVerticalDashCameraEnabled || playerFacade == null)
         {
             ResetVerticalDashCameraState();
             return;
