@@ -8,6 +8,13 @@ internal sealed class PlayerDashSystem
     // ダッシュバッファタイマー。
     private float dashBufferTimer;
 
+    // HoodRecover 要求を PlayerModelView が拾えるように短時間保持する。
+    private float hoodRecoverRequestHoldTimer;
+
+    // 外部トリガー由来の回復は PlayerModelView.Update とタイミングがずれる可能性があるため、
+    // 1フレームではなく短時間だけ要求を保持する。
+    private const float HoodRecoverRequestHoldDuration = 0.12f;
+
     // デバッグ表示用のダッシュバッファタイマー。
     internal float DashBufferTimer => dashBufferTimer;
 
@@ -24,6 +31,8 @@ internal sealed class PlayerDashSystem
     internal void ResetRuntimeTimers()
     {
         dashBufferTimer = 0f;
+        hoodRecoverRequestHoldTimer = 0f;
+
         deps.RuntimeState.justDashStartedThisFrame = false;
         deps.RuntimeState.requestHoodRecoverThisFrame = false;
         deps.RuntimeState.hoodVisualState = PlayerHoodVisualState.Up;
@@ -33,7 +42,13 @@ internal sealed class PlayerDashSystem
     internal void ResetOneShotFlags()
     {
         deps.RuntimeState.justDashStartedThisFrame = false;
-        deps.RuntimeState.requestHoodRecoverThisFrame = false;
+
+        // HoodRecover 要求は外部ギミック接触などで FixedUpdate 外から立つことがあるため、
+        // 通常の one-shot と同じタイミングでは消さない。
+        if (hoodRecoverRequestHoldTimer <= 0f)
+        {
+            deps.RuntimeState.requestHoodRecoverThisFrame = false;
+        }
     }
 
     // ============================================================
@@ -43,6 +58,8 @@ internal sealed class PlayerDashSystem
     // ダッシュ継続タイマーを更新する。
     internal void UpdateDashTimers(float deltaTime, System.Action onDashEnd)
     {
+        UpdateHoodRecoverRequestHoldTimer(deltaTime);
+
         if (!deps.RuntimeState.isDashing)
         {
             deps.RuntimeState.dashTimer = 0f;
@@ -53,6 +70,21 @@ internal sealed class PlayerDashSystem
         if (deps.RuntimeState.dashTimer <= 0f)
         {
             onDashEnd();
+        }
+    }
+
+    private void UpdateHoodRecoverRequestHoldTimer(float deltaTime)
+    {
+        if (hoodRecoverRequestHoldTimer <= 0f)
+        {
+            return;
+        }
+
+        hoodRecoverRequestHoldTimer = Mathf.Max(0f, hoodRecoverRequestHoldTimer - deltaTime);
+
+        if (hoodRecoverRequestHoldTimer <= 0f)
+        {
+            deps.RuntimeState.requestHoodRecoverThisFrame = false;
         }
     }
 
@@ -129,6 +161,7 @@ internal sealed class PlayerDashSystem
         if (deps.RuntimeState.hoodVisualState == PlayerHoodVisualState.Down)
         {
             deps.RuntimeState.requestHoodRecoverThisFrame = true;
+            hoodRecoverRequestHoldTimer = HoodRecoverRequestHoldDuration;
         }
 
         return true;

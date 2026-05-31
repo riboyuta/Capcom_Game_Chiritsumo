@@ -128,11 +128,57 @@ public sealed class HandChaserMovement : MonoBehaviour
     // 外部から設定を適用する（Room.cs から呼ばれる）
     public void ApplySettings(HandChaserMovementSettings settings)
     {
-        moveSpeed     = Mathf.Max(0f, settings.moveSpeed);
+        ApplyMovementSettings(settings, true);
+    }
+
+    public void ApplySettings(
+        HandChaserMovementSettings movementSettings,
+        HandChaserAdaptiveSpeedSettings adaptiveSpeedSettings)
+    {
+        ApplyMovementSettings(movementSettings, false);
+        ApplyAdaptiveSpeedSettings(adaptiveSpeedSettings, false);
+
+        // RoomEnemySystem から適用された値を、この敵の初期値として扱う。
+        StoreCurrentSettingsAsInitial();
+    }
+
+    public void ApplyMovementSettings(HandChaserMovementSettings settings, bool updateInitialState)
+    {
+        moveSpeed = Mathf.Max(0f, settings.moveSpeed);
         moveDirection = settings.moveDirection;
         customMoveAxis = settings.customMoveAxis.sqrMagnitude > 0f
             ? settings.customMoveAxis.normalized
             : Vector3.right;
+
+        ResetSpeedSmoothing();
+
+        if (updateInitialState)
+        {
+            StoreCurrentSettingsAsInitial();
+        }
+    }
+
+    public void ApplyAdaptiveSpeedSettings(HandChaserAdaptiveSpeedSettings settings, bool updateInitialState)
+    {
+        enableAdaptiveSpeed = settings.enableAdaptiveSpeed;
+
+        nearSpeed = Mathf.Max(0f, settings.nearSpeed);
+        idealSpeed = Mathf.Max(0f, settings.idealSpeed);
+        farSpeed = Mathf.Max(0f, settings.farSpeed);
+
+        nearThreshold = Mathf.Max(0f, settings.nearThreshold);
+        idealMinDistance = Mathf.Max(nearThreshold, settings.idealMinDistance);
+        idealMaxDistance = Mathf.Max(idealMinDistance, settings.idealMaxDistance);
+        farThreshold = Mathf.Max(idealMaxDistance, settings.farThreshold);
+
+        speedSmoothTime = Mathf.Max(0.001f, settings.speedSmoothTime);
+
+        ResetSpeedSmoothing();
+
+        if (updateInitialState)
+        {
+            StoreCurrentSettingsAsInitial();
+        }
     }
 
     // プレイヤーの Transform を設定する（HandChaserEnemy から呼ばれる）
@@ -277,11 +323,11 @@ public sealed class HandChaserMovement : MonoBehaviour
     public void CaptureInitialState()
     {
         if (hasCapturedInitialState)
+        {
             return;
+        }
 
-        initialMoveSpeed      = moveSpeed;
-        initialMoveDirection  = moveDirection;
-        initialCustomMoveAxis = customMoveAxis;
+        StoreCurrentSettingsAsInitial();
         hasCapturedInitialState = true;
     }
 
@@ -295,6 +341,20 @@ public sealed class HandChaserMovement : MonoBehaviour
         // 変速の内部状態もリセット
         currentSpeed            = 0f;
         speedVelocity           = 0f;
+        currentSpeedInitialized = false;
+    }
+
+    private void StoreCurrentSettingsAsInitial()
+    {
+        initialMoveSpeed = moveSpeed;
+        initialMoveDirection = moveDirection;
+        initialCustomMoveAxis = customMoveAxis;
+    }
+
+    private void ResetSpeedSmoothing()
+    {
+        currentSpeed = 0f;
+        speedVelocity = 0f;
         currentSpeedInitialized = false;
     }
 }

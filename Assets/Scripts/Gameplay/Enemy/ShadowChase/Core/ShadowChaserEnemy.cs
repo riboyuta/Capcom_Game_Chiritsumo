@@ -171,9 +171,33 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
     // インスペクター設定の初期値キャッシュ
     private float initialDelayTime;
     private bool initialUseInterpolation;
+    private float initialSnapDistance;
+    private bool initialSmoothFollow;
     private float initialFollowSmoothSharpness;
+
+    private bool initialUseSpawnSequence;
     private float initialSpawnDelay;
     private float initialSpawnDuration;
+    private Vector3 initialSpawnOffset;
+    private Vector3 initialSpawnStartScale;
+    private bool initialHideDuringSpawnDelay;
+    private bool initialStartFollowAfterSpawn;
+
+    private bool initialUseCatchUp;
+    private float initialCatchUpDuration;
+    private float initialCatchUpFollowSharpness;
+    private float initialCatchUpCompleteDistance;
+    private AnimationCurve initialCatchUpCurve;
+
+    private float initialContactRadius;
+    private bool initialApplyFacingToVisual;
+
+    private bool initialShowTargetGizmo;
+    private Color initialTargetGizmoColor;
+    private bool initialShowRequestedSpawnGizmo;
+    private Color initialRequestedSpawnGizmoColor;
+    private bool initialShowCatchUpTargetGizmo;
+    private Color initialCatchUpTargetGizmoColor;
 
     // View 参照口
     public bool HasSnapshot => hasLastAppliedSnapshot;
@@ -283,13 +307,145 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         }
 
         // インスペクター設定値の初期値をキャッシュ
-        initialDelayTime = delayTime;
-        initialUseInterpolation = useInterpolation;
-        initialFollowSmoothSharpness = followSmoothSharpness;
-        initialSpawnDelay = spawnDelay;
-        initialSpawnDuration = spawnDuration;
+        StoreCurrentSettingsAsInitial();
 
         hasCapturedInitialState = true;
+    }
+
+    public void ApplySettings(ShadowChaserSettings settings)
+    {
+        if (settings == null)
+        {
+            return;
+        }
+
+        delayTime = Mathf.Max(0f, settings.delayTime);
+        useInterpolation = settings.useInterpolation;
+        snapDistance = Mathf.Max(0f, settings.snapDistance);
+        smoothFollow = settings.smoothFollow;
+        followSmoothSharpness = Mathf.Max(0.01f, settings.followSmoothSharpness);
+
+        isActiveOnStart = settings.isActiveOnStart;
+
+        useSpawnSequence = settings.useSpawnSequence;
+        spawnDelay = Mathf.Max(0f, settings.spawnDelay);
+        spawnDuration = Mathf.Max(0.001f, settings.spawnDuration);
+        spawnOffset = settings.spawnOffset;
+        spawnStartScale = settings.spawnStartScale;
+        hideDuringSpawnDelay = settings.hideDuringSpawnDelay;
+        startFollowAfterSpawn = settings.startFollowAfterSpawn;
+
+        useCatchUp = settings.useCatchUp;
+        catchUpDuration = Mathf.Max(0.001f, settings.catchUpDuration);
+        catchUpFollowSharpness = Mathf.Max(0.01f, settings.catchUpFollowSharpness);
+        catchUpCompleteDistance = Mathf.Max(0f, settings.catchUpCompleteDistance);
+        catchUpCurve = CloneCurveOrDefault(settings.catchUpCurve);
+
+        contactRadius = Mathf.Max(0f, settings.contactRadius);
+        applyFacingToVisual = settings.applyFacingToVisual;
+
+        showTargetGizmo = settings.showTargetGizmo;
+        targetGizmoColor = settings.targetGizmoColor;
+        showRequestedSpawnGizmo = settings.showRequestedSpawnGizmo;
+        requestedSpawnGizmoColor = settings.requestedSpawnGizmoColor;
+        showCatchUpTargetGizmo = settings.showCatchUpTargetGizmo;
+        catchUpTargetGizmoColor = settings.catchUpTargetGizmoColor;
+
+        // RoomEnemySystem から適用された値を、この敵の初期値として扱う。
+        StoreCurrentSettingsAsInitial();
+
+        // Idle中だけ表示状態を設定に合わせる。
+        // 追尾中やスポーン中に表示を強制変更すると見た目が飛ぶので触らない。
+        if (Application.isPlaying && state == ShadowChaserState.Idle)
+        {
+            SetVisible(!hideDuringSpawnDelay);
+        }
+    }
+
+    private void StoreCurrentSettingsAsInitial()
+    {
+        initialDelayTime = delayTime;
+        initialUseInterpolation = useInterpolation;
+        initialSnapDistance = snapDistance;
+        initialSmoothFollow = smoothFollow;
+        initialFollowSmoothSharpness = followSmoothSharpness;
+
+        initialWasActiveOnStart = isActiveOnStart;
+
+        initialUseSpawnSequence = useSpawnSequence;
+        initialSpawnDelay = spawnDelay;
+        initialSpawnDuration = spawnDuration;
+        initialSpawnOffset = spawnOffset;
+        initialSpawnStartScale = spawnStartScale;
+        initialHideDuringSpawnDelay = hideDuringSpawnDelay;
+        initialStartFollowAfterSpawn = startFollowAfterSpawn;
+
+        initialUseCatchUp = useCatchUp;
+        initialCatchUpDuration = catchUpDuration;
+        initialCatchUpFollowSharpness = catchUpFollowSharpness;
+        initialCatchUpCompleteDistance = catchUpCompleteDistance;
+        initialCatchUpCurve = CloneCurveOrDefault(catchUpCurve);
+
+        initialContactRadius = contactRadius;
+        initialApplyFacingToVisual = applyFacingToVisual;
+
+        initialShowTargetGizmo = showTargetGizmo;
+        initialTargetGizmoColor = targetGizmoColor;
+        initialShowRequestedSpawnGizmo = showRequestedSpawnGizmo;
+        initialRequestedSpawnGizmoColor = requestedSpawnGizmoColor;
+        initialShowCatchUpTargetGizmo = showCatchUpTargetGizmo;
+        initialCatchUpTargetGizmoColor = catchUpTargetGizmoColor;
+    }
+
+    private void RestoreInitialSettings()
+    {
+        delayTime = initialDelayTime;
+        useInterpolation = initialUseInterpolation;
+        snapDistance = initialSnapDistance;
+        smoothFollow = initialSmoothFollow;
+        followSmoothSharpness = initialFollowSmoothSharpness;
+
+        isActiveOnStart = initialWasActiveOnStart;
+
+        useSpawnSequence = initialUseSpawnSequence;
+        spawnDelay = initialSpawnDelay;
+        spawnDuration = initialSpawnDuration;
+        spawnOffset = initialSpawnOffset;
+        spawnStartScale = initialSpawnStartScale;
+        hideDuringSpawnDelay = initialHideDuringSpawnDelay;
+        startFollowAfterSpawn = initialStartFollowAfterSpawn;
+
+        useCatchUp = initialUseCatchUp;
+        catchUpDuration = initialCatchUpDuration;
+        catchUpFollowSharpness = initialCatchUpFollowSharpness;
+        catchUpCompleteDistance = initialCatchUpCompleteDistance;
+        catchUpCurve = CloneCurveOrDefault(initialCatchUpCurve);
+
+        contactRadius = initialContactRadius;
+        applyFacingToVisual = initialApplyFacingToVisual;
+
+        showTargetGizmo = initialShowTargetGizmo;
+        targetGizmoColor = initialTargetGizmoColor;
+        showRequestedSpawnGizmo = initialShowRequestedSpawnGizmo;
+        requestedSpawnGizmoColor = initialRequestedSpawnGizmoColor;
+        showCatchUpTargetGizmo = initialShowCatchUpTargetGizmo;
+        catchUpTargetGizmoColor = initialCatchUpTargetGizmoColor;
+    }
+
+    private static AnimationCurve CloneCurveOrDefault(AnimationCurve source)
+    {
+        if (source == null || source.length == 0)
+        {
+            return AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+        }
+
+        AnimationCurve clone = new AnimationCurve(source.keys)
+        {
+            preWrapMode = source.preWrapMode,
+            postWrapMode = source.postWrapMode
+        };
+
+        return clone;
     }
 
     public void ResetToRespawnState()
@@ -320,11 +476,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             }
 
             // パラメータを初期値に復元
-            delayTime = initialDelayTime;
-            useInterpolation = initialUseInterpolation;
-            followSmoothSharpness = initialFollowSmoothSharpness;
-            spawnDelay = initialSpawnDelay;
-            spawnDuration = initialSpawnDuration;
+            RestoreInitialSettings();
 
             SetVisible(initialVisibility);
 
