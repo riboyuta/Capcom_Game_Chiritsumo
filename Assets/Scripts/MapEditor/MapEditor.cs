@@ -93,8 +93,12 @@ public class MapEditor : MonoBehaviour
     [SerializeField] private CameraShakeProfile CSMapeditorTestProfile;
 
     [Header("TileDatabase")]
-    [Tooltip("TileDatabaseスクリプトをここにドラッグしてね")]
+    [Tooltip("TileDatabaseスクリプトをここにドロップしてね")]
     [SerializeField] private TileDatabase tileDatabase;
+
+    [Header("mapRoot")]
+    [Tooltip("mapRootオブジェクトをここにドロップしてね")]
+    [SerializeField] private Transform mapRoot;
 
 
     [SerializeField] private int chunkSize = 16;
@@ -380,6 +384,7 @@ public class MapEditor : MonoBehaviour
         }
 
         GameObject tile = Instantiate(currentTile.prefab, spawnPos, Quaternion.identity);
+        tile.transform.SetParent(mapRoot);
         TileType tileType = tile.GetComponent<TileType>();
         tileType.tileDefinition = currentTile;
 
@@ -640,6 +645,7 @@ public class MapEditor : MonoBehaviour
             }
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
+            tile.transform.SetParent(mapRoot);
             TileType tileType = tile.GetComponent<TileType>();
 
             tileType.tileDefinition = def;
@@ -853,6 +859,7 @@ public class MapEditor : MonoBehaviour
             }
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
+            tile.transform.SetParent(mapRoot);
             TileType tileType = tile.GetComponent<TileType>();
 
             tileType.tileDefinition = def;
@@ -1008,6 +1015,7 @@ public class MapEditor : MonoBehaviour
             }
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
+            tile.transform.SetParent(mapRoot);
             TileType tileType = tile.GetComponent<TileType>();
 
             tileType.tileDefinition = def;
