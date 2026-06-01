@@ -339,6 +339,16 @@ public sealed class PlayerFacade : MonoBehaviour
     // - ダッシュ中だけ反応する敵やスイッチ
     public bool IsDashActive => playerController.IsDashActive;
 
+    // このフレームにダッシュを開始したか。
+    // 用途例:
+    // - ダッシュ開始演出の one-shot 起点
+    public bool JustDashStartedThisFrame => playerController.JustDashStartedThisFrameForFacade;
+
+    // 現在のダッシュ方向。
+    // 用途例:
+    // - ダッシュ方向に応じた演出分岐
+    public Vector2 DashDirection => playerController.DashDirectionForFacade;
+
     // 今この瞬間にダッシュ開始できるか。
     // 用途例:
     // - ダッシュ回復ギミックが「回復が必要か」を見る

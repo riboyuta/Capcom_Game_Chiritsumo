@@ -71,6 +71,8 @@ public sealed partial class PlayerController : MonoBehaviour
     private readonly PlayerRuntimeState runtimeState = new PlayerRuntimeState();
     private readonly PlayerFrameRequests frameRequests = new PlayerFrameRequests();
     internal bool IsDashActive => runtimeState.isDashing;
+    internal bool JustDashStartedThisFrameForFacade => runtimeState.justDashStartedThisFrame;
+    internal Vector2 DashDirectionForFacade => runtimeState.dashDirection;
     internal bool IsGrounded => runtimeState.isGrounded;
     internal bool IsAirborne => !runtimeState.isGrounded;
     internal bool IsWallGrabbing => runtimeState.isWallGrabbing;
