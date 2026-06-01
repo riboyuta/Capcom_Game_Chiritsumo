@@ -71,6 +71,8 @@ public sealed partial class PlayerController : MonoBehaviour
     private readonly PlayerRuntimeState runtimeState = new PlayerRuntimeState();
     private readonly PlayerFrameRequests frameRequests = new PlayerFrameRequests();
     internal bool IsDashActive => runtimeState.isDashing;
+    internal bool JustDashStartedThisFrameForFacade => runtimeState.justDashStartedThisFrame;
+    internal Vector2 DashDirectionForFacade => runtimeState.dashDirection;
     internal bool IsGrounded => runtimeState.isGrounded;
     internal bool IsAirborne => !runtimeState.isGrounded;
     internal bool IsWallGrabbing => runtimeState.isWallGrabbing;
@@ -91,6 +93,10 @@ public sealed partial class PlayerController : MonoBehaviour
     public bool IsDeathSequencePlaying => deathCoordinator != null && deathCoordinator.IsDeathSequencePlaying;
     public bool IsActionLocked => IsDeadState;
     public bool IsKnockback => false; // 一撃死仕様でノックバックなし
+
+    // 外部AI向け: 最後に有効なダッシュ入力が入ったフレーム。
+    // 敵AIが「このフレームでダッシュ入力があったか」を取りこぼしにくくするため、boolではなくフレーム番号で公開する。
+    public int LastAcceptedDashInputFrame { get; private set; } = -1;
 
     // Facade 向け最小 bridge: 下入力を保持しているか。
     internal bool DownInputHeldForFacade => IsDownInputHeld;
@@ -431,6 +437,8 @@ public sealed partial class PlayerController : MonoBehaviour
         if (playerInputReader.DashPressed && CanAcceptDashInput())
         {
             frameRequests.dashRequested = true;
+            LastAcceptedDashInputFrame = Time.frameCount;
+
         }
         if (playerInputReader.StompPressed)
         {

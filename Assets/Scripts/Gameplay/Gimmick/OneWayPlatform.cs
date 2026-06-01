@@ -21,11 +21,11 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
 
     private Collider platformCollider;
     private Collider playerCollider;
-    private Rigidbody playerRb;
     private PlayerFacade playerFacade;
     private float dropThroughTimer;
     private bool hasCapturedInitialState;
     private bool wasBelowPlatform;
+    private bool isCollisionIgnored;
 
     private void Awake()
     {
@@ -37,10 +37,7 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         // プレイヤーを検索してキャッシュする。
         TryFindPlayer();
 
-        if (playerCollider != null && platformCollider != null)
-        {
-            wasBelowPlatform = playerCollider.bounds.min.y < platformCollider.bounds.max.y - tolerance;
-        }
+        RecalculateWasBelowPlatform();
     }
 
     // ──────────────────────────────────────────────
@@ -58,10 +55,18 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         // すり抜けタイマーをリセットし、衝突判定を復帰させる。
         dropThroughTimer = 0f;
 
+        if (playerCollider == null || playerFacade == null)
+        {
+            TryFindPlayer();
+        }
+
         if (playerCollider != null && platformCollider != null)
         {
             Physics.IgnoreCollision(playerCollider, platformCollider, false);
         }
+
+        isCollisionIgnored = false;
+        RecalculateWasBelowPlatform();
     }
 
     // ──────────────────────────────────────────────
@@ -83,23 +88,24 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         if (dropThroughTimer > 0f)
         {
             dropThroughTimer -= Time.fixedDeltaTime;
-            Physics.IgnoreCollision(playerCollider, platformCollider, true);
+            SetCollisionIgnored(true);
             return;
         }
 
         // プレイヤーの足元位置と床上面の位置関係を調べる。
         float platformTop = platformCollider.bounds.max.y;
         float playerBottom = playerCollider.bounds.min.y;
-        bool playerFallingOrStill = playerRb == null || playerRb.linearVelocity.y <= 0.01f;
+        float verticalVelocity = playerFacade != null ? playerFacade.CurrentVelocity.y : 0f;
+        bool playerFallingOrStill = verticalVelocity <= 0.01f;
 
         // 急降下など高速落下時のすっぽ抜け（トンネリング）対策
         // 落下速度が速い場合、1物理フレームで移動する距離が tolerance を超えてしまい
         // 「床の下にいる」と誤認されて衝突判定が外れるのを防ぎます。
         float currentTolerance = tolerance;
-        if (playerFallingOrStill && playerRb != null && playerRb.linearVelocity.y < -0.1f)
+        if (playerFallingOrStill && verticalVelocity < -0.1f)
         {
             // 現在の落下速度に基づき、次フレームの移動距離を予測して許容範囲を広げる（最大 1.0m 拡張）
-            float fallDistancePerFrame = Mathf.Abs(playerRb.linearVelocity.y) * Time.fixedDeltaTime;
+            float fallDistancePerFrame = Mathf.Abs(verticalVelocity) * Time.fixedDeltaTime;
             currentTolerance += Mathf.Min(1.0f, fallDistancePerFrame * 1.5f);
         }
 
@@ -127,14 +133,24 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         if (allowDropThrough && playerAbove && playerFacade != null && playerFacade.IsDownInputHeld)
         {
             dropThroughTimer = dropThroughDuration;
-            Physics.IgnoreCollision(playerCollider, platformCollider, true);
+            SetCollisionIgnored(true);
             return;
         }
+
+        // すでに接地中で床上面にいる場合は、微小な速度ブレで衝突を切らない。
+        // 落下入力によるすり抜け判定は、この前で処理済みにする。
+        if (playerFacade != null && playerFacade.IsGrounded && playerAbove)
+        {
+            wasBelowPlatform = false;
+            SetCollisionIgnored(false);
+            return;
+        }
+
 
         // プレイヤーが床の上にいて、落下中または静止中なら衝突を有効にする。
         // それ以外（下にいる、上昇中）なら衝突を無効にして通過させる。
         bool shouldCollide = playerAbove && playerFallingOrStill;
-        Physics.IgnoreCollision(playerCollider, platformCollider, !shouldCollide);
+        SetCollisionIgnored(!shouldCollide);
     }
 
     // ──────────────────────────────────────────────
@@ -151,7 +167,31 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         if (facades.Length == 0) return;
 
         playerFacade = facades[0];
-        playerRb = playerFacade.GetComponent<Rigidbody>();
         playerCollider = playerFacade.GetComponent<Collider>();
+    }
+
+    // 現在の位置関係から、プレイヤーが床の下側にいるかを再計算する。
+    private void RecalculateWasBelowPlatform()
+    {
+        if (playerCollider == null || platformCollider == null)
+        {
+            wasBelowPlatform = false;
+            return;
+        }
+
+        float platformTop = platformCollider.bounds.max.y;
+        float playerBottom = playerCollider.bounds.min.y;
+        wasBelowPlatform = playerBottom < platformTop - tolerance;
+    }
+
+    // プレイヤーと床の衝突無効状態を切り替える。
+    // 同じ状態で毎物理フレーム Physics.IgnoreCollision を呼ばないようにする。
+    private void SetCollisionIgnored(bool shouldIgnore)
+    {
+        if (playerCollider == null || platformCollider == null) return;
+        if (isCollisionIgnored == shouldIgnore) return;
+
+        Physics.IgnoreCollision(playerCollider, platformCollider, shouldIgnore);
+        isCollisionIgnored = shouldIgnore;
     }
 }

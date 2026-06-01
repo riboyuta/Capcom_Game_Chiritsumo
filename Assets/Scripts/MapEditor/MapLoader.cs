@@ -28,7 +28,7 @@ public class MapLoader : MonoBehaviour
     private readonly float gridSize = 1.0f;
 
     // JSON フォルダのフルパス
-    private string FolderPath => Path.Combine(Application.dataPath, mapFolder);
+    private string FolderPath => Path.Combine(Application.streamingAssetsPath, mapFolder);
 
     // ステージ JSON のフルパス
     private string FilePath => Path.Combine(FolderPath, "Stage_" + stageNumber + ".json");
@@ -83,7 +83,7 @@ public class MapLoader : MonoBehaviour
         foreach (TileData data in mapData.tiles)
         {
             // tileID に対応する定義を TileDatabase から検索する
-            TileDefinition def = tileDatabase.tiles.Find(t => t.tileID == data.tileID);
+            TileDefinition def = tileDatabase.tiles.Find(t => t != null && t.tileID == data.tileID);
             if (def == null)
             {
                 Debug.LogWarning($"[MapLoader] tileID '{data.tileID}' が TileDatabase に見つかりません。スキップします。", this);

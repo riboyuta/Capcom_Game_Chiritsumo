@@ -193,6 +193,58 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         }
     }
 
+    public void ApplySettings(HandChaserSettings settings)
+    {
+        if (settings == null)
+        {
+            return;
+        }
+
+        EnsureRuntimeCaches();
+
+        startActive = settings.startActive;
+        hideUntilActivated = settings.hideUntilActivated;
+        useSpawnPositionOnActivate = settings.useSpawnPositionOnActivate;
+        spawnPositionOnActivate = settings.spawnPositionOnActivate;
+
+        playerTag = string.IsNullOrWhiteSpace(settings.playerTag)
+            ? "Player"
+            : settings.playerTag;
+
+        killPlayerOnContact = settings.killPlayerOnContact;
+        disableAfterKill = settings.disableAfterKill;
+        enableDebugLog = settings.enableDebugLog;
+
+        autoAdjustHitbox = settings.autoAdjustHitbox;
+        visualizeHitbox = settings.visualizeHitbox;
+        hitboxColor = settings.hitboxColor;
+
+        if (movement != null)
+        {
+            movement.ApplySettings(settings.movement, settings.adaptiveSpeed);
+        }
+
+        ResolvePlayerIfNeeded();
+        EnsureHitboxSupport();
+        EnsureLineMaterialIfNeeded();
+
+        if (Application.isPlaying)
+        {
+            isActivated = startActive;
+            ApplyActivationVisualState();
+
+            if (movement != null)
+            {
+                movement.IsActive = isActivated;
+            }
+
+            if (proximityEffects != null)
+            {
+                proximityEffects.IsActive = isActivated;
+            }
+        }
+    }
+
     public void BeginChase()
     {
         // 既に起動済みならスキップ
@@ -405,6 +457,82 @@ public sealed class HandChaserEnemy : MonoBehaviour, IRespawnResettable
         if (proximityEffects == null)
         {
             proximityEffects = GetComponent<ProximityEffectController>();
+        }
+    }
+
+    private void EnsureRuntimeCaches()
+    {
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody>();
+
+            if (rb != null)
+            {
+                rb.isKinematic = true;
+                rb.useGravity = false;
+            }
+        }
+
+        if (cachedCollider == null)
+        {
+            cachedCollider = GetComponent<Collider>();
+        }
+
+        if (cachedRenderers == null || cachedRenderers.Length == 0)
+        {
+            cachedRenderers = GetComponentsInChildren<Renderer>(true);
+        }
+
+        TryGetComponents();
+    }
+
+    private void EnsureHitboxSupport()
+    {
+        if (!autoAdjustHitbox)
+        {
+            return;
+        }
+
+        if (hitboxAdjuster != null)
+        {
+            return;
+        }
+
+        if (cachedCollider == null)
+        {
+            cachedCollider = GetComponent<Collider>();
+        }
+
+        hitboxAdjuster = new HandChaserHitboxAdjuster(
+            transform,
+            cachedCollider,
+            movement,
+            wallModelView,
+            enableDebugLog);
+
+        hitboxAdjuster.Initialize();
+
+        if (hasCapturedInitialState)
+        {
+            hitboxAdjuster.SubscribeToRoomEvents();
+        }
+    }
+
+    private void EnsureLineMaterialIfNeeded()
+    {
+        if (!visualizeHitbox)
+        {
+            return;
+        }
+
+        if (lineMaterial == null)
+        {
+            CreateLineMaterial();
+        }
+
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
         }
     }
 

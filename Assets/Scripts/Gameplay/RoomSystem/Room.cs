@@ -79,6 +79,18 @@ public sealed class Room : MonoBehaviour
     [Tooltip("overrideRoomTransitionDuration が有効な時に使う遷移時間です。")]
     [SerializeField] private float roomTransitionDuration = 0.20f;
 
+    [Header("ダッシュカメラ設定を上書きするか")]
+    [Tooltip("有効にすると、この部屋にいる間だけ PlayerCameraController 側の横方向 / 上下方向ダッシュカメラ補正の有効・無効設定をまとめて上書きします。無効の場合は PlayerCameraController 側の標準設定をそのまま使います。")]
+    [SerializeField] private bool overrideDashCameraEnabled = false;
+
+    [Header("横方向ダッシュカメラをこの部屋で有効にするか")]
+    [Tooltip("overrideDashCameraEnabled が有効な時だけ使われます。この部屋で横方向ダッシュ時のカメラ補正を有効にするかを指定します。")]
+    [SerializeField] private bool horizontalDashCameraEnabledInRoom = true;
+
+    [Header("上下方向ダッシュカメラをこの部屋で有効にするか")]
+    [Tooltip("overrideDashCameraEnabled が有効な時だけ使われます。この部屋で上下方向ダッシュ時のカメラ補正を有効にするかを指定します。")]
+    [SerializeField] private bool verticalDashCameraEnabledInRoom = false;
+
     [Header("HandChaser 設定")]
     [Tooltip("有効にすると、子階層の HandChaserMovement に設定を適用します。")]
     [SerializeField] private bool useHandChaserSettings = false;
@@ -112,6 +124,9 @@ public sealed class Room : MonoBehaviour
     public float OrthographicSizeSmoothTime => orthographicSizeSmoothTime;
     public bool HasRoomTransitionDurationOverride => overrideRoomTransitionDuration;
     public float RoomTransitionDuration => roomTransitionDuration;
+    public bool HasDashCameraOverride => overrideDashCameraEnabled;
+    public bool HorizontalDashCameraEnabledInRoom => horizontalDashCameraEnabledInRoom;
+    public bool VerticalDashCameraEnabledInRoom => verticalDashCameraEnabledInRoom;
 
     private void Awake()
     {
