@@ -202,7 +202,7 @@ internal sealed class PlayerInputAssistSystem
             return false;
         }
 
-        // 水平成分がなく、真上/真下ダッシュなら補正しない。
+        // 水平成分がない真上/真下ダッシュでは補正しない。
         if (Mathf.Abs(deps.RuntimeState.dashDirection.x) <= 0.01f)
         {
             return false;
@@ -221,22 +221,35 @@ internal sealed class PlayerInputAssistSystem
             return false;
         }
 
-        Vector3 candidatePosition = deps.Rb.position + deps.Transform.up * deps.Settings.Dash.DashCornerCorrectionUpDistance;
+        float upDistance = deps.Settings.Dash.DashCornerCorrectionUpDistance;
+        if (upDistance <= 0f)
+        {
+            return false;
+        }
 
-        GetCapsuleWorldPointsAtPosition(
-            candidatePosition,
-            out Vector3 topPoint,
-            out Vector3 bottomPoint,
-            out float worldRadius);
+        int directionSign = deps.RuntimeState.dashDirection.x > 0f ? 1 : -1;
+        Vector3 horizontalDirection = deps.Transform.right * directionSign;
 
-        bool blockedAtCandidate = Physics.CheckCapsule(
-            topPoint,
-            bottomPoint,
-            worldRadius * 0.98f,
-            deps.Settings.Detection.GroundLayerMask,
-            QueryTriggerInteraction.Ignore);
+        Vector3 currentPosition = deps.Rb.position;
+        Vector3 candidatePosition = currentPosition + deps.Transform.up * upDistance;
 
-        if (blockedAtCandidate)
+        // 上へずらした位置そのものが詰まっているなら補正しない。
+        if (IsCapsuleBlockedAtPosition(candidatePosition))
+        {
+            return false;
+        }
+
+        // 上へずらした後、前方へ抜けられるか確認する。
+        // ここが詰まっているなら、角ではなく普通の壁として扱う。
+        float forwardCheckDistance =
+            deps.GetWorldCapsuleRadius() +
+            deps.Settings.Detection.WallCheckDistance +
+            0.01f;
+
+        Vector3 forwardCandidatePosition =
+            candidatePosition + horizontalDirection * forwardCheckDistance;
+
+        if (IsCapsuleBlockedAtPosition(forwardCandidatePosition))
         {
             return false;
         }
@@ -269,5 +282,26 @@ internal sealed class PlayerInputAssistSystem
 
         topPoint = worldCenter + up * sphereOffset;
         bottomPoint = worldCenter - up * sphereOffset;
+    }
+
+    // 指定位置にプレイヤーカプセルを置いたとき、地形に重なるか確認する。
+    private bool IsCapsuleBlockedAtPosition(Vector3 targetPosition)
+    {
+        GetCapsuleWorldPointsAtPosition(
+            targetPosition,
+            out Vector3 topPoint,
+            out Vector3 bottomPoint,
+            out float worldRadius);
+
+        int solidLayerMask =
+            deps.Settings.Detection.GroundLayerMask.value |
+            deps.Settings.Detection.WallLayerMask.value;
+
+        return Physics.CheckCapsule(
+            topPoint,
+            bottomPoint,
+            worldRadius * 0.98f,
+            solidLayerMask,
+            QueryTriggerInteraction.Ignore);
     }
 }

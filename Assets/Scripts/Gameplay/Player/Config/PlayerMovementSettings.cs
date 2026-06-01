@@ -20,6 +20,10 @@ public sealed class PlayerMovementSettings
     [Tooltip("地面判定や壁判定の距離、半径、対象レイヤーなど判定系の設定です。")]
     [SerializeField] DetectionSettings detection = new();
 
+    [Header("自動段差乗り上げ設定")]
+    [Tooltip("地上移動中に1段分の段差を自動で乗り上げる設定です。")]
+    [SerializeField] AutoStepSettings autoStep = new();
+
     [Header("壁アクション設定")]
     [Tooltip("壁滑り、壁捕まり、壁キックなど壁接触中の行動設定です。")]
     [SerializeField] WallSettings wall = new();
@@ -40,6 +44,7 @@ public sealed class PlayerMovementSettings
     public JumpSettings Jump => jump;
     public FallSettings Fall => fall;
     public DetectionSettings Detection => detection;
+    public AutoStepSettings AutoStep => autoStep;
     public WallSettings Wall => wall;
     public DashSettings Dash => dash;
     public InputAssistSettings InputAssist => inputAssist;
@@ -244,6 +249,34 @@ public sealed class DetectionSettings
     public float WallCheckDistance => wallCheckDistance;
     public float WallCheckRadius => wallCheckRadius;
     public float WallInputThreshold => wallInputThreshold;
+}
+
+[Serializable]
+public sealed class AutoStepSettings
+{
+    [Header("自動段差乗り上げを使う")]
+    [Tooltip("有効にすると、地上移動中に1段分の段差を自動で乗り上げます。")]
+    [SerializeField] bool useAutoStep = true;
+
+    [Header("最大乗り上げ高さ")]
+    [Tooltip("自動で乗り上げられる最大高さです。1マスの高さに合わせます。")]
+    [Min(0f)]
+    [SerializeField] float maxHeight = 1.0f;
+
+    [Header("前方チェック距離")]
+    [Tooltip("足元前方の段差を検出する距離です。大きすぎると離れた段差に反応しやすくなります。")]
+    [Min(0f)]
+    [SerializeField] float forwardCheckDistance = 0.12f;
+
+    [Header("空間判定の余白")]
+    [Tooltip("乗り上げ先でカプセルが壁や床にめり込まないようにするための余白です。")]
+    [Min(0f)]
+    [SerializeField] float clearanceMargin = 0.03f;
+
+    public bool UseAutoStep => useAutoStep;
+    public float MaxHeight => maxHeight;
+    public float ForwardCheckDistance => forwardCheckDistance;
+    public float ClearanceMargin => clearanceMargin;
 }
 
 [Serializable]
