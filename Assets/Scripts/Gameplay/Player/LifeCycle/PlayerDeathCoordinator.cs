@@ -90,9 +90,6 @@ internal sealed class PlayerDeathCoordinator
 
     private float ConfiguredDamageDeathIntroDuration => playerDeathView != null ? playerDeathView.DamageDeathIntroDuration : 0f;
     private float ConfiguredDamageDeathTiltAngle => playerDeathView != null ? playerDeathView.DamageDeathTiltAngle : 80f;
-    private float ConfiguredDamageDeathZoomSizeOffset => playerDeathView != null ? playerDeathView.DamageDeathZoomSizeOffset : -0.35f;
-    private float ConfiguredDamageDeathZoomSmoothTime => playerDeathView != null ? playerDeathView.DamageDeathZoomSmoothTime : 0.08f;
-    private float ConfiguredBlackRespawnThreshold => playerDeathView != null ? playerDeathView.BlackRespawnThreshold : 0.85f;
 
     private IEnumerator CoRespawnSequence()
     {
@@ -100,7 +97,6 @@ internal sealed class PlayerDeathCoordinator
 
         if (lastDeathCause == PlayerDeathCause.Damage)
         {
-            PlayDamageDeathZoom();
             PlayDamageDeathIntro();
             yield return WaitForDamageDeathIntro();
         }
@@ -108,27 +104,13 @@ internal sealed class PlayerDeathCoordinator
         ResolvePlayerDeathViewIfNeeded();
         if (playerDeathView != null)
         {
-            if (lastDeathCause == PlayerDeathCause.Hazard)
-            {
-                LogRespawn("Hazard death uses immediate black transition");
-                LogRespawn("Hazard black in started");
-            }
-            else
-            {
-                LogRespawn("Death transition in started");
-            }
-
-            playerDeathView.PlayTransitionIn(lastDeathCause);
-
-            yield return new WaitUntil(() =>
-                playerDeathView == null ||
-                playerDeathView.GetBlackAmount() >= ConfiguredBlackRespawnThreshold);
-
-            LogRespawn("Death transition reached respawn threshold");
+            LogRespawn("Respawn blink close started");
+            yield return playerDeathView.PlayRespawnTransitionIn();
+            LogRespawn("Respawn blink close complete");
         }
         else
         {
-            LogRespawnWarning("PlayerDeathView missing (transition/intro unavailable)");
+            LogRespawnWarning("PlayerDeathView missing (respawn transition unavailable)");
         }
 
         if (stageResetSystem == null)
@@ -183,23 +165,10 @@ internal sealed class PlayerDeathCoordinator
 
         if (playerDeathView != null)
         {
-            if (lastDeathCause == PlayerDeathCause.Hazard)
-            {
-                LogRespawn("Hazard black out started");
-            }
-            else
-            {
-                LogRespawn("Death transition out started");
-            }
-
-            playerDeathView.PlayTransitionOut(lastDeathCause);
-
-            yield return new WaitUntil(() =>
-                playerDeathView == null ||
-                playerDeathView.GetBlackAmount() <= 0.01f);
-
-            playerDeathView.ResetTransitionImmediate();
-            LogRespawn("Death transition reset");
+            LogRespawn("Respawn blink open started");
+            yield return playerDeathView.PlayRespawnTransitionOut();
+            playerDeathView.ResetRespawnTransitionImmediate();
+            LogRespawn("Respawn blink open complete");
         }
 
         respawnSequenceCoroutine = null;
@@ -221,25 +190,6 @@ internal sealed class PlayerDeathCoordinator
         }
 
         playerCameraController.ResetRuntimeStateForRespawn();
-    }
-
-    private void PlayDamageDeathZoom()
-    {
-        if (playerCameraController == null)
-        {
-            playerCameraController = UnityEngine.Object.FindFirstObjectByType<PlayerCameraController>();
-        }
-
-        if (playerCameraController == null)
-        {
-            LogRespawnWarning("PlayerCameraController missing (damage death zoom skipped)");
-            return;
-        }
-
-        float targetSize = Mathf.Max(0.01f, playerCameraController.EffectiveSize + ConfiguredDamageDeathZoomSizeOffset);
-        playerCameraController.SetActiveOrthographicSizeSmoothTimeOverride(ConfiguredDamageDeathZoomSmoothTime);
-        playerCameraController.SetActiveOrthographicSizeOverride(targetSize);
-        LogRespawn("Damage death zoom applied");
     }
 
     private void PlayDamageDeathIntro()
@@ -318,9 +268,6 @@ internal sealed class PlayerDeathCoordinator
     {
         stopAllRumble?.Invoke();
         stopAllSounds?.Invoke();
-
-        isDead = false;
-        isDeathSequencePlaying = false;
 
         runtimeState.isGrounded = false;
         runtimeState.isTouchingWall = false;
