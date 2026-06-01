@@ -3,6 +3,12 @@ using UnityEngine;
 // 一方通行床ギミック。
 // 下からは通過し、上からは着地できる。横からはすり抜ける。
 // 落下入力で降りられるかどうかを Inspector で選択可能。
+//
+// 設計方針:
+// プレイヤーの衝突を操作するのではなく、床自身のコライダーの enabled を
+// 切り替えることで一方通行を実現する。
+// これにより、プレイヤーの物理状態（接地判定・摩擦・ステップ等）に
+// 一方通行床が干渉する問題を根本的に回避する。
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider))]
 public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
@@ -20,12 +26,31 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
     [SerializeField, Min(0f)] private float tolerance = 0.05f;
 
     private Collider platformCollider;
-    private Collider playerCollider;
+    private Collider playerCollider; // bounds 読み取り専用。衝突操作には使用しない。
     private PlayerFacade playerFacade;
+
+    // プレイヤーはシーンに1体しかいないため、全インスタンスで検索結果を共有する。
+    // FindObjectsByType の呼び出しを最小限に抑える。
+    private static PlayerFacade s_cachedFacade;
+    private static Collider s_cachedCollider;
+    // 同一フレーム内での重複検索を防ぐためのフレーム番号。
+    private static int s_lastSearchFrame = -1;
     private float dropThroughTimer;
     private bool hasCapturedInitialState;
     private bool wasBelowPlatform;
-    private bool isCollisionIgnored;
+
+    // リスポーン・部屋遷移直後の猶予タイマー。
+    // ResetToRespawnState はプレイヤーのテレポートより先に呼ばれるため、
+    // テレポート完了後の数フレームは wasBelowPlatform を強制的に false にして
+    // コライダーを有効に保つ。これにより、テレポート先で「下にいる」と
+    // 誤判定されてコライダーが切れ、プレイヤーが落下する問題を防ぐ。
+    // また、外部制御（部屋遷移）終了時にも同様に発動する。
+    private float resetGraceTimer;
+    private const float ResetGraceDuration = 0.15f;
+
+    // 前フレームで外部制御中だったかを追跡する。
+    // 外部制御が終了した瞬間（true → false）を検出し、猶予タイマーを起動する。
+    private bool wasExternallyControlled;
 
     private void Awake()
     {
@@ -52,7 +77,7 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
 
     public void ResetToRespawnState()
     {
-        // すり抜けタイマーをリセットし、衝突判定を復帰させる。
+        // すり抜けタイマーをリセットし、コライダーを有効に戻す。
         dropThroughTimer = 0f;
 
         if (playerCollider == null || playerFacade == null)
@@ -60,13 +85,13 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
             TryFindPlayer();
         }
 
-        if (playerCollider != null && platformCollider != null)
-        {
-            Physics.IgnoreCollision(playerCollider, platformCollider, false);
-        }
+        SetPlatformEnabled(true);
 
-        isCollisionIgnored = false;
-        RecalculateWasBelowPlatform();
+        // プレイヤーのテレポートはこの呼び出しの後に行われるため、
+        // 今の位置で wasBelowPlatform を再計算しても意味がない。
+        // 強制的に false にし、猶予タイマーでテレポート完了まで保護する。
+        wasBelowPlatform = false;
+        resetGraceTimer = ResetGraceDuration;
     }
 
     // ──────────────────────────────────────────────
@@ -84,23 +109,59 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
 
         if (platformCollider == null) return;
 
-        // すり抜けタイマーが残っている間は衝突を無効のまま維持する。
+        // ──────────────────────────────────────────────
+        // 外部制御（部屋遷移）中の処理
+        // ──────────────────────────────────────────────
+        // 外部制御中はプレイヤーの移動が遷移システムに管理されているため、
+        // 一方通行判定を停止し、コライダーを OFF にして自由に通過させる。
+        // 外部制御が終了した瞬間に猶予タイマーを起動し、
+        // プレイヤーが正しく床の上に押し出されるようにする。
+        bool isExternallyControlled = playerFacade != null && playerFacade.IsExternallyControlled;
+
+        if (isExternallyControlled)
+        {
+            // 外部制御中: コライダー OFF、状態追跡停止。
+            SetPlatformEnabled(false);
+            wasExternallyControlled = true;
+            return;
+        }
+
+        // 外部制御が終了した瞬間を検出し、猶予タイマーを起動する。
+        if (wasExternallyControlled)
+        {
+            wasExternallyControlled = false;
+            wasBelowPlatform = false;
+            resetGraceTimer = ResetGraceDuration;
+        }
+
+        // リスポーン・遷移直後の猶予期間中は、wasBelowPlatform を強制リセットして
+        // コライダーを有効に保つ。テレポート先でのめり込みは物理エンジンが押し出す。
+        if (resetGraceTimer > 0f)
+        {
+            resetGraceTimer -= Time.fixedDeltaTime;
+            wasBelowPlatform = false;
+            SetPlatformEnabled(true);
+            return;
+        }
+
+        // すり抜けタイマーが残っている間はコライダーを無効のまま維持する。
         if (dropThroughTimer > 0f)
         {
             dropThroughTimer -= Time.fixedDeltaTime;
-            SetCollisionIgnored(true);
+            SetPlatformEnabled(false);
             return;
         }
 
         // プレイヤーの足元位置と床上面の位置関係を調べる。
-        float platformTop = platformCollider.bounds.max.y;
+        // コライダーが無効のときは bounds が使えないため、保存済みの位置を使う。
+        float platformTop = GetPlatformTop();
         float playerBottom = playerCollider.bounds.min.y;
-        float verticalVelocity = playerFacade != null ? playerFacade.CurrentVelocity.y : 0f;
-        bool playerFallingOrStill = verticalVelocity <= 0.01f;
 
         // 急降下など高速落下時のすっぽ抜け（トンネリング）対策
         // 落下速度が速い場合、1物理フレームで移動する距離が tolerance を超えてしまい
         // 「床の下にいる」と誤認されて衝突判定が外れるのを防ぎます。
+        float verticalVelocity = playerFacade != null ? playerFacade.CurrentVelocity.y : 0f;
+        bool playerFallingOrStill = verticalVelocity <= 0.01f;
         float currentTolerance = tolerance;
         if (playerFallingOrStill && verticalVelocity < -0.1f)
         {
@@ -121,9 +182,9 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
 
         bool playerAbove = playerBottom >= platformTop - currentTolerance;
 
-        // ダッシュによるすり抜け中の引っかかり防止
-        // 下からすり抜け中にダッシュするとY速度が0になり着地判定が誤爆するため、ダッシュ中は上にいると判定しない
-        if (playerFacade != null && playerFacade.IsDashActive && wasBelowPlatform)
+        // まだ下から抜け切っていない間は「上にいる」と判定しない。
+        // （ジャンプの頂点や、部屋遷移時の強制速度ゼロ化、ダッシュ時の速度変化などによる誤着地を防ぐため）
+        if (wasBelowPlatform)
         {
             playerAbove = false;
         }
@@ -133,24 +194,21 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
         if (allowDropThrough && playerAbove && playerFacade != null && playerFacade.IsDownInputHeld)
         {
             dropThroughTimer = dropThroughDuration;
-            SetCollisionIgnored(true);
+            SetPlatformEnabled(false);
             return;
         }
 
-        // すでに接地中で床上面にいる場合は、微小な速度ブレで衝突を切らない。
-        // 落下入力によるすり抜け判定は、この前で処理済みにする。
-        if (playerFacade != null && playerFacade.IsGrounded && playerAbove)
+        // すでに接地中で床上面（許容範囲内）にいる場合は、強制的に上にいるとみなす。
+        // （リスポーン等により wasBelowPlatform が不正に残っていても上書きで解除する）
+        if (playerFacade != null && playerFacade.IsGrounded && (playerBottom >= platformTop - currentTolerance))
         {
             wasBelowPlatform = false;
-            SetCollisionIgnored(false);
+            SetPlatformEnabled(true);
             return;
         }
 
-
-        // プレイヤーが床の上にいて、落下中または静止中なら衝突を有効にする。
-        // それ以外（下にいる、上昇中）なら衝突を無効にして通過させる。
-        bool shouldCollide = playerAbove && playerFallingOrStill;
-        SetCollisionIgnored(!shouldCollide);
+        // 最終判定: プレイヤーが上にいればコライダー ON、それ以外は OFF。
+        SetPlatformEnabled(playerAbove);
     }
 
     // ──────────────────────────────────────────────
@@ -159,15 +217,33 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
 
     private void TryFindPlayer()
     {
-        // シーン内から PlayerFacade を検索する。
+        // 静的キャッシュが有効なら再検索をスキップする。
+        // Destroy されたオブジェクトは Unity の null 比較で検出される。
+        if (s_cachedFacade != null && s_cachedCollider != null)
+        {
+            playerFacade = s_cachedFacade;
+            playerCollider = s_cachedCollider;
+            return;
+        }
+
+        // プレイヤーが存在しないシーン（MapEditor 等）で全インスタンスが
+        // 毎 FixedUpdate に FindObjectsByType を呼ぶのを防ぐため、
+        // 1フレームにつき最大1回だけ検索する。
+        int currentFrame = Time.frameCount;
+        if (currentFrame == s_lastSearchFrame) return;
+        s_lastSearchFrame = currentFrame;
+
         PlayerFacade[] facades = FindObjectsByType<PlayerFacade>(
             FindObjectsInactive.Exclude,
             FindObjectsSortMode.None);
 
         if (facades.Length == 0) return;
 
-        playerFacade = facades[0];
-        playerCollider = playerFacade.GetComponent<Collider>();
+        s_cachedFacade = facades[0];
+        s_cachedCollider = s_cachedFacade.GetComponent<Collider>();
+
+        playerFacade = s_cachedFacade;
+        playerCollider = s_cachedCollider;
     }
 
     // 現在の位置関係から、プレイヤーが床の下側にいるかを再計算する。
@@ -179,19 +255,47 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        float platformTop = platformCollider.bounds.max.y;
+        float platformTop = GetPlatformTop();
         float playerBottom = playerCollider.bounds.min.y;
         wasBelowPlatform = playerBottom < platformTop - tolerance;
     }
 
-    // プレイヤーと床の衝突無効状態を切り替える。
-    // 同じ状態で毎物理フレーム Physics.IgnoreCollision を呼ばないようにする。
-    private void SetCollisionIgnored(bool shouldIgnore)
-    {
-        if (playerCollider == null || platformCollider == null) return;
-        if (isCollisionIgnored == shouldIgnore) return;
+    // ──────────────────────────────────────────────
+    // コライダー有効/無効の切り替え
+    // ──────────────────────────────────────────────
 
-        Physics.IgnoreCollision(playerCollider, platformCollider, shouldIgnore);
-        isCollisionIgnored = shouldIgnore;
+    // 床のコライダーの有効/無効のみを切り替える。
+    // プレイヤーの物理状態には一切干渉しない。
+    private void SetPlatformEnabled(bool shouldEnable)
+    {
+        if (platformCollider == null) return;
+        if (platformCollider.enabled == shouldEnable) return;
+
+        platformCollider.enabled = shouldEnable;
+    }
+
+    // ──────────────────────────────────────────────
+    // 床上面の位置取得
+    // ──────────────────────────────────────────────
+
+    // コライダーが無効になっていると bounds が信頼できないため、
+    // Transform ベースで床上面のワールド Y 座標を計算する。
+    private float GetPlatformTop()
+    {
+        if (platformCollider is BoxCollider box)
+        {
+            // BoxCollider: center + half-size の Y をワールド変換する。
+            Vector3 localTop = box.center + new Vector3(0f, box.size.y * 0.5f, 0f);
+            return transform.TransformPoint(localTop).y;
+        }
+
+        // フォールバック: コライダーが有効なら bounds を使う。
+        if (platformCollider.enabled)
+        {
+            return platformCollider.bounds.max.y;
+        }
+
+        // コライダー無効かつ BoxCollider 以外の場合は Transform 基準で概算する。
+        return transform.position.y + transform.lossyScale.y * 0.5f;
     }
 }

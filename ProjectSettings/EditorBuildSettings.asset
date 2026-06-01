@@ -17,7 +17,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/MainScenes/Result.unity
     guid: 370940ae0cdc67b46b5a1d9ab6e3c769
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/TestPlayScenes/IkedaScenes/IkedaMap/DebugMapScenes/DebugMapScene/TestPlay/DebugMapTestPlay.unity
     guid: dc99dfb525ea013438126baaa3ec3e6f
   - enabled: 1
