@@ -31,6 +31,19 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
     [Tooltip("ワイヤーフレームの表示色です。")]
     [SerializeField] private Color safeZoneColor = new Color(0f, 1f, 0f, 0.8f);
 
+    [Header("出現予告UI")]
+    [Tooltip("HandEnemy 出現前に画面端へ表示する警告UIです。")]
+    [SerializeField] private HandEnemySpawnWarningView spawnWarningView;
+
+    [Tooltip("出現方向の判定に使う HandChaserMovement です。未設定時は targetEnemy から自動取得します。")]
+    [SerializeField] private HandChaserMovement targetMovement;
+
+    [Tooltip("出現予告UIを使うかどうかです。")]
+    [SerializeField] private bool useSpawnWarning = true;
+
+    [Tooltip("出現予告UIの再生時間です。")]
+    [SerializeField, Min(0f)] private float spawnWarningDuration = 1.2f;
+
     private Material lineMaterial;
     private Collider safeZoneCollider;
     private RoomManager roomManager;
@@ -55,6 +68,11 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         }
 
         roomManager = FindFirstObjectByType<RoomManager>();
+
+        if (targetMovement == null && targetEnemy != null)
+        {
+            targetMovement = targetEnemy.GetComponent<HandChaserMovement>();
+        }
 
         if (visualizeSafeZone)
         {
@@ -154,24 +172,76 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
             gameRoot.StartElapsedTimeIfNeeded();
         }
 
-        if (spawnDelay > 0f)
-        {
-            StopSpawnCoroutine();
-            spawnCoroutine = StartCoroutine(DelayedSpawnCoroutine());
-        }
-        else
-        {
-            SpawnEnemy();
-        }
+        StopSpawnCoroutine();
+        spawnCoroutine = StartCoroutine(SpawnSequenceCoroutine());
     }
 
-    private IEnumerator DelayedSpawnCoroutine()
+    private IEnumerator SpawnSequenceCoroutine()
     {
-        yield return new WaitForSeconds(spawnDelay);
+        if (useSpawnWarning && spawnWarningView != null && spawnWarningDuration > 0f)
+        {
+            SpawnWarningScreenEdge edge = ResolveSpawnWarningEdge();
+            spawnWarningView.Play(edge, spawnWarningDuration);
+        }
+
+        if (spawnDelay > 0f)
+        {
+            yield return new WaitForSeconds(spawnDelay);
+        }
 
         SpawnEnemy();
 
         spawnCoroutine = null;
+    }
+
+    private SpawnWarningScreenEdge ResolveSpawnWarningEdge()
+    {
+        if (targetMovement == null)
+        {
+            return SpawnWarningScreenEdge.Left;
+        }
+
+        switch (targetMovement.Direction)
+        {
+            case MoveDirection.Right:
+                return SpawnWarningScreenEdge.Left;
+
+            case MoveDirection.Left:
+                return SpawnWarningScreenEdge.Right;
+
+            case MoveDirection.Up:
+                return SpawnWarningScreenEdge.Bottom;
+
+            case MoveDirection.Down:
+                return SpawnWarningScreenEdge.Top;
+
+            case MoveDirection.Custom:
+                return ResolveSpawnWarningEdgeFromAxis(targetMovement.CustomMoveAxis);
+
+            default:
+                return SpawnWarningScreenEdge.Left;
+        }
+    }
+
+    private SpawnWarningScreenEdge ResolveSpawnWarningEdgeFromAxis(Vector3 axis)
+    {
+        if (axis.sqrMagnitude <= 0.0001f)
+        {
+            return SpawnWarningScreenEdge.Left;
+        }
+
+        Vector3 normalizedAxis = axis.normalized;
+
+        if (Mathf.Abs(normalizedAxis.x) >= Mathf.Abs(normalizedAxis.y))
+        {
+            return normalizedAxis.x >= 0f
+                ? SpawnWarningScreenEdge.Left
+                : SpawnWarningScreenEdge.Right;
+        }
+
+        return normalizedAxis.y >= 0f
+            ? SpawnWarningScreenEdge.Bottom
+            : SpawnWarningScreenEdge.Top;
     }
 
     private void SpawnEnemy()
@@ -211,6 +281,11 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         }
 
         StopSpawnCoroutine();
+
+        if (spawnWarningView != null)
+        {
+            spawnWarningView.StopAndHide();
+        }
 
         if (hasCapturedInitialState)
         {
@@ -258,10 +333,17 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
 
     private void StopSpawnCoroutine()
     {
+        bool hadSpawnCoroutine = spawnCoroutine != null;
+
         if (spawnCoroutine != null)
         {
             StopCoroutine(spawnCoroutine);
             spawnCoroutine = null;
+        }
+
+        if (hadSpawnCoroutine && spawnWarningView != null)
+        {
+            spawnWarningView.StopAndHide();
         }
     }
 
