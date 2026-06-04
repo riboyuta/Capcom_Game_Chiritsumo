@@ -115065,14 +115065,6 @@
             "gimmickID": 0
         },
         {
-            "x": 490,
-            "y": 39,
-            "z": 0,
-            "tileID": "Gimmick_Dashrefill",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 481,
             "y": 43,
             "z": 0,
@@ -120085,6 +120077,14 @@
             "y": -41,
             "z": 0,
             "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 489,
+            "y": 39,
+            "z": 0,
+            "tileID": "Gimmick_Dashrefill",
             "gimmickType": 0,
             "gimmickID": 0
         }
