@@ -632,7 +632,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c2892f1cdcd4874ba1db4dd8327b387, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapEditor
-  stageNumber: 3
+  stageNumber: 4
   mapFolder: Scenes/DebugScenes/Tomoya/DebugMapScenes/DebugMapEditorScene/DebugMapEditor_MapData
   gridSizeType: 0
   chunkDrawDistance: 1
