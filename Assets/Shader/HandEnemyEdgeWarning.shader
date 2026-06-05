@@ -12,8 +12,13 @@ Shader "UI/HandEnemyEdgeWarning"
         _EdgeSoftness ("Edge Softness", Range(0.001, 0.5)) = 0.22
         _NoiseScale ("Noise Scale", Float) = 42
         _NoiseStrength ("Noise Strength", Range(0, 1)) = 0.45
-    }
 
+        _ArcDepth ("Arc Dent Depth", Range(0, 0.95)) = 0.55
+        _ArcPower ("Arc Curve Power", Range(0.2, 5)) = 1.6
+        _BraceDepth ("Brace Dent Depth", Range(0, 0.95)) = 0.4
+        _BracePower ("Brace Curve Power", Range(1, 8)) = 15.0 
+    }
+    
     SubShader
     {
         Tags
@@ -48,7 +53,11 @@ Shader "UI/HandEnemyEdgeWarning"
             float _EdgeSoftness;
             float _NoiseScale;
             float _NoiseStrength;
-
+            float _ArcDepth;
+            float _ArcPower;
+            float _BraceDepth;
+            float _BracePower;
+                
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -84,23 +93,40 @@ Shader "UI/HandEnemyEdgeWarning"
                 float2 uv = input.uv;
 
                 float distanceToEdge = uv.x;
-
+                float alongEdge = uv.y;
+                
                 if (_Edge > 0.5 && _Edge < 1.5)
                 {
+                    // Right
                     distanceToEdge = 1.0 - uv.x;
+                    alongEdge = uv.y;
                 }
                 else if (_Edge > 1.5 && _Edge < 2.5)
                 {
+                    // Top
                     distanceToEdge = 1.0 - uv.y;
+                    alongEdge = uv.x;
                 }
                 else if (_Edge > 2.5)
                 {
+                    // Bottom
                     distanceToEdge = uv.y;
+                    alongEdge = uv.x;
                 }
-
+                
+                // 中央を 0、上下端/左右端を 1 にする
+                float centerToEnd = abs(alongEdge - 0.5) * 2.0;
+                
+                // 中央付近は緩やか、端付近で強く曲がるカーブ
+                float braceCurve = pow(saturate(centerToEnd), _BracePower);
+                
+                // 中央は細く、端に近いほど太くする
+                float centerThickness = _EdgeThickness * (1.0 - _BraceDepth);
+                float curvedThickness = lerp(centerThickness, _EdgeThickness, braceCurve);
+                
                 float edgeMask = 1.0 - smoothstep(
-                    _EdgeThickness,
-                    _EdgeThickness + _EdgeSoftness,
+                    curvedThickness,
+                    curvedThickness + _EdgeSoftness,
                     distanceToEdge
                 );
 

@@ -40,6 +40,9 @@ public sealed class HandEnemySpawnWarningView : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float noiseStrength = 0.45f;
 
     [Header("点滅")]
+    [Tooltip("有効にすると警告UIを点滅させます。無効にすると一定の濃さで表示します。")]
+    [SerializeField] private bool enableBlink = true;
+
     [Tooltip("点滅速度です。")]
     [SerializeField, Min(0.1f)] private float blinkSpeed = 6f;
 
@@ -111,6 +114,47 @@ public sealed class HandEnemySpawnWarningView : MonoBehaviour
         }
 
         runningCoroutine = StartCoroutine(PlayRoutine(edge, duration));
+    }
+
+    public void PlayLoop(SpawnWarningScreenEdge edge)
+    {
+        StopAndHide();
+
+        if (screenImage == null || runtimeMaterial == null)
+        {
+            return;
+        }
+
+        runningCoroutine = StartCoroutine(PlayLoopRoutine(edge));
+    }
+
+    private IEnumerator PlayLoopRoutine(SpawnWarningScreenEdge edge)
+    {
+        SetImageEnabled(true);
+        SetStaticMaterialValues(edge);
+
+        float elapsed = 0f;
+
+        while (true)
+        {
+            float deltaTime = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
+            elapsed += deltaTime;
+
+            float fadeIn = Mathf.Clamp01(elapsed / 0.15f);
+
+            float blinkRate = 1f;
+
+            if (enableBlink)
+            {
+                float blink = Mathf.Sin(elapsed * blinkSpeed * Mathf.PI * 2f) * 0.5f + 0.5f;
+                blinkRate = Mathf.Lerp(minBlinkRate, 1f, blink);
+            }
+
+            float alpha = maxAlpha * fadeIn * blinkRate;
+            runtimeMaterial.SetFloat(WarningAlphaId, alpha);
+
+            yield return null;
+        }
     }
 
     public void StopAndHide()

@@ -5,6 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
 {
+
     [Header("起動対象の敵")]
     [Tooltip("起動対象の HandChaserEnemy です。")]
     [SerializeField] private HandChaserEnemy targetEnemy;
@@ -41,9 +42,6 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
     [Tooltip("出現予告UIを使うかどうかです。")]
     [SerializeField] private bool useSpawnWarning = true;
 
-    [Tooltip("出現予告UIの再生時間です。")]
-    [SerializeField, Min(0f)] private float spawnWarningDuration = 1.2f;
-
     private Material lineMaterial;
     private Collider safeZoneCollider;
     private RoomManager roomManager;
@@ -57,10 +55,15 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
     private bool initialColliderEnabled;
     private bool initialHasStartedSpawn;
 
+    private bool isPlayerInsideSafeZone;
+
+    private const float AxisThreshold = 0.0001f;
+    private const int WireframeSegments = 24;
+    private const int CapsuleEdgeCount = 4;
+
     private void Awake()
     {
-        safeZoneCollider = GetComponent<Collider>();
-        safeZoneCollider.isTrigger = true;
+        EnsureSafeZoneCollider();
 
         if (parentRoom == null)
         {
@@ -120,45 +123,50 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
 
         isRoomActive = newRoom == parentRoom;
 
-        // この部屋に入った時点ではスポーンしない。
-        // セーフゾーンを出た時にだけスポーン処理を開始する。
         if (isRoomActive)
         {
             StopSpawnCoroutine();
             hasStartedSpawn = false;
+            isPlayerInsideSafeZone = false;
         }
         else
         {
             StopSpawnCoroutine();
+            StopSpawnWarning();
+            isPlayerInsideSafeZone = false;
         }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        TryHandlePlayerInsideSafeZone(other);
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        TryHandlePlayerInsideSafeZone(other);
+    }
+
+    private void TryHandlePlayerInsideSafeZone(Collider other)
+    {
+        if (!CanHandlePlayerTrigger(other))
+        {
+            return;
+        }
+
+        isPlayerInsideSafeZone = true;
+        StartSpawnWarningIfNeeded();
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (!isRoomActive)
+        if (!CanHandlePlayerTrigger(other) || targetEnemy == null)
         {
             return;
         }
 
-        if (roomManager != null && roomManager.IsTransitioning)
-        {
-            return;
-        }
-
-        if (targetEnemy == null)
-        {
-            return;
-        }
-
-        if (!other.CompareTag(playerTag))
-        {
-            return;
-        }
-
-        if (hasStartedSpawn)
-        {
-            return;
-        }
+        isPlayerInsideSafeZone = false;
+        StopSpawnWarning();
 
         StartSpawnAfterSafeZoneExit();
     }
@@ -172,22 +180,20 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
             gameRoot.StartElapsedTimeIfNeeded();
         }
 
-        StopSpawnCoroutine();
-        spawnCoroutine = StartCoroutine(SpawnSequenceCoroutine());
-    }
-
-    private IEnumerator SpawnSequenceCoroutine()
-    {
-        if (useSpawnWarning && spawnWarningView != null && spawnWarningDuration > 0f)
-        {
-            SpawnWarningScreenEdge edge = ResolveSpawnWarningEdge();
-            spawnWarningView.Play(edge, spawnWarningDuration);
-        }
-
         if (spawnDelay > 0f)
         {
-            yield return new WaitForSeconds(spawnDelay);
+            StopSpawnCoroutine();
+            spawnCoroutine = StartCoroutine(DelayedSpawnCoroutine());
         }
+        else
+        {
+            SpawnEnemy();
+        }
+    }
+
+    private IEnumerator DelayedSpawnCoroutine()
+    {
+        yield return new WaitForSeconds(spawnDelay);
 
         SpawnEnemy();
 
@@ -225,7 +231,7 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
 
     private SpawnWarningScreenEdge ResolveSpawnWarningEdgeFromAxis(Vector3 axis)
     {
-        if (axis.sqrMagnitude <= 0.0001f)
+        if (axis.sqrMagnitude <= AxisThreshold)
         {
             return SpawnWarningScreenEdge.Left;
         }
@@ -254,6 +260,32 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         targetEnemy.BeginChase();
     }
 
+    private void StartSpawnWarningIfNeeded()
+    {
+        if (!useSpawnWarning || spawnWarningView == null)
+        {
+            return;
+        }
+
+        if (spawnWarningView.IsPlaying)
+        {
+            return;
+        }
+
+        SpawnWarningScreenEdge edge = ResolveSpawnWarningEdge();
+        spawnWarningView.PlayLoop(edge);
+    }
+
+    private void StopSpawnWarning()
+    {
+        if (spawnWarningView == null)
+        {
+            return;
+        }
+
+        spawnWarningView.StopAndHide();
+    }
+
     public void CaptureInitialState()
     {
         if (hasCapturedInitialState)
@@ -261,10 +293,7 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        if (safeZoneCollider == null)
-        {
-            safeZoneCollider = GetComponent<Collider>();
-        }
+        EnsureSafeZoneCollider();
 
         initialEnabled = enabled;
         initialColliderEnabled = safeZoneCollider != null && safeZoneCollider.enabled;
@@ -275,39 +304,19 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
 
     public void ResetToRespawnState()
     {
-        if (safeZoneCollider == null)
-        {
-            safeZoneCollider = GetComponent<Collider>();
-        }
+        EnsureSafeZoneCollider();
 
         StopSpawnCoroutine();
-
-        if (spawnWarningView != null)
-        {
-            spawnWarningView.StopAndHide();
-        }
+        StopSpawnWarning();
+        isPlayerInsideSafeZone = false;
 
         if (hasCapturedInitialState)
         {
-            enabled = initialEnabled;
-            hasStartedSpawn = initialHasStartedSpawn;
-
-            if (safeZoneCollider != null)
-            {
-                safeZoneCollider.enabled = initialColliderEnabled;
-                safeZoneCollider.isTrigger = true;
-            }
+            RestoreCapturedState();
         }
         else
         {
-            enabled = true;
-            hasStartedSpawn = false;
-
-            if (safeZoneCollider != null)
-            {
-                safeZoneCollider.enabled = true;
-                safeZoneCollider.isTrigger = true;
-            }
+            RestoreDefaultState();
         }
 
         if (targetEnemy != null)
@@ -315,8 +324,6 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
             targetEnemy.ResetEncounterForRespawn();
         }
 
-        // リスポーン時に即スポーンしない。
-        // 現在部屋なら、セーフゾーン退出待ちに戻す。
         RefreshRoomActiveState();
     }
 
@@ -350,6 +357,7 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
     private void OnDisable()
     {
         StopSpawnCoroutine();
+        StopSpawnWarning();
     }
 
     private void CreateLineMaterial()
@@ -433,13 +441,12 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
     {
         Vector3 center = sphereCollider.center;
         float radius = sphereCollider.radius;
-        int segments = 24;
 
         // XY平面の円
-        for (int i = 0; i < segments; i++)
+        for (int i = 0; i < WireframeSegments; i++)
         {
-            float angle1 = (i / (float)segments) * Mathf.PI * 2f;
-            float angle2 = ((i + 1) / (float)segments) * Mathf.PI * 2f;
+            float angle1 = (i / (float)WireframeSegments) * Mathf.PI * 2f;
+            float angle2 = ((i + 1) / (float)WireframeSegments) * Mathf.PI * 2f;
 
             Vector3 p1 = center + new Vector3(Mathf.Cos(angle1) * radius, Mathf.Sin(angle1) * radius, 0f);
             Vector3 p2 = center + new Vector3(Mathf.Cos(angle2) * radius, Mathf.Sin(angle2) * radius, 0f);
@@ -449,10 +456,10 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         }
 
         // XZ平面の円
-        for (int i = 0; i < segments; i++)
+        for (int i = 0; i < WireframeSegments; i++)
         {
-            float angle1 = (i / (float)segments) * Mathf.PI * 2f;
-            float angle2 = ((i + 1) / (float)segments) * Mathf.PI * 2f;
+            float angle1 = (i / (float)WireframeSegments) * Mathf.PI * 2f;
+            float angle2 = ((i + 1) / (float)WireframeSegments) * Mathf.PI * 2f;
 
             Vector3 p1 = center + new Vector3(Mathf.Cos(angle1) * radius, 0f, Mathf.Sin(angle1) * radius);
             Vector3 p2 = center + new Vector3(Mathf.Cos(angle2) * radius, 0f, Mathf.Sin(angle2) * radius);
@@ -462,10 +469,10 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         }
 
         // YZ平面の円
-        for (int i = 0; i < segments; i++)
+        for (int i = 0; i < WireframeSegments; i++)
         {
-            float angle1 = (i / (float)segments) * Mathf.PI * 2f;
-            float angle2 = ((i + 1) / (float)segments) * Mathf.PI * 2f;
+            float angle1 = (i / (float)WireframeSegments) * Mathf.PI * 2f;
+            float angle2 = ((i + 1) / (float)WireframeSegments) * Mathf.PI * 2f;
 
             Vector3 p1 = center + new Vector3(0f, Mathf.Cos(angle1) * radius, Mathf.Sin(angle1) * radius);
             Vector3 p2 = center + new Vector3(0f, Mathf.Cos(angle2) * radius, Mathf.Sin(angle2) * radius);
@@ -481,7 +488,6 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         float radius = capsuleCollider.radius;
         float height = capsuleCollider.height;
         int direction = capsuleCollider.direction; // 0:X, 1:Y, 2:Z
-        int segments = 24;
 
         float cylinderHeight = Mathf.Max(0f, height - radius * 2f);
         Vector3 offset = Vector3.zero;
@@ -497,10 +503,10 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         Vector3 bottom = center - offset;
 
         // 円周の描画（上下）
-        for (int i = 0; i < segments; i++)
+        for (int i = 0; i < WireframeSegments; i++)
         {
-            float angle1 = (i / (float)segments) * Mathf.PI * 2f;
-            float angle2 = ((i + 1) / (float)segments) * Mathf.PI * 2f;
+            float angle1 = (i / (float)WireframeSegments) * Mathf.PI * 2f;
+            float angle2 = ((i + 1) / (float)WireframeSegments) * Mathf.PI * 2f;
 
             Vector3 p1, p2;
 
@@ -527,9 +533,9 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         }
 
         // 縦のエッジ（4本）
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < CapsuleEdgeCount; i++)
         {
-            float angle = (i / 4f) * Mathf.PI * 2f;
+            float angle = (i / (float)CapsuleEdgeCount) * Mathf.PI * 2f;
             Vector3 edgeOffset;
 
             if (direction == 0) // X軸
@@ -547,6 +553,51 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
 
             GL.Vertex(top + edgeOffset);
             GL.Vertex(bottom + edgeOffset);
+        }
+    }
+
+    private void EnsureSafeZoneCollider()
+    {
+        if (safeZoneCollider == null)
+        {
+            safeZoneCollider = GetComponent<Collider>();
+        }
+
+        if (safeZoneCollider != null)
+        {
+            safeZoneCollider.isTrigger = true;
+        }
+    }
+
+    private bool CanHandlePlayerTrigger(Collider other)
+    {
+        return isRoomActive
+            && !(roomManager != null && roomManager.IsTransitioning)
+            && !hasStartedSpawn
+            && other.CompareTag(playerTag);
+    }
+
+    private void RestoreCapturedState()
+    {
+        enabled = initialEnabled;
+        hasStartedSpawn = initialHasStartedSpawn;
+
+        if (safeZoneCollider != null)
+        {
+            safeZoneCollider.enabled = initialColliderEnabled;
+            safeZoneCollider.isTrigger = true;
+        }
+    }
+
+    private void RestoreDefaultState()
+    {
+        enabled = true;
+        hasStartedSpawn = false;
+
+        if (safeZoneCollider != null)
+        {
+            safeZoneCollider.enabled = true;
+            safeZoneCollider.isTrigger = true;
         }
     }
 }
