@@ -228,9 +228,14 @@ MonoBehaviour:
       wallCheckDistance: 0.15
       wallCheckRadius: 0.2
       wallInputThreshold: 0.12
+    autoStep:
+      useAutoStep: 1
+      maxHeight: 1
+      forwardCheckDistance: 0.12
+      clearanceMargin: 0.03
     wall:
-      useWallSlide: 0
-      wallSlideMaxSpeed: 3
+      useWallSlide: 1
+      wallSlideMaxSpeed: 8
       useWallGrab: 1
       wallGrabMaxHoldTime: 6
       wallGrabIdleDrainPerSecond: 1
@@ -724,16 +729,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDeathView
   playerView: {fileID: 7907766519545806563}
-  deathTransitionView: {fileID: 0}
+  blinkTransitionView: {fileID: 0}
+  useDamageDeathIntro: 1
   damageDeathIntroDuration: 0.2
   damageDeathTiltAngle: 90
-  damageDeathZoomSizeOffset: 0
-  damageDeathZoomSmoothTime: 0
-  damageBlackInDuration: 0
-  damageBlackOutDuration: 0
-  hazardBlackInDuration: 0
-  hazardBlackOutDuration: 0
-  blackRespawnThreshold: 0
 --- !u!114 &4144544718889830320
 MonoBehaviour:
   m_ObjectHideFlags: 0
