@@ -300,7 +300,10 @@ internal sealed class PlayerLocomotionCoordinator
     // ダッシュ中の専用速度を適用する。
     internal void ApplyDashVelocity()
     {
-        dashSystem.ApplyDashVelocity(resolvedLocomotionModifier, () => inputAssistSystem.TryApplyDashCornerCorrection());
+        dashSystem.ApplyDashVelocity(
+            resolvedLocomotionModifier,
+            () => movementCore.TryAutoStepUpFromDash(),
+            () => inputAssistSystem.TryApplyDashCornerCorrection());
     }
 
     // ダッシュ終了後の接地スナップ可否を判定する。

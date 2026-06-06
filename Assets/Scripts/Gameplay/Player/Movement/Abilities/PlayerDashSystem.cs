@@ -356,15 +356,21 @@ internal sealed class PlayerDashSystem
 
     // ダッシュ中の専用速度を適用する。
     // ダッシュ中の専用速度を適用する。
-    internal void ApplyDashVelocity(PlayerLocomotionModifierRequest modifier, System.Func<bool> tryApplyDashCornerCorrection)
+    internal void ApplyDashVelocity(PlayerLocomotionModifierRequest modifier, System.Func<bool> tryApplyDashAutoStep, System.Func<bool> tryApplyDashCornerCorrection)
     {
-        // ダッシュ中に壁角へ引っかかった場合、先に位置補正を試す。
-        // 成功した場合は、この Tick の壁接触情報が補正前の古い情報になるため、後続の壁速度補正では使わない。
-        bool appliedDashCornerCorrection = tryApplyDashCornerCorrection();
-
         // 斜め下ダッシュで地面に触れた場合、下方向成分を消して横ダッシュへ変換する。
         // これは地面へ押し付け続ける挙動を避けるため、dashDirection 自体を変える。
         ConvertDiagonalDownDashOnGround();
+
+        // ダッシュ中の1段段差乗り上げを先に試す。
+        // 成功したフレームは、同じ上方向補正であるダッシュ角補正は使わない。
+        bool appliedDashAutoStep = tryApplyDashAutoStep != null && tryApplyDashAutoStep();
+
+        bool appliedDashCornerCorrection = false;
+        if (!appliedDashAutoStep)
+        {
+            appliedDashCornerCorrection = tryApplyDashCornerCorrection != null && tryApplyDashCornerCorrection();
+        }
 
         // ダッシュ時間が 0 に近すぎると除算が不安定になるため、最低値を保証する。
         float dashDuration = Mathf.Max(0.0001f, deps.Settings.Dash.Duration);

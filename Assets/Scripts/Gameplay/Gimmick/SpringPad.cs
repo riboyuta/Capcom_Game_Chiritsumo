@@ -98,6 +98,21 @@ public sealed class SpringPad : MonoBehaviour
         TryBounce(facade);
     }
 
+    private void OnCollisionStay(Collision collision)
+    {
+        if (!TryGetPlayerFacade(collision.collider, out PlayerFacade facade))
+        {
+            return;
+        }
+
+        if (!HasValidActivationContact(collision))
+        {
+            return;
+        }
+
+        TryBounce(facade);
+    }
+
     private bool TryGetPlayerFacade(Collider hitCollider, out PlayerFacade facade)
     {
         facade = null;
