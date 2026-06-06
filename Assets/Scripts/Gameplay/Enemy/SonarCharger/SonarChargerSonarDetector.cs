@@ -19,20 +19,8 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
     [Tooltip("ソナーの広がりを GameView 上にワイヤーフレームで表示します。")]
     [SerializeField] private bool visualizeSonarInGameView = true;
 
-    [Tooltip("ソナーの最大半径も GameView 上に表示します。")]
-    [SerializeField] private bool visualizeMaxRadiusInGameView = true;
-
     [Tooltip("展開中のソナーリングの表示色です。")]
     [SerializeField] private Color gameViewCurrentRingColor = new Color(0.0f, 0.8f, 1.0f, 0.9f);
-
-    [Tooltip("最大半径の表示色です。")]
-    [SerializeField] private Color gameViewMaxRadiusColor = new Color(0.0f, 0.8f, 1.0f, 0.25f);
-
-    [Tooltip("true の場合、壁や床の手前にデバッグ線を表示します。")]
-    [SerializeField] private bool drawOnTop = true;
-
-    [Tooltip("描画位置のZ補正です。線が見えづらい場合だけ微調整します。")]
-    [SerializeField] private float gameViewZOffset = 0.0f;
 
     // パルス状態
     private bool isPulseActive;
@@ -212,6 +200,7 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
     }
 
     // ワイヤーフレーム描画: マテリアル設定更新
+    // ワイヤーフレーム描画: マテリアル設定更新
     private void ApplyLineMaterialSettings()
     {
         if (lineMaterial == null)
@@ -224,13 +213,10 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
         lineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
         lineMaterial.SetInt("_ZWrite", 0);
 
-        int zTest = drawOnTop
-            ? (int)UnityEngine.Rendering.CompareFunction.Always
-            : (int)UnityEngine.Rendering.CompareFunction.LessEqual;
-
-        lineMaterial.SetInt("_ZTest", zTest);
+        lineMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
     }
 
+    // ワイヤーフレーム描画: GameView用レンダリングコールバック
     // ワイヤーフレーム描画: GameView用レンダリングコールバック
     private void OnRenderObject()
     {
@@ -250,7 +236,6 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
         }
 
         Vector3 origin = GetOriginPosition();
-        origin.z += gameViewZOffset;
 
         ApplyLineMaterialSettings();
 
@@ -259,12 +244,6 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
         GL.PushMatrix();
         GL.MultMatrix(Matrix4x4.identity);
         GL.Begin(GL.LINES);
-
-        if (visualizeMaxRadiusInGameView && lastMaxRadius > 0.0f)
-        {
-            GL.Color(gameViewMaxRadiusColor);
-            DrawCircleWireframe(origin, lastMaxRadius);
-        }
 
         if (isPulseActive && currentRadius > 0.0f)
         {
