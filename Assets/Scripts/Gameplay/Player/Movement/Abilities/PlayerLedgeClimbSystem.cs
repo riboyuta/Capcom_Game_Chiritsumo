@@ -251,8 +251,9 @@ internal sealed class PlayerLedgeClimbSystem
 
         // 崖のぼり中はスクリプト制御にする。
         // ただし当たり判定は残す。
+        deps.Rb.linearVelocity = Vector3.zero;
         deps.Rb.useGravity = false;
-        deps.Rb.isKinematic = false;
+        deps.Rb.isKinematic = true;
         deps.CapsuleCollider.enabled = true;
     }
 
@@ -288,12 +289,18 @@ internal sealed class PlayerLedgeClimbSystem
     private void CompleteLedgeClimb()
     {
         deps.RuntimeState.isLedgeClimbing = false;
+
         MovePlayerPosition(deps.RuntimeState.ledgeClimbTargetPosition);
 
         deps.CapsuleCollider.enabled = true;
-        deps.Rb.isKinematic = false;
-        deps.Rb.useGravity = true;
-        deps.Rb.linearVelocity = Vector3.zero;
+
+        if (deps.Rb != null)
+        {
+            deps.Rb.linearVelocity = Vector3.zero;
+            deps.Rb.isKinematic = false;
+            deps.Rb.useGravity = true;
+        }
+
         deps.RuntimeState.isGrounded = false;
 
         deps.RuntimeState.isWallGrabbing = false;

@@ -430,6 +430,9 @@ MonoBehaviour:
   parentRoom: {fileID: 0}
   visualizeSafeZone: 1
   safeZoneColor: {r: 0, g: 1, b: 0, a: 0.8}
+  spawnWarningView: {fileID: 0}
+  targetMovement: {fileID: 0}
+  useSpawnWarning: 1
 --- !u!1 &155527367
 GameObject:
   m_ObjectHideFlags: 0
@@ -836,6 +839,37 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 633e189701e08db4ba53ac88174c2bf5, type: 3}
+--- !u!1 &280605801
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 280605802}
+  m_Layer: 0
+  m_Name: SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &280605802
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 280605801}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -35.86, y: 19.35, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2123532961}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &395024894
 GameObject:
   m_ObjectHideFlags: 0
@@ -1112,16 +1146,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDeathView
   playerView: {fileID: 395024897}
-  deathTransitionView: {fileID: 745865858}
+  blinkTransitionView: {fileID: 0}
+  useDamageDeathIntro: 1
   damageDeathIntroDuration: 0.3
   damageDeathTiltAngle: 80
-  damageDeathZoomSizeOffset: 0
-  damageDeathZoomSmoothTime: 0
-  damageBlackInDuration: 0
-  damageBlackOutDuration: 0
-  hazardBlackInDuration: 0
-  hazardBlackOutDuration: 0
-  blackRespawnThreshold: 1
 --- !u!114 &395024899
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2076,8 +2104,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SonarChargerActivator
   targetEnemy: {fileID: 854060251}
   gameRoot: {fileID: 0}
-  useSpawnPointOnActivate: 0
-  spawnPoint: {fileID: 0}
+  useSpawnPointOnActivate: 1
+  spawnPoint: {fileID: 280605802}
   playerTag: Player
   spawnDelay: 0
   parentRoom: {fileID: 0}
@@ -2468,6 +2496,11 @@ MonoBehaviour:
       wallCheckDistance: 0.15
       wallCheckRadius: 0.2
       wallInputThreshold: 0.12
+    autoStep:
+      useAutoStep: 1
+      maxHeight: 1
+      forwardCheckDistance: 0.12
+      clearanceMargin: 0.03
     wall:
       useWallSlide: 1
       wallSlideMaxSpeed: 3
@@ -3492,6 +3525,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCameraController
   targetCamera: {fileID: 1882003666}
   targetAnchor: {fileID: 0}
+  playerFacade: {fileID: 0}
   worldBounds: {fileID: 1175559812}
   autoFindPlayerAnchor: 1
   playerTag: Player
@@ -3499,6 +3533,25 @@ MonoBehaviour:
   cameraOffset: {x: 0, y: 0, z: -10}
   smoothTimeX: 0.2
   smoothTimeY: 0.2
+  horizontalDashCameraEnabled: 1
+  horizontalDashThreshold: 0.75
+  verticalDashIgnoreThreshold: 0.25
+  dashStartLagDuration: 0.08
+  dashStartSmoothTimeX: 0.16
+  dashSmoothTimeX: 0.08
+  dashLookAheadX: 1.2
+  dashLookAheadReturnTime: 0.18
+  verticalDashCameraEnabled: 1
+  verticalDashThreshold: 0.75
+  horizontalDashIgnoreThreshold: 0.25
+  verticalDashStartLagDuration: 0.05
+  verticalDashStartSmoothTimeY: 0.14
+  verticalDashSmoothTimeY: 0.08
+  verticalDashLookAheadY: 0.8
+  verticalDashLookAheadReturnTime: 0.14
+  diagonalDashCameraEnabled: 1
+  diagonalDashThreshold: 0.5
+  diagonalDashLookAheadMultiplier: 1
   orthographicSizeSmoothTime: 0.2
   defaultRoomTransitionDuration: 0.2
   roomTransitionCompleteDistance: 0.05
@@ -4214,6 +4267,7 @@ Transform:
   m_Children:
   - {fileID: 854060254}
   - {fileID: 968007288}
+  - {fileID: 280605802}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
