@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public sealed class TimeHitStopSlow : MonoBehaviour, IRespawnResettable
+public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 {
     [Header("参照 / ルーム管理")]
     [Tooltip("現在の部屋と部屋遷移状態を確認するための RoomManager です。未設定の場合は Awake で自動取得します。")]
