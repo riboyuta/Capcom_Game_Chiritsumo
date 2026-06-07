@@ -417,10 +417,14 @@ internal sealed class PlayerWallActionSystem
 
         ExitWallGrab();
 
+        int wallKickFacing = -side;
+
         Vector3 velocity = deps.Rb.linearVelocity;
-        velocity.x = -side * deps.Settings.Wall.WallJumpHorizontalVelocity;
+        velocity.x = wallKickFacing * deps.Settings.Wall.WallJumpHorizontalVelocity;
         velocity.y = deps.Settings.Wall.WallJumpVerticalVelocity;
         deps.Rb.linearVelocity = velocity;
+
+        deps.RuntimeState.facing = wallKickFacing;
 
         deps.RuntimeState.wallJumpControlLockTimer = deps.Settings.Wall.WallJumpControlLockTime;
         deps.RuntimeState.wallReattachLockTimer = deps.Settings.Wall.WallReattachLockTime;

@@ -177,15 +177,11 @@ public sealed class SpringPad : MonoBehaviour
             return;
         }
 
-        PlayFeedback();
-        lastBounceTime = Time.time;
-
-        facade.TryRefillDash(DashRefillReason.Gimmick);
-
         Vector3 launchDirection = transform.up.normalized;
         bool shouldApplyGravityModifier =
             useLaunchGravityModifier &&
             Vector3.Dot(launchDirection, Vector3.up) > UpwardGravityModifierThreshold;
+
         PlayerFixedLaunchRequest request = new PlayerFixedLaunchRequest
         {
             Owner = this,
@@ -207,7 +203,15 @@ public sealed class SpringPad : MonoBehaviour
             ForceUnground = true
         };
 
-        facade.ApplyFixedLaunch(in request);
+        if (!facade.TryApplyFixedLaunch(in request))
+        {
+            return;
+        }
+
+        PlayFeedback();
+        lastBounceTime = Time.time;
+
+        facade.TryRefillDash(DashRefillReason.Gimmick);
     }
 
     private float ComputeLaunchSpeed()

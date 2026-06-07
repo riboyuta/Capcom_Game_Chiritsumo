@@ -569,8 +569,31 @@ public sealed class PlayerFacade : MonoBehaviour
     // 固定射出中の落下時重力倍率。
     private float fixedLaunchFallingGravityMultiplier;
 
+    // 外部から固定射出を試みる。
+    public bool TryApplyFixedLaunch(in PlayerFixedLaunchRequest request)
+    {
+        if (playerController == null)
+        {
+            return false;
+        }
+
+        if (!playerController.CanAcceptFixedLaunch(in request))
+        {
+            return false;
+        }
+
+        ApplyFixedLaunchInternal(in request);
+        return true;
+    }
+
     // 外部から固定射出を適用する。
+    // 既存呼び出し互換用。
     public void ApplyFixedLaunch(in PlayerFixedLaunchRequest request)
+    {
+        TryApplyFixedLaunch(in request);
+    }
+
+    private void ApplyFixedLaunchInternal(in PlayerFixedLaunchRequest request)
     {
         Rigidbody rb = playerController.Rigidbody;
         if (rb == null) return;
@@ -650,7 +673,7 @@ public sealed class PlayerFacade : MonoBehaviour
             ForceUnground = true
         };
 
-        ApplyFixedLaunch(in request);
+        TryApplyFixedLaunch(in request);
     }
 
     private void FixedUpdate()

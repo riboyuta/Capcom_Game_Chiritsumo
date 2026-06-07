@@ -3,6 +3,9 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class SonarChargerSonarDetector : MonoBehaviour
 {
+    private const int SonarRingSegments = 96;
+    private const int RingBridgeLineStep = 8;
+
     [Header("ソナー中心")]
     [Tooltip("ソナーの発生中心です。未設定時はこの GameObject の位置を使います。")]
     [SerializeField] private Transform sonarOrigin;
@@ -12,20 +15,56 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
     [SerializeField] private Color currentRingColor = new Color(0.0f, 0.8f, 1.0f, 0.9f);
     [SerializeField] private Color maxRadiusColor = new Color(0.0f, 0.8f, 1.0f, 0.25f);
 
+    [Header("GameView 可視化")]
+    [Tooltip("ソナーの広がりを GameView 上にワイヤーフレームで表示します。")]
+    [SerializeField] private bool visualizeSonarInGameView = true;
+
+    [Tooltip("展開中のソナーリングの表示色です。")]
+    [SerializeField] private Color gameViewCurrentRingColor = new Color(0.0f, 0.8f, 1.0f, 0.9f);
+
     // パルス状態
     private bool isPulseActive;
     private bool hasCompletedFirstPulse;
     private float intervalTimer;
     private float currentRadius;
     private float lastMaxRadius;
+    private float lastRingThickness;
+
+    private Material lineMaterial;
 
     public bool IsPulseActive => isPulseActive;
     public float CurrentRadius => currentRadius;
 
+    private void Awake()
+    {
+        if (visualizeSonarInGameView)
+        {
+            CreateLineMaterial();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (lineMaterial == null)
+        {
+            return;
+        }
+
+        if (Application.isPlaying)
+        {
+            Destroy(lineMaterial);
+        }
+        else
+        {
+            DestroyImmediate(lineMaterial);
+        }
+    }
+
     public void ResetDetector(SonarChargerSettings settings)
     {
         ResetPulseState(false, false);
-        lastMaxRadius = settings?.sonarMaxRadius ?? 0.0f;
+        lastMaxRadius = settings != null ? settings.sonarMaxRadius : 0.0f;
+        lastRingThickness = settings != null ? settings.sonarRingThickness : 0.0f;
     }
 
     public void CancelPulse()
@@ -49,8 +88,9 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
             return false;
         }
 
-        // 最大半径を記録（Gizmo描画用）
+        // 描画用に最新設定を保持
         lastMaxRadius = settings.sonarMaxRadius;
+        lastRingThickness = settings.sonarRingThickness;
 
         // パルス状態を更新、アクティブでない場合はfalse
         if (!UpdatePulse(settings, deltaTime))
@@ -136,6 +176,145 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
     private static Vector2 ToVector2(Vector3 vector)
     {
         return new Vector2(vector.x, vector.y);
+    }
+
+    // ワイヤーフレーム描画: マテリアル作成
+    private void CreateLineMaterial()
+    {
+        if (lineMaterial != null)
+        {
+            return;
+        }
+
+        Shader shader = Shader.Find("Hidden/Internal-Colored");
+
+        if (shader == null)
+        {
+            Debug.LogWarning("[SonarChargerSonarDetector] Hidden/Internal-Colored shader が見つかりません。", this);
+            return;
+        }
+
+        lineMaterial = new Material(shader);
+        lineMaterial.hideFlags = HideFlags.HideAndDontSave;
+        ApplyLineMaterialSettings();
+    }
+
+    // ワイヤーフレーム描画: マテリアル設定更新
+    // ワイヤーフレーム描画: マテリアル設定更新
+    private void ApplyLineMaterialSettings()
+    {
+        if (lineMaterial == null)
+        {
+            return;
+        }
+
+        lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        lineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        lineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+        lineMaterial.SetInt("_ZWrite", 0);
+
+        lineMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+    }
+
+    // ワイヤーフレーム描画: GameView用レンダリングコールバック
+    // ワイヤーフレーム描画: GameView用レンダリングコールバック
+    private void OnRenderObject()
+    {
+        if (!visualizeSonarInGameView)
+        {
+            return;
+        }
+
+        if (lineMaterial == null)
+        {
+            CreateLineMaterial();
+        }
+
+        if (lineMaterial == null)
+        {
+            return;
+        }
+
+        Vector3 origin = GetOriginPosition();
+
+        ApplyLineMaterialSettings();
+
+        lineMaterial.SetPass(0);
+
+        GL.PushMatrix();
+        GL.MultMatrix(Matrix4x4.identity);
+        GL.Begin(GL.LINES);
+
+        if (isPulseActive && currentRadius > 0.0f)
+        {
+            GL.Color(gameViewCurrentRingColor);
+            DrawSonarRingWireframe(origin, currentRadius, lastRingThickness);
+        }
+
+        GL.End();
+        GL.PopMatrix();
+    }
+
+    // ワイヤーフレーム描画: ソナーリング本体
+    private void DrawSonarRingWireframe(Vector3 origin, float radius, float thickness)
+    {
+        float halfThickness = Mathf.Max(0.0f, thickness * 0.5f);
+        float innerRadius = Mathf.Max(0.0f, radius - halfThickness);
+        float outerRadius = radius + halfThickness;
+
+        if (innerRadius > 0.01f)
+        {
+            DrawCircleWireframe(origin, innerRadius);
+        }
+
+        DrawCircleWireframe(origin, outerRadius);
+
+        if (innerRadius <= 0.01f)
+        {
+            return;
+        }
+
+        // 内円と外円を少しだけ繋いで、リングの太さが分かるようにする
+        for (int i = 0; i < SonarRingSegments; i += RingBridgeLineStep)
+        {
+            float angle = (i / (float)SonarRingSegments) * Mathf.PI * 2.0f;
+
+            Vector3 innerPoint = origin + new Vector3(
+                Mathf.Cos(angle) * innerRadius,
+                Mathf.Sin(angle) * innerRadius,
+                0.0f);
+
+            Vector3 outerPoint = origin + new Vector3(
+                Mathf.Cos(angle) * outerRadius,
+                Mathf.Sin(angle) * outerRadius,
+                0.0f);
+
+            GL.Vertex(innerPoint);
+            GL.Vertex(outerPoint);
+        }
+    }
+
+    // ワイヤーフレーム描画: XY平面の円
+    private void DrawCircleWireframe(Vector3 origin, float radius)
+    {
+        for (int i = 0; i < SonarRingSegments; i++)
+        {
+            float angle1 = (i / (float)SonarRingSegments) * Mathf.PI * 2.0f;
+            float angle2 = ((i + 1) / (float)SonarRingSegments) * Mathf.PI * 2.0f;
+
+            Vector3 p1 = origin + new Vector3(
+                Mathf.Cos(angle1) * radius,
+                Mathf.Sin(angle1) * radius,
+                0.0f);
+
+            Vector3 p2 = origin + new Vector3(
+                Mathf.Cos(angle2) * radius,
+                Mathf.Sin(angle2) * radius,
+                0.0f);
+
+            GL.Vertex(p1);
+            GL.Vertex(p2);
+        }
     }
 
 #if UNITY_EDITOR

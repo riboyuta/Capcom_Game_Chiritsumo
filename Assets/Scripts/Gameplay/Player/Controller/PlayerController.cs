@@ -124,6 +124,40 @@ public sealed partial class PlayerController : MonoBehaviour
         return externalControlSystem != null && externalControlSystem.CanAcceptExternalControl(request);
     }
 
+    // Facade 向け最小 bridge: 固定射出受理可否。
+internal bool CanAcceptFixedLaunch(in PlayerFixedLaunchRequest request)
+{
+    if (rb == null)
+    {
+        return false;
+    }
+
+    if (request.Direction.sqrMagnitude <= Mathf.Epsilon)
+    {
+        return false;
+    }
+
+    if (IsActionLocked || IsDeathSequencePlaying)
+    {
+        return false;
+    }
+
+    // 崖乗り上げ中は、崖乗り上げ側の MovePosition 制御を優先する。
+    // この間にバネなどの外部射出を受けると、位置補間と速度射出が競合してガクつく。
+    if (runtimeState.isLedgeClimbing)
+    {
+        return false;
+    }
+
+    // 大砲・レール・イベント拘束など、別の外部制御中は固定射出を受けない。
+    if (IsExternallyControlled)
+    {
+        return false;
+    }
+
+    return true;
+}
+
     // Facade 向け最小 bridge: 外部制御開始。
     internal bool TryBeginExternalControl(
         in PlayerExternalControlRequest request,
