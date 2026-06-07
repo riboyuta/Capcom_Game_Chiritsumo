@@ -44,8 +44,8 @@ public sealed class Room : MonoBehaviour
     [Tooltip("この Room へ入った時、入ってきた面の戻り防止 Blocker を有効化するかを設定します。")]
     [SerializeField] private bool enableOneWayBlockerOnEntry = false;
 
-    [Header("カメラ注視位置")]
-    [Tooltip("この部屋で使うカメラ注視オフセットです。Xで左右寄せ、Yで上下寄せを調整します。")]
+    [Header("カメラ中心オフセット")]
+    [Tooltip("この部屋でカメラ中心をプレイヤー基準からどれだけずらすかを設定します。Xで左右寄せ、Yで上下寄せを調整します。")]
     [SerializeField] private Vector2 roomFocusOffset = Vector2.zero;
 
     [Header("カメラ追従スムーズ上書き")]
