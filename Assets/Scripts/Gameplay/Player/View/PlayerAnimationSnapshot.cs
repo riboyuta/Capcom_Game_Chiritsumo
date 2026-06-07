@@ -36,30 +36,44 @@ internal readonly struct PlayerAnimationSnapshot
     // 見た目専用状態
     public readonly PlayerHoodVisualState hoodState;
 
+    // HoodRecover 要求ID。
+    // bool だけでは連続要求を区別できないため、要求ごとに増えるIDを持つ。
+    public readonly int hoodRecoverRequestId;
+
+    // この HoodRecover が対象にするフード世代。
+    // 古い HoodRecover 完了で、新しい Dash 後の Down 状態を Up にしないために使う。
+    public readonly int hoodRecoverTargetVersion;
+
+    // 現在のフード世代。
+    public readonly int hoodVisualVersion;
+
     // 空の初期値。
     public static PlayerAnimationSnapshot Default => new PlayerAnimationSnapshot(
-        isGrounded: false,
-        isDashing: false,
-        isWallSliding: false,
-        isWallGrabbing: false,
-        isLedgeClimbing: false,
-        isStomping: false,
-        isExternallyControlled: false,
-        isDead: false,
-        justLanded: false,
-        justJumped: false,
-        justWallJumped: false,
-        justCrossedApex: false,
-        justDashStarted: false,
-        requestHoodRecover: false,
-        velocityX: 0f,
-        velocityY: 0f,
-        moveInputX: 0f,
-        moveInputY: 0f,
-        facing: 1,
-        wallSide: 0,
-        wallGrabSide: 0,
-        hoodState: PlayerHoodVisualState.Up);
+    isGrounded: false,
+    isDashing: false,
+    isWallSliding: false,
+    isWallGrabbing: false,
+    isLedgeClimbing: false,
+    isStomping: false,
+    isExternallyControlled: false,
+    isDead: false,
+    justLanded: false,
+    justJumped: false,
+    justWallJumped: false,
+    justCrossedApex: false,
+    justDashStarted: false,
+    requestHoodRecover: false,
+    velocityX: 0f,
+    velocityY: 0f,
+    moveInputX: 0f,
+    moveInputY: 0f,
+    facing: 1,
+    wallSide: 0,
+    wallGrabSide: 0,
+    hoodState: PlayerHoodVisualState.Up,
+    hoodRecoverRequestId: 0,
+    hoodRecoverTargetVersion: 0,
+    hoodVisualVersion: 0);
 
     internal PlayerAnimationSnapshot(
         bool isGrounded,
@@ -83,7 +97,10 @@ internal readonly struct PlayerAnimationSnapshot
         int facing,
         int wallSide,
         int wallGrabSide,
-        PlayerHoodVisualState hoodState)
+        PlayerHoodVisualState hoodState,
+        int hoodRecoverRequestId,
+        int hoodRecoverTargetVersion,
+        int hoodVisualVersion)
     {
         this.isGrounded = isGrounded;
         this.isDashing = isDashing;
@@ -107,9 +124,12 @@ internal readonly struct PlayerAnimationSnapshot
         this.moveInputY = moveInputY;
 
         this.facing = facing == 0 ? 1 : (facing > 0 ? 1 : -1);
-        this.wallSide = wallSide;
+        this.wallSide = wallSide;   
         this.wallGrabSide = wallGrabSide;
         this.hoodState = hoodState;
+        this.hoodRecoverRequestId = hoodRecoverRequestId;
+        this.hoodRecoverTargetVersion = hoodRecoverTargetVersion;
+        this.hoodVisualVersion = hoodVisualVersion;
     }
 
     // 地上で横移動入力があるかの簡易判定。
