@@ -40,6 +40,10 @@ internal sealed class PlayerDashSystem
         deps.RuntimeState.justDashStartedThisFrame = false;
         deps.RuntimeState.requestHoodRecoverThisFrame = false;
         deps.RuntimeState.hoodVisualState = PlayerHoodVisualState.Up;
+
+        deps.RuntimeState.hoodVisualVersion = 0;
+        deps.RuntimeState.hoodRecoverRequestId = 0;
+        deps.RuntimeState.hoodRecoverTargetVersion = 0;
     }
 
     // 見た目用単発フラグをリセットする。
@@ -165,6 +169,9 @@ internal sealed class PlayerDashSystem
         if (deps.RuntimeState.hoodVisualState == PlayerHoodVisualState.Down)
         {
             deps.RuntimeState.requestHoodRecoverThisFrame = true;
+            deps.RuntimeState.hoodRecoverRequestId++;
+            deps.RuntimeState.hoodRecoverTargetVersion = deps.RuntimeState.hoodVisualVersion;
+
             hoodRecoverRequestHoldTimer = HoodRecoverRequestHoldDuration;
         }
 
@@ -241,6 +248,10 @@ internal sealed class PlayerDashSystem
         deps.RuntimeState.justDashStartedThisFrame = true;
         deps.RuntimeState.requestHoodRecoverThisFrame = false;
         deps.RuntimeState.hoodVisualState = PlayerHoodVisualState.Down;
+
+        // 新しいダッシュでフード状態の世代を進める。
+        // これにより、古い HoodRecover 完了がこの Down 状態を Up に戻すのを防ぐ。
+        deps.RuntimeState.hoodVisualVersion++;
 
         if (deps.RuntimeState.isGrounded)
         {
