@@ -1,5 +1,37 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3439266446954421451
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7739214259632440699}
+  m_Layer: 0
+  m_Name: ModelRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7739214259632440699
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3439266446954421451}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2429069666638468225}
+  m_Father: {fileID: 5573156421576183138}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4164687569488564593
 GameObject:
   m_ObjectHideFlags: 0
@@ -9,8 +41,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5573156421576183138}
-  - component: {fileID: 3971013630613049872}
-  - component: {fileID: 7019143993142121559}
+  - component: {fileID: 6398278473927905883}
   m_Layer: 0
   m_Name: ShadowEnemyView
   m_TagString: Untagged
@@ -30,69 +61,11 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.4, y: 0.4, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 7739214259632440699}
   m_Father: {fileID: 3728791641749409189}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &3971013630613049872
-SpriteRenderer:
-  serializedVersion: 2
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4164687569488564593}
-  m_Enabled: 1
-  m_CastShadows: 0
-  m_ReceiveShadows: 0
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 0
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 0
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 4
-  m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 0
-  m_FlipY: 0
-  m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
-  m_AdaptiveModeThreshold: 0.5
-  m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
-  m_SpriteSortPoint: 0
---- !u!114 &7019143993142121559
+--- !u!114 &6398278473927905883
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -101,196 +74,129 @@ MonoBehaviour:
   m_GameObject: {fileID: 4164687569488564593}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86b45d499df521040adc4440a23f9a4c, type: 3}
+  m_Script: {fileID: 11500000, guid: 029422439644a544eaf82e00ef4abd8b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ShadowChaserView
+  m_EditorClassIdentifier: Assembly-CSharp::ShadowChaserModelView
   shadowEnemy: {fileID: 7109090437168328579}
-  spriteRenderer: {fileID: 3971013630613049872}
-  viewRoot: {fileID: 5573156421576183138}
-  walkThreshold: 0.05
-  riseThreshold: 0.05
-  baseLocalOffset: {x: 0, y: 0, z: 0}
-  baseScale: {x: 0.4, y: 0.4, z: 0.4}
-  idleClip:
-    enabled: 1
-    sprites:
-    - {fileID: 290368967, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
-    startFrame: 0
-    endFrame: 0
-    fps: 12
-    playbackMode: 2
-    minimumDuration: 0
-    extraFlipX: 0
-    extraFlipY: 0
-    scaleMultiplier: 1
-    localOffset: {x: 0, y: 0, z: 0}
-  walkLoopClip:
-    enabled: 1
-    sprites:
-    - {fileID: 290368967, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
-    - {fileID: 1716179379, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
-    - {fileID: 1465907502, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
-    - {fileID: -727687240, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
-    - {fileID: 472008612, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
-    - {fileID: -49800599, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
-    - {fileID: 248648912, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
-    - {fileID: 382070223, guid: 9bfd71fa813c42c44a2398f6c581b0ec, type: 3}
-    startFrame: 0
-    endFrame: 7
-    fps: 12
-    playbackMode: 0
-    minimumDuration: 0
-    extraFlipX: 0
-    extraFlipY: 0
-    scaleMultiplier: 1
-    localOffset: {x: 0, y: 0, z: 0}
-  landClip:
-    enabled: 1
-    sprites:
-    - {fileID: -1046398307, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
-    startFrame: 0
-    endFrame: 0
-    fps: 3
-    playbackMode: 1
-    minimumDuration: 0.09
-    extraFlipX: 0
-    extraFlipY: 0
-    scaleMultiplier: 1
-    localOffset: {x: 0, y: 0, z: 0}
-  jumpStartClip:
-    enabled: 1
-    sprites:
-    - {fileID: -1812844035, guid: 160d2f2539805774aa741bb865af696e, type: 3}
-    - {fileID: -28800686, guid: 160d2f2539805774aa741bb865af696e, type: 3}
-    - {fileID: -109164536, guid: 160d2f2539805774aa741bb865af696e, type: 3}
-    - {fileID: 641278213, guid: 160d2f2539805774aa741bb865af696e, type: 3}
-    startFrame: 0
-    endFrame: 3
-    fps: 20
-    playbackMode: 2
-    minimumDuration: 0.1
-    extraFlipX: 0
-    extraFlipY: 0
-    scaleMultiplier: 1
-    localOffset: {x: 0, y: 0, z: 0}
-  jumpRiseClip:
-    enabled: 0
-    sprites:
-    - {fileID: 641278213, guid: 160d2f2539805774aa741bb865af696e, type: 3}
-    startFrame: 0
-    endFrame: 0
-    fps: 12
-    playbackMode: 2
-    minimumDuration: 0
-    extraFlipX: 0
-    extraFlipY: 0
-    scaleMultiplier: 1
-    localOffset: {x: 0, y: 0, z: 0}
-  jumpToFallClip:
-    enabled: 1
-    sprites:
-    - {fileID: 1303732482, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
-    - {fileID: -1045589456, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
-    - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
-    startFrame: 0
-    endFrame: 2
-    fps: 10
-    playbackMode: 1
-    minimumDuration: 0.1
-    extraFlipX: 0
-    extraFlipY: 0
-    scaleMultiplier: 1
-    localOffset: {x: 0, y: 0, z: 0}
-  fallClip:
-    enabled: 0
-    sprites:
-    - {fileID: 1567032740, guid: 219bfd49cb6a9e444baff703a99bac5a, type: 3}
-    startFrame: 0
-    endFrame: 0
-    fps: 12
-    playbackMode: 2
-    minimumDuration: 0
-    extraFlipX: 0
-    extraFlipY: 0
-    scaleMultiplier: 1
-    localOffset: {x: 0, y: 0, z: 0}
-  wallSlideClip:
-    enabled: 1
-    sprites:
-    - {fileID: 422731689, guid: 0494f32ca83c29b468b8c90383c2f5b0, type: 3}
-    startFrame: 0
-    endFrame: 0
-    fps: 12
-    playbackMode: 0
-    minimumDuration: 0
-    extraFlipX: 1
-    extraFlipY: 0
-    scaleMultiplier: 1
-    localOffset: {x: 0, y: 0, z: 0}
-  wallJumpClip:
-    enabled: 1
-    sprites:
-    - {fileID: -710639366, guid: d75da9a588426e042a7d7d4c0de1ebbe, type: 3}
-    - {fileID: -710639366, guid: d75da9a588426e042a7d7d4c0de1ebbe, type: 3}
-    startFrame: 0
-    endFrame: 1
-    fps: 3
-    playbackMode: 0
-    minimumDuration: 0.1
-    extraFlipX: 0
-    extraFlipY: 0
-    scaleMultiplier: 1
-    localOffset: {x: 0, y: 0, z: 0}
-  dashClip:
-    enabled: 1
-    sprites:
-    - {fileID: 1441946917, guid: ad1e1244b7d90d740a91f7892935a8bf, type: 3}
-    startFrame: 0
-    endFrame: 0
-    fps: 12
-    playbackMode: 2
-    minimumDuration: 0
-    extraFlipX: 0
-    extraFlipY: 0
-    scaleMultiplier: 1
-    localOffset: {x: 0, y: 0, z: 0}
-  currentAnimState: 0
-  desiredAnimState: 0
+  animator: {fileID: 8599031029733543675}
+  modelRoot: {fileID: 7739214259632440699}
+  hoodUpRoot: {fileID: 3151201500496059633}
+  hoodDownRoot: {fileID: 5820686304514612151}
+  controlledRenderers: []
+  resolverSettings:
+    runVelocityThreshold: 0.05
+    riseVelocityThreshold: 0.05
+    wallClimbInputThreshold: 0.1
+    landMinimumDuration: 0.08
+    jumpStartMinimumDuration: 0.1
+    jumpToFallMinimumDuration: 0.08
+    wallJumpMinimumDuration: 0.1
+    ledgeClimbMinimumDuration: 0.1
+    stompMinimumDuration: 0.05
+  baseLayerIndex: 0
+  defaultTransitionDuration: 0.06
+  urgentTransitionDuration: 0.02
+  flipByScaleX: 1
+  invertFacing: 0
+  useWallJumpFacingLock: 1
+  wallJumpFacingLockDuration: 0.4
+  fallbackToIdleWhenStateMissing: 1
+  warnWhenAnimatorStateMissing: 1
+  stateNames:
+    idle: Idle
+    run: Run
+    land: Land
+    jumpStart: JumpStart
+    jumpRise: JumpRise
+    jumpToFall: JumpToFall
+    fall: Fall
+    wallSlide: WallSlide
+    wallGrabIdle: WallGrabIdle
+    wallClimb: WallClimb
+    wallJump: WallJump
+    dash: Dash
+    ledgeClimb: LedgeClimb
+    stomp: Stomp
+  useStateAdjustments: 1
+  stateAdjustments:
+    idle:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    run:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    land:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    jumpStart:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    jumpRise:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    jumpToFall:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    fall:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    wallSlide:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    wallGrabIdle:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    wallClimb:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    wallJump:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    dash:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    ledgeClimb:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+    stomp:
+      localOffset: {x: 0, y: 0, z: 0}
+      localEulerAngles: {x: 0, y: 0, z: 0}
+      scaleMultiplier: 1
+      extraFlipX: 0
+  currentState: 0
+  desiredState: 0
+  playingAnimatorStateName: None
+  currentHoodState: 0
   currentStateElapsed: 0
   currentStateLockRemaining: 0
-  currentClipName: None
-  currentFrameIndex: 0
---- !u!1 &4287828007265584616
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7411532347134837446}
-  m_Layer: 0
-  m_Name: SpawnPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7411532347134837446
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4287828007265584616}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3728791641749409189}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  wallJumpFacingLockTimer: 0
+  wallJumpLockedFacing: 1
 --- !u!1 &5574496361361292809
 GameObject:
   m_ObjectHideFlags: 0
@@ -335,7 +241,6 @@ GameObject:
   - component: {fileID: 5994568916941441081}
   - component: {fileID: 6444090207509418584}
   - component: {fileID: 1417925466093227198}
-  - component: {fileID: 4989920111678109130}
   m_Layer: 0
   m_Name: EnemySpawnTrigger
   m_TagString: Untagged
@@ -392,33 +297,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShadowChaserActivator
   targetEnemy: {fileID: 7109090437168328579}
-  spawnPoint: {fileID: 7411532347134837446}
+  spawnPoint: {fileID: 0}
   usePlayerTag: 1
   playerTag: Player
   spawnDelay: 2
   parentRoom: {fileID: 0}
---- !u!114 &4989920111678109130
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7538254646737796183}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: def240e382888554abf044f8350dcbf8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HandChaserActivator
-  targetEnemy: {fileID: 0}
-  gameRoot: {fileID: 0}
-  playerTag: Player
-  spawnDelay: 2
-  parentRoom: {fileID: 0}
-  visualizeSafeZone: 1
-  safeZoneColor: {r: 0, g: 1, b: 0, a: 0.8}
-  spawnWarningView: {fileID: 0}
-  targetMovement: {fileID: 0}
-  useSpawnWarning: 1
 --- !u!1 &8890554767865357542
 GameObject:
   m_ObjectHideFlags: 0
@@ -451,7 +334,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5573156421576183138}
-  - {fileID: 7411532347134837446}
   m_Father: {fileID: 907117647867660136}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!136 &630152229394790392
@@ -491,54 +373,91 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShadowChaserEnemy
   recorder: {fileID: 0}
   targetPlayer: {fileID: 0}
-  visualRoot: {fileID: 0}
-  controlledRenderers: []
   delayTime: 0.6
   useInterpolation: 1
-  snapDistance: 0.1
-  smoothFollow: 1
-  followSmoothSharpness: 300
   isActiveOnStart: 0
-  useSpawnSequence: 1
-  spawnDelay: 0
-  spawnDuration: 1
-  spawnOffset: {x: 0, y: 0, z: 0}
-  spawnStartScale: {x: 0.6, y: 0.6, z: 1}
-  hideDuringSpawnDelay: 1
-  startFollowAfterSpawn: 1
-  useCatchUp: 1
-  catchUpDuration: 1.5
-  catchUpFollowSharpness: 5
-  catchUpCompleteDistance: 0.08
-  catchUpCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0.30950928
-      inSlope: 2
-      outSlope: 2
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
+  appearDuration: 0.3
+  appearOffset: {x: 0, y: -1, z: 0}
+  appearOnDelayedTrail: 1
   contactRadius: 0.8
-  applyFacingToVisual: 0
   showTargetGizmo: 1
   targetGizmoColor: {r: 0, g: 1, b: 1, a: 1}
-  showRequestedSpawnGizmo: 1
-  requestedSpawnGizmoColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  showCatchUpTargetGizmo: 1
-  catchUpTargetGizmoColor: {r: 0, g: 1, b: 0, a: 1}
+  showSpawnGizmo: 1
+  spawnGizmoColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+--- !u!1001 &2756045194315232106
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 7739214259632440699}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -52.499752
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 33.578125
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+      propertyPath: m_Name
+      value: player_model
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+--- !u!4 &2429069666638468225 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+  m_PrefabInstance: {fileID: 2756045194315232106}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &3151201500496059633 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -8249431710032580709, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+  m_PrefabInstance: {fileID: 2756045194315232106}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &5820686304514612151 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8572685291474118877, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+  m_PrefabInstance: {fileID: 2756045194315232106}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &8599031029733543675 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
+  m_PrefabInstance: {fileID: 2756045194315232106}
+  m_PrefabAsset: {fileID: 0}

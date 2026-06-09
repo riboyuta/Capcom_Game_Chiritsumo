@@ -49,6 +49,11 @@ public sealed partial class PlayerController : MonoBehaviour
     [Header("参照: PlayerDeathView")]
     [Tooltip("死亡時の倒れ演出と黒フェード制御を行う見た目コンポーネントです。未設定時は実行時に探索を試みます。")]
     [SerializeField] private PlayerDeathView playerDeathView;
+
+    [Header("参照: PlayerShadowRecorder")]
+    [Tooltip("ShadowChaser 用のプレイヤー履歴レコーダーです。未設定時は同一 GameObject から取得します。")]
+    [SerializeField] private PlayerShadowRecorder playerShadowRecorder;
+
     // 物理移動本体。
     // 速度変更、物理拘束、重力挙動などに使う。
     private Rigidbody rb;
@@ -378,6 +383,12 @@ internal bool CanAcceptFixedLaunch(in PlayerFixedLaunchRequest request)
             enabled = false;
             return;
         }
+
+        if (playerShadowRecorder == null)
+        {
+            playerShadowRecorder = GetComponent<PlayerShadowRecorder>();
+        }
+
         // 入力リーダーを生成する。
         // ここで「生入力」と「入力割り当て設定」を結び付ける。
         playerInputReader = new PlayerInputReader(rawInputSource, inputBindings, movementSettings);
@@ -423,6 +434,7 @@ internal bool CanAcceptFixedLaunch(in PlayerFixedLaunchRequest request)
         runtimeState.wasGroundedLastFrame = false;
         frameRequests.requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
 
+
         currentAnimationSnapshot = PlayerAnimationSnapshot.Default;
 
         deathCoordinator = new PlayerDeathCoordinator(
@@ -444,6 +456,7 @@ internal bool CanAcceptFixedLaunch(in PlayerFixedLaunchRequest request)
                 justLandedThisFrame = false;
                 justCrossedApexThisFrame = false;
             },
+            () => playerShadowRecorder?.ResetHistoryToCurrent(),
             LogRespawn,
             LogRespawnWarning);
     }

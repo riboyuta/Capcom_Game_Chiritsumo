@@ -1,573 +1,270 @@
 using System.Collections;
 using UnityEngine;
 
-// PlayerShadowRecorder の履歴を遅延再生してプレイヤーを追う敵。
-// 追尾開始前に、トリガーから渡された出現位置へ移動し、待機・出現演出・CatchUp を挟める。
-// 通常追尾も平滑化し、LateUpdate で見た目更新してカクつきを減らしている。
-// StageResetSystem からは IRespawnResettable 経由で初期状態へ戻される。
+// PlayerShadowRecorder の履歴を遅延再生する敵。
+// delayTime 秒前のスナップショットをそのまま適用し、プレイヤーの「影」として追跡する。
+// 見た目制御は ShadowChaserModelView 側に任せる。
 [DisallowMultipleComponent]
 public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
 {
+    // =========================================================
+    // 内部ステート
+    // =========================================================
+
     private enum ShadowChaserState
     {
-        Idle,
-        SpawnDelay,
-        Spawning,
-        CatchUp,
-        Following
+        Idle,       // 非活性
+        Appearing,  // 出現演出中
+        Following,  // 追跡中
     }
 
+    // =========================================================
+    // インスペクター設定
+    // =========================================================
+
     [Header("プレイヤー履歴レコーダー")]
-    [Tooltip("追尾元になるプレイヤー履歴です。")]
+    [Tooltip("追跡元になるプレイヤー履歴です。")]
     [SerializeField] private PlayerShadowRecorder recorder;
 
     [Header("対象プレイヤー")]
     [Tooltip("接触時に即死を要求する対象プレイヤーです。未設定時は recorder と同じ GameObject から取得を試みます。")]
     [SerializeField] private PlayerController targetPlayer;
 
-    [Header("ビジュアルルート")]
-    [Tooltip("左右反転対象の見た目 root です。未設定時は自分自身を使います。")]
-    [SerializeField] private Transform visualRoot;
-
-    [Header("制御対象レンダラー")]
-    [Tooltip("出現時に表示・非表示を切り替える対象 Renderer 群です。未設定時は子を含めて自動取得を試みます。")]
-    [SerializeField] private Renderer[] controlledRenderers;
-
-    [Header("遅延時間")]
-    [Tooltip("何秒前のプレイヤーをなぞるかです。")]
+    [Header("履歴再生")]
+    [Tooltip("何秒前のプレイヤー状態を再生するかです。")]
     [SerializeField] private float delayTime = 0.4f;
 
-    [Header("補間使用")]
-    [Tooltip("履歴の前後 2 点を補間して滑らかにするかです。")]
+    [Tooltip("履歴の前後 2 点を補間して再生するかです。")]
     [SerializeField] private bool useInterpolation = true;
 
-    [Header("スナップ距離")]
-    [Tooltip("目標位置から大きく離れたときに即座に補正する距離です。")]
-    [SerializeField] private float snapDistance = 0.3f;
-
-    [Header("滑らか追尾")]
-    [Tooltip("通常追尾中も目標位置へ少し滑らかに寄せるかです。")]
-    [SerializeField] private bool smoothFollow = true;
-
-    [Header("追尾平滑化強度")]
-    [Tooltip("通常追尾中の吸い付き強さです。大きいほど素早く追従します。")]
-    [SerializeField] private float followSmoothSharpness = 40.0f;
-
     [Header("開始時有効化")]
-    [Tooltip("開始時に有効にするかです。true ならシーン開始時にスポーンシーケンスへ入ります。")]
+    [Tooltip("true ならシーン開始時に出現演出へ入ります。")]
     [SerializeField] private bool isActiveOnStart = false;
 
-    [Header("スポーンシーケンス使用")]
-    [Tooltip("スポーンシーケンスを使うかです。false なら即座に追尾開始します。")]
-    [SerializeField] private bool useSpawnSequence = true;
+    [Header("出現演出")]
+    [Tooltip("出現演出の長さです。0 なら即座に追跡へ移行します。")]
+    [SerializeField] private float appearDuration = 0.3f;
 
-    [Header("スポーン待機時間")]
-    [Tooltip("起動から出現演出開始までの待機時間です。")]
-    [SerializeField] private float spawnDelay = 0.2f;
+    [Tooltip("出現演出の開始位置オフセットです。")]
+    [SerializeField] private Vector3 appearOffset = new Vector3(0f, -1f, 0f);
 
-    [Header("スポーン演出時間")]
-    [Tooltip("出現演出の長さです。")]
-    [SerializeField] private float spawnDuration = 0.35f;
-
-    [Header("スポーン位置オフセット")]
-    [Tooltip("出現演出の開始位置オフセットです。要求されたスポーン位置からこの分ずらした位置から現れます。")]
-    [SerializeField] private Vector3 spawnOffset = new Vector3(0f, -1f, 0f);
-
-    [Header("スポーン開始スケール")]
-    [Tooltip("出現演出開始時のスケールです。")]
-    [SerializeField] private Vector3 spawnStartScale = new Vector3(0.6f, 0.6f, 1f);
-
-    [Header("待機中非表示")]
-    [Tooltip("待機中は Renderer を非表示にするかです。")]
-    [SerializeField] private bool hideDuringSpawnDelay = true;
-
-    [Header("スポーン後追尾開始")]
-    [Tooltip("出現演出完了後に追尾を開始するかです。")]
-    [SerializeField] private bool startFollowAfterSpawn = true;
-
-    [Header("レール合流使用")]
-    [Tooltip("スポーン後、履歴レールへ滑らかに合流する処理を使うかです。")]
-    [SerializeField] private bool useCatchUp = true;
-
-    [Header("合流時間")]
-    [Tooltip("CatchUp にかける最短時間です。")]
-    [SerializeField] private float catchUpDuration = 0.2f;
-
-    [Header("合流追尾強度")]
-    [Tooltip("CatchUp 中に現在位置から目標位置へ吸い付く強さです。大きいほど追従が強くなります。")]
-    [SerializeField] private float catchUpFollowSharpness = 12.0f;
-
-    [Header("合流完了距離")]
-    [Tooltip("CatchUp 完了とみなす位置差です。これ以下まで寄ったら通常追尾へ入ります。")]
-    [SerializeField] private float catchUpCompleteDistance = 0.08f;
-
-    [Header("合流カーブ")]
-    [Tooltip("CatchUp の進行カーブです。未設定や不正時は線形扱いになります。")]
-    [SerializeField] private AnimationCurve catchUpCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    [Tooltip("出現位置を固定スポーン位置ではなく、遅延履歴上の位置に合わせるかです。")]
+    [SerializeField] private bool appearOnDelayedTrail = true;
 
     [Header("接触判定半径")]
     [Tooltip("この半径内にプレイヤー中心が入ったら即死扱いにします。")]
     [SerializeField] private float contactRadius = 0.4f;
 
-    [Header("向き反転適用")]
-    [Tooltip("snapshot の facing に応じて左右反転するかです。")]
-    [SerializeField] private bool applyFacingToVisual = true;
-
-    [Header("目標位置表示")]
-    [Tooltip("参照中の目標位置を Gizmo で表示します。")]
+    [Header("Gizmo 表示")]
+    [Tooltip("現在参照中の履歴位置を Gizmo で表示します。")]
     [SerializeField] private bool showTargetGizmo = true;
-
-    [Header("目標位置色")]
-    [Tooltip("目標位置の Gizmo 色です。")]
+    [Tooltip("履歴位置の Gizmo 色です。")]
     [SerializeField] private Color targetGizmoColor = Color.cyan;
 
-    [Header("スポーン位置表示")]
-    [Tooltip("現在の要求スポーン位置を Gizmo で表示します。")]
-    [SerializeField] private bool showRequestedSpawnGizmo = true;
+    [Tooltip("起動時に渡されたスポーン位置を Gizmo で表示します。")]
+    [SerializeField] private bool showSpawnGizmo = true;
+    [Tooltip("スポーン位置の Gizmo 色です。")]
+    [SerializeField] private Color spawnGizmoColor = Color.yellow;
 
-    [Header("スポーン位置色")]
-    [Tooltip("要求スポーン位置の Gizmo 色です。")]
-    [SerializeField] private Color requestedSpawnGizmoColor = Color.yellow;
-
-    [Header("合流目標表示")]
-    [Tooltip("CatchUp 中の現在目標位置を Gizmo で表示します。")]
-    [SerializeField] private bool showCatchUpTargetGizmo = true;
-
-    [Header("合流目標色")]
-    [Tooltip("CatchUp 目標位置の Gizmo 色です。")]
-    [SerializeField] private Color catchUpTargetGizmoColor = Color.green;
+    // =========================================================
+    // ランタイム状態
+    // =========================================================
 
     private ShadowChaserState state = ShadowChaserState.Idle;
-    private Coroutine spawnSequenceCoroutine;
+    private Coroutine appearCoroutine;
+    private float appearNormalizedTime = 1f;    // 出現演出の進捗（0〜1）、ShadowChaserModelView から参照される
 
+    // 最後に適用したスナップショット（外部参照・Gizmo 用）
     private PlayerShadowSnapshot lastAppliedSnapshot;
     private bool hasLastAppliedSnapshot;
 
-    private Vector3 defaultPosition;
+    // Awake 時点の Transform（デフォルト基準値）
+    private Vector3    defaultPosition;
     private Quaternion defaultRotation;
-    private Vector3 defaultVisualScale;
-    private bool initializedDefaultVisualScale;
 
-    private float catchUpTimer;
-    private Vector3 catchUpStartPosition;
-    private Quaternion catchUpStartRotation;
-    private bool hasCatchUpTarget;
-    private Vector3 catchUpCurrentTargetPosition;
-    private Quaternion catchUpCurrentTargetRotation;
+    // 現在のスポーン情報（Gizmo 表示用）
+    private Vector3    currentSpawnPosition;
+    private Quaternion currentSpawnRotation;
+    private bool       hasSpawnPosition;
 
-    // 現在の起動要求で使うスポーン情報
-    private Vector3 currentRequestedSpawnPosition;
-    private Quaternion currentRequestedSpawnRotation;
-    private bool hasRequestedSpawn;
-
-    // Respawn 用に保存する初期状態
-    private bool hasCapturedInitialState;
-    private Vector3 initialPosition;
+    // リスポーン用 Transform スナップショット
+    private bool       hasCapturedInitialState;
+    private Vector3    initialPosition;
     private Quaternion initialRotation;
-    private Vector3 initialVisualScale;
-    private bool initialVisibility;
-    private bool initialWasActiveOnStart;
 
-    // インスペクター設定の初期値キャッシュ
-    private float initialDelayTime;
-    private bool initialUseInterpolation;
-    private float initialSnapDistance;
-    private bool initialSmoothFollow;
-    private float initialFollowSmoothSharpness;
+    // リスポーン用 設定値スナップショット
+    private float   initialDelayTime;
+    private bool    initialUseInterpolation;
+    private bool    initialWasActiveOnStart;
+    private float   initialAppearDuration;
+    private Vector3 initialAppearOffset;
+    private bool    initialAppearOnDelayedTrail;
+    private float   initialContactRadius;
+    private bool    initialShowTargetGizmo;
+    private Color   initialTargetGizmoColor;
+    private bool    initialShowSpawnGizmo;
+    private Color   initialSpawnGizmoColor;
 
-    private bool initialUseSpawnSequence;
-    private float initialSpawnDelay;
-    private float initialSpawnDuration;
-    private Vector3 initialSpawnOffset;
-    private Vector3 initialSpawnStartScale;
-    private bool initialHideDuringSpawnDelay;
-    private bool initialStartFollowAfterSpawn;
+    // =========================================================
+    // 公開プロパティ
+    // =========================================================
 
-    private bool initialUseCatchUp;
-    private float initialCatchUpDuration;
-    private float initialCatchUpFollowSharpness;
-    private float initialCatchUpCompleteDistance;
-    private AnimationCurve initialCatchUpCurve;
-
-    private float initialContactRadius;
-    private bool initialApplyFacingToVisual;
-
-    private bool initialShowTargetGizmo;
-    private Color initialTargetGizmoColor;
-    private bool initialShowRequestedSpawnGizmo;
-    private Color initialRequestedSpawnGizmoColor;
-    private bool initialShowCatchUpTargetGizmo;
-    private Color initialCatchUpTargetGizmoColor;
-
-    // View 参照口
-    public bool HasSnapshot => hasLastAppliedSnapshot;
+    public bool HasSnapshot          => hasLastAppliedSnapshot;
+    public bool IsAppearing          => state == ShadowChaserState.Appearing;
+    public bool IsFollowing          => state == ShadowChaserState.Following;
+    public float AppearNormalizedTime => appearNormalizedTime;
     public PlayerShadowSnapshot CurrentSnapshot => lastAppliedSnapshot;
 
-    // 初期化処理。
-    // 必要な参照を取得し、デフォルトの位置・回転・スケールを保存する。
+    // =========================================================
+    // Unity ライフサイクル
+    // =========================================================
+
     private void Awake()
     {
-        // Recorder が未設定ならシーンから探す
+        // 未設定の参照をシーンから自動解決する
         if (recorder == null)
-        {
             recorder = FindFirstObjectByType<PlayerShadowRecorder>();
-        }
 
-        // targetPlayer が未設定なら recorder から取得
         if (targetPlayer == null && recorder != null)
-        {
             targetPlayer = recorder.GetComponent<PlayerController>();
-        }
 
-        // visualRoot が未設定なら自身を使用
-        if (visualRoot == null)
-        {
-            visualRoot = transform;
-        }
-
-        // controlledRenderers が未設定なら子を含めて自動取得
-        if (controlledRenderers == null || controlledRenderers.Length == 0)
-        {
-            controlledRenderers = GetComponentsInChildren<Renderer>(true);
-        }
-
-        // デフォルトの位置・回転・スケールを保存
+        // デフォルト Transform を記憶（リセット基準値）
         defaultPosition = transform.position;
         defaultRotation = transform.rotation;
 
-        if (visualRoot != null)
-        {
-            defaultVisualScale = visualRoot.localScale;
-            initializedDefaultVisualScale = true;
-        }
+        currentSpawnPosition = defaultPosition;
+        currentSpawnRotation = defaultRotation;
+        hasSpawnPosition     = false;
 
-        // スポーン要求情報の初期化
-        currentRequestedSpawnPosition = defaultPosition;
-        currentRequestedSpawnRotation = defaultRotation;
-        hasRequestedSpawn = false;
-
-        // 初期状態を Idle に設定
         state = ShadowChaserState.Idle;
-        SetVisible(!hideDuringSpawnDelay);
 
-        // 初期状態をキャッシュ
         CaptureInitialState();
     }
 
-    // isActiveOnStart が true なら、シーン開始時に自動的に起動する。
+    private void OnValidate()
+    {
+        delayTime      = Mathf.Max(0f, delayTime);
+        appearDuration = Mathf.Max(0f, appearDuration);
+        contactRadius  = Mathf.Max(0f, contactRadius);
+    }
+
     private void Start()
     {
+        // isActiveOnStart が有効なら即座に出現演出を開始する
         if (isActiveOnStart)
-        {
-            Activate(new ShadowChaserSpawnRequest(defaultPosition, defaultRotation));
-        }
-        else
-        {
-            state = ShadowChaserState.Idle;
-        }
+            Activate(defaultPosition, defaultRotation);
     }
 
-    // LateUpdate で見た目を更新することで、カクつきを減らす。
-    // 状態に応じて CatchUp または Following の更新処理を実行する。
     private void LateUpdate()
     {
-        switch (state)
-        {
-            case ShadowChaserState.CatchUp:
-                UpdateCatchUp();
-                CheckKillContact();
-                break;
-
-            case ShadowChaserState.Following:
-                UpdateFollow();
-                CheckKillContact();
-                break;
-        }
-    }
-
-    public void CaptureInitialState()
-    {
-        if (hasCapturedInitialState)
-        {
+        if (state != ShadowChaserState.Following)
             return;
-        }
 
-        initialPosition = transform.position;
-        initialRotation = transform.rotation;
-        initialVisibility = AreAnyRenderersVisible();
-        initialWasActiveOnStart = isActiveOnStart;
-
-        if (visualRoot != null)
-        {
-            initialVisualScale = visualRoot.localScale;
-        }
-        else
-        {
-            initialVisualScale = Vector3.one;
-        }
-
-        // インスペクター設定値の初期値をキャッシュ
-        StoreCurrentSettingsAsInitial();
-
-        hasCapturedInitialState = true;
+        UpdateFollow();
+        CheckKillContact();
     }
 
+    // =========================================================
+    // 公開 API
+    // =========================================================
+
+    // ScriptableObject の設定値を一括適用する
     public void ApplySettings(ShadowChaserSettings settings)
     {
         if (settings == null)
-        {
             return;
-        }
 
-        delayTime = Mathf.Max(0f, settings.delayTime);
-        useInterpolation = settings.useInterpolation;
-        snapDistance = Mathf.Max(0f, settings.snapDistance);
-        smoothFollow = settings.smoothFollow;
-        followSmoothSharpness = Mathf.Max(0.01f, settings.followSmoothSharpness);
+        delayTime            = Mathf.Max(0f, settings.delayTime);
+        useInterpolation     = settings.useInterpolation;
+        isActiveOnStart      = settings.isActiveOnStart;
 
-        isActiveOnStart = settings.isActiveOnStart;
+        appearDuration       = Mathf.Max(0f, settings.appearDuration);
+        appearOffset         = settings.appearOffset;
+        appearOnDelayedTrail = settings.appearOnDelayedTrail;
 
-        useSpawnSequence = settings.useSpawnSequence;
-        spawnDelay = Mathf.Max(0f, settings.spawnDelay);
-        spawnDuration = Mathf.Max(0.001f, settings.spawnDuration);
-        spawnOffset = settings.spawnOffset;
-        spawnStartScale = settings.spawnStartScale;
-        hideDuringSpawnDelay = settings.hideDuringSpawnDelay;
-        startFollowAfterSpawn = settings.startFollowAfterSpawn;
+        contactRadius        = Mathf.Max(0f, settings.contactRadius);
 
-        useCatchUp = settings.useCatchUp;
-        catchUpDuration = Mathf.Max(0.001f, settings.catchUpDuration);
-        catchUpFollowSharpness = Mathf.Max(0.01f, settings.catchUpFollowSharpness);
-        catchUpCompleteDistance = Mathf.Max(0f, settings.catchUpCompleteDistance);
-        catchUpCurve = CloneCurveOrDefault(settings.catchUpCurve);
+        showTargetGizmo      = settings.showTargetGizmo;
+        targetGizmoColor     = settings.targetGizmoColor;
+        showSpawnGizmo       = settings.showSpawnGizmo;
+        spawnGizmoColor      = settings.spawnGizmoColor;
 
-        contactRadius = Mathf.Max(0f, settings.contactRadius);
-        applyFacingToVisual = settings.applyFacingToVisual;
-
-        showTargetGizmo = settings.showTargetGizmo;
-        targetGizmoColor = settings.targetGizmoColor;
-        showRequestedSpawnGizmo = settings.showRequestedSpawnGizmo;
-        requestedSpawnGizmoColor = settings.requestedSpawnGizmoColor;
-        showCatchUpTargetGizmo = settings.showCatchUpTargetGizmo;
-        catchUpTargetGizmoColor = settings.catchUpTargetGizmoColor;
-
-        // RoomEnemySystem から適用された値を、この敵の初期値として扱う。
         StoreCurrentSettingsAsInitial();
-
-        // Idle中だけ表示状態を設定に合わせる。
-        // 追尾中やスポーン中に表示を強制変更すると見た目が飛ぶので触らない。
-        if (Application.isPlaying && state == ShadowChaserState.Idle)
-        {
-            SetVisible(!hideDuringSpawnDelay);
-        }
     }
 
-    private void StoreCurrentSettingsAsInitial()
+    // 現在の状態をリスポーン基準として記録する（2 回目以降は無視）
+    public void CaptureInitialState()
     {
-        initialDelayTime = delayTime;
-        initialUseInterpolation = useInterpolation;
-        initialSnapDistance = snapDistance;
-        initialSmoothFollow = smoothFollow;
-        initialFollowSmoothSharpness = followSmoothSharpness;
+        if (hasCapturedInitialState)
+            return;
 
-        initialWasActiveOnStart = isActiveOnStart;
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
 
-        initialUseSpawnSequence = useSpawnSequence;
-        initialSpawnDelay = spawnDelay;
-        initialSpawnDuration = spawnDuration;
-        initialSpawnOffset = spawnOffset;
-        initialSpawnStartScale = spawnStartScale;
-        initialHideDuringSpawnDelay = hideDuringSpawnDelay;
-        initialStartFollowAfterSpawn = startFollowAfterSpawn;
-
-        initialUseCatchUp = useCatchUp;
-        initialCatchUpDuration = catchUpDuration;
-        initialCatchUpFollowSharpness = catchUpFollowSharpness;
-        initialCatchUpCompleteDistance = catchUpCompleteDistance;
-        initialCatchUpCurve = CloneCurveOrDefault(catchUpCurve);
-
-        initialContactRadius = contactRadius;
-        initialApplyFacingToVisual = applyFacingToVisual;
-
-        initialShowTargetGizmo = showTargetGizmo;
-        initialTargetGizmoColor = targetGizmoColor;
-        initialShowRequestedSpawnGizmo = showRequestedSpawnGizmo;
-        initialRequestedSpawnGizmoColor = requestedSpawnGizmoColor;
-        initialShowCatchUpTargetGizmo = showCatchUpTargetGizmo;
-        initialCatchUpTargetGizmoColor = catchUpTargetGizmoColor;
+        StoreCurrentSettingsAsInitial();
+        hasCapturedInitialState = true;
     }
 
-    private void RestoreInitialSettings()
-    {
-        delayTime = initialDelayTime;
-        useInterpolation = initialUseInterpolation;
-        snapDistance = initialSnapDistance;
-        smoothFollow = initialSmoothFollow;
-        followSmoothSharpness = initialFollowSmoothSharpness;
-
-        isActiveOnStart = initialWasActiveOnStart;
-
-        useSpawnSequence = initialUseSpawnSequence;
-        spawnDelay = initialSpawnDelay;
-        spawnDuration = initialSpawnDuration;
-        spawnOffset = initialSpawnOffset;
-        spawnStartScale = initialSpawnStartScale;
-        hideDuringSpawnDelay = initialHideDuringSpawnDelay;
-        startFollowAfterSpawn = initialStartFollowAfterSpawn;
-
-        useCatchUp = initialUseCatchUp;
-        catchUpDuration = initialCatchUpDuration;
-        catchUpFollowSharpness = initialCatchUpFollowSharpness;
-        catchUpCompleteDistance = initialCatchUpCompleteDistance;
-        catchUpCurve = CloneCurveOrDefault(initialCatchUpCurve);
-
-        contactRadius = initialContactRadius;
-        applyFacingToVisual = initialApplyFacingToVisual;
-
-        showTargetGizmo = initialShowTargetGizmo;
-        targetGizmoColor = initialTargetGizmoColor;
-        showRequestedSpawnGizmo = initialShowRequestedSpawnGizmo;
-        requestedSpawnGizmoColor = initialRequestedSpawnGizmoColor;
-        showCatchUpTargetGizmo = initialShowCatchUpTargetGizmo;
-        catchUpTargetGizmoColor = initialCatchUpTargetGizmoColor;
-    }
-
-    private static AnimationCurve CloneCurveOrDefault(AnimationCurve source)
-    {
-        if (source == null || source.length == 0)
-        {
-            return AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
-        }
-
-        AnimationCurve clone = new AnimationCurve(source.keys)
-        {
-            preWrapMode = source.preWrapMode,
-            postWrapMode = source.postWrapMode
-        };
-
-        return clone;
-    }
-
+    // リスポーン時に初期状態へ戻す（IRespawnResettable 実装）
     public void ResetToRespawnState()
     {
-        if (spawnSequenceCoroutine != null)
-        {
-            StopCoroutine(spawnSequenceCoroutine);
-            spawnSequenceCoroutine = null;
-        }
+        StopAppearCoroutine();
 
-        state = ShadowChaserState.Idle;
+        state                  = ShadowChaserState.Idle;
         hasLastAppliedSnapshot = false;
-        hasCatchUpTarget = false;
-        catchUpTimer = 0f;
-
-        currentRequestedSpawnPosition = defaultPosition;
-        currentRequestedSpawnRotation = defaultRotation;
-        hasRequestedSpawn = false;
+        hasSpawnPosition       = false;
+        appearNormalizedTime   = 0f;
 
         if (hasCapturedInitialState)
         {
             transform.position = initialPosition;
             transform.rotation = initialRotation;
 
-            if (visualRoot != null)
-            {
-                visualRoot.localScale = initialVisualScale;
-            }
-
-            // パラメータを初期値に復元
             RestoreInitialSettings();
 
-            SetVisible(initialVisibility);
-
+            // isActiveOnStart が有効だった場合は再起動する
             if (initialWasActiveOnStart)
-            {
-                Activate(new ShadowChaserSpawnRequest(initialPosition, initialRotation));
-            }
+                Activate(initialPosition, initialRotation);
         }
         else
         {
+            // 初期状態未記録時はデフォルト値でフォールバック
             transform.position = defaultPosition;
             transform.rotation = defaultRotation;
-
-            if (visualRoot != null && initializedDefaultVisualScale)
-            {
-                visualRoot.localScale = defaultVisualScale;
-            }
-
-            if (hideDuringSpawnDelay)
-            {
-                SetVisible(false);
-            }
-            else
-            {
-                SetVisible(true);
-            }
         }
     }
 
-    // 外部から呼ばれて敵を起動する。
-    // トリガーから渡された出現位置へ移動し、スポーンシーケンスを開始する。
-    public void Activate(ShadowChaserSpawnRequest request)
+    // 指定スポーン位置で出現演出を開始し、追跡を有効化する
+    public void Activate(Vector3 spawnPosition, Quaternion spawnRotation)
     {
-        // 既に Idle 以外の状態なら何もしない
+        // すでに活性状態なら無視する
         if (state != ShadowChaserState.Idle)
+            return;
+
+        currentSpawnPosition = spawnPosition;
+        currentSpawnRotation = spawnRotation;
+        hasSpawnPosition     = true;
+
+        if (appearDuration <= 0f)
         {
+            // 演出なし：即座に追跡開始
+            BeginFollowImmediate(spawnPosition, spawnRotation);
             return;
         }
 
-        // スポーン要求情報を保存
-        currentRequestedSpawnPosition = request.position;
-        currentRequestedSpawnRotation = request.rotation;
-        hasRequestedSpawn = true;
-
-        // 要求されたスポーン位置へ即座に移動
-        MoveToRequestedSpawnImmediate();
-
-        // スポーンシーケンスを使わない場合は即座に追尾開始
-        if (!useSpawnSequence)
-        {
-            SetVisible(true);
-
-            if (visualRoot != null && initializedDefaultVisualScale)
-            {
-                visualRoot.localScale = defaultVisualScale;
-            }
-
-            if (startFollowAfterSpawn)
-            {
-                BeginCatchUpOrFollow();
-            }
-
-            return;
-        }
-
-        // スポーンシーケンスを開始
-        if (spawnSequenceCoroutine != null)
-        {
-            StopCoroutine(spawnSequenceCoroutine);
-        }
-
-        spawnSequenceCoroutine = StartCoroutine(CoSpawnSequence());
+        StopAppearCoroutine();
+        appearCoroutine = StartCoroutine(CoAppear(spawnPosition, spawnRotation));
     }
 
+    // 追跡を停止し、Idle 状態へ戻す
     public void Deactivate()
     {
-        if (spawnSequenceCoroutine != null)
-        {
-            StopCoroutine(spawnSequenceCoroutine);
-            spawnSequenceCoroutine = null;
-        }
+        StopAppearCoroutine();
 
-        state = ShadowChaserState.Idle;
+        state                  = ShadowChaserState.Idle;
         hasLastAppliedSnapshot = false;
-        hasCatchUpTarget = false;
-        catchUpTimer = 0f;
-
-        if (hideDuringSpawnDelay)
-        {
-            SetVisible(false);
-        }
+        hasSpawnPosition       = false;
+        appearNormalizedTime   = 0f;
     }
 
     public bool IsActive()
@@ -575,396 +272,233 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         return state != ShadowChaserState.Idle;
     }
 
-    // スポーンシーケンスのコルーチン。
-    // 待機時間を置き、出現演出（オフセット位置から目的地への移動 + スケール変化）を行う。
-    private IEnumerator CoSpawnSequence()
+    // =========================================================
+    // 出現演出コルーチン
+    // =========================================================
+
+    // EaseOutCubic で補間しながら出現演出を実行し、完了後に Following へ移行する
+    private IEnumerator CoAppear(Vector3 fallbackPosition, Quaternion fallbackRotation)
     {
-        state = ShadowChaserState.SpawnDelay;
+        state                = ShadowChaserState.Appearing;
+        appearNormalizedTime = 0f;
 
-        Vector3 targetPosition = GetRequestedSpawnPosition();
-        Quaternion targetRotation = GetRequestedSpawnRotation();
+        // 演出終了目標：履歴位置が取れれば優先して使う
+        Vector3              endPosition = fallbackPosition;
+        Quaternion           endRotation = fallbackRotation;
+        PlayerShadowSnapshot snapshot;
 
-        // 待機中は非表示にするかどうか
-        if (hideDuringSpawnDelay)
+        if (appearOnDelayedTrail && TryGetCurrentRailTarget(out snapshot))
         {
-            SetVisible(false);
-        }
-        else
-        {
-            SetVisible(true);
-        }
-
-        // スポーン位置へ移動
-        transform.position = targetPosition;
-        transform.rotation = targetRotation;
-
-        // 待機時間
-        if (spawnDelay > 0f)
-        {
-            yield return new WaitForSeconds(spawnDelay);
+            endPosition = snapshot.position;
+            endRotation = snapshot.rotation;
+            StoreSnapshot(snapshot);
         }
 
-        // 出現演出開始
-        state = ShadowChaserState.Spawning;
-
-        SetVisible(true);
-
-        // 出現演出の開始位置と終了位置
-        Vector3 startPosition = targetPosition + spawnOffset;
-        Vector3 endPosition = targetPosition;
-
-        Vector3 startScale = spawnStartScale;
-        Vector3 endScale = initializedDefaultVisualScale ? defaultVisualScale : Vector3.one;
+        // 開始位置はオフセット分ずらす
+        Vector3    startPosition = endPosition + appearOffset;
+        Quaternion startRotation = endRotation;
 
         transform.position = startPosition;
-        transform.rotation = targetRotation;
+        transform.rotation = startRotation;
 
-        if (visualRoot != null)
-        {
-            visualRoot.localScale = startScale;
-        }
-
-        // 出現演出：位置とスケールを補間
-        float duration = Mathf.Max(0.0001f, spawnDuration);
-        float elapsed = 0f;
+        float duration = Mathf.Max(0.0001f, appearDuration);
+        float elapsed  = 0f;
 
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / duration);
+
+            float normalizedTime = Mathf.Clamp01(elapsed / duration);
+            appearNormalizedTime = normalizedTime;                      // View 側へ進捗を公開する
+
+            float t = EaseOutCubic(normalizedTime);
+
+            // 演出中も目標位置を履歴に追従させる
+            if (appearOnDelayedTrail && TryGetCurrentRailTarget(out snapshot))
+            {
+                endPosition = snapshot.position;
+                endRotation = snapshot.rotation;
+                StoreSnapshot(snapshot);
+            }
 
             transform.position = Vector3.Lerp(startPosition, endPosition, t);
-
-            if (visualRoot != null)
-            {
-                visualRoot.localScale = Vector3.Lerp(startScale, endScale, t);
-            }
+            transform.rotation = Quaternion.Slerp(startRotation, endRotation, t);
 
             yield return null;
         }
 
-        // 最終位置とスケールを確定
-        transform.position = endPosition;
-
-        if (visualRoot != null)
-        {
-            visualRoot.localScale = endScale;
-        }
-
-        // 出現後に追尾を開始するかどうか
-        if (startFollowAfterSpawn)
-        {
-            BeginCatchUpOrFollow();
-        }
+        // 演出完了：最終位置を確定する
+        if (appearOnDelayedTrail && TryGetCurrentRailTarget(out snapshot))
+            ApplySnapshotImmediate(snapshot);
         else
         {
-            state = ShadowChaserState.Idle;
+            transform.position = endPosition;
+            transform.rotation = endRotation;
         }
 
-        spawnSequenceCoroutine = null;
+        appearNormalizedTime = 1f;
+        state                = ShadowChaserState.Following;
+        appearCoroutine      = null;
     }
 
-    // CatchUp または通常追尾を開始する。
-    // CatchUp が有効なら、スポーン位置から履歴レールへの滑らかな合流を行う。
-    private void BeginCatchUpOrFollow()
+    // =========================================================
+    // 追跡ロジック
+    // =========================================================
+
+    // 演出なしで即座に Following 状態へ移行する
+    private void BeginFollowImmediate(Vector3 fallbackPosition, Quaternion fallbackRotation)
     {
-        // CatchUp を使わない場合は即座に通常追尾へ
-        if (!useCatchUp)
+        if (appearOnDelayedTrail && TryGetCurrentRailTarget(out PlayerShadowSnapshot snapshot))
+            ApplySnapshotImmediate(snapshot);
+        else
         {
-            BeginFollow();
-            return;
+            transform.position = fallbackPosition;
+            transform.rotation = fallbackRotation;
         }
 
-        // Recorder がない場合は通常追尾へ
-        if (recorder == null)
-        {
-            BeginFollow();
-            return;
-        }
-
-        // 履歴から snapshot を取得できない場合は通常追尾へ
-        if (!recorder.TryGetSnapshotAtDelay(delayTime, useInterpolation, out PlayerShadowSnapshot snapshot))
-        {
-            BeginFollow();
-            return;
-        }
-
-        // CatchUp 開始：現在位置から目標位置へ滑らかに移行
-        catchUpTimer = 0f;
-        catchUpStartPosition = transform.position;
-        catchUpStartRotation = transform.rotation;
-
-        catchUpCurrentTargetPosition = snapshot.position;
-        catchUpCurrentTargetRotation = snapshot.rotation;
-        hasCatchUpTarget = true;
-
-        lastAppliedSnapshot = snapshot;
-        hasLastAppliedSnapshot = true;
-
-        state = ShadowChaserState.CatchUp;
+        state                = ShadowChaserState.Following;
+        appearNormalizedTime = 0f;
     }
 
-    private void BeginFollow()
-    {
-        state = ShadowChaserState.Following;
-    }
-
-    // CatchUp 中の更新処理。
-    // スポーン位置から履歴レールへ滑らかに合流する。
-    // 目標位置に十分近づいたら通常追尾へ移行する。
-    private void UpdateCatchUp()
-    {
-        if (recorder == null)
-        {
-            BeginFollow();
-            return;
-        }
-
-        // 最新の snapshot を取得
-        if (!recorder.TryGetSnapshotAtDelay(delayTime, useInterpolation, out PlayerShadowSnapshot snapshot))
-        {
-            return;
-        }
-
-        // 目標位置を更新
-        catchUpCurrentTargetPosition = snapshot.position;
-        catchUpCurrentTargetRotation = snapshot.rotation;
-        hasCatchUpTarget = true;
-
-        lastAppliedSnapshot = snapshot;
-        hasLastAppliedSnapshot = true;
-
-        float duration = Mathf.Max(0.0001f, catchUpDuration);
-        catchUpTimer += Time.deltaTime;
-
-        // 正規化された時間 (0.0 ～ 1.0)
-        float normalizedTime = Mathf.Clamp01(catchUpTimer / duration);
-
-        // カーブを適用
-        float curveT = normalizedTime;
-        if (catchUpCurve != null && catchUpCurve.length > 0)
-        {
-            curveT = catchUpCurve.Evaluate(normalizedTime);
-        }
-
-        // 目標位置への吸い付き計算
-        float followLerpFactor = 1f - Mathf.Exp(-Mathf.Max(0.01f, catchUpFollowSharpness) * Time.deltaTime);
-
-        // 現在位置から目標位置への移動目標を計算
-        Vector3 movingTargetPosition = Vector3.Lerp(
-            transform.position,
-            catchUpCurrentTargetPosition,
-            followLerpFactor);
-
-        Quaternion movingTargetRotation = Quaternion.Slerp(
-            transform.rotation,
-            catchUpCurrentTargetRotation,
-            followLerpFactor);
-
-        // 開始位置から移動目標へ、カーブに応じて補間
-        transform.position = Vector3.Lerp(
-            catchUpStartPosition,
-            movingTargetPosition,
-            curveT);
-
-        transform.rotation = Quaternion.Slerp(
-            catchUpStartRotation,
-            movingTargetRotation,
-            curveT);
-
-        ApplyFacingVisual(snapshot.facing);
-
-        // 目標位置との距離をチェック（パフォーマンス最適化: sqrMagnitude を使用）
-        float sqrRemainDistance = (transform.position - catchUpCurrentTargetPosition).sqrMagnitude;
-        float sqrCompleteDistance = catchUpCompleteDistance * catchUpCompleteDistance;
-
-        // 時間が経過し、十分近づいたら通常追尾へ移行
-        if (normalizedTime >= 1f && sqrRemainDistance <= Mathf.Max(0.000001f, sqrCompleteDistance))
-        {
-            BeginFollow();
-        }
-    }
-
-    // 通常追尾中の更新処理。
-    // delayTime 秒前のプレイヤー履歴を取得し、その位置をなぞる。
+    // 毎フレーム、遅延スナップショットを取得して位置を更新する
     private void UpdateFollow()
     {
+        if (TryGetCurrentRailTarget(out PlayerShadowSnapshot snapshot))
+            ApplySnapshotImmediate(snapshot);
+    }
+
+    // delayTime 秒前のスナップショットを recorder から取得する
+    private bool TryGetCurrentRailTarget(out PlayerShadowSnapshot snapshot)
+    {
+        snapshot = default;
+
         if (recorder == null)
-        {
-            return;
-        }
+            return false;
 
-        // delayTime 秒前の snapshot を取得
-        if (!recorder.TryGetSnapshotAtDelay(delayTime, useInterpolation, out PlayerShadowSnapshot snapshot))
-        {
-            return;
-        }
+        return recorder.TryGetSnapshotAtDelay(delayTime, useInterpolation, out snapshot);
+    }
 
-        // snapshot を適用して位置を更新
-        ApplySnapshot(snapshot);
+    // スナップショットを Transform へ即時適用する
+    private void ApplySnapshotImmediate(PlayerShadowSnapshot snapshot)
+    {
+        transform.position = snapshot.position;
+        transform.rotation = snapshot.rotation;
 
-        lastAppliedSnapshot = snapshot;
+        StoreSnapshot(snapshot);
+    }
+
+    // 直近スナップショットを記録する（外部公開・Gizmo 用）
+    private void StoreSnapshot(PlayerShadowSnapshot snapshot)
+    {
+        lastAppliedSnapshot    = snapshot;
         hasLastAppliedSnapshot = true;
     }
 
-    // snapshot を適用して自身の位置・回転・向きを更新する。
-    // snapDistance 以上離れている場合は即座に移動、そうでなければ滑らかに追尾する。
-    private void ApplySnapshot(PlayerShadowSnapshot snapshot)
-    {
-        // パフォーマンス最適化: 平方根計算を避けるため sqrMagnitude を使用
-        float sqrDistance = (transform.position - snapshot.position).sqrMagnitude;
-        float sqrSnapDistance = snapDistance * snapDistance;
+    // =========================================================
+    // 接触判定
+    // =========================================================
 
-        // snapDistance 以上離れている場合は即座に移動
-        if (sqrDistance >= sqrSnapDistance)
-        {
-            transform.position = snapshot.position;
-        }
-        else if (smoothFollow)
-        {
-            // 滑らかに追尾
-            float lerpFactor = 1f - Mathf.Exp(-Mathf.Max(0.01f, followSmoothSharpness) * Time.deltaTime);
-            transform.position = Vector3.Lerp(transform.position, snapshot.position, lerpFactor);
-        }
-        else
-        {
-            // 滑らかな追尾をしない場合は即座に移動
-            transform.position = snapshot.position;
-        }
-
-        transform.rotation = snapshot.rotation;
-        ApplyFacingVisual(snapshot.facing);
-    }
-
-    private void ApplyFacingVisual(int facing)
-    {
-        if (!applyFacingToVisual || visualRoot == null || !initializedDefaultVisualScale)
-        {
-            return;
-        }
-
-        Vector3 scale = defaultVisualScale;
-        scale.x = Mathf.Abs(defaultVisualScale.x) * (facing < 0 ? -1f : 1f);
-        visualRoot.localScale = scale;
-    }
-
-    // プレイヤーとの接触判定。
-    // contactRadius 内にプレイヤーがいたら即死を要求する。
+    // プレイヤーが contactRadius 以内に入ったらハザード死を要求する
     private void CheckKillContact()
     {
         if (targetPlayer == null)
-        {
             return;
-        }
 
-        // プレイヤーとの距離を計算（パフォーマンス最適化: sqrMagnitude を使用）
-        Vector3 playerPosition = targetPlayer.transform.position;
-        float sqrDistance = (transform.position - playerPosition).sqrMagnitude;
+        float sqrDistance      = (transform.position - targetPlayer.transform.position).sqrMagnitude;
         float sqrContactRadius = contactRadius * contactRadius;
 
-        // contactRadius 内にいれば即死を要求
-        if (sqrDistance > sqrContactRadius)
-        {
+        if (sqrDistance <= sqrContactRadius)
+            targetPlayer.RequestHazardDeath();
+    }
+
+    // =========================================================
+    // 設定値の保存・復元
+    // =========================================================
+
+    // 現在の設定値をリスポーン用スナップショットとして保存する
+    private void StoreCurrentSettingsAsInitial()
+    {
+        initialDelayTime            = delayTime;
+        initialUseInterpolation     = useInterpolation;
+        initialWasActiveOnStart     = isActiveOnStart;
+
+        initialAppearDuration       = appearDuration;
+        initialAppearOffset         = appearOffset;
+        initialAppearOnDelayedTrail = appearOnDelayedTrail;
+
+        initialContactRadius        = contactRadius;
+
+        initialShowTargetGizmo      = showTargetGizmo;
+        initialTargetGizmoColor     = targetGizmoColor;
+        initialShowSpawnGizmo       = showSpawnGizmo;
+        initialSpawnGizmoColor      = spawnGizmoColor;
+    }
+
+    // リスポーン用スナップショットから設定値を復元する
+    private void RestoreInitialSettings()
+    {
+        delayTime            = initialDelayTime;
+        useInterpolation     = initialUseInterpolation;
+        isActiveOnStart      = initialWasActiveOnStart;
+
+        appearDuration       = initialAppearDuration;
+        appearOffset         = initialAppearOffset;
+        appearOnDelayedTrail = initialAppearOnDelayedTrail;
+
+        contactRadius        = initialContactRadius;
+
+        showTargetGizmo      = initialShowTargetGizmo;
+        targetGizmoColor     = initialTargetGizmoColor;
+        showSpawnGizmo       = initialShowSpawnGizmo;
+        spawnGizmoColor      = initialSpawnGizmoColor;
+    }
+
+    // =========================================================
+    // ユーティリティ
+    // =========================================================
+
+    private void StopAppearCoroutine()
+    {
+        if (appearCoroutine == null)
             return;
-        }
 
-        targetPlayer.RequestHazardDeath();
+        StopCoroutine(appearCoroutine);
+        appearCoroutine = null;
     }
 
-    private void MoveToRequestedSpawnImmediate()
+    // 3 次イーズアウト（1 − (1−t)³）
+    private static float EaseOutCubic(float t)
     {
-        transform.position = GetRequestedSpawnPosition();
-        transform.rotation = GetRequestedSpawnRotation();
-
-        if (visualRoot != null && initializedDefaultVisualScale)
-        {
-            visualRoot.localScale = defaultVisualScale;
-        }
+        t = Mathf.Clamp01(t);
+        float inv = 1f - t;
+        return 1f - inv * inv * inv;
     }
 
-    private Vector3 GetRequestedSpawnPosition()
-    {
-        if (hasRequestedSpawn)
-        {
-            return currentRequestedSpawnPosition;
-        }
-
-        return defaultPosition;
-    }
-
-    private Quaternion GetRequestedSpawnRotation()
-    {
-        if (hasRequestedSpawn)
-        {
-            return currentRequestedSpawnRotation;
-        }
-
-        return defaultRotation;
-    }
-
-    private void SetVisible(bool visible)
-    {
-        if (controlledRenderers == null)
-        {
-            return;
-        }
-
-        int count = controlledRenderers.Length;
-        for (int i = 0; i < count; ++i)
-        {
-            Renderer current = controlledRenderers[i];
-            if (current == null)
-            {
-                continue;
-            }
-
-            current.enabled = visible;
-        }
-    }
-
-    private bool AreAnyRenderersVisible()
-    {
-        if (controlledRenderers == null || controlledRenderers.Length == 0)
-        {
-            return true;
-        }
-
-        for (int i = 0; i < controlledRenderers.Length; ++i)
-        {
-            Renderer current = controlledRenderers[i];
-            if (current != null && current.enabled)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    // =========================================================
+    // Gizmo
+    // =========================================================
 
     private void OnDrawGizmosSelected()
     {
+        // 接触判定円
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, contactRadius);
 
+        // 現在の追跡目標位置
         if (showTargetGizmo && hasLastAppliedSnapshot)
         {
             Gizmos.color = targetGizmoColor;
             Gizmos.DrawSphere(lastAppliedSnapshot.position, 0.08f);
         }
 
-        if (showRequestedSpawnGizmo)
+        // スポーン位置とオフセット方向
+        if (showSpawnGizmo)
         {
-            Vector3 spawnPosition = hasRequestedSpawn ? currentRequestedSpawnPosition : transform.position;
-            Gizmos.color = requestedSpawnGizmoColor;
-            Gizmos.DrawWireSphere(spawnPosition, 0.15f);
-            Gizmos.DrawLine(spawnPosition, spawnPosition + spawnOffset);
-        }
+            Vector3 spawnPosition = hasSpawnPosition ? currentSpawnPosition : transform.position;
 
-        if (showCatchUpTargetGizmo && state == ShadowChaserState.CatchUp && hasCatchUpTarget)
-        {
-            Gizmos.color = catchUpTargetGizmoColor;
-            Gizmos.DrawSphere(catchUpCurrentTargetPosition, 0.1f);
-            Gizmos.DrawLine(transform.position, catchUpCurrentTargetPosition);
+            Gizmos.color = spawnGizmoColor;
+            Gizmos.DrawWireSphere(spawnPosition, 0.15f);
+            Gizmos.DrawLine(spawnPosition, spawnPosition + appearOffset);
         }
     }
 }

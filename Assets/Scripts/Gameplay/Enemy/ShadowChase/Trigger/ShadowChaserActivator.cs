@@ -7,6 +7,9 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
 {
+    private const int WireframeSegments = 24;
+    private const int CapsuleEdgeCount  = 4;
+
     [Header("起動対象の敵")]
     [Tooltip("起動対象の ShadowChaserEnemy です。")]
     [SerializeField] private ShadowChaserEnemy targetEnemy;
@@ -30,6 +33,14 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
     [Tooltip("このセーフゾーンが属する Room です。未設定時は親階層から自動検索します。")]
     [SerializeField] private Room parentRoom;
 
+    [Header("セーフゾーン視覚化")]
+    [Tooltip("セーフゾーンをワイヤーフレームで視覚化します。")]
+    [SerializeField] private bool visualizeSafeZone = true;
+
+    [Tooltip("ワイヤーフレームの表示色です。")]
+    [SerializeField] private Color safeZoneColor = new Color(0f, 1f, 0f, 0.8f);
+
+    private Material lineMaterial;
     private Collider safeZoneCollider;
     private RoomManager roomManager;
     private Coroutine spawnCoroutine;
@@ -58,6 +69,9 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
         }
 
         roomManager = FindFirstObjectByType<RoomManager>();
+
+        if (visualizeSafeZone)
+            CreateLineMaterial();
     }
 
     private void Start()
@@ -73,8 +87,14 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
     private void OnDestroy()
     {
         if (roomManager != null)
-        {
             roomManager.OnRoomTransitionComplete -= OnRoomTransitionComplete;
+
+        if (lineMaterial != null)
+        {
+            if (Application.isPlaying)
+                Destroy(lineMaterial);
+            else
+                DestroyImmediate(lineMaterial);
         }
     }
 
@@ -162,11 +182,7 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        ShadowChaserSpawnRequest request = new ShadowChaserSpawnRequest(
-            spawnPoint.position,
-            spawnPoint.rotation);
-
-        targetEnemy.Activate(request);
+        targetEnemy.Activate(spawnPoint.position, spawnPoint.rotation);
     }
 
     public void CaptureInitialState()
@@ -253,16 +269,171 @@ public sealed class ShadowChaserActivator : MonoBehaviour, IRespawnResettable
     private bool IsPlayer(Collider other)
     {
         if (other == null)
-        {
             return false;
-        }
 
         if (usePlayerTag && other.CompareTag(playerTag))
-        {
             return true;
-        }
 
         PlayerController player = other.GetComponentInParent<PlayerController>();
         return player != null;
+    }
+
+    // =========================================================
+    // セーフゾーン視覚化（GL ワイヤーフレーム）
+    // =========================================================
+
+    private void CreateLineMaterial()
+    {
+        Shader shader = Shader.Find("Hidden/Internal-Colored");
+        lineMaterial = new Material(shader);
+        lineMaterial.hideFlags = HideFlags.HideAndDontSave;
+        lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        lineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        lineMaterial.SetInt("_Cull",     (int)UnityEngine.Rendering.CullMode.Off);
+        lineMaterial.SetInt("_ZWrite", 0);
+    }
+
+    private void OnRenderObject()
+    {
+        if (!visualizeSafeZone || lineMaterial == null || safeZoneCollider == null)
+            return;
+
+        lineMaterial.SetPass(0);
+
+        GL.PushMatrix();
+        GL.MultMatrix(transform.localToWorldMatrix);
+        GL.Begin(GL.LINES);
+        GL.Color(safeZoneColor);
+
+        if (safeZoneCollider is BoxCollider boxCollider)
+            DrawBoxColliderWireframe(boxCollider);
+        else if (safeZoneCollider is SphereCollider sphereCollider)
+            DrawSphereColliderWireframe(sphereCollider);
+        else if (safeZoneCollider is CapsuleCollider capsuleCollider)
+            DrawCapsuleColliderWireframe(capsuleCollider);
+
+        GL.End();
+        GL.PopMatrix();
+    }
+
+    private void DrawBoxColliderWireframe(BoxCollider boxCollider)
+    {
+        Vector3 center   = boxCollider.center;
+        Vector3 halfSize = boxCollider.size * 0.5f;
+
+        Vector3 v0 = center + new Vector3(-halfSize.x, -halfSize.y, -halfSize.z);
+        Vector3 v1 = center + new Vector3( halfSize.x, -halfSize.y, -halfSize.z);
+        Vector3 v2 = center + new Vector3( halfSize.x,  halfSize.y, -halfSize.z);
+        Vector3 v3 = center + new Vector3(-halfSize.x,  halfSize.y, -halfSize.z);
+        Vector3 v4 = center + new Vector3(-halfSize.x, -halfSize.y,  halfSize.z);
+        Vector3 v5 = center + new Vector3( halfSize.x, -halfSize.y,  halfSize.z);
+        Vector3 v6 = center + new Vector3( halfSize.x,  halfSize.y,  halfSize.z);
+        Vector3 v7 = center + new Vector3(-halfSize.x,  halfSize.y,  halfSize.z);
+
+        // 底面
+        GL.Vertex(v0); GL.Vertex(v1);
+        GL.Vertex(v1); GL.Vertex(v5);
+        GL.Vertex(v5); GL.Vertex(v4);
+        GL.Vertex(v4); GL.Vertex(v0);
+
+        // 上面
+        GL.Vertex(v3); GL.Vertex(v2);
+        GL.Vertex(v2); GL.Vertex(v6);
+        GL.Vertex(v6); GL.Vertex(v7);
+        GL.Vertex(v7); GL.Vertex(v3);
+
+        // 縦のエッジ
+        GL.Vertex(v0); GL.Vertex(v3);
+        GL.Vertex(v1); GL.Vertex(v2);
+        GL.Vertex(v5); GL.Vertex(v6);
+        GL.Vertex(v4); GL.Vertex(v7);
+    }
+
+    private void DrawSphereColliderWireframe(SphereCollider sphereCollider)
+    {
+        Vector3 center = sphereCollider.center;
+        float   radius = sphereCollider.radius;
+
+        // XY / XZ / YZ の 3 平面に円を描く
+        for (int i = 0; i < WireframeSegments; i++)
+        {
+            float a1 = (i       / (float)WireframeSegments) * Mathf.PI * 2f;
+            float a2 = ((i + 1) / (float)WireframeSegments) * Mathf.PI * 2f;
+
+            GL.Vertex(center + new Vector3(Mathf.Cos(a1) * radius, Mathf.Sin(a1) * radius, 0f));
+            GL.Vertex(center + new Vector3(Mathf.Cos(a2) * radius, Mathf.Sin(a2) * radius, 0f));
+
+            GL.Vertex(center + new Vector3(Mathf.Cos(a1) * radius, 0f, Mathf.Sin(a1) * radius));
+            GL.Vertex(center + new Vector3(Mathf.Cos(a2) * radius, 0f, Mathf.Sin(a2) * radius));
+
+            GL.Vertex(center + new Vector3(0f, Mathf.Cos(a1) * radius, Mathf.Sin(a1) * radius));
+            GL.Vertex(center + new Vector3(0f, Mathf.Cos(a2) * radius, Mathf.Sin(a2) * radius));
+        }
+    }
+
+    private void DrawCapsuleColliderWireframe(CapsuleCollider capsuleCollider)
+    {
+        Vector3 center    = capsuleCollider.center;
+        float   radius    = capsuleCollider.radius;
+        float   height    = capsuleCollider.height;
+        int     direction = capsuleCollider.direction; // 0:X, 1:Y, 2:Z
+
+        float   cylinderHeight = Mathf.Max(0f, height - radius * 2f);
+        Vector3 axisOffset     = Vector3.zero;
+
+        switch (direction)
+        {
+            case 0: axisOffset = new Vector3(cylinderHeight * 0.5f, 0f, 0f); break;
+            case 1: axisOffset = new Vector3(0f, cylinderHeight * 0.5f, 0f); break;
+            case 2: axisOffset = new Vector3(0f, 0f, cylinderHeight * 0.5f); break;
+        }
+
+        Vector3 top    = center + axisOffset;
+        Vector3 bottom = center - axisOffset;
+
+        // 上下円周を描く
+        for (int i = 0; i < WireframeSegments; i++)
+        {
+            float a1 = (i       / (float)WireframeSegments) * Mathf.PI * 2f;
+            float a2 = ((i + 1) / (float)WireframeSegments) * Mathf.PI * 2f;
+
+            Vector3 p1, p2;
+
+            if (direction == 0)
+            {
+                p1 = new Vector3(0f, Mathf.Cos(a1) * radius, Mathf.Sin(a1) * radius);
+                p2 = new Vector3(0f, Mathf.Cos(a2) * radius, Mathf.Sin(a2) * radius);
+            }
+            else if (direction == 1)
+            {
+                p1 = new Vector3(Mathf.Cos(a1) * radius, 0f, Mathf.Sin(a1) * radius);
+                p2 = new Vector3(Mathf.Cos(a2) * radius, 0f, Mathf.Sin(a2) * radius);
+            }
+            else
+            {
+                p1 = new Vector3(Mathf.Cos(a1) * radius, Mathf.Sin(a1) * radius, 0f);
+                p2 = new Vector3(Mathf.Cos(a2) * radius, Mathf.Sin(a2) * radius, 0f);
+            }
+
+            GL.Vertex(top    + p1); GL.Vertex(top    + p2);
+            GL.Vertex(bottom + p1); GL.Vertex(bottom + p2);
+        }
+
+        // 縦のエッジ（4本）
+        for (int i = 0; i < CapsuleEdgeCount; i++)
+        {
+            float   angle      = (i / (float)CapsuleEdgeCount) * Mathf.PI * 2f;
+            Vector3 edgeOffset;
+
+            if (direction == 0)
+                edgeOffset = new Vector3(0f, Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius);
+            else if (direction == 1)
+                edgeOffset = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+            else
+                edgeOffset = new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0f);
+
+            GL.Vertex(top    + edgeOffset);
+            GL.Vertex(bottom + edgeOffset);
+        }
     }
 }
