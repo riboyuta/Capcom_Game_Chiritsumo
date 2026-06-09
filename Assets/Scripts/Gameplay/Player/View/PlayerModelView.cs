@@ -133,6 +133,8 @@ public sealed class PlayerModelView : MonoBehaviour
 
     [Header("デバッグ(Runtime): HoodRecover")]
     [SerializeField] private bool isHoodRecoverPlaying;
+    [SerializeField] private int lastHandledHoodRecoverRequestId;
+    [SerializeField] private int playingHoodRecoverTargetVersion;
     [SerializeField] private float hoodRecoverTimer;
     [SerializeField] private bool hoodRecoverAppliedUp;
 
@@ -196,6 +198,9 @@ public sealed class PlayerModelView : MonoBehaviour
         wallJumpFacingLockTimer = 0f;
         wallJumpLockedFacing = 1;
         previousDesiredState = PlayerAnimationState.Idle;
+
+        lastHandledHoodRecoverRequestId = 0;
+        playingHoodRecoverTargetVersion = 0;
     }
 
     private void Update()
@@ -448,9 +453,14 @@ public sealed class PlayerModelView : MonoBehaviour
 
     private void TickHoodRecover(PlayerAnimationSnapshot snapshot, float deltaTime)
     {
-        if (snapshot.requestHoodRecover && !isHoodRecoverPlaying)
+        bool hasNewHoodRecoverRequest =
+            snapshot.requestHoodRecover &&
+            snapshot.hoodRecoverRequestId != lastHandledHoodRecoverRequestId;
+
+        if (hasNewHoodRecoverRequest)
         {
-            StartHoodRecover();
+            lastHandledHoodRecoverRequestId = snapshot.hoodRecoverRequestId;
+            StartHoodRecover(snapshot.hoodRecoverTargetVersion);
         }
 
         if (!isHoodRecoverPlaying)
@@ -471,11 +481,12 @@ public sealed class PlayerModelView : MonoBehaviour
         }
     }
 
-    private void StartHoodRecover()
+    private void StartHoodRecover(int targetVersion)
     {
         isHoodRecoverPlaying = true;
         hoodRecoverTimer = 0f;
         hoodRecoverAppliedUp = false;
+        playingHoodRecoverTargetVersion = targetVersion;
 
         PlayUpperBodyState(hoodRecoverUpperStateName);
     }
@@ -486,7 +497,7 @@ public sealed class PlayerModelView : MonoBehaviour
 
         if (playerController != null)
         {
-            playerController.CompleteHoodRecoverVisual();
+            playerController.CompleteHoodRecoverVisual(playingHoodRecoverTargetVersion);
         }
     }
 

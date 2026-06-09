@@ -37,7 +37,10 @@ public sealed partial class PlayerController
             wallSide: runtimeState.wallSide,
             wallGrabSide: runtimeState.wallGrabSide,
 
-            hoodState: runtimeState.hoodVisualState);
+            hoodState: runtimeState.hoodVisualState,
+            hoodRecoverRequestId: runtimeState.hoodRecoverRequestId,
+            hoodRecoverTargetVersion: runtimeState.hoodRecoverTargetVersion,
+            hoodVisualVersion: runtimeState.hoodVisualVersion);
     }
 
     // 見た目用の向きを解決する。
