@@ -67,7 +67,7 @@ public sealed class PlayerShadowRecorder : MonoBehaviour
         recordInterval = Mathf.Max(0.001f, recordInterval);
         maxHistoryDuration = Mathf.Max(recordInterval, maxHistoryDuration);
 
-        nextRecordTime = Time.time;
+        ResetHistoryToCurrent();
     }
 
     // LateUpdate で記録を行うことで、フレーム内の最新状態を取得する。
@@ -113,6 +113,21 @@ public sealed class PlayerShadowRecorder : MonoBehaviour
         debugHistoryCount = history.Count - historyStartIndex;
     }
 
+    private void OnEnable()
+    {
+        if (playerController == null)
+        {
+            return;
+        }
+
+        ResetHistoryToCurrent();
+    }
+
+    private void OnDisable()
+    {
+        ClearHistory();
+    }
+
     // 現在の PlayerController の状態を snapshot として記録する。
     private void RecordSnapshot(float currentTime)
     {
@@ -131,6 +146,47 @@ public sealed class PlayerShadowRecorder : MonoBehaviour
             history.RemoveRange(0, historyStartIndex);
             historyStartIndex = 0;
         }
+    }
+
+    // 追尾履歴をすべて破棄する。
+    // リスポーンや強制ワープ直後に、死亡前・別部屋の履歴を参照しないようにする。
+    public void ClearHistory()
+    {
+        history.Clear();
+        historyStartIndex = 0;
+
+        lastRecordedTime = 0f;
+        debugHistoryCount = 0;
+
+        nextRecordTime = Time.time;
+    }
+
+    // 現在位置を起点として履歴を作り直す。
+    // Clear だけだと delayTime 分の履歴が溜まるまで Shadow が目標を取れないため、現在 snapshot を 1 件入れる。
+    public void ResetHistoryToCurrent()
+    {
+        ClearHistory();
+        SeedCurrentSnapshot(Time.time);
+    }
+
+    // 現在の PlayerController 状態を履歴に 1 件だけ追加する。
+    public void SeedCurrentSnapshot(float currentTime)
+    {
+        if (playerController == null)
+        {
+            return;
+        }
+
+        PlayerShadowSnapshot snapshot = playerController.CaptureShadowSnapshot();
+        snapshot.time = currentTime;
+
+        history.Add(snapshot);
+
+        historyStartIndex = 0;
+        lastRecordedTime = currentTime;
+        debugHistoryCount = history.Count;
+
+        nextRecordTime = currentTime + recordInterval;
     }
 
     // maxHistoryDuration より古い履歴を削除する。
@@ -237,26 +293,21 @@ public sealed class PlayerShadowRecorder : MonoBehaviour
 
         result.time = Mathf.Lerp(a.time, b.time, t);
 
-        // 位置・回転・速度は補間
+        // 位置・回転・速度は補間する。
         result.position = Vector3.Lerp(a.position, b.position, t);
         result.rotation = Quaternion.Slerp(a.rotation, b.rotation, t);
         result.velocity = Vector3.Lerp(a.velocity, b.velocity, t);
 
-        // 離散的なフラグ類は t < 0.5 なら a、それ以外は b を採用
-        result.facing = t < 0.5f ? a.facing : b.facing;
+        // 離散的な情報は近い方を採用する。
+        bool useA = t < 0.5f;
 
-        result.isGrounded = t < 0.5f ? a.isGrounded : b.isGrounded;
-        result.isTouchingWall = t < 0.5f ? a.isTouchingWall : b.isTouchingWall;
-        result.wallSide = t < 0.5f ? a.wallSide : b.wallSide;
+        result.facing = useA ? a.facing : b.facing;
 
-        result.isWallSliding = t < 0.5f ? a.isWallSliding : b.isWallSliding;
-        result.isDashing = t < 0.5f ? a.isDashing : b.isDashing;
-
-        result.isActionLocked = t < 0.5f ? a.isActionLocked : b.isActionLocked;
-        result.isDead = t < 0.5f ? a.isDead : b.isDead;
-
-        // visualState は離散状態として扱い、近い方を採用する。
-        result.visualState = t < 0.5f ? a.visualState : b.visualState;
+        // 見た目状態は補間しない。
+        // Dash と Idle の中間状態のようなものは存在しないため、近い snapshot を採用する。
+        result.animationSnapshot = useA
+            ? a.animationSnapshot
+            : b.animationSnapshot;
 
         return result;
     }
