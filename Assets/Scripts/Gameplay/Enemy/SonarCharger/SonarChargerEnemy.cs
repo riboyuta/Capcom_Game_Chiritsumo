@@ -193,6 +193,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         // 表示状態を適用し、Follow状態へ遷移
         ApplyActivationVisualState();
         ChangeState(SonarChargerState.Follow);
+        view.PlayFollow();
 
         LogDebug("BeginChase.");
     }
@@ -265,10 +266,15 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         view.ResetVisualOffset();
 
         // プレイヤーの位置へ向かって移動
+        Vector3 followDirection = targetPlayer.transform.position - transform.position;
+        followDirection.z = 0.0f;
+
         movement.TickFollow(
             targetPlayer.transform.position,
             Settings,
             deltaTime);
+
+        view.ApplyDirection(followDirection);
 
         // ダッシュ入力による即座Alert起動をチェック
         if (TryStartAlertByDashInput())
@@ -295,6 +301,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         sonarDetector.CancelPulse();
         StopMovementAndResetView();
         ChangeState(SonarChargerState.Alert);
+        view.PlayAlert();
         LogDebug("Player detected. Alert started.");
     }
 
@@ -310,6 +317,10 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         {
             alertTargetPosition = targetPlayer.transform.position;
         }
+
+        Vector3 alertDirection = alertTargetPosition - transform.position;
+        alertDirection.z = 0.0f;
+        view.ApplyDirection(alertDirection);
 
         // Alert状態の視覚的な揺れエフェクトを更新
         view.TickAlert(stateTimer, Settings);
@@ -355,6 +366,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         movement.StartCharge(alertTargetPosition, playerCameraController, Settings);
         view.ApplyDirection(movement.ChargeDirection);
         ChangeState(SonarChargerState.Charge);
+        view.PlayCharge();
         LogDebug($"Charge started. dir={movement.ChargeDirection}");
     }
 
@@ -376,6 +388,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     {
         movement.StartRebound(Settings);
         ChangeState(SonarChargerState.Rebound);
+        view.PlayRebound();
         LogDebug("Rebound started.");
     }
 
@@ -388,6 +401,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
             // 跳ね返り完了、移動停止してStunへ遷移
             movement.StopImmediate();
             ChangeState(SonarChargerState.Stun);
+            view.PlayStun();
         }
     }
 
@@ -404,6 +418,8 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
             // ソナーをリセットして再探知を開始
             sonarDetector.ResetDetector(Settings);
             ChangeState(SonarChargerState.Follow);
+            view.PlayFollow();
+
         }
     }
 
@@ -537,6 +553,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     private void ResetToIdleState()
     {
         ChangeState(SonarChargerState.Idle);
+        view.PlayIdle();
         ApplyActivationVisualState();
     }
 
