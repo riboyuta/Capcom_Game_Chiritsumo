@@ -1,8 +1,7 @@
 using UnityEngine;
 
 // 一方通行床ギミック。
-// 下からは通過し、上からは着地できる。横からはすり抜ける。
-// 落下入力で降りられるかどうかを Inspector で選択可能。
+// 下からの通過、上からの落下入力によるすり抜けを Inspector で選択可能。
 //
 // 設計方針:
 // プレイヤーの衝突を操作するのではなく、床自身のコライダーの enabled を
@@ -13,9 +12,20 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
 {
+    private enum PassThroughFromBelowMode
+    {
+        Allow = 0,
+        MatchDropThroughSetting = 1,
+        Block = 2,
+    }
+
     [Header("落下入力で降りられるか")]
     [Tooltip("true の場合、下入力を入れると床をすり抜けて降りられます。false の場合は降りられません。")]
     [SerializeField] private bool allowDropThrough = true;
+
+    [Header("下から上へ通過できるか")]
+    [Tooltip("MatchDropThroughSetting は落下入力で降りられるかの設定に合わせます。Allow は下から通過可能、Block は下からも衝突します。")]
+    [SerializeField] private PassThroughFromBelowMode passThroughFromBelow = PassThroughFromBelowMode.Allow;
 
     [Header("すり抜け後の復帰時間（秒）")]
     [Tooltip("すり抜け開始後、衝突判定を再び有効にするまでの時間（秒）。短すぎるとすり抜け中に再び着地してしまいます。")]
@@ -24,6 +34,10 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
     [Header("判定の許容誤差（メートル）")]
     [Tooltip("プレイヤーの足元が床上面からこの値以内に収まっていれば「上にいる」と判定します。")]
     [SerializeField, Min(0f)] private float tolerance = 0.05f;
+
+    [Header("下から侵入後の着地復帰")]
+    [Tooltip("下から通過中に下降へ転じた時、プレイヤー中心が床上面からこの高さ以上なら床上側に入ったとみなして Collider を戻します。")]
+    [SerializeField, Min(0f)] private float fromBelowCatchCenterMargin = 0.05f;
 
     private Collider platformCollider;
     private Collider playerCollider; // bounds 読み取り専用。衝突操作には使用しない。
@@ -170,6 +184,39 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
             currentTolerance += Mathf.Min(1.0f, fallDistancePerFrame * 1.5f);
         }
 
+        // 下からの通過を許可しない場合は、床を通常の固体として扱う。
+        // ただし allowDropThrough=true なら、上にいる時の下入力によるすり抜けは許可する。
+        if (!AllowsPassThroughFromBelow())
+        {
+            bool playerAboveForDropThrough = playerBottom >= platformTop - currentTolerance;
+            if (allowDropThrough && playerAboveForDropThrough && playerFacade != null && playerFacade.IsDownInputHeld)
+            {
+                dropThroughTimer = dropThroughDuration;
+                SetPlatformEnabled(false);
+                return;
+            }
+
+            wasBelowPlatform = false;
+            SetPlatformEnabled(true);
+            return;
+        }
+
+        // 下から通過中にステップ等で床内部へ入り、足元が床上面を超えないまま下降へ転じるケースを拾う。
+        // ステップ中は水平移動を優先し、終了後に床上側へ入っていれば Collider を戻す。
+        bool isDashActive = playerFacade != null && playerFacade.IsDashActive;
+        float playerCenterY = playerCollider.bounds.center.y;
+        bool shouldCatchFromInside = wasBelowPlatform
+            && !isDashActive
+            && playerFallingOrStill
+            && playerCenterY >= platformTop + fromBelowCatchCenterMargin;
+
+        if (shouldCatchFromInside)
+        {
+            wasBelowPlatform = false;
+            SetPlatformEnabled(true);
+            return;
+        }
+
         // 下からすり抜け中かどうかの状態を更新する。
         if (playerBottom < platformTop - currentTolerance)
         {
@@ -209,6 +256,19 @@ public sealed class OneWayPlatform : MonoBehaviour, IRespawnResettable
 
         // 最終判定: プレイヤーが上にいればコライダー ON、それ以外は OFF。
         SetPlatformEnabled(playerAbove);
+    }
+
+    private bool AllowsPassThroughFromBelow()
+    {
+        switch (passThroughFromBelow)
+        {
+            case PassThroughFromBelowMode.Allow:
+                return true;
+            case PassThroughFromBelowMode.Block:
+                return false;
+            default:
+                return allowDropThrough;
+        }
     }
 
     // ──────────────────────────────────────────────
