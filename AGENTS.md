@@ -267,6 +267,20 @@ Do not move scripts between folders unless explicitly requested.
 * Avoid mixing input, movement, collision, UI, camera, debug, and game state responsibilities.
 * Prefer small components with clear responsibilities.
 * Use `[SerializeField] private` for Inspector-exposed fields when appropriate.
+* For every Inspector-exposed `[SerializeField] private` field that is intended to be configured in the Unity Editor, add both Japanese `[Header]` and Japanese `[Tooltip]` attributes.
+* Do not add only `[Header]` or only `[Tooltip]` for such fields; use both together.
+* `[Header]` text should group fields by responsibility or behavior in Japanese.
+* `[Tooltip]` text should explain what the field controls, when it is used, and any important range or setup notes in Japanese.
+* If a field is exposed in the Inspector but does not need `[Header]` and `[Tooltip]`, explain why it is intentionally exempt.
+* Do not rename serialized fields only to improve Inspector wording.
+* Do not add noisy headers or tooltips to purely internal fields that are not intended to be configured in the Unity Editor.
+* When adding or modifying non-trivial C# gameplay code, add concise Japanese comments that explain responsibility, intent, side effects, or important assumptions.
+* Prefer comments that explain why the code exists or what responsibility it owns, not line-by-line explanations of obvious syntax.
+* For Unity gameplay scripts, use Japanese comments when they help explain serialized settings, state transitions, lifecycle methods, collision conditions, time control, camera behavior, or game feel behavior.
+* Do not add noisy comments to self-explanatory code.
+* Do not leave commented-out old code unless explicitly requested.
+* Do not paste AI reasoning logs, Codex logs, or raw conversation text into code comments.
+* After implementation, the project owner should be able to explain the new behavior from names, Inspector headers/tooltips, and concise Japanese comments.
 * Do not introduce singletons, static mutable state, or global state without explaining why.
 * Preserve existing public APIs unless explicitly requested.
 * Do not rename public or serialized fields unless necessary, because it can break Inspector references.
