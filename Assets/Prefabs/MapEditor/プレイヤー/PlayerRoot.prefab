@@ -307,6 +307,7 @@ MonoBehaviour:
   stageResetSystem: {fileID: 0}
   playerCameraController: {fileID: 0}
   playerDeathView: {fileID: 0}
+  playerShadowRecorder: {fileID: 0}
 --- !u!114 &3856591718426588387
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -465,6 +466,7 @@ GameObject:
   - component: {fileID: 66581817119747921}
   - component: {fileID: 5220131752379562976}
   - component: {fileID: 4144544718889830320}
+  - component: {fileID: 7861244319324550756}
   m_Layer: 0
   m_Name: ViewRoot
   m_TagString: Untagged
@@ -765,6 +767,10 @@ MonoBehaviour:
   urgentTransitionDuration: 0.02
   flipByScaleX: 1
   invertFacing: 0
+  useWallJumpFacingLock: 1
+  wallJumpFacingLockDuration: 0.4
+  wallJumpFacingLockTimer: 0
+  wallJumpLockedFacing: 1
   fallbackToIdleWhenStateMissing: 1
   warnWhenAnimatorStateMissing: 1
   stateNames:
@@ -868,8 +874,172 @@ MonoBehaviour:
   hoodRecoverSwitchToUpTime: 0.18
   hoodRecoverTotalDuration: 0.45
   isHoodRecoverPlaying: 0
+  lastHandledHoodRecoverRequestId: 0
+  playingHoodRecoverTargetVersion: 0
   hoodRecoverTimer: 0
   hoodRecoverAppliedUp: 0
+--- !u!114 &7861244319324550756
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9036148985921755710}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f037472dd7cc864dba59bfccf07884b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDashAfterimageView
+  playerFacade: {fileID: 0}
+  modelRoot: {fileID: 0}
+  afterimageColor: {r: 0.42, g: 0.34, b: 1, a: 1}
+  useColorGradient: 1
+  afterimageColorGradient:
+    serializedVersion: 2
+    key0: {r: 0.82, g: 0.95, b: 1, a: 1}
+    key1: {r: 0.1, g: 0.72, b: 1, a: 0.75}
+    key2: {r: 0.34, g: 0.24, b: 1, a: 0.35}
+    key3: {r: 0.58, g: 0.14, b: 1, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 16384
+    ctime2: 42598
+    ctime3: 65535
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 16384
+    atime2: 42598
+    atime3: 65535
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 4
+    m_NumAlphaKeys: 4
+  useEmission: 1
+  emissionColor: {r: 0.36, g: 0.2, b: 1, a: 1}
+  useEmissionColorGradient: 1
+  emissionColorGradient:
+    serializedVersion: 2
+    key0: {r: 0.82, g: 0.95, b: 1, a: 1}
+    key1: {r: 0.08, g: 0.46, b: 1, a: 1}
+    key2: {r: 0.42, g: 0.18, b: 1, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 22937
+    ctime2: 49151
+    ctime3: 65535
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 4
+    m_NumAlphaKeys: 2
+  emissionIntensity: 2
+  emissionIntensityCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -1.7
+      outSlope: -1.7
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.35
+      value: 0.55
+      inSlope: -1.4
+      outSlope: -1
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -0.55
+      outSlope: -0.55
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  startAlpha: 0.42
+  lifetime: 0.24
+  afterimageDepthOffset: 0.02
+  afterimageScaleMultiplier: 1
+  spawnInterval: 0.045
+  maxGhostCount: 6
+  fadeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -2.2
+      outSlope: -2.2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.25
+      value: 0.45
+      inSlope: -2.2
+      outSlope: -0.75
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.65
+      value: 0.15
+      inSlope: -0.75
+      outSlope: -0.43
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -0.43
+      outSlope: -0.43
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  afterimageMaterial: {fileID: 0}
 --- !u!1001 &632477157342944301
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -904,7 +1074,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.42261827
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
       propertyPath: m_LocalRotation.x
@@ -912,7 +1082,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.9063079
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
       propertyPath: m_LocalRotation.z
@@ -924,7 +1094,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 130
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 54601c85e2e9a4b40b17f84d17b52f1f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
