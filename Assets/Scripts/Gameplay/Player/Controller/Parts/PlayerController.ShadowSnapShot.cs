@@ -8,6 +8,7 @@ public sealed partial class PlayerController
     // PlayerShadowRecorder が定期的に呼び出して履歴を作成する。
     public PlayerShadowSnapshot CaptureShadowSnapshot()
     {
+        Vector3 position = rb != null ? rb.position : transform.position;
         Vector3 velocity = rb != null ? rb.linearVelocity : Vector3.zero;
         int facing = NormalizeShadowFacing(ResolveAnimationFacing());
 
@@ -16,7 +17,7 @@ public sealed partial class PlayerController
         snapshot.time = Time.time;
 
         // 移動再生用
-        snapshot.position = transform.position;
+        snapshot.position = position;
         snapshot.rotation = transform.rotation;
         snapshot.velocity = velocity;
         snapshot.facing = facing;

@@ -456,7 +456,7 @@ internal bool CanAcceptFixedLaunch(in PlayerFixedLaunchRequest request)
                 justLandedThisFrame = false;
                 justCrossedApexThisFrame = false;
             },
-            () => playerShadowRecorder?.ResetHistoryToCurrent(),
+            respawnPosition => playerShadowRecorder?.ResetHistoryToPosition(respawnPosition), 
             LogRespawn,
             LogRespawnWarning);
     }

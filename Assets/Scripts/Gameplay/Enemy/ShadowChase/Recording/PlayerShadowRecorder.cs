@@ -161,6 +161,33 @@ public sealed class PlayerShadowRecorder : MonoBehaviour
         nextRecordTime = Time.time;
     }
 
+    public void ResetHistoryToPosition(Vector3 worldPosition)
+    {
+        ClearHistory();
+        SeedSnapshotAtPosition(Time.time, worldPosition);
+    }
+
+    private void SeedSnapshotAtPosition(float currentTime, Vector3 worldPosition)
+    {
+        if (playerController == null)
+        {
+            return;
+        }
+
+        PlayerShadowSnapshot snapshot = playerController.CaptureShadowSnapshot();
+
+        snapshot.time = currentTime;
+        snapshot.position = worldPosition;
+
+        history.Add(snapshot);
+
+        historyStartIndex = 0;
+        lastRecordedTime = currentTime;
+        debugHistoryCount = history.Count;
+
+        nextRecordTime = currentTime + recordInterval;
+    }
+
     // 現在位置を起点として履歴を作り直す。
     // Clear だけだと delayTime 分の履歴が溜まるまで Shadow が目標を取れないため、現在 snapshot を 1 件入れる。
     public void ResetHistoryToCurrent()
