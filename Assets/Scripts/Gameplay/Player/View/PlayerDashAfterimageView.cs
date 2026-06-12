@@ -44,10 +44,10 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
 
     [Header("残像の生成制御: フェード")]
     [Tooltip("残像のフェードカーブ。横軸は寿命の進行度、縦軸は透明度の倍率です。")]
-    [SerializeField] private AnimationCurve fadeCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
+    [SerializeField] private AnimationCurve fadeCurve = CreateDefaultFadeCurve();
 
     [Header("残像マテリアル: 任意指定")]
-    [Tooltip("任意の残像用Material。未指定の場合は実行時に半透明表示用Materialを作成し、破棄時に解放します。")]
+    [Tooltip("任意の残像用Material。指定時もMaterial Assetは直接変更せず、実行時コピーをGhost用に調整して破棄時に解放します。未指定の場合は半透明表示用Materialを実行時に作成します。")]
     [SerializeField] private Material afterimageMaterial;
 
     private const string PoolRootName = "PlayerDashAfterimagePool";
@@ -62,19 +62,23 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
     private static readonly int ZWriteId = Shader.PropertyToID("_ZWrite");
     private static readonly int CullId = Shader.PropertyToID("_Cull");
     private static readonly int ModeId = Shader.PropertyToID("_Mode");
+    private static readonly int AlphaClipId = Shader.PropertyToID("_AlphaClip");
 
     private readonly List<GhostInstance> ghosts = new List<GhostInstance>();
 
     private Transform poolRoot;
     private Material runtimeMaterial;
+    private Material runtimeMaterialSource;
     private bool wasDashActive;
     private float spawnTimer;
     private bool warnedMissingReferences;
     private bool warnedMissingMaterial;
+    private bool warnedMissingColorProperties;
 
     private void Awake()
     {
         ResolveReferences();
+        EnsureRuntimeFadeCurve();
         EnsureRuntimeMaterial();
     }
 
@@ -152,8 +156,7 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
 
         if (runtimeMaterial != null)
         {
-            DestroyUnityObject(runtimeMaterial);
-            runtimeMaterial = null;
+            DestroyRuntimeMaterial();
         }
     }
 
@@ -167,8 +170,44 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
 
         if (fadeCurve == null || fadeCurve.length == 0)
         {
-            fadeCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
+            fadeCurve = CreateDefaultFadeCurve();
         }
+    }
+
+    private static AnimationCurve CreateDefaultFadeCurve()
+    {
+        return new AnimationCurve(
+            new Keyframe(0f, 1f, -2.2f, -2.2f),
+            new Keyframe(0.25f, 0.45f, -2.2f, -0.75f),
+            new Keyframe(0.65f, 0.15f, -0.75f, -0.43f),
+            new Keyframe(1f, 0f, -0.43f, -0.43f));
+    }
+
+    private void EnsureRuntimeFadeCurve()
+    {
+        // Scene側に旧デフォルトが保存済みでも、カスタム調整済みでなければ新しい初期フェードを使う。
+        if (fadeCurve == null || fadeCurve.length == 0 || IsLegacyDefaultFadeCurve(fadeCurve))
+        {
+            fadeCurve = CreateDefaultFadeCurve();
+        }
+    }
+
+    private static bool IsLegacyDefaultFadeCurve(AnimationCurve curve)
+    {
+        if (curve == null || curve.length != 2)
+        {
+            return false;
+        }
+
+        Keyframe[] keys = curve.keys;
+        Keyframe first = keys[0];
+        Keyframe second = keys[1];
+        return Mathf.Approximately(first.time, 0f)
+            && Mathf.Approximately(first.value, 1f)
+            && Mathf.Approximately(first.outTangent, 0f)
+            && Mathf.Approximately(second.time, 1f)
+            && Mathf.Approximately(second.value, 0f)
+            && Mathf.Approximately(second.inTangent, 0f);
     }
 
     private bool ResolveReferences()
@@ -206,19 +245,29 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
 
     private Material ResolveGhostMaterial()
     {
-        return afterimageMaterial != null ? afterimageMaterial : EnsureRuntimeMaterial();
+        return EnsureRuntimeMaterial();
     }
 
     private Material EnsureRuntimeMaterial()
     {
-        // .matアセットを増やさないため、未指定時だけ実行時Materialを作ってOnDestroyで破棄する。
-        if (afterimageMaterial != null)
+        if (runtimeMaterial != null && runtimeMaterialSource == afterimageMaterial)
         {
-            return afterimageMaterial;
+            return runtimeMaterial;
         }
 
-        if (runtimeMaterial != null)
+        DestroyRuntimeMaterial();
+        runtimeMaterialSource = afterimageMaterial;
+
+        if (afterimageMaterial != null)
         {
+            // 指定Materialも直接変更せず、Ghost専用のRuntimeコピーだけを透明表示向けに調整する。
+            runtimeMaterial = new Material(afterimageMaterial)
+            {
+                name = $"{afterimageMaterial.name} Runtime Dash Afterimage",
+                hideFlags = HideFlags.DontSave
+            };
+
+            PrepareRuntimeMaterial(runtimeMaterial);
             return runtimeMaterial;
         }
 
@@ -240,17 +289,38 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
 
         if (shader == null)
         {
+            runtimeMaterialSource = null;
             return null;
         }
 
         runtimeMaterial = new Material(shader)
         {
-            name = "Runtime Player Dash Afterimage"
+            name = "Runtime Player Dash Afterimage",
+            hideFlags = HideFlags.DontSave
         };
 
-        ConfigureTransparentMaterial(runtimeMaterial);
-        ApplyMaterialColor(runtimeMaterial, GetTintColor(1f));
+        PrepareRuntimeMaterial(runtimeMaterial);
         return runtimeMaterial;
+    }
+
+    private void PrepareRuntimeMaterial(Material material)
+    {
+        ConfigureTransparentMaterial(material);
+        ApplyMaterialColor(material, GetTintColor(1f));
+        WarnMissingColorPropertiesOnce(material);
+    }
+
+    private void DestroyRuntimeMaterial()
+    {
+        if (runtimeMaterial == null)
+        {
+            runtimeMaterialSource = null;
+            return;
+        }
+
+        DestroyUnityObject(runtimeMaterial);
+        runtimeMaterial = null;
+        runtimeMaterialSource = null;
     }
 
     private void WarnMissingMaterialOnce()
@@ -263,6 +333,19 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
         warnedMissingMaterial = true;
         Debug.LogWarning(
             $"{nameof(PlayerDashAfterimageView)} could not create a runtime afterimage material.",
+            this);
+    }
+
+    private void WarnMissingColorPropertiesOnce(Material material)
+    {
+        if (warnedMissingColorProperties || material == null || HasAnyMaterialColorProperty(material))
+        {
+            return;
+        }
+
+        warnedMissingColorProperties = true;
+        Debug.LogWarning(
+            $"{nameof(PlayerDashAfterimageView)} runtime material '{material.name}' does not have _BaseColor, _Color, or _TintColor. Alpha fade may not be visible with this shader.",
             this);
     }
 
@@ -445,8 +528,15 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
             material.SetInt(CullId, (int)CullMode.Off);
         }
 
+        if (material.HasProperty(AlphaClipId))
+        {
+            material.SetFloat(AlphaClipId, 0f);
+        }
+
         material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
         material.EnableKeyword("_ALPHABLEND_ON");
+        material.DisableKeyword("_ALPHATEST_ON");
+        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
     }
 
     private static void ApplyMaterialColor(Material material, Color color)
@@ -465,6 +555,13 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
         {
             material.SetColor(TintColorId, color);
         }
+    }
+
+    private static bool HasAnyMaterialColorProperty(Material material)
+    {
+        return material.HasProperty(BaseColorId)
+            || material.HasProperty(ColorId)
+            || material.HasProperty(TintColorId);
     }
 
     private static void DestroyUnityObject(Object target)
@@ -557,6 +654,9 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
             float normalizedAge = Mathf.Clamp01(age / lifetime);
             if (normalizedAge >= 1f)
             {
+                Color finalColor = baseColor;
+                finalColor.a = 0f;
+                ApplyColor(finalColor);
                 Deactivate();
                 return;
             }
