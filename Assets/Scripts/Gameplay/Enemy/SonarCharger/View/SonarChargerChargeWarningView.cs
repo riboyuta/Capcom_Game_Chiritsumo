@@ -16,6 +16,7 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
     private static readonly int WarningStateId = Shader.PropertyToID("_WarningState");
     private static readonly int WarningLengthId = Shader.PropertyToID("_WarningLength");
     private static readonly int WarningWidthId = Shader.PropertyToID("_WarningWidth");
+    private static readonly int LockFlashId = Shader.PropertyToID("_LockFlash");
 
     [Header("帯Root")]
     [Tooltip("突進予測帯の位置・回転・スケールを制御するRootです。")]
@@ -239,8 +240,10 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
         {
             case SonarChargeWarningVisualState.Tracking:
                 stateValue = 0.0f;
-                pulseSpeed *= 0.75f;
-                baseAlpha *= 0.75f;
+
+                // Alert中でも危険範囲として読めるよう、透明度は下げすぎない。
+                pulseSpeed *= 1.0f;
+                baseAlpha *= 1.0f;
                 break;
 
             case SonarChargeWarningVisualState.Locked:
@@ -275,7 +278,7 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
         propertyBlock.SetFloat(Shader.PropertyToID("_WarningState"), stateValue);
         propertyBlock.SetFloat(Shader.PropertyToID("_WarningLength"), length);
         propertyBlock.SetFloat(Shader.PropertyToID("_WarningWidth"), settings.alertPredictionBandWidth);
-        propertyBlock.SetFloat(Shader.PropertyToID("_LockFlash"), lockFlash);
+        propertyBlock.SetFloat(LockFlashId, lockFlash);
 
         bandRenderer.SetPropertyBlock(propertyBlock);
     }
