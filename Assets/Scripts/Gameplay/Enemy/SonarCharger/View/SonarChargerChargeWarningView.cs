@@ -3,6 +3,13 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class SonarChargerChargeWarningView : MonoBehaviour
 {
+    public enum SonarChargeWarningVisualState
+    {
+        Tracking,
+        Locked,
+        Charging
+    }
+
     private static readonly int WarningAlphaId = Shader.PropertyToID("_WarningAlpha");
     private static readonly int WarningPulseId = Shader.PropertyToID("_WarningPulse");
     private static readonly int WarningProgressId = Shader.PropertyToID("_WarningProgress");
@@ -37,6 +44,9 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
     private bool hasInitialMarkerScale;
 
     private MaterialPropertyBlock propertyBlock;
+
+    private SonarChargeWarningVisualState visualState = SonarChargeWarningVisualState.Tracking;
+    private float lockedEffectTimer;
 
     private void Awake()
     {
@@ -106,6 +116,9 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
     {
         Hide();
 
+        visualState = SonarChargeWarningVisualState.Tracking;
+        lockedEffectTimer = 0.0f;
+
         if (bandRoot != null && hasInitialBandScale)
         {
             bandRoot.localScale = initialBandLocalScale;
@@ -142,6 +155,11 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
         }
 
         Show();
+
+        if (visualState == SonarChargeWarningVisualState.Locked)
+        {
+            lockedEffectTimer += Time.deltaTime;
+        }
 
         Vector3 normalizedDirection = direction / length;
 
@@ -199,10 +217,10 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
     }
 
     private void UpdateShaderParameters(
-        float alertT,
-        float elapsedTime,
-        float length,
-        SonarChargerSettings settings)
+    float alertT,
+    float elapsedTime,
+    float length,
+    SonarChargerSettings settings)
     {
         if (bandRenderer == null)
         {
@@ -212,20 +230,52 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
         propertyBlock ??= new MaterialPropertyBlock();
         bandRenderer.GetPropertyBlock(propertyBlock);
 
-        float pulse = Mathf.Sin(elapsedTime * settings.alertPredictionPulseSpeed) * 0.5f + 0.5f;
+        float pulseSpeed = settings.alertPredictionPulseSpeed;
+        float baseAlpha = settings.alertPredictionBandAlpha;
+        float stateValue = 0.0f;
+        float lockFlash = 0.0f;
+
+        switch (visualState)
+        {
+            case SonarChargeWarningVisualState.Tracking:
+                stateValue = 0.0f;
+                pulseSpeed *= 0.75f;
+                baseAlpha *= 0.75f;
+                break;
+
+            case SonarChargeWarningVisualState.Locked:
+                stateValue = 1.0f;
+                pulseSpeed *= 1.5f;
+
+                // LockConfirmに入った直後ほど強く光る。
+                lockFlash = Mathf.Clamp01(1.0f - lockedEffectTimer / Mathf.Max(0.001f, settings.lockConfirmTime));
+                baseAlpha *= 1.2f;
+                break;
+
+            case SonarChargeWarningVisualState.Charging:
+                stateValue = 2.0f;
+                pulseSpeed *= 2.0f;
+                baseAlpha *= 1.0f;
+                break;
+        }
+
+        float pulse = Mathf.Sin(elapsedTime * pulseSpeed) * 0.5f + 0.5f;
+
         float alpha = Mathf.Lerp(
             settings.alertPredictionMinAlpha,
             settings.alertPredictionMaxAlpha,
             pulse);
 
-        alpha *= settings.alertPredictionBandAlpha;
+        alpha *= baseAlpha;
+        alpha = Mathf.Clamp01(alpha + lockFlash * 0.35f);
 
-        propertyBlock.SetFloat(WarningAlphaId, alpha);
-        propertyBlock.SetFloat(WarningPulseId, pulse);
-        propertyBlock.SetFloat(WarningProgressId, alertT);
-        propertyBlock.SetFloat(WarningStateId, 0.0f);
-        propertyBlock.SetFloat(WarningLengthId, length);
-        propertyBlock.SetFloat(WarningWidthId, settings.alertPredictionBandWidth);
+        propertyBlock.SetFloat(Shader.PropertyToID("_WarningAlpha"), alpha);
+        propertyBlock.SetFloat(Shader.PropertyToID("_WarningPulse"), pulse);
+        propertyBlock.SetFloat(Shader.PropertyToID("_WarningProgress"), alertT);
+        propertyBlock.SetFloat(Shader.PropertyToID("_WarningState"), stateValue);
+        propertyBlock.SetFloat(Shader.PropertyToID("_WarningLength"), length);
+        propertyBlock.SetFloat(Shader.PropertyToID("_WarningWidth"), settings.alertPredictionBandWidth);
+        propertyBlock.SetFloat(Shader.PropertyToID("_LockFlash"), lockFlash);
 
         bandRenderer.SetPropertyBlock(propertyBlock);
     }
@@ -256,5 +306,22 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
             + settings.alertPredictionTargetMarkerPulseScale * pulse;
 
         targetMarker.localScale = initialMarkerScale * Mathf.Max(0.0f, scale);
+    }
+
+    public void SetTracking()
+    {
+        visualState = SonarChargeWarningVisualState.Tracking;
+        lockedEffectTimer = 0.0f;
+    }
+
+    public void SetLocked()
+    {
+        visualState = SonarChargeWarningVisualState.Locked;
+        lockedEffectTimer = 0.0f;
+    }
+
+    public void SetCharging()
+    {
+        visualState = SonarChargeWarningVisualState.Charging;
     }
 }

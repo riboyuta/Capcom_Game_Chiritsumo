@@ -329,6 +329,11 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
 
         HideChargeWarning();
 
+        if (chargeWarningView != null)
+        {
+            chargeWarningView.SetTracking();
+        }
+
         ChangeState(SonarChargerState.Alert);
         view.PlayAlert();
         LogDebug("Player detected. Alert started.");
@@ -396,6 +401,11 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         // この瞬間の狙い位置で突進方向を確定する。
         lockedChargeTargetPosition = alertTargetPosition;
 
+        if (chargeWarningView != null)
+        {
+            chargeWarningView.SetLocked();
+        }
+
         movement.StopImmediate();
         view.ResetVisualOffset();
 
@@ -440,6 +450,11 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
             lockedChargeTargetPosition,
             playerCameraController,
             Settings);
+
+        if (chargeWarningView != null)
+        {
+            chargeWarningView.SetCharging();
+        }
 
         view.ApplyDirection(movement.ChargeDirection);
 
