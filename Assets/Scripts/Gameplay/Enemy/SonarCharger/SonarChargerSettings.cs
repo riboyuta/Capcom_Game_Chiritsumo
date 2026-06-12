@@ -88,6 +88,11 @@ public sealed class SonarChargerSettings
     [Min(0.0f)]
     public float alertTime = 0.4f;
 
+    [Header("突進方向確定後の硬直時間")]
+    [Tooltip("Alertで突進方向を確定した後、実際に突進するまでの短い硬直時間です。")]
+    [Min(0.0f)]
+    public float lockConfirmTime = 0.15f;
+
     [Header("突進方向の最低距離")]
     [Tooltip("突進方向が短すぎる時の最低距離です。")]
     [Min(0.001f)]
@@ -186,6 +191,20 @@ public sealed class SonarChargerSettings
     [Min(0.0f)]
     public float alertPredictionTargetMarkerPulseScale = 0.08f;
 
+    [Header("突進予測帯の幅")]
+    [Tooltip("突進予測の帯の幅です。敵本体の当たり判定幅に近い値にすると避けやすくなります。")]
+    [Min(0.01f)]
+    public float alertPredictionBandWidth = 0.8f;
+
+    [Header("突進予測帯のZオフセット")]
+    [Tooltip("突進予測帯を少し手前に表示するためのZオフセットです。")]
+    public float alertPredictionBandZOffset = -0.05f;
+
+    [Header("突進予測帯の基本透明度")]
+    [Tooltip("突進予測帯の基本透明度です。")]
+    [Range(0.0f, 1.0f)]
+    public float alertPredictionBandAlpha = 0.75f;
+
     [Header("デバッグログ出力")]
     [Tooltip("デバッグログを出すかです。")]
     public bool enableDebugLog = false;
@@ -222,6 +241,7 @@ public sealed class SonarChargerSettings
         enableDashInputAlertTrigger = source.enableDashInputAlertTrigger;
 
         alertTime = Mathf.Max(0.0f, source.alertTime);
+        lockConfirmTime = Mathf.Max(0.0f, source.lockConfirmTime);
         minChargeTargetDistance = Mathf.Max(0.001f, source.minChargeTargetDistance);
         chargeSpeed = Mathf.Max(0.0f, source.chargeSpeed);
         cameraBoundaryPadding = Mathf.Max(0.0f, source.cameraBoundaryPadding);
@@ -246,6 +266,9 @@ public sealed class SonarChargerSettings
         alertPredictionMaxAlpha = Mathf.Clamp01(source.alertPredictionMaxAlpha);
         alertPredictionTargetMarkerScale = Mathf.Max(0.0f, source.alertPredictionTargetMarkerScale);
         alertPredictionTargetMarkerPulseScale = Mathf.Max(0.0f, source.alertPredictionTargetMarkerPulseScale);
+        alertPredictionBandWidth = Mathf.Max(0.01f, source.alertPredictionBandWidth);
+        alertPredictionBandZOffset = source.alertPredictionBandZOffset;
+        alertPredictionBandAlpha = Mathf.Clamp01(source.alertPredictionBandAlpha);
 
         enableDebugLog = source.enableDebugLog;
     }

@@ -3,28 +3,40 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class SonarChargerChargeWarningView : MonoBehaviour
 {
-    [Header("予測線: 芯")]
-    [Tooltip("突進ルートの中心線です。")]
-    [SerializeField] private LineRenderer coreLine;
+    private static readonly int WarningAlphaId = Shader.PropertyToID("_WarningAlpha");
+    private static readonly int WarningPulseId = Shader.PropertyToID("_WarningPulse");
+    private static readonly int WarningProgressId = Shader.PropertyToID("_WarningProgress");
+    private static readonly int WarningStateId = Shader.PropertyToID("_WarningState");
+    private static readonly int WarningLengthId = Shader.PropertyToID("_WarningLength");
+    private static readonly int WarningWidthId = Shader.PropertyToID("_WarningWidth");
 
-    [Header("予測線: 発光")]
-    [Tooltip("突進ルートの発光・太い外側線です。未使用なら未設定で構いません。")]
-    [SerializeField] private LineRenderer glowLine;
+    [Header("帯Root")]
+    [Tooltip("突進予測帯の位置・回転・スケールを制御するRootです。")]
+    [SerializeField] private Transform bandRoot;
+
+    [Header("帯Quad")]
+    [Tooltip("実際に帯として表示するQuadのTransformです。BandRootの子を指定します。")]
+    [SerializeField] private Transform bandQuadTransform;
+
+    [Header("帯Renderer")]
+    [Tooltip("突進予測帯を描画するMeshRendererです。QuadのMeshRendererを指定します。")]
+    [SerializeField] private MeshRenderer bandRenderer;
 
     [Header("先端マーカー")]
-    [Tooltip("予測線の先端に表示するマーカーです。未使用なら未設定で構いません。")]
+    [Tooltip("予測帯の先端に表示するマーカーです。未使用なら未設定で構いません。")]
     [SerializeField] private Transform targetMarker;
 
-    [Header("表示色")]
-    [SerializeField] private Color coreColor = new Color(1.0f, 0.2f, 0.1f, 1.0f);
-    [SerializeField] private Color glowColor = new Color(1.0f, 0.2f, 0.1f, 0.45f);
+    [Header("表示調整")]
+    [Tooltip("この距離以下になった帯は非表示にします。")]
+    [SerializeField] private float minVisibleLength = 0.05f;
 
-    [Header("Zオフセット")]
-    [Tooltip("予測線を少し手前に出すためのZオフセットです。")]
-    [SerializeField] private float zOffset = -0.05f;
-
+    private Vector3 initialBandLocalScale = Vector3.one;
     private Vector3 initialMarkerScale = Vector3.one;
+
+    private bool hasInitialBandScale;
     private bool hasInitialMarkerScale;
+
+    private MaterialPropertyBlock propertyBlock;
 
     private void Awake()
     {
@@ -34,25 +46,42 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
 
     public void Initialize()
     {
-        if (coreLine == null)
+        if (bandRoot == null)
         {
-            coreLine = GetComponentInChildren<LineRenderer>(true);
+            bandRoot = transform;
         }
 
-        SetupLine(coreLine);
-        SetupLine(glowLine);
+        if (bandQuadTransform == null && bandRenderer != null)
+        {
+            bandQuadTransform = bandRenderer.transform;
+        }
+
+        if (bandRenderer == null)
+        {
+            bandRenderer = GetComponentInChildren<MeshRenderer>(true);
+        }
+
+        if (bandRoot != null && !hasInitialBandScale)
+        {
+            initialBandLocalScale = bandRoot.localScale;
+            hasInitialBandScale = true;
+        }
 
         if (targetMarker != null && !hasInitialMarkerScale)
         {
             initialMarkerScale = targetMarker.localScale;
             hasInitialMarkerScale = true;
         }
+
+        propertyBlock ??= new MaterialPropertyBlock();
     }
 
     public void Show()
     {
-        SetLineVisible(coreLine, true);
-        SetLineVisible(glowLine, true);
+        if (bandRenderer != null)
+        {
+            bandRenderer.enabled = true;
+        }
 
         if (targetMarker != null)
         {
@@ -60,31 +89,31 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
         }
     }
 
-    public void ResetView()
-    {
-        Hide();
-
-        if (targetMarker != null && hasInitialMarkerScale)
-        {
-            targetMarker.localScale = initialMarkerScale;
-        }
-    }
-
     public void Hide()
     {
-        if (coreLine != null)
+        if (bandRenderer != null)
         {
-            coreLine.enabled = false;
-        }
-
-        if (glowLine != null)
-        {
-            glowLine.enabled = false;
+            bandRenderer.enabled = false;
         }
 
         if (targetMarker != null)
         {
             targetMarker.gameObject.SetActive(false);
+        }
+    }
+
+    public void ResetView()
+    {
+        Hide();
+
+        if (bandRoot != null && hasInitialBandScale)
+        {
+            bandRoot.localScale = initialBandLocalScale;
+        }
+
+        if (targetMarker != null && hasInitialMarkerScale)
+        {
+            targetMarker.localScale = initialMarkerScale;
         }
     }
 
@@ -101,10 +130,87 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
             return;
         }
 
+        Vector3 direction = end - start;
+        direction.z = 0.0f;
+
+        float length = direction.magnitude;
+
+        if (length <= minVisibleLength)
+        {
+            Hide();
+            return;
+        }
+
         Show();
 
-        start.z += zOffset;
-        end.z += zOffset;
+        Vector3 normalizedDirection = direction / length;
+
+        UpdateBandTransform(
+            start,
+            end,
+            normalizedDirection,
+            length,
+            settings);
+
+        UpdateShaderParameters(
+            Mathf.Clamp01(alertT),
+            elapsedTime,
+            length,
+            settings);
+
+        UpdateMarker(end, elapsedTime, settings);
+    }
+
+    private void UpdateBandTransform(
+    Vector3 start,
+    Vector3 end,
+    Vector3 normalizedDirection,
+    float length,
+    SonarChargerSettings settings)
+    {
+        if (bandRoot == null)
+        {
+            return;
+        }
+
+        Vector3 rootPosition = start;
+        rootPosition.z += settings.alertPredictionBandZOffset;
+
+        float angleZ = Mathf.Atan2(normalizedDirection.y, normalizedDirection.x) * Mathf.Rad2Deg;
+
+        // Rootは帯の開始位置、つまり敵の現在位置に置く。
+        bandRoot.position = rootPosition;
+        bandRoot.rotation = Quaternion.Euler(0.0f, 0.0f, angleZ);
+        bandRoot.localScale = Vector3.one;
+
+        if (bandQuadTransform == null)
+        {
+            return;
+        }
+
+        // Unity標準Quadは中心Pivotなので、ローカルX方向に半分ずらす。
+        // これで帯はRoot位置から前方にだけ伸びる。
+        bandQuadTransform.localPosition = new Vector3(length * 0.5f, 0.0f, 0.0f);
+        bandQuadTransform.localRotation = Quaternion.identity;
+        bandQuadTransform.localScale = new Vector3(
+            length,
+            settings.alertPredictionBandWidth,
+            1.0f);
+    }
+
+    private void UpdateShaderParameters(
+        float alertT,
+        float elapsedTime,
+        float length,
+        SonarChargerSettings settings)
+    {
+        if (bandRenderer == null)
+        {
+            return;
+        }
+
+        propertyBlock ??= new MaterialPropertyBlock();
+        bandRenderer.GetPropertyBlock(propertyBlock);
 
         float pulse = Mathf.Sin(elapsedTime * settings.alertPredictionPulseSpeed) * 0.5f + 0.5f;
         float alpha = Mathf.Lerp(
@@ -112,63 +218,21 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
             settings.alertPredictionMaxAlpha,
             pulse);
 
-        float coreWidth = Mathf.Max(0.001f, settings.alertPredictionCoreWidth);
-        float glowWidth = Mathf.Max(coreWidth, settings.alertPredictionGlowWidth);
+        alpha *= settings.alertPredictionBandAlpha;
 
-        UpdateLine(coreLine, start, end, coreWidth, coreColor, alpha);
-        UpdateLine(glowLine, start, end, glowWidth, glowColor, alpha * glowColor.a);
+        propertyBlock.SetFloat(WarningAlphaId, alpha);
+        propertyBlock.SetFloat(WarningPulseId, pulse);
+        propertyBlock.SetFloat(WarningProgressId, alertT);
+        propertyBlock.SetFloat(WarningStateId, 0.0f);
+        propertyBlock.SetFloat(WarningLengthId, length);
+        propertyBlock.SetFloat(WarningWidthId, settings.alertPredictionBandWidth);
 
-        UpdateMarker(end, pulse, settings);
-    }
-
-    private void SetupLine(LineRenderer line)
-    {
-        if (line == null)
-        {
-            return;
-        }
-
-        line.positionCount = 2;
-        line.useWorldSpace = true;
-        line.enabled = false;
-    }
-
-    private void SetLineVisible(LineRenderer line, bool visible)
-    {
-        if (line != null)
-        {
-            line.enabled = visible;
-        }
-    }
-
-    private void UpdateLine(
-        LineRenderer line,
-        Vector3 start,
-        Vector3 end,
-        float width,
-        Color baseColor,
-        float alpha)
-    {
-        if (line == null)
-        {
-            return;
-        }
-
-        Color color = baseColor;
-        color.a = Mathf.Clamp01(alpha);
-
-        line.positionCount = 2;
-        line.SetPosition(0, start);
-        line.SetPosition(1, end);
-        line.startWidth = width;
-        line.endWidth = width;
-        line.startColor = color;
-        line.endColor = color;
+        bandRenderer.SetPropertyBlock(propertyBlock);
     }
 
     private void UpdateMarker(
         Vector3 end,
-        float pulse,
+        float elapsedTime,
         SonarChargerSettings settings)
     {
         if (targetMarker == null)
@@ -176,13 +240,17 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
             return;
         }
 
-        targetMarker.position = end;
+        Vector3 markerPosition = end;
+        markerPosition.z += settings.alertPredictionBandZOffset;
+        targetMarker.position = markerPosition;
 
         if (!hasInitialMarkerScale)
         {
             initialMarkerScale = targetMarker.localScale;
             hasInitialMarkerScale = true;
         }
+
+        float pulse = Mathf.Sin(elapsedTime * settings.alertPredictionPulseSpeed) * 0.5f + 0.5f;
 
         float scale = settings.alertPredictionTargetMarkerScale
             + settings.alertPredictionTargetMarkerPulseScale * pulse;

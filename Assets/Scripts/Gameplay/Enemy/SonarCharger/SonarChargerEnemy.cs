@@ -13,12 +13,13 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     // 敵の状態定義
     private enum SonarChargerState
     {
-        Idle,     // 非アクティブ状態
-        Follow,   // プレイヤーを追跡しながらソナーで探知
-        Alert,    // プレイヤー発見後の溜め状態
-        Charge,   // 直線突進
-        Rebound,  // カメラ境界に当たった後の跳ね返り
-        Stun      // 跳ね返り後の硬直
+        Idle,        // 非アクティブ状態
+        Follow,      // プレイヤーを追跡しながらソナーで探知
+        Alert,       // プレイヤー発見後の溜め状態
+        LockConfirm, // 突進方向確定後の短い硬直
+        Charge,      // 直線突進
+        Rebound,     // カメラ境界に当たった後の跳ね返り
+        Stun         // 跳ね返り後の硬直
     }
 
     [Header("設定")]
@@ -49,6 +50,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     private SonarChargerState state = SonarChargerState.Idle;
     private float stateTimer;
     private Vector3 alertTargetPosition;
+    private Vector3 lockedChargeTargetPosition;
 
     private Vector3 chargeWarningEndPosition;
     private bool hasChargeWarningEndPosition;
@@ -139,6 +141,10 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
 
             case SonarChargerState.Alert:
                 TickAlert(deltaTime);
+                break;
+
+            case SonarChargerState.LockConfirm:
+                TickLockConfirm(deltaTime);
                 break;
 
             case SonarChargerState.Charge:
@@ -350,10 +356,10 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
 
         UpdateChargeWarning();
 
-        // 溜め時間が経過したらChargeへ遷移
+        // 溜め時間が経過したらLockConfirmへ遷移
         if (stateTimer >= Settings.alertTime)
         {
-            StartCharge();
+            StartLockConfirm();
         }
     }
 
@@ -384,14 +390,60 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         return true;
     }
 
-    // 状態遷移: Alert → Charge
+    // 状態遷移: Alert → LockConfirm
+    private void StartLockConfirm()
+    {
+        // この瞬間の狙い位置で突進方向を確定する。
+        lockedChargeTargetPosition = alertTargetPosition;
+
+        movement.StopImmediate();
+        view.ResetVisualOffset();
+
+        Vector3 lockedDirection = lockedChargeTargetPosition - transform.position;
+        lockedDirection.z = 0.0f;
+        view.ApplyDirection(lockedDirection);
+
+        UpdateChargeWarningForTarget(lockedChargeTargetPosition, 1.0f);
+
+        ChangeState(SonarChargerState.LockConfirm);
+        view.PlayAlert();
+
+        LogDebug("Charge direction locked.");
+    }
+
+    // 状態: LockConfirm - 突進方向確定後の短い硬直
+    private void TickLockConfirm(float deltaTime)
+    {
+        stateTimer += deltaTime;
+
+        movement.StopImmediate();
+
+        Vector3 lockedDirection = lockedChargeTargetPosition - transform.position;
+        lockedDirection.z = 0.0f;
+        view.ApplyDirection(lockedDirection);
+
+        // 方向確定後はプレイヤーを追い直さず、固定された方向の予測表示を維持する。
+        UpdateChargeWarningForTarget(lockedChargeTargetPosition, 1.0f);
+
+        if (stateTimer >= Settings.lockConfirmTime)
+        {
+            StartCharge();
+        }
+    }
+
+    // 状態遷移: LockConfirm → Charge
     private void StartCharge()
     {
         view.ResetVisualOffset();
 
-        movement.StartCharge(alertTargetPosition, playerCameraController, Settings);
+        movement.StartCharge(
+            lockedChargeTargetPosition,
+            playerCameraController,
+            Settings);
+
         view.ApplyDirection(movement.ChargeDirection);
 
+        // Charge中に表示し続ける帯の終点をここで固定する。
         PrepareChargeWarningForCharge();
 
         ChangeState(SonarChargerState.Charge);
@@ -419,6 +471,11 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
 
     private void UpdateChargeWarning()
     {
+        UpdateChargeWarningForTarget(alertTargetPosition, GetAlertProgress01());
+    }
+
+    private void UpdateChargeWarningForTarget(Vector3 targetPosition, float progress)
+    {
         if (chargeWarningView == null)
         {
             return;
@@ -433,7 +490,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         Vector3 start = transform.position;
 
         Vector3 direction = movement.BuildChargeDirectionTo(
-            alertTargetPosition,
+            targetPosition,
             Settings);
 
         Vector3 end = movement.BuildPredictionEndPosition(
@@ -442,16 +499,22 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
             playerCameraController,
             Settings);
 
-        float alertT = Settings.alertTime <= 0.0f
-            ? 1.0f
-            : Mathf.Clamp01(stateTimer / Settings.alertTime);
-
         chargeWarningView.UpdateWarning(
             start,
             end,
-            alertT,
+            Mathf.Clamp01(progress),
             stateTimer,
             Settings);
+    }
+
+    private float GetAlertProgress01()
+    {
+        if (Settings.alertTime <= 0.0f)
+        {
+            return 1.0f;
+        }
+
+        return Mathf.Clamp01(stateTimer / Settings.alertTime);
     }
 
     private void PrepareChargeWarningForCharge()
@@ -477,7 +540,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         if (direction.sqrMagnitude <= 0.0001f)
         {
             direction = movement.BuildChargeDirectionTo(
-                alertTargetPosition,
+                lockedChargeTargetPosition,
                 Settings);
         }
 
@@ -713,6 +776,8 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         sonarDetector.ResetDetector(Settings);
         playerMotionDetector.ResetDetector(targetPlayer);
         view.ResetToInitialState();
+
+        lockedChargeTargetPosition = Vector3.zero;
 
         if (chargeWarningView != null)
         {
