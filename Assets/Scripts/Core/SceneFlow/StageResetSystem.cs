@@ -26,20 +26,33 @@ public sealed class StageResetSystem : MonoBehaviour
 
     public void ResetAllToRespawnState()
     {
-        // 初期状態未保存のケース（実行順や例外ケース）でも安全に保存します。
         if (!hasCapturedInitialState)
         {
-            CaptureInitialStateAll();
+            Debug.LogWarning("[StageResetSystem] Initial state has not been captured. Reset skipped to avoid capturing runtime state.", this);
+            return;
         }
 
         Debug.Log("[StageResetSystem] Stage reset started", this);
 
         for (int i = 0; i < resetTargets.Count; i++)
         {
+            if (!IsTargetValid(resetTargets[i]))
+            {
+                continue;
+            }
+
             resetTargets[i].ResetToRespawnState();
         }
 
         Debug.Log("[StageResetSystem] Stage reset complete", this);
+    }
+
+    public void RecollectAndCaptureInitialState()
+    {
+        // MapLoader などが生成を完了した直後に、最新のReset対象を初期状態として保存する。
+        hasCapturedInitialState = false;
+        CollectTargets();
+        CaptureInitialStateAll();
     }
 
     private void CollectTargets()
@@ -72,7 +85,7 @@ public sealed class StageResetSystem : MonoBehaviour
 
         for (int i = 0; i < resetTargets.Count; i++)
         {
-            if (resetTargets[i] == null)
+            if (!IsTargetValid(resetTargets[i]))
             {
                 continue;
             }
@@ -82,5 +95,20 @@ public sealed class StageResetSystem : MonoBehaviour
 
         hasCapturedInitialState = true;
         Debug.Log("[StageResetSystem] Initial state capture complete", this);
+    }
+
+    private static bool IsTargetValid(IRespawnResettable target)
+    {
+        if (target == null)
+        {
+            return false;
+        }
+
+        if (target is Object unityObject)
+        {
+            return unityObject != null;
+        }
+
+        return true;
     }
 }
