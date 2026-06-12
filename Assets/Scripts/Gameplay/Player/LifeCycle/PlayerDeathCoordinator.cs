@@ -20,7 +20,7 @@ internal sealed class PlayerDeathCoordinator
     private readonly Action stopAllRumble;
     private readonly Action stopAllSounds;
     private readonly Action resetVisualOneShotFlags;
-    private readonly Action resetShadowHistoryForRespawn;
+    private readonly Action<Vector3> resetShadowHistoryForRespawn;
     private readonly Action<string> logRespawn;
     private readonly Action<string> logRespawnWarning;
 
@@ -53,7 +53,7 @@ internal sealed class PlayerDeathCoordinator
         Action stopAllRumble,
         Action stopAllSounds,
         Action resetVisualOneShotFlags,
-        Action resetShadowHistoryForRespawn,
+        Action<Vector3> resetShadowHistoryForRespawn,
         Action<string> logRespawn,
         Action<string> logRespawnWarning)
     {
@@ -268,7 +268,7 @@ internal sealed class PlayerDeathCoordinator
 
         Physics.SyncTransforms();
 
-        resetShadowHistoryForRespawn?.Invoke();
+        resetShadowHistoryForRespawn?.Invoke(worldPosition);
     }
 
     private void ResetForRespawn()
