@@ -15,16 +15,32 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
     [SerializeField] private Transform modelRoot;
 
     [Header("残像の見た目: 色")]
-    [Tooltip("残像に適用する色。アルファ値はstartAlphaとfadeCurveで制御されます。")]
+    [Tooltip("useColorGradientが無効な場合に残像へ適用する単色です。アルファ値はstartAlphaとfadeCurveで制御されます。")]
     [SerializeField] private Color afterimageColor = new Color(0.42f, 0.34f, 1f, 1f);
+
+    [Header("残像の見た目: 色変化")]
+    [Tooltip("残像本体色を寿命進行度に応じてGradientで変化させるかどうかです。無効時はafterimageColorの単色を使用します。")]
+    [SerializeField] private bool useColorGradient = true;
+
+    [Header("残像の見た目: 色Gradient")]
+    [Tooltip("残像本体色の寿命ごとの変化です。生成直後の白青から青、青紫、透明へ流れる色跡を作ります。")]
+    [SerializeField] private Gradient afterimageColorGradient = CreateDefaultAfterimageColorGradient();
 
     [Header("残像の発光: 有効化")]
     [Tooltip("残像にEmission発光を適用するかどうかです。無効時は透明度フェードのみを使用します。")]
     [SerializeField] private bool useEmission = true;
 
     [Header("残像の発光: 色")]
-    [Tooltip("残像のEmission発光色です。HDR Colorとして調整でき、青紫系の高速分身表現に使います。")]
+    [Tooltip("useEmissionColorGradientが無効な場合に使うEmission発光色です。HDR Colorとして調整でき、青紫系の高速分身表現に使います。")]
     [SerializeField, ColorUsage(false, true)] private Color emissionColor = new Color(0.36f, 0.2f, 1f, 1f);
+
+    [Header("残像の発光: 色変化")]
+    [Tooltip("Emission発光色を寿命進行度に応じてGradientで変化させるかどうかです。無効時はemissionColorの単色を使用します。")]
+    [SerializeField] private bool useEmissionColorGradient = true;
+
+    [Header("残像の発光: 色Gradient")]
+    [Tooltip("Emission発光色の寿命ごとの変化です。生成直後の白青から青、青紫へ流れ、終端では発光を残さない設定にします。")]
+    [SerializeField] private Gradient emissionColorGradient = CreateDefaultEmissionColorGradient();
 
     [Header("残像の発光: 強さ")]
     [Tooltip("残像のEmission発光の基準強度です。大きいほど発光が強くなり、Bloom設定がある環境ではにじみも強くなります。")]
@@ -98,6 +114,7 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
     private void Awake()
     {
         ResolveReferences();
+        EnsureRuntimeGradients();
         EnsureRuntimeFadeCurve();
         EnsureRuntimeEmissionCurve();
         EnsureRuntimeMaterial();
@@ -195,6 +212,16 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
             fadeCurve = CreateDefaultFadeCurve();
         }
 
+        if (afterimageColorGradient == null)
+        {
+            afterimageColorGradient = CreateDefaultAfterimageColorGradient();
+        }
+
+        if (emissionColorGradient == null)
+        {
+            emissionColorGradient = CreateDefaultEmissionColorGradient();
+        }
+
         if (emissionIntensityCurve == null || emissionIntensityCurve.length == 0)
         {
             emissionIntensityCurve = CreateDefaultEmissionIntensityCurve();
@@ -208,6 +235,48 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
             new Keyframe(0.25f, 0.45f, -2.2f, -0.75f),
             new Keyframe(0.65f, 0.15f, -0.75f, -0.43f),
             new Keyframe(1f, 0f, -0.43f, -0.43f));
+    }
+
+    private static Gradient CreateDefaultAfterimageColorGradient()
+    {
+        Gradient gradient = new Gradient();
+        gradient.SetKeys(
+            new[]
+            {
+                new GradientColorKey(new Color(0.82f, 0.95f, 1f, 1f), 0f),
+                new GradientColorKey(new Color(0.1f, 0.72f, 1f, 1f), 0.25f),
+                new GradientColorKey(new Color(0.34f, 0.24f, 1f, 1f), 0.65f),
+                new GradientColorKey(new Color(0.58f, 0.14f, 1f, 1f), 1f)
+            },
+            new[]
+            {
+                new GradientAlphaKey(1f, 0f),
+                new GradientAlphaKey(0.75f, 0.25f),
+                new GradientAlphaKey(0.35f, 0.65f),
+                new GradientAlphaKey(0f, 1f)
+            });
+
+        return gradient;
+    }
+
+    private static Gradient CreateDefaultEmissionColorGradient()
+    {
+        Gradient gradient = new Gradient();
+        gradient.SetKeys(
+            new[]
+            {
+                new GradientColorKey(new Color(0.82f, 0.95f, 1f, 1f), 0f),
+                new GradientColorKey(new Color(0.08f, 0.46f, 1f, 1f), 0.35f),
+                new GradientColorKey(new Color(0.42f, 0.18f, 1f, 1f), 0.75f),
+                new GradientColorKey(Color.black, 1f)
+            },
+            new[]
+            {
+                new GradientAlphaKey(1f, 0f),
+                new GradientAlphaKey(1f, 1f)
+            });
+
+        return gradient;
     }
 
     private static AnimationCurve CreateDefaultEmissionIntensityCurve()
@@ -243,6 +312,19 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
             && Mathf.Approximately(second.time, 1f)
             && Mathf.Approximately(second.value, 0f)
             && Mathf.Approximately(second.inTangent, 0f);
+    }
+
+    private void EnsureRuntimeGradients()
+    {
+        if (afterimageColorGradient == null)
+        {
+            afterimageColorGradient = CreateDefaultAfterimageColorGradient();
+        }
+
+        if (emissionColorGradient == null)
+        {
+            emissionColorGradient = CreateDefaultEmissionColorGradient();
+        }
     }
 
     private void EnsureRuntimeEmissionCurve()
@@ -366,7 +448,7 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
     private void PrepareRuntimeMaterial(Material material)
     {
         ConfigureTransparentMaterial(material);
-        ApplyMaterialColor(material, GetTintColor(1f));
+        ApplyMaterialColor(material, GetAfterimageColor(0f, 1f));
         ConfigureRuntimeEmission(material);
         WarnMissingColorPropertiesOnce(material);
     }
@@ -509,7 +591,7 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
             return;
         }
 
-        ghost.CompleteCapture(capturedCount, GetTintColor(1f), GetEmissionColor(0f));
+        ghost.CompleteCapture(capturedCount, GetAfterimageColor(0f, 1f), GetEmissionColor(0f));
     }
 
     private bool CanCaptureRenderer(Renderer sourceRenderer)
@@ -584,22 +666,67 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
             ghosts[i].Tick(
                 deltaTime,
                 fadeCurve,
-                GetTintColor(1f),
+                useColorGradient,
+                afterimageColor,
+                afterimageColorGradient,
+                startAlpha,
                 useEmission,
+                useEmissionColorGradient,
                 emissionColor,
+                emissionColorGradient,
                 emissionIntensity,
                 emissionIntensityCurve);
         }
     }
 
-    private Color GetTintColor(float alphaMultiplier)
+    private Color GetAfterimageColor(float normalizedAge, float fade)
     {
-        Color color = afterimageColor;
-        color.a = afterimageColor.a * startAlpha * alphaMultiplier;
-        return color;
+        return EvaluateAfterimageColor(
+            useColorGradient,
+            afterimageColorGradient,
+            afterimageColor,
+            startAlpha,
+            normalizedAge,
+            fade);
     }
 
     private Color GetEmissionColor(float normalizedAge)
+    {
+        return EvaluateEmissionColor(
+            useEmission,
+            useEmissionColorGradient,
+            emissionColorGradient,
+            emissionColor,
+            emissionIntensity,
+            emissionIntensityCurve,
+            normalizedAge);
+    }
+
+    private static Color EvaluateAfterimageColor(
+        bool useColorGradient,
+        Gradient colorGradient,
+        Color fallbackColor,
+        float startAlpha,
+        float normalizedAge,
+        float fade)
+    {
+        Color color = useColorGradient && colorGradient != null
+            ? colorGradient.Evaluate(Mathf.Clamp01(normalizedAge))
+            : fallbackColor;
+
+        // Gradientの透明度と既存Fadeを合成し、色変化を入れても消え方の責務を維持する。
+        color.a *= Mathf.Clamp01(startAlpha) * Mathf.Clamp01(fade);
+        return color;
+    }
+
+    private static Color EvaluateEmissionColor(
+        bool useEmission,
+        bool useEmissionColorGradient,
+        Gradient emissionColorGradient,
+        Color fallbackColor,
+        float emissionIntensity,
+        AnimationCurve emissionIntensityCurve,
+        float normalizedAge)
     {
         if (!useEmission || emissionIntensity <= 0f)
         {
@@ -611,7 +738,11 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
             ? Mathf.Max(0f, emissionIntensityCurve.Evaluate(normalizedAge))
             : Mathf.Max(0f, 1f - normalizedAge);
 
-        return emissionColor * emissionIntensity * curveMultiplier;
+        Color emissionBase = useEmissionColorGradient && emissionColorGradient != null
+            ? emissionColorGradient.Evaluate(normalizedAge)
+            : fallbackColor;
+
+        return emissionBase * Mathf.Max(0f, emissionIntensity) * curveMultiplier;
     }
 
     private static void ConfigureTransparentMaterial(Material material)
@@ -771,9 +902,14 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
         public void Tick(
             float deltaTime,
             AnimationCurve fadeCurve,
-            Color baseColor,
+            bool useColorGradient,
+            Color afterimageColor,
+            Gradient afterimageColorGradient,
+            float startAlpha,
             bool useEmission,
+            bool useEmissionColorGradient,
             Color emissionColor,
+            Gradient emissionColorGradient,
             float emissionIntensity,
             AnimationCurve emissionIntensityCurve)
         {
@@ -787,28 +923,34 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
             float normalizedAge = Mathf.Clamp01(age / lifetime);
             if (normalizedAge >= 1f)
             {
-                Color finalColor = baseColor;
-                finalColor.a = 0f;
+                Color finalColor = EvaluateAfterimageColor(
+                    useColorGradient,
+                    afterimageColorGradient,
+                    afterimageColor,
+                    startAlpha,
+                    1f,
+                    0f);
                 ApplyVisualProperties(finalColor, Color.black);
                 Deactivate();
                 return;
             }
 
             float fade = fadeCurve != null ? Mathf.Clamp01(fadeCurve.Evaluate(normalizedAge)) : 1f - normalizedAge;
-            Color color = baseColor;
-            color.a = baseColor.a * fade;
-
-            float emissionCurveMultiplier = 0f;
-            if (useEmission)
-            {
-                emissionCurveMultiplier = emissionIntensityCurve != null
-                    ? Mathf.Max(0f, emissionIntensityCurve.Evaluate(normalizedAge))
-                    : Mathf.Max(0f, 1f - normalizedAge);
-            }
-
-            Color emission = useEmission
-                ? emissionColor * Mathf.Max(0f, emissionIntensity) * emissionCurveMultiplier
-                : Color.black;
+            Color color = EvaluateAfterimageColor(
+                useColorGradient,
+                afterimageColorGradient,
+                afterimageColor,
+                startAlpha,
+                normalizedAge,
+                fade);
+            Color emission = EvaluateEmissionColor(
+                useEmission,
+                useEmissionColorGradient,
+                emissionColorGradient,
+                emissionColor,
+                emissionIntensity,
+                emissionIntensityCurve,
+                normalizedAge);
 
             ApplyVisualProperties(color, emission);
         }
