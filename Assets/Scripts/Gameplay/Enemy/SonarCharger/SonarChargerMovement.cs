@@ -32,6 +32,57 @@ public sealed class SonarChargerMovement : MonoBehaviour
 
     public Vector3 ChargeDirection => chargeDirection;
 
+    public Vector3 BuildChargeDirectionTo(
+    Vector3 targetPosition,
+    SonarChargerSettings settings)
+    {
+        Vector3 current = GetWorldPosition();
+        Vector3 toTarget = Flatten(targetPosition - current);
+
+        float minDistance = Mathf.Max(0.001f, settings.minChargeTargetDistance);
+
+        if (toTarget.sqrMagnitude < minDistance * minDistance)
+        {
+            toTarget = lastMoveDirection.sqrMagnitude > 0.0001f
+                ? lastMoveDirection
+                : Vector3.right;
+        }
+
+        return toTarget.normalized;
+    }
+
+    public Vector3 BuildPredictionEndPosition(
+    Vector3 start,
+    Vector3 direction,
+    PlayerCameraController cameraController,
+    SonarChargerSettings settings)
+    {
+        direction = Flatten(direction);
+
+        if (direction.sqrMagnitude <= 0.0001f)
+        {
+            direction = chargeDirection.sqrMagnitude > 0.0001f
+                ? chargeDirection
+                : Vector3.right;
+        }
+
+        direction.Normalize();
+
+        float length = settings.alertPredictionLineLength > 0.0f
+            ? settings.alertPredictionLineLength
+            : settings.maxChargeDistance;
+
+        if (length <= 0.0f)
+        {
+            length = 12.0f;
+        }
+
+        Vector3 end = start + direction * length;
+        end.z = start.z;
+
+        return end;
+    }
+
     // 初期化: Rigidbodyをキャッシュ
     public void Initialize(Rigidbody rigidbody)
     {

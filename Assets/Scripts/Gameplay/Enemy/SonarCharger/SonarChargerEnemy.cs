@@ -7,6 +7,7 @@ using UnityEngine;
 [RequireComponent(typeof(SonarChargerSonarDetector))]
 [RequireComponent(typeof(SonarChargerPlayerMotionDetector))]
 [RequireComponent(typeof(SonarChargerView))]
+[RequireComponent(typeof(SonarChargerChargeWarningView))]
 public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
 {
     // 敵の状態定義
@@ -38,6 +39,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     [SerializeField] private SonarChargerSonarDetector sonarDetector;
     [SerializeField] private SonarChargerPlayerMotionDetector playerMotionDetector;
     [SerializeField] private SonarChargerView view;
+    [SerializeField] private SonarChargerChargeWarningView chargeWarningView;
 
     // キャッシュ済み Unity コンポーネント
     private Rigidbody rb;
@@ -47,6 +49,9 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     private SonarChargerState state = SonarChargerState.Idle;
     private float stateTimer;
     private Vector3 alertTargetPosition;
+
+    private Vector3 chargeWarningEndPosition;
+    private bool hasChargeWarningEndPosition;
 
     // アクティベーション状態
     private bool isActivated;
@@ -70,6 +75,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         sonarDetector = GetComponent<SonarChargerSonarDetector>();
         playerMotionDetector = GetComponent<SonarChargerPlayerMotionDetector>();
         view = GetComponent<SonarChargerView>();
+        chargeWarningView = GetComponent<SonarChargerChargeWarningView>();
     }
 
     private void Awake()
@@ -81,6 +87,12 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
 
         movement.Initialize(rb);
         view.Initialize(transform);
+
+        if (chargeWarningView != null)
+        {
+            chargeWarningView.Initialize();
+            chargeWarningView.Hide();
+        }
 
         CaptureInitialState();
         ResetToIdleState();
@@ -163,6 +175,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         {
             ResetDetectors();
             ApplyActivationVisualState();
+            HideChargeWarning();
 
             if (Settings.startActive && !isActivated && !isDisabled)
             {
@@ -181,6 +194,8 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
             return;
         }
 
+        HideChargeWarning();
+
         // 状態をアクティブに設定
         isDisabled = false;
         isActivated = true;
@@ -192,6 +207,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
 
         // 表示状態を適用し、Follow状態へ遷移
         ApplyActivationVisualState();
+        HideChargeWarning();
         ChangeState(SonarChargerState.Follow);
         view.PlayFollow();
 
@@ -206,6 +222,8 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
 
     public void DisableSelf()
     {
+        HideChargeWarning();
+
         isDisabled = true;
         isActivated = false;
         ClearRigidbodyVelocity();
@@ -238,6 +256,8 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     // リスポーン時に敵を初期状態にリセットする
     public void ResetEncounterForRespawn()
     {
+        HideChargeWarning();
+
         // 初期位置・回転にワープ
         WarpTo(initialPosition, initialRotation);
         // Rigidbodyの速度をクリア
@@ -300,6 +320,9 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         alertTargetPosition = detectedPosition;
         sonarDetector.CancelPulse();
         StopMovementAndResetView();
+
+        HideChargeWarning();
+
         ChangeState(SonarChargerState.Alert);
         view.PlayAlert();
         LogDebug("Player detected. Alert started.");
@@ -324,6 +347,8 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
 
         // Alert状態の視覚的な揺れエフェクトを更新
         view.TickAlert(stateTimer, Settings);
+
+        UpdateChargeWarning();
 
         // 溜め時間が経過したらChargeへ遷移
         if (stateTimer >= Settings.alertTime)
@@ -363,8 +388,12 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     private void StartCharge()
     {
         view.ResetVisualOffset();
+
         movement.StartCharge(alertTargetPosition, playerCameraController, Settings);
         view.ApplyDirection(movement.ChargeDirection);
+
+        PrepareChargeWarningForCharge();
+
         ChangeState(SonarChargerState.Charge);
         view.PlayCharge();
         LogDebug($"Charge started. dir={movement.ChargeDirection}");
@@ -373,6 +402,8 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     // 状態: Charge - 直線突進
     private void TickCharge(float deltaTime)
     {
+        stateTimer += deltaTime;
+
         // 突進移動を更新、カメラ境界に到達したかをチェック
         bool reachedCameraBoundary = movement.TickCharge(Settings, deltaTime);
 
@@ -380,12 +411,146 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         if (reachedCameraBoundary)
         {
             StartRebound();
+            return;
+        }
+
+        UpdateChargeWarningDuringCharge();
+    }
+
+    private void UpdateChargeWarning()
+    {
+        if (chargeWarningView == null)
+        {
+            return;
+        }
+
+        if (!Settings.showAlertPredictionLine)
+        {
+            chargeWarningView.Hide();
+            return;
+        }
+
+        Vector3 start = transform.position;
+
+        Vector3 direction = movement.BuildChargeDirectionTo(
+            alertTargetPosition,
+            Settings);
+
+        Vector3 end = movement.BuildPredictionEndPosition(
+            start,
+            direction,
+            playerCameraController,
+            Settings);
+
+        float alertT = Settings.alertTime <= 0.0f
+            ? 1.0f
+            : Mathf.Clamp01(stateTimer / Settings.alertTime);
+
+        chargeWarningView.UpdateWarning(
+            start,
+            end,
+            alertT,
+            stateTimer,
+            Settings);
+    }
+
+    private void PrepareChargeWarningForCharge()
+    {
+        hasChargeWarningEndPosition = false;
+
+        if (chargeWarningView == null)
+        {
+            return;
+        }
+
+        if (!Settings.showAlertPredictionLine)
+        {
+            chargeWarningView.Hide();
+            return;
+        }
+
+        Vector3 start = transform.position;
+
+        Vector3 direction = movement.ChargeDirection;
+        direction.z = 0.0f;
+
+        if (direction.sqrMagnitude <= 0.0001f)
+        {
+            direction = movement.BuildChargeDirectionTo(
+                alertTargetPosition,
+                Settings);
+        }
+
+        chargeWarningEndPosition = movement.BuildPredictionEndPosition(
+            start,
+            direction,
+            playerCameraController,
+            Settings);
+
+        hasChargeWarningEndPosition = true;
+
+        chargeWarningView.UpdateWarning(
+            start,
+            chargeWarningEndPosition,
+            1.0f,
+            0.0f,
+            Settings);
+    }
+
+    private void UpdateChargeWarningDuringCharge()
+    {
+        if (chargeWarningView == null)
+        {
+            return;
+        }
+
+        if (!Settings.showAlertPredictionLine)
+        {
+            chargeWarningView.Hide();
+            return;
+        }
+
+        if (!hasChargeWarningEndPosition)
+        {
+            chargeWarningView.Hide();
+            return;
+        }
+
+        Vector3 start = transform.position;
+        Vector3 end = chargeWarningEndPosition;
+
+        Vector3 remaining = end - start;
+        remaining.z = 0.0f;
+
+        // 終点付近まで来たらラインを消す。
+        if (remaining.sqrMagnitude <= 0.05f * 0.05f)
+        {
+            chargeWarningView.Hide();
+            return;
+        }
+
+        chargeWarningView.UpdateWarning(
+            start,
+            end,
+            1.0f,
+            stateTimer,
+            Settings);
+    }
+
+    private void HideChargeWarning()
+    {
+        hasChargeWarningEndPosition = false;
+
+        if (chargeWarningView != null)
+        {
+            chargeWarningView.Hide();
         }
     }
 
     // 状態遷移: Charge → Rebound
     private void StartRebound()
     {
+        HideChargeWarning();
         movement.StartRebound(Settings);
         ChangeState(SonarChargerState.Rebound);
         view.PlayRebound();
@@ -512,6 +677,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         sonarDetector ??= GetComponent<SonarChargerSonarDetector>();
         playerMotionDetector ??= GetComponent<SonarChargerPlayerMotionDetector>();
         view ??= GetComponent<SonarChargerView>();
+        chargeWarningView ??= GetComponent<SonarChargerChargeWarningView>();
     }
 
     private void ResolvePlayerIfNeeded()
@@ -547,14 +713,21 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         sonarDetector.ResetDetector(Settings);
         playerMotionDetector.ResetDetector(targetPlayer);
         view.ResetToInitialState();
+
+        if (chargeWarningView != null)
+        {
+            chargeWarningView.ResetView();
+        }
     }
 
     // 状態遷移ヘルパー
     private void ResetToIdleState()
     {
+
         ChangeState(SonarChargerState.Idle);
         view.PlayIdle();
         ApplyActivationVisualState();
+        HideChargeWarning();
     }
 
     private void StopMovementAndResetView()
