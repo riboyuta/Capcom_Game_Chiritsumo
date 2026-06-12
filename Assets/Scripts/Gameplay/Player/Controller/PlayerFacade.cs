@@ -354,6 +354,14 @@ public sealed class PlayerFacade : MonoBehaviour
     // - ダッシュ回復ギミックが「回復が必要か」を見る
     // - UI やチュートリアルで現在ダッシュ可能かを表示する
     public bool CanUseDashNow => playerController.CanUseDashNow();
+
+
+    // 最後に有効なダッシュ入力が受理されたフレーム。
+    // 用途例:
+    // - 外部ギミックや敵AIが新しいダッシュ入力の受理を検知する
+    // - 開始時のフレーム値と比較して、その後の入力受理を判定する
+    public int LastAcceptedDashInputFrame => playerController.LastAcceptedDashInputFrame;
+
     // 壁掴み中か。
     // 用途例:
     // - 壁掴み中だけ反応する壁ギミック

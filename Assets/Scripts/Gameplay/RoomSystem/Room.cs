@@ -26,26 +26,16 @@ public sealed class Room : MonoBehaviour
     [Tooltip("この部屋の下へ抜けた時の遷移先です。未設定なら下遷移はできません。")]
     [SerializeField] private Room downRoom;
 
-    [Header("復帰位置: 左右")]
-    [Tooltip("左側からこの部屋へ入った時、または左遷移に対応する復帰位置です。未使用なら未設定で構いません。")]
-    [SerializeField] private Transform respawnFromLeft;
-
-    [Tooltip("右側からこの部屋へ入った時、または右遷移に対応する復帰位置です。未使用なら未設定で構いません。")]
-    [SerializeField] private Transform respawnFromRight;
-
-    [Header("復帰位置: 上下")]
-    [Tooltip("上側からこの部屋へ入った時、または上遷移に対応する復帰位置です。未使用なら未設定で構いません。")]
-    [SerializeField] private Transform respawnFromUp;
-
-    [Tooltip("下側からこの部屋へ入った時、または下遷移に対応する復帰位置です。未使用なら未設定で構いません。")]
-    [SerializeField] private Transform respawnFromDown;
+    [Header("復帰位置")]
+    [Tooltip("この部屋で死亡した時に使う部屋単位の復帰位置です。部屋へ入った方向に関係なく、この Transform を checkpoint として登録します。")]
+    [SerializeField] private Transform respawnPoint;
 
     [Header("一方通行設定")]
     [Tooltip("この Room へ入った時、入ってきた面の戻り防止 Blocker を有効化するかを設定します。")]
     [SerializeField] private bool enableOneWayBlockerOnEntry = false;
 
-    [Header("カメラ注視位置")]
-    [Tooltip("この部屋で使うカメラ注視オフセットです。Xで左右寄せ、Yで上下寄せを調整します。")]
+    [Header("カメラ中心オフセット")]
+    [Tooltip("この部屋でカメラ中心をプレイヤー基準からどれだけずらすかを設定します。Xで左右寄せ、Yで上下寄せを調整します。")]
     [SerializeField] private Vector2 roomFocusOffset = Vector2.zero;
 
     [Header("カメラ追従スムーズ上書き")]
@@ -107,10 +97,7 @@ public sealed class Room : MonoBehaviour
     public Room UpRoom => upRoom;
     public Room DownRoom => downRoom;
 
-    public Transform RespawnFromLeft => respawnFromLeft;
-    public Transform RespawnFromRight => respawnFromRight;
-    public Transform RespawnFromUp => respawnFromUp;
-    public Transform RespawnFromDown => respawnFromDown;
+    public Transform RespawnPoint => respawnPoint;
 
     public bool EnableOneWayBlockerOnEntry => enableOneWayBlockerOnEntry;
     public bool HasFollowSmoothingOverride => overrideFollowSmoothing;
