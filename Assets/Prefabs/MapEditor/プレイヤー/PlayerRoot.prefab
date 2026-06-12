@@ -890,8 +890,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f037472dd7cc864dba59bfccf07884b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDashAfterimageView
-  playerFacade: {fileID: 0}
-  modelRoot: {fileID: 0}
+  playerFacade: {fileID: 5756467161709318609}
+  modelRoot: {fileID: 2186265764438467228}
   afterimageColor: {r: 0.42, g: 0.34, b: 1, a: 1}
   useColorGradient: 1
   afterimageColorGradient:
@@ -926,7 +926,7 @@ MonoBehaviour:
     m_NumAlphaKeys: 4
   useEmission: 1
   emissionColor: {r: 0.36, g: 0.2, b: 1, a: 1}
-  useEmissionColorGradient: 1
+  useEmissionColorGradient: 0
   emissionColorGradient:
     serializedVersion: 2
     key0: {r: 0.82, g: 0.95, b: 1, a: 1}
@@ -957,7 +957,7 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 4
     m_NumAlphaKeys: 2
-  emissionIntensity: 2
+  emissionIntensity: 4
   emissionIntensityCurve:
     serializedVersion: 2
     m_Curve:
@@ -991,12 +991,12 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  startAlpha: 0.42
+  startAlpha: 0.4
   lifetime: 0.24
-  afterimageDepthOffset: 0.02
-  afterimageScaleMultiplier: 1
+  afterimageDepthOffset: 1
+  afterimageScaleMultiplier: 1.4
   spawnInterval: 0.045
-  maxGhostCount: 6
+  maxGhostCount: 5
   fadeCurve:
     serializedVersion: 2
     m_Curve:
@@ -1039,7 +1039,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  afterimageMaterial: {fileID: 0}
+  afterimageMaterial: {fileID: 2100000, guid: 3655098b4a66fbe4bb12916ede82842d, type: 2}
 --- !u!1001 &632477157342944301
 PrefabInstance:
   m_ObjectHideFlags: 0
