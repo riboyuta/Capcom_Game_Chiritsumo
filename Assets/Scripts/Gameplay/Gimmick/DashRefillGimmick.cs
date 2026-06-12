@@ -31,7 +31,7 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
 
     private void Awake()
     {
-        myCollider = GetComponent<Collider>();
+        EnsureRuntimeReferences();
 
         // トリガー化を保証する
         if (myCollider != null)
@@ -39,18 +39,31 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
             myCollider.isTrigger = true;
         }
 
-        if (visualTransform == null)
-        {
-            visualTransform = transform.childCount > 0 ? transform.GetChild(0) : transform;
-        }
-
-        visualRenderers = visualTransform.GetComponentsInChildren<Renderer>();
-
         // MeshRenderer のソーティングを設定する
         foreach (var r in GetComponentsInChildren<Renderer>())
         {
             r.sortingLayerName = "UseGimmick";
             r.sortingOrder = 0;
+        }
+    }
+
+    private void EnsureRuntimeReferences()
+    {
+        if (myCollider == null)
+        {
+            myCollider = GetComponent<Collider>();
+        }
+
+        if (visualTransform == null)
+        {
+            visualTransform = transform.childCount > 0 ? transform.GetChild(0) : transform;
+        }
+
+        if (visualRenderers == null)
+        {
+            visualRenderers = visualTransform != null
+                ? visualTransform.GetComponentsInChildren<Renderer>(true)
+                : new Renderer[0];
         }
     }
 
@@ -175,6 +188,8 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
     public void CaptureInitialState()
     {
         if (hasCapturedInitialState) return;
+
+        EnsureRuntimeReferences();
 
         initialIsAvailable = isAvailable;
         initialCooldownTimer = cooldownTimer;
