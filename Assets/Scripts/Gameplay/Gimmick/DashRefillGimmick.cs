@@ -21,6 +21,10 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
     private Renderer[] visualRenderers;
     private bool isAvailable = true;
     private float cooldownTimer;
+    private bool initialIsAvailable;
+    private float initialCooldownTimer;
+    private bool initialColliderEnabled;
+    private bool[] initialRendererEnabledStates;
 
     // IRespawnResettable 用
     private bool hasCapturedInitialState;
@@ -127,9 +131,40 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
 
     private void SetVisualActive(bool active)
     {
+        if (visualRenderers == null) return;
+
         foreach (var r in visualRenderers)
         {
             if (r != null) r.enabled = active;
+        }
+    }
+
+    private void CaptureRendererInitialStates()
+    {
+        if (visualRenderers == null)
+        {
+            initialRendererEnabledStates = null;
+            return;
+        }
+
+        initialRendererEnabledStates = new bool[visualRenderers.Length];
+        for (int i = 0; i < visualRenderers.Length; i++)
+        {
+            initialRendererEnabledStates[i] = visualRenderers[i] != null && visualRenderers[i].enabled;
+        }
+    }
+
+    private void RestoreRendererInitialStates()
+    {
+        if (visualRenderers == null || initialRendererEnabledStates == null) return;
+
+        int count = Mathf.Min(visualRenderers.Length, initialRendererEnabledStates.Length);
+        for (int i = 0; i < count; i++)
+        {
+            if (visualRenderers[i] != null)
+            {
+                visualRenderers[i].enabled = initialRendererEnabledStates[i];
+            }
         }
     }
 
@@ -140,12 +175,32 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
     public void CaptureInitialState()
     {
         if (hasCapturedInitialState) return;
+
+        initialIsAvailable = isAvailable;
+        initialCooldownTimer = cooldownTimer;
+        initialColliderEnabled = myCollider != null && myCollider.enabled;
+        CaptureRendererInitialStates();
+
         hasCapturedInitialState = true;
     }
 
     public void ResetToRespawnState()
     {
-        // リスポーン時は使用可能な状態に戻す
-        Reactivate();
+        // リスポーン時は使用可否も初期キャプチャ状態へ戻す。
+        if (!hasCapturedInitialState)
+        {
+            CaptureInitialState();
+        }
+
+        // 死亡復帰では常に再有効化せず、キャプチャした初期状態へ戻す。
+        isAvailable = initialIsAvailable;
+        cooldownTimer = initialCooldownTimer;
+
+        if (myCollider != null)
+        {
+            myCollider.enabled = initialColliderEnabled;
+        }
+
+        RestoreRendererInitialStates();
     }
 }

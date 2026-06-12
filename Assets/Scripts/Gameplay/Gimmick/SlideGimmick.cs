@@ -21,10 +21,16 @@ public class SlideGimmick : MonoBehaviour, IRespawnResettable
     [SerializeField, Min(0.1f)] private float slideSpeed = 2.0f;
 
     private Vector3 initialLocalPosition;
+    private Vector3 initialResetLocalPosition;
     private float currentDistance = 0f;
     private bool isBlocked = false;
     private Collider myCollider;
     private bool hasCapturedInitialState;
+    private float initialCurrentDistance;
+    private bool initialIsBlocked;
+    private bool initialColliderEnabled;
+    private Renderer[] visualRenderers;
+    private bool[] initialRendererEnabledStates;
 
     //生成されたときにスイッチを探すため！
     public void SetSwitch(SwitchGimmick sw)
@@ -35,8 +41,10 @@ public class SlideGimmick : MonoBehaviour, IRespawnResettable
     private void Awake()
     {
         initialLocalPosition = transform.localPosition;
+        initialResetLocalPosition = transform.localPosition;
         // 自身または子オブジェクトからコライダーを取得します
         myCollider = GetComponentInChildren<Collider>();
+        visualRenderers = GetComponentsInChildren<Renderer>(true);
     }
 
     private void Update()
@@ -95,7 +103,13 @@ public class SlideGimmick : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        initialLocalPosition = transform.localPosition;
+        initialCurrentDistance = currentDistance;
+        initialIsBlocked = isBlocked;
+        initialLocalPosition = transform.localPosition - (slideLocalDirection.normalized * initialCurrentDistance);
+        initialResetLocalPosition = transform.localPosition;
+        initialColliderEnabled = myCollider != null && myCollider.enabled;
+        CaptureRendererInitialStates();
+
         hasCapturedInitialState = true;
     }
 
@@ -107,8 +121,45 @@ public class SlideGimmick : MonoBehaviour, IRespawnResettable
             CaptureInitialState();
         }
 
-        currentDistance = 0f;
-        isBlocked = false;
-        transform.localPosition = initialLocalPosition;
+        // 移動途中や開いた状態でも、初期キャプチャ時の距離と見た目へ戻す。
+        currentDistance = initialCurrentDistance;
+        isBlocked = initialIsBlocked;
+        transform.localPosition = initialResetLocalPosition;
+
+        if (myCollider != null)
+        {
+            myCollider.enabled = initialColliderEnabled;
+        }
+
+        RestoreRendererInitialStates();
+    }
+
+    private void CaptureRendererInitialStates()
+    {
+        if (visualRenderers == null)
+        {
+            initialRendererEnabledStates = null;
+            return;
+        }
+
+        initialRendererEnabledStates = new bool[visualRenderers.Length];
+        for (int i = 0; i < visualRenderers.Length; i++)
+        {
+            initialRendererEnabledStates[i] = visualRenderers[i] != null && visualRenderers[i].enabled;
+        }
+    }
+
+    private void RestoreRendererInitialStates()
+    {
+        if (visualRenderers == null || initialRendererEnabledStates == null) return;
+
+        int count = Mathf.Min(visualRenderers.Length, initialRendererEnabledStates.Length);
+        for (int i = 0; i < count; i++)
+        {
+            if (visualRenderers[i] != null)
+            {
+                visualRenderers[i].enabled = initialRendererEnabledStates[i];
+            }
+        }
     }
 }
