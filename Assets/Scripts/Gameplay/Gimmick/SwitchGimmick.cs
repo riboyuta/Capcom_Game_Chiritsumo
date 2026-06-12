@@ -5,6 +5,8 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class SwitchGimmick : MonoBehaviour, IRespawnResettable
 {
+    private const string InteractedTriggerName = "Interacted";
+
     public enum SwitchType
     {
         OneShot,    // 一度押し込まれたらそのまま戻らない
@@ -40,9 +42,18 @@ public class SwitchGimmick : MonoBehaviour, IRespawnResettable
     [SerializeField] private Animator anim;
 
     private Vector3 initialLocalPosition;
+    private Vector3 initialResetLocalPosition;
     private float currentPressDistance = 0f;
     private bool isPushedThisFrame = false;
     private bool hasCapturedInitialState;
+    private bool initialIsPressed;
+    private float initialPressDistance;
+    private bool initialIsPushedThisFrame;
+    private Collider myCollider;
+    private Renderer[] visualRenderers;
+    private bool initialColliderEnabled;
+    private bool[] initialRendererEnabledStates;
+    private bool initialAnimatorEnabled;
     // 外部からスイッチがオンになっているか確認するためのプロパティ
     public bool IsPressed { get; private set; }
 
@@ -51,6 +62,9 @@ public class SwitchGimmick : MonoBehaviour, IRespawnResettable
     private void Awake()
     {
         initialLocalPosition = transform.localPosition;
+        initialResetLocalPosition = transform.localPosition;
+        myCollider = GetComponent<Collider>();
+        visualRenderers = GetComponentsInChildren<Renderer>(true);
     }
     public void CaptureInitialState()
     {
@@ -59,16 +73,79 @@ public class SwitchGimmick : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        initialLocalPosition = transform.localPosition;
+        initialIsPressed = IsPressed;
+        initialPressDistance = currentPressDistance;
+        initialIsPushedThisFrame = isPushedThisFrame;
+        initialLocalPosition = transform.localPosition - (pushLocalDirection.normalized * initialPressDistance);
+        initialResetLocalPosition = transform.localPosition;
+        initialColliderEnabled = myCollider != null && myCollider.enabled;
+        initialAnimatorEnabled = anim != null && anim.enabled;
+        CaptureRendererInitialStates();
+
         hasCapturedInitialState = true;
     }
 
     public void ResetToRespawnState()
     {
-        IsPressed = false;
-        currentPressDistance = 0f;
-        isPushedThisFrame = false;
-        transform.localPosition = initialLocalPosition;
+        if (!hasCapturedInitialState)
+        {
+            CaptureInitialState();
+        }
+
+        // 押下途中で死亡しても、見た目と内部距離を初期キャプチャ値へ揃える。
+        IsPressed = initialIsPressed;
+        currentPressDistance = initialPressDistance;
+        isPushedThisFrame = initialIsPushedThisFrame;
+        transform.localPosition = initialResetLocalPosition;
+
+        if (myCollider != null)
+        {
+            myCollider.enabled = initialColliderEnabled;
+        }
+
+        RestoreRendererInitialStates();
+        RestoreAnimatorInitialState();
+    }
+
+    private void CaptureRendererInitialStates()
+    {
+        if (visualRenderers == null)
+        {
+            initialRendererEnabledStates = null;
+            return;
+        }
+
+        initialRendererEnabledStates = new bool[visualRenderers.Length];
+        for (int i = 0; i < visualRenderers.Length; i++)
+        {
+            initialRendererEnabledStates[i] = visualRenderers[i] != null && visualRenderers[i].enabled;
+        }
+    }
+
+    private void RestoreRendererInitialStates()
+    {
+        if (visualRenderers == null || initialRendererEnabledStates == null) return;
+
+        int count = Mathf.Min(visualRenderers.Length, initialRendererEnabledStates.Length);
+        for (int i = 0; i < count; i++)
+        {
+            if (visualRenderers[i] != null)
+            {
+                visualRenderers[i].enabled = initialRendererEnabledStates[i];
+            }
+        }
+    }
+
+    private void RestoreAnimatorInitialState()
+    {
+        if (anim == null) return;
+
+        if (anim.runtimeAnimatorController != null)
+        {
+            anim.ResetTrigger(InteractedTriggerName);
+        }
+
+        anim.enabled = initialAnimatorEnabled;
     }
 
     private void OnTriggerStay(Collider other)
@@ -113,7 +190,7 @@ public class SwitchGimmick : MonoBehaviour, IRespawnResettable
             if (anim != null)
             {
                // Debug.Log(anim);
-                anim.SetTrigger("Interacted");
+                anim.SetTrigger(InteractedTriggerName);
 
             }
 

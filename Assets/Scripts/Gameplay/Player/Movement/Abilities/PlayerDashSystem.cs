@@ -186,6 +186,7 @@ internal sealed class PlayerDashSystem
             case DashRefillReason.Grounded:
             case DashRefillReason.Gimmick:
             case DashRefillReason.Scripted:
+            case DashRefillReason.TutorialAssist:
             default:
                 return true;
         }

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -26,6 +27,8 @@ public class MapLoader : MonoBehaviour
 
     private readonly List<GameObject> spawnedTiles = new List<GameObject>();
     private readonly float gridSize = 1.0f;
+    private Coroutine stageResetRecollectCoroutine;
+    private bool hasWarnedStageResetSystemMissing;
 
     // JSON フォルダのフルパス
     private string FolderPath => Path.Combine(Application.streamingAssetsPath, mapFolder);
@@ -110,6 +113,48 @@ public class MapLoader : MonoBehaviour
         }
 
         Debug.Log($"[MapLoader] ロード完了: Stage_{stageNumber}.json ({spawnedTiles.Count} タイル生成)", this);
+        ScheduleStageResetRecollect();
+    }
+
+    private void ScheduleStageResetRecollect()
+    {
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
+        if (stageResetRecollectCoroutine != null)
+        {
+            StopCoroutine(stageResetRecollectCoroutine);
+        }
+
+        stageResetRecollectCoroutine = StartCoroutine(CoRecollectStageResetAfterMapLoad());
+    }
+
+    private IEnumerator CoRecollectStageResetAfterMapLoad()
+    {
+        // Destroyで破棄予約した旧タイルが検索に残らないよう、生成完了後の次フレームで再収集する。
+        yield return null;
+
+        stageResetRecollectCoroutine = null;
+        NotifyStageResetSystemMapLoaded();
+    }
+
+    private void NotifyStageResetSystemMapLoaded()
+    {
+        StageResetSystem stageResetSystem = FindFirstObjectByType<StageResetSystem>();
+        if (stageResetSystem == null)
+        {
+            if (!hasWarnedStageResetSystemMissing)
+            {
+                Debug.LogWarning("[MapLoader] StageResetSystem が見つからないため、生成ギミックの死亡時Reset対象を再収集できません。", this);
+                hasWarnedStageResetSystemMissing = true;
+            }
+
+            return;
+        }
+
+        stageResetSystem.RecollectAndCaptureInitialState();
     }
 
     /// 生成済みのタイルをすべて破棄します。
