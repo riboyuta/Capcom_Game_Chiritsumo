@@ -7,14 +7,6 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [Tooltip("現在の部屋と部屋遷移状態を確認するための RoomManager です。未設定の場合は Awake で自動取得します。")]
     [SerializeField] private RoomManager roomManager;
 
-    [Header("参照 / 対象ルーム")]
-    [Tooltip("この敵接近時の時間補助を有効にする対象ルーム一覧です。1つ以上設定されている場合は、この一覧を優先して判定します。")]
-    [SerializeField] private Room[] targetRooms;
-
-    [Header("参照 / 対象ルーム（移行用）")]
-    [Tooltip("旧設定用の対象ルームです。targetRooms に有効な Room がない場合だけ参照します。既存 Scene の参照保護のため残しています。")]
-    [SerializeField] private Room targetRoom;
-
     [Header("参照 / プレイヤー")]
     [Tooltip("プレイヤーの位置、ダッシュ入力受付フレーム、ダッシュ回復処理を参照するための PlayerFacade です。未設定の場合は Awake で自動取得します。")]
     [SerializeField] private PlayerFacade playerFacade;
@@ -27,93 +19,96 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [Tooltip("追跡敵の前面位置を計算するために使用する BoxCollider です。プレイヤーとの前方距離判定に使います。")]
     [SerializeField] private BoxCollider handChaserBoxCollider;
 
-    [Header("初回補助設定 / 発動距離")]
-    [Tooltip("初回補助を発動する、追跡敵の前面からプレイヤーまでの距離です。値が小さいほどギリギリで発動します。")]
-    [SerializeField, Min(0f)] private float firstTriggerDistance = 2f;
 
-    [Header("初回補助設定 / 時間倍率")]
-    [Tooltip("初回補助中の Time.timeScale です。0 にすると完全停止、1 に近いほど通常速度に近づきます。")]
-    [SerializeField, Range(0f, 1f)] private float firstTimeScale = 0f;
+    [Header("対象ルーム / 有効ルーム一覧")]
+    [Tooltip("この敵接近時の時間補助を有効にする対象ルーム一覧です。1つ以上設定されている場合は、この一覧を優先して判定します。")]
+    [SerializeField] private Room[] targetRooms;
 
-    [Header("旧設定 / 最大継続時間")]
-    [Tooltip("旧設定用の初回最大継続時間です。現在の解除判定には共通 maxDuration を使います。既存Sceneの値保護のため残しています。")]
-    [SerializeField, Min(0f)] private float firstMaxDuration = 0.18f;
+    [Header("対象ルーム / 移行用")]
+    [Tooltip("旧設定用の対象ルームです。targetRooms に有効な Room がない場合だけ参照します。既存 Scene の参照保護のため残しています。")]
+    [SerializeField] private Room targetRoom;
 
-    [Header("2回目以降補助設定 / 発動距離")]
-    [Tooltip("2回目以降の補助を発動する、追跡敵の前面からプレイヤーまでの距離です。")]
-    [SerializeField, Min(0f)] private float repeatTriggerDistance = 2.5f;
 
-    [Header("3回目以降補助設定 / 発動距離")]
-    [Tooltip("有効にすると、3回目以降の補助発動距離を2回目とは別に設定します。無効時は repeatTriggerDistance を使います。")]
-    [SerializeField] private bool useThirdAndLaterTriggerDistance;
-
-    [Header("3回目以降補助設定 / 発動距離")]
-    [Tooltip("3回目以降の補助を発動する距離です。useThirdAndLaterTriggerDistance が有効な場合だけ使います。既存Scene維持のため、初期値は4mです。")]
-    [SerializeField, Min(0f)] private float thirdAndLaterTriggerDistance = 4f;
-
-    [Header("2回目補助設定 / 時間倍率")]
-    [Tooltip("2回目の補助中の Time.timeScale です。0 に近いほど強い時間補助になります。")]
-    [SerializeField, Range(0f, 1f)] private float repeatTimeScale = 0.25f;
-
-    [Header("3回目以降補助設定 / 時間倍率")]
-    [Tooltip("3回目以降の補助中の Time.timeScale です。回数制限に達するまで、この値を使い続けます。")]
-    [SerializeField, Range(0f, 1f)] private float thirdAndLaterTimeScale = 0.15f;
-
-    [Header("旧設定 / 最大継続時間")]
-    [Tooltip("旧設定用の2回目以降最大継続時間です。現在の解除判定には共通 maxDuration を使います。既存Sceneの値保護のため残しています。")]
-    [SerializeField, Min(0f)] private float repeatMaxDuration = 0.35f;
-
-    [Header("共通設定 / 最大継続時間")]
-    [Tooltip("補助が自動終了するまでの共通最大時間です。1回目、2回目、3回目以降のすべてで使います。unscaledDeltaTime 基準で計測します。")]
-    [SerializeField, Min(0f)] private float maxDuration = 5f;
-
-    [Header("共通設定 / 補助開始待機時間")]
+    [Header("発動条件 / 追跡開始後の待機時間")]
     [Tooltip("追跡開始直後に補助が即発動しないようにする待機時間です。敵出現直後の誤発動防止に使います。")]
     [SerializeField, Min(0f)] private float assistEnableDelayAfterEnemySpawn = 0.25f;
 
-    [Header("共通設定 / クールダウン")]
+    [Header("発動条件 / クールダウン")]
     [Tooltip("補助終了後、次の補助が発動可能になるまでの待機時間です。連続発動を防ぎます。")]
     [SerializeField, Min(0f)] private float cooldownTime = 0.5f;
 
-    [Header("発動設定 / ダッシュ可否")]
+    [Header("発動条件 / ダッシュ可否")]
     [Tooltip("有効にすると、補助開始前にプレイヤーが今ダッシュ可能かを確認し、ダッシュ可能な場合だけ補助を開始します。")]
     [SerializeField] private bool requireDashAvailableToStart;
 
-    [Header("補助開始設定 / ダッシュ回復")]
-    [Tooltip("有効にすると、補助開始時にプレイヤーのダッシュを1回だけ回復します。チュートリアル用の救済として使います。")]
-    [SerializeField] private bool refillDashOnAssistStart = true;
-
-    [Header("解除設定 / ダッシュ入力")]
-    [Tooltip("有効にすると、補助開始後にプレイヤーのダッシュ入力が受理された時点で補助を解除します。")]
-    [SerializeField] private bool releaseOnDashInput = true;
-
-    [Header("解除設定 / 最大継続時間")]
-    [Tooltip("有効にすると、1回目または2回目以降の最大継続時間に達した時点で補助を解除します。時間計測は Time.timeScale の影響を受けません。")]
-    [SerializeField] private bool useMaxDuration = true;
-
-    [Header("解除設定 / 距離解除")]
-    [Tooltip("有効にすると、補助中に追跡敵の前面からプレイヤーまでの距離が解除距離以上になった時点で補助を解除します。")]
-    [SerializeField] private bool releaseOnDistance;
-
-    [Header("解除設定 / 距離解除")]
-    [Tooltip("距離解除を行う前面距離です。発動距離より大きい値にすると、補助開始直後の即解除を避けやすくなります。")]
-    [SerializeField, Min(0f)] private float releaseDistance = 5f;
-
-    [Header("共通設定 / 最大補助回数")]
+    [Header("発動条件 / 最大補助回数を使う")]
     [Tooltip("有効にすると、1回の追跡中に発動できる補助回数を maxAssistCount で制限します。無効時は回数制限なしで発動します。")]
     [SerializeField] private bool useAssistCountLimit = true;
 
-    [Header("共通設定 / 最大補助回数")]
+    [Header("発動条件 / 最大補助回数")]
     [Tooltip("1回の追跡中に発動できる補助の最大回数です。0 にすると補助は発動しません。")]
     [SerializeField, Min(0)] private int maxAssistCount = 3;
 
-    [Header("共通設定 / デバッグログ")]
+
+    [Header("補助開始時 / ダッシュ回復")]
+    [Tooltip("有効にすると、補助開始時にプレイヤーのダッシュを1回だけ回復します。チュートリアル用の救済として使います。")]
+    [SerializeField] private bool refillDashOnAssistStart = true;
+
+
+    [Header("1回目補助 / 発動距離")]
+    [Tooltip("初回補助を発動する、追跡敵の前面からプレイヤーまでの距離です。値が小さいほどギリギリで発動します。")]
+    [SerializeField, Min(0f)] private float firstTriggerDistance = 2f;
+
+    [Header("1回目補助 / 時間倍率")]
+    [Tooltip("初回補助中の Time.timeScale です。0 にすると完全停止、1 に近いほど通常速度に近づきます。")]
+    [SerializeField, Range(0f, 1f)] private float firstTimeScale = 0f;
+
+    [Header("2回目補助 / 発動距離")]
+    [Tooltip("2回目の補助を発動する、追跡敵の前面からプレイヤーまでの距離です。")]
+    [SerializeField, Min(0f)] private float repeatTriggerDistance = 2.5f;
+
+    [Header("2回目補助 / 時間倍率")]
+    [Tooltip("2回目の補助中の Time.timeScale です。0 に近いほど強い時間補助になります。")]
+    [SerializeField, Range(0f, 1f)] private float repeatTimeScale = 0.25f;
+
+    [Header("3回目以降補助 / 発動距離")]
+    [Tooltip("3回目以降の補助を発動する距離です。既存 Scene 維持のため、初期値は4mです。")]
+    [SerializeField, Min(0f)] private float thirdAndLaterTriggerDistance = 4f;
+
+    [Header("3回目以降補助 / 時間倍率")]
+    [Tooltip("3回目以降の補助中の Time.timeScale です。回数制限に達するまで、この値を使い続けます。")]
+    [SerializeField, Range(0f, 1f)] private float thirdAndLaterTimeScale = 0.15f;
+
+
+    [Header("解除条件 / ダッシュ入力で解除")]
+    [Tooltip("有効にすると、補助開始後にプレイヤーのダッシュ入力が受理された時点で補助を解除します。")]
+    [SerializeField] private bool releaseOnDashInput = true;
+
+    [Header("解除条件 / 最大継続時間を使う")]
+    [Tooltip("有効にすると、最大継続時間に達した時点で補助を解除します。時間計測は Time.timeScale の影響を受けません。")]
+    [SerializeField] private bool useMaxDuration = true;
+
+    [Header("解除条件 / 最大継続時間")]
+    [Tooltip("補助が自動終了するまでの共通最大時間です。1回目、2回目、3回目以降のすべてで使います。unscaledDeltaTime 基準で計測します。")]
+    [SerializeField, Min(0f)] private float maxDuration = 5f;
+
+    [Header("解除条件 / 距離で解除")]
+    [Tooltip("有効にすると、補助中に追跡敵の前面からプレイヤーまでの距離が解除距離以上になった時点で補助を解除します。")]
+    [SerializeField] private bool releaseOnDistance;
+
+    [Header("解除条件 / 距離解除しきい値")]
+    [Tooltip("距離解除を行う前面距離です。発動距離より大きい値にすると、補助開始直後の即解除を避けやすくなります。")]
+    [SerializeField, Min(0f)] private float releaseDistance = 5f;
+
+
+    [Header("表示 / ギズモ表示")]
+    [Tooltip("Scene ビューで追跡敵の範囲、前面位置、発動距離の目安を表示するかどうかです。")]
+    [SerializeField] private bool showGizmos = true;
+
+    [Header("表示 / デバッグログ")]
     [Tooltip("補助開始、補助終了、時間倍率復元などのログを Console に出力するかどうかです。")]
     [SerializeField] private bool showDebugLog;
 
-    [Header("共通設定 / ギズモ表示")]
-    [Tooltip("Scene ビューで追跡敵の範囲、前面位置、発動距離の目安を表示するかどうかです。")]
-    [SerializeField] private bool showGizmos = true;
 
     [Header("デバッグ確認 / 現在の前方距離")]
     [Tooltip("追跡敵の前面からプレイヤーまでの現在距離です。実行中の発動条件確認に使います。")]
@@ -150,12 +145,10 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     {
         firstTriggerDistance = Mathf.Max(0f, firstTriggerDistance);
         firstTimeScale = Mathf.Max(0f, firstTimeScale);
-        firstMaxDuration = Mathf.Max(0f, firstMaxDuration);
         repeatTriggerDistance = Mathf.Max(0f, repeatTriggerDistance);
         thirdAndLaterTriggerDistance = Mathf.Max(0f, thirdAndLaterTriggerDistance);
         repeatTimeScale = Mathf.Max(0f, repeatTimeScale);
         thirdAndLaterTimeScale = Mathf.Max(0f, thirdAndLaterTimeScale);
-        repeatMaxDuration = Mathf.Max(0f, repeatMaxDuration);
         maxDuration = Mathf.Max(0f, maxDuration);
         assistEnableDelayAfterEnemySpawn = Mathf.Max(0f, assistEnableDelayAfterEnemySpawn);
         cooldownTime = Mathf.Max(0f, cooldownTime);
@@ -429,9 +422,8 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return repeatTriggerDistance;
         }
 
-        return useThirdAndLaterTriggerDistance
-            ? thirdAndLaterTriggerDistance
-            : repeatTriggerDistance;
+        return thirdAndLaterTriggerDistance;
+
     }
 
     private bool ShouldReleaseByDistance()
