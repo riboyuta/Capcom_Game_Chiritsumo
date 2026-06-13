@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -133,6 +134,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     private bool isTimeOverrideActive;
     private float originalTimeScale = 1f;
     private float originalFixedDeltaTime;
+    private readonly List<EnemyProximityAssistTarget> assistTargetBuffer = new List<EnemyProximityAssistTarget>();
 
     private const float MinFixedDeltaTimeScale = 0.0001f;
 
@@ -165,7 +167,8 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        if (handChaserMovement == null || !handChaserMovement.IsActive)
+        bool hasActiveAssistSource = HasActiveAssistSource();
+        if (!hasActiveAssistSource)
         {
             ForceClearRunningAssist("chaser inactive");
             ResetChaseDetection();
@@ -178,7 +181,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        UpdateChaseDetection();
+        UpdateChaseDetection(hasActiveAssistSource);
 
         if (!hasDetectedChaseStart)
         {
@@ -302,9 +305,9 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         return targetRoom != null && currentRoom == targetRoom;
     }
 
-    private void UpdateChaseDetection()
+    private void UpdateChaseDetection(bool hasActiveAssistSource)
     {
-        if (handChaserMovement == null || !handChaserMovement.IsActive)
+        if (!hasActiveAssistSource)
         {
             ResetChaseDetection();
             return;
@@ -492,17 +495,113 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
     private bool TryUpdateFrontDistance()
     {
-        if (handChaserBoxCollider == null || playerFacade == null)
+        if (playerFacade == null)
         {
             return false;
         }
 
-        if (!TryGetMoveAxis(out Vector3 axis))
+        if (TryUpdateMarkerFrontDistance(out float nearestFrontDistance))
+        {
+            currentFrontDistance = nearestFrontDistance;
+            return true;
+        }
+
+        if (!TryUpdateLegacyFrontDistance(out nearestFrontDistance))
         {
             return false;
         }
 
-        Bounds bounds = handChaserBoxCollider.bounds;
+        currentFrontDistance = nearestFrontDistance;
+        return true;
+    }
+
+    private bool HasActiveAssistSource()
+    {
+        if (TryGetCurrentRoom(out Room currentRoom))
+        {
+            EnemyProximityAssistTarget.CollectValidTargets(currentRoom, assistTargetBuffer);
+            if (assistTargetBuffer.Count > 0)
+            {
+                return true;
+            }
+        }
+        else
+        {
+            assistTargetBuffer.Clear();
+        }
+
+        return handChaserMovement != null && handChaserMovement.IsActive;
+    }
+
+    private bool TryUpdateMarkerFrontDistance(out float nearestFrontDistance)
+    {
+        nearestFrontDistance = 0f;
+
+        if (!TryGetCurrentRoom(out Room currentRoom))
+        {
+            assistTargetBuffer.Clear();
+            return false;
+        }
+
+        EnemyProximityAssistTarget.CollectValidTargets(currentRoom, assistTargetBuffer);
+
+        bool hasDistance = false;
+        for (int i = 0; i < assistTargetBuffer.Count; i++)
+        {
+            EnemyProximityAssistTarget target = assistTargetBuffer[i];
+            if (target == null)
+            {
+                continue;
+            }
+
+            if (!TryCalculateFrontDistance(target.Movement, target.Collider, out float frontDistance))
+            {
+                continue;
+            }
+
+            if (!hasDistance || frontDistance < nearestFrontDistance)
+            {
+                nearestFrontDistance = frontDistance;
+                hasDistance = true;
+            }
+        }
+
+        return hasDistance;
+    }
+
+    private bool TryUpdateLegacyFrontDistance(out float frontDistance)
+    {
+        frontDistance = 0f;
+
+        if (!TryCalculateFrontDistance(handChaserMovement, handChaserBoxCollider, out frontDistance))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool TryGetCurrentRoom(out Room currentRoom)
+    {
+        currentRoom = roomManager != null ? roomManager.CurrentRoom : null;
+        return currentRoom != null;
+    }
+
+    private bool TryCalculateFrontDistance(HandChaserMovement movement, BoxCollider boxCollider, out float frontDistance)
+    {
+        frontDistance = 0f;
+
+        if (movement == null || boxCollider == null || playerFacade == null)
+        {
+            return false;
+        }
+
+        if (!TryGetMoveAxis(movement, out Vector3 axis))
+        {
+            return false;
+        }
+
+        Bounds bounds = boxCollider.bounds;
         Vector3 absAxis = new Vector3(Mathf.Abs(axis.x), Mathf.Abs(axis.y), Mathf.Abs(axis.z));
         float projectedHalfExtent =
             bounds.extents.x * absAxis.x +
@@ -511,20 +610,25 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
         float frontPlane = Vector3.Dot(bounds.center, axis) + projectedHalfExtent;
         float playerPlane = Vector3.Dot(playerFacade.transform.position, axis);
-        currentFrontDistance = playerPlane - frontPlane;
+        frontDistance = playerPlane - frontPlane;
         return true;
     }
 
     private bool TryGetMoveAxis(out Vector3 axis)
     {
+        return TryGetMoveAxis(handChaserMovement, out axis);
+    }
+
+    private bool TryGetMoveAxis(HandChaserMovement movement, out Vector3 axis)
+    {
         axis = Vector3.right;
 
-        if (handChaserMovement == null)
+        if (movement == null)
         {
             return false;
         }
 
-        switch (handChaserMovement.Direction)
+        switch (movement.Direction)
         {
             case MoveDirection.Right:
                 axis = Vector3.right;
@@ -539,7 +643,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
                 axis = Vector3.down;
                 break;
             case MoveDirection.Custom:
-                axis = handChaserMovement.CustomMoveAxis;
+                axis = movement.CustomMoveAxis;
                 break;
             default:
                 axis = Vector3.right;
