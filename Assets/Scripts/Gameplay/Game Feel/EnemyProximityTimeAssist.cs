@@ -8,7 +8,11 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [SerializeField] private RoomManager roomManager;
 
     [Header("参照 / 対象ルーム")]
-    [Tooltip("この敵接近時の時間補助を有効にする対象ルームです。未設定の場合はルーム制限なしで動作します。")]
+    [Tooltip("この敵接近時の時間補助を有効にする対象ルーム一覧です。1つ以上設定されている場合は、この一覧を優先して判定します。")]
+    [SerializeField] private Room[] targetRooms;
+
+    [Header("参照 / 対象ルーム（移行用）")]
+    [Tooltip("旧設定用の対象ルームです。targetRooms に有効な Room がない場合だけ参照します。既存 Scene の参照保護のため残しています。")]
     [SerializeField] private Room targetRoom;
 
     [Header("参照 / プレイヤー")]
@@ -254,12 +258,41 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return false;
         }
 
-        if (targetRoom == null)
+        return roomManager != null && IsCurrentRoomTarget(roomManager.CurrentRoom);
+    }
+
+    private bool IsCurrentRoomTarget(Room currentRoom)
+    {
+        if (currentRoom == null)
         {
-            return true;
+            return false;
         }
 
-        return roomManager != null && roomManager.CurrentRoom == targetRoom;
+        bool hasTargetRooms = false;
+        if (targetRooms != null)
+        {
+            for (int i = 0; i < targetRooms.Length; i++)
+            {
+                Room candidate = targetRooms[i];
+                if (candidate == null)
+                {
+                    continue;
+                }
+
+                hasTargetRooms = true;
+                if (candidate == currentRoom)
+                {
+                    return true;
+                }
+            }
+        }
+
+        if (hasTargetRooms)
+        {
+            return false;
+        }
+
+        return targetRoom != null && currentRoom == targetRoom;
     }
 
     private void UpdateChaseDetection()
