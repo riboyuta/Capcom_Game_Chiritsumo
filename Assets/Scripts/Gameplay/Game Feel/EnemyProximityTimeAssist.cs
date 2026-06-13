@@ -59,6 +59,14 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [Tooltip("補助終了後、次の補助が発動可能になるまでの待機時間です。連続発動を防ぎます。")]
     [SerializeField, Min(0f)] private float cooldownTime = 0.5f;
 
+    [Header("解除設定 / ダッシュ入力")]
+    [Tooltip("有効にすると、補助開始後にプレイヤーのダッシュ入力が受理された時点で補助を解除します。")]
+    [SerializeField] private bool releaseOnDashInput = true;
+
+    [Header("解除設定 / 最大継続時間")]
+    [Tooltip("有効にすると、1回目または2回目以降の最大継続時間に達した時点で補助を解除します。時間計測は Time.timeScale の影響を受けません。")]
+    [SerializeField] private bool useMaxDuration = true;
+
     [Header("解除設定 / 距離解除")]
     [Tooltip("有効にすると、補助中に追跡敵の前面からプレイヤーまでの距離が解除距離以上になった時点で補助を解除します。")]
     [SerializeField] private bool releaseOnDistance;
@@ -273,13 +281,13 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     {
         assistTimer += Time.unscaledDeltaTime;
 
-        if (playerFacade != null && playerFacade.LastAcceptedDashInputFrame > dashBaselineFrame)
+        if (releaseOnDashInput && playerFacade != null && playerFacade.LastAcceptedDashInputFrame > dashBaselineFrame)
         {
             EndAssist("dash input accepted");
             return;
         }
 
-        if (assistTimer >= activeAssistMaxDuration)
+        if (useMaxDuration && assistTimer >= activeAssistMaxDuration)
         {
             EndAssist("max duration");
             return;
