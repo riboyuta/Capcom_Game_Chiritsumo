@@ -68,6 +68,10 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [SerializeField, Min(0f)] private float releaseDistance = 5f;
 
     [Header("共通設定 / 最大補助回数")]
+    [Tooltip("有効にすると、1回の追跡中に発動できる補助回数を maxAssistCount で制限します。無効時は回数制限なしで発動します。")]
+    [SerializeField] private bool useAssistCountLimit = true;
+
+    [Header("共通設定 / 最大補助回数")]
     [Tooltip("1回の追跡中に発動できる補助の最大回数です。0 にすると補助は発動しません。")]
     [SerializeField, Min(0)] private int maxAssistCount = 3;
 
@@ -165,7 +169,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        if (currentAssistCount >= maxAssistCount)
+        if (useAssistCountLimit && currentAssistCount >= maxAssistCount)
         {
             return;
         }
