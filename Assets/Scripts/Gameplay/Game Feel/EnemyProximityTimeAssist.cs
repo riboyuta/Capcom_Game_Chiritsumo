@@ -8,7 +8,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [SerializeField] private RoomManager roomManager;
 
     [Header("参照 / 対象ルーム")]
-    [Tooltip("このヒットストップ・スロー補助を有効にする対象ルームです。未設定の場合はルーム制限なしで動作します。")]
+    [Tooltip("この敵接近時の時間補助を有効にする対象ルームです。未設定の場合はルーム制限なしで動作します。")]
     [SerializeField] private Room targetRoom;
 
     [Header("参照 / プレイヤー")]
@@ -23,27 +23,27 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [Tooltip("追跡敵の前面位置を計算するために使用する BoxCollider です。プレイヤーとの前方距離判定に使います。")]
     [SerializeField] private BoxCollider handChaserBoxCollider;
 
-    [Header("初回 Stop 設定 / 発動距離")]
+    [Header("初回補助設定 / 発動距離")]
     [Tooltip("初回補助を発動する、追跡敵の前面からプレイヤーまでの距離です。値が小さいほどギリギリで発動します。")]
     [SerializeField, Min(0f)] private float firstTriggerDistance = 2f;
 
-    [Header("初回 Stop 設定 / 時間倍率")]
+    [Header("初回補助設定 / 時間倍率")]
     [Tooltip("初回補助中の Time.timeScale です。0 にすると完全停止、1 に近いほど通常速度に近づきます。")]
     [SerializeField, Range(0f, 1f)] private float firstTimeScale = 0f;
 
-    [Header("初回 Stop 設定 / 最大継続時間")]
+    [Header("初回補助設定 / 最大継続時間")]
     [Tooltip("初回補助が自動終了するまでの最大時間です。unscaledDeltaTime 基準で計測します。")]
     [SerializeField, Min(0f)] private float firstMaxDuration = 0.18f;
 
-    [Header("2回目以降 Slow 設定 / 発動距離")]
+    [Header("2回目以降補助設定 / 発動距離")]
     [Tooltip("2回目以降の補助を発動する、追跡敵の前面からプレイヤーまでの距離です。")]
     [SerializeField, Min(0f)] private float repeatTriggerDistance = 2.5f;
 
-    [Header("2回目以降 Slow 設定 / 時間倍率")]
+    [Header("2回目以降補助設定 / 時間倍率")]
     [Tooltip("2回目以降の補助中の Time.timeScale です。0 に近いほど強いスローになります。")]
     [SerializeField, Range(0f, 1f)] private float repeatTimeScale = 0.25f;
 
-    [Header("2回目以降 Slow 設定 / 最大継続時間")]
+    [Header("2回目以降補助設定 / 最大継続時間")]
     [Tooltip("2回目以降の補助が自動終了するまでの最大時間です。unscaledDeltaTime 基準で計測します。")]
     [SerializeField, Min(0f)] private float repeatMaxDuration = 0.35f;
 
@@ -292,7 +292,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
         if (showDebugLog)
         {
-            Debug.Log($"[TimeHitStopSlow] Assist started. type={(isFirstAssist ? "Stop" : "Slow")}, count={currentAssistCount}, distance={currentFrontDistance:F3}, timeScale={targetTimeScale:F3}", this);
+            Debug.Log($"[EnemyProximityTimeAssist] Assist started. type={(isFirstAssist ? "First" : "Repeat")}, count={currentAssistCount}, distance={currentFrontDistance:F3}, timeScale={targetTimeScale:F3}", this);
         }
     }
 
@@ -308,7 +308,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
         if (showDebugLog)
         {
-            Debug.Log($"[TimeHitStopSlow] Assist ended. reason={reason}, cooldown={cooldownTimer:F3}", this);
+            Debug.Log($"[EnemyProximityTimeAssist] Assist ended. reason={reason}, cooldown={cooldownTimer:F3}", this);
         }
     }
 
@@ -328,7 +328,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
         if (showDebugLog)
         {
-            Debug.Log($"[TimeHitStopSlow] Running assist force-cleared. reason={reason}", this);
+            Debug.Log($"[EnemyProximityTimeAssist] Running assist force-cleared. reason={reason}", this);
         }
     }
 
@@ -345,7 +345,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
         if (showDebugLog)
         {
-            Debug.Log($"[TimeHitStopSlow] Time scale restored. reason={reason}, timeScale={originalTimeScale:F3}, fixedDeltaTime={originalFixedDeltaTime:F5}", this);
+            Debug.Log($"[EnemyProximityTimeAssist] Time scale restored. reason={reason}, timeScale={originalTimeScale:F3}, fixedDeltaTime={originalFixedDeltaTime:F5}", this);
         }
     }
 
