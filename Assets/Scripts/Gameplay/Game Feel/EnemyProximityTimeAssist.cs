@@ -59,6 +59,14 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [Tooltip("補助終了後、次の補助が発動可能になるまでの待機時間です。連続発動を防ぎます。")]
     [SerializeField, Min(0f)] private float cooldownTime = 0.5f;
 
+    [Header("発動設定 / ダッシュ可否")]
+    [Tooltip("有効にすると、補助開始前にプレイヤーが今ダッシュ可能かを確認し、ダッシュ可能な場合だけ補助を開始します。")]
+    [SerializeField] private bool requireDashAvailableToStart;
+
+    [Header("補助開始設定 / ダッシュ回復")]
+    [Tooltip("有効にすると、補助開始時にプレイヤーのダッシュを1回だけ回復します。チュートリアル用の救済として使います。")]
+    [SerializeField] private bool refillDashOnAssistStart = true;
+
     [Header("解除設定 / ダッシュ入力")]
     [Tooltip("有効にすると、補助開始後にプレイヤーのダッシュ入力が受理された時点で補助を解除します。")]
     [SerializeField] private bool releaseOnDashInput = true;
@@ -190,7 +198,10 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         float triggerDistance = currentAssistCount == 0 ? firstTriggerDistance : repeatTriggerDistance;
         if (currentFrontDistance <= triggerDistance)
         {
-            StartAssist(currentAssistCount == 0);
+            if (CanStartAssistByDashAvailability())
+            {
+                StartAssist(currentAssistCount == 0);
+            }
         }
     }
 
@@ -307,7 +318,10 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         }
 
         dashBaselineFrame = playerFacade.LastAcceptedDashInputFrame;
-        playerFacade.TryRefillDash(DashRefillReason.TutorialAssist);
+        if (refillDashOnAssistStart)
+        {
+            playerFacade.TryRefillDash(DashRefillReason.TutorialAssist);
+        }
 
         float targetTimeScale = GetAssistTimeScale(currentAssistCount);
         activeAssistMaxDuration = isFirstAssist ? firstMaxDuration : repeatMaxDuration;
@@ -326,6 +340,17 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         {
             Debug.Log($"[EnemyProximityTimeAssist] Assist started. type={(isFirstAssist ? "First" : "Repeat")}, count={currentAssistCount}, distance={currentFrontDistance:F3}, timeScale={targetTimeScale:F3}", this);
         }
+    }
+
+    private bool CanStartAssistByDashAvailability()
+    {
+        if (!requireDashAvailableToStart)
+        {
+            return true;
+        }
+
+        // ダッシュ可能な場面だけ時間補助を開始し、回復やTimeScale変更へ入る前に止める。
+        return playerFacade != null && playerFacade.CanUseDashNow;
     }
 
     private float GetAssistTimeScale(int assistCountBeforeStart)
