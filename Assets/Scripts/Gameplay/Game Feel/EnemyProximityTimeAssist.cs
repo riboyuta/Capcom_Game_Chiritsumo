@@ -35,13 +35,21 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [Tooltip("初回補助中の Time.timeScale です。0 にすると完全停止、1 に近いほど通常速度に近づきます。")]
     [SerializeField, Range(0f, 1f)] private float firstTimeScale = 0f;
 
-    [Header("初回補助設定 / 最大継続時間")]
-    [Tooltip("初回補助が自動終了するまでの最大時間です。unscaledDeltaTime 基準で計測します。")]
+    [Header("旧設定 / 最大継続時間")]
+    [Tooltip("旧設定用の初回最大継続時間です。現在の解除判定には共通 maxDuration を使います。既存Sceneの値保護のため残しています。")]
     [SerializeField, Min(0f)] private float firstMaxDuration = 0.18f;
 
     [Header("2回目以降補助設定 / 発動距離")]
     [Tooltip("2回目以降の補助を発動する、追跡敵の前面からプレイヤーまでの距離です。")]
     [SerializeField, Min(0f)] private float repeatTriggerDistance = 2.5f;
+
+    [Header("3回目以降補助設定 / 発動距離")]
+    [Tooltip("有効にすると、3回目以降の補助発動距離を2回目とは別に設定します。無効時は repeatTriggerDistance を使います。")]
+    [SerializeField] private bool useThirdAndLaterTriggerDistance;
+
+    [Header("3回目以降補助設定 / 発動距離")]
+    [Tooltip("3回目以降の補助を発動する距離です。useThirdAndLaterTriggerDistance が有効な場合だけ使います。既存Scene維持のため、初期値は4mです。")]
+    [SerializeField, Min(0f)] private float thirdAndLaterTriggerDistance = 4f;
 
     [Header("2回目補助設定 / 時間倍率")]
     [Tooltip("2回目の補助中の Time.timeScale です。0 に近いほど強い時間補助になります。")]
@@ -51,9 +59,13 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [Tooltip("3回目以降の補助中の Time.timeScale です。回数制限に達するまで、この値を使い続けます。")]
     [SerializeField, Range(0f, 1f)] private float thirdAndLaterTimeScale = 0.15f;
 
-    [Header("2回目以降補助設定 / 最大継続時間")]
-    [Tooltip("2回目以降の補助が自動終了するまでの最大時間です。unscaledDeltaTime 基準で計測します。")]
+    [Header("旧設定 / 最大継続時間")]
+    [Tooltip("旧設定用の2回目以降最大継続時間です。現在の解除判定には共通 maxDuration を使います。既存Sceneの値保護のため残しています。")]
     [SerializeField, Min(0f)] private float repeatMaxDuration = 0.35f;
+
+    [Header("共通設定 / 最大継続時間")]
+    [Tooltip("補助が自動終了するまでの共通最大時間です。1回目、2回目、3回目以降のすべてで使います。unscaledDeltaTime 基準で計測します。")]
+    [SerializeField, Min(0f)] private float maxDuration = 5f;
 
     [Header("共通設定 / 補助開始待機時間")]
     [Tooltip("追跡開始直後に補助が即発動しないようにする待機時間です。敵出現直後の誤発動防止に使います。")]
@@ -140,9 +152,11 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         firstTimeScale = Mathf.Max(0f, firstTimeScale);
         firstMaxDuration = Mathf.Max(0f, firstMaxDuration);
         repeatTriggerDistance = Mathf.Max(0f, repeatTriggerDistance);
+        thirdAndLaterTriggerDistance = Mathf.Max(0f, thirdAndLaterTriggerDistance);
         repeatTimeScale = Mathf.Max(0f, repeatTimeScale);
         thirdAndLaterTimeScale = Mathf.Max(0f, thirdAndLaterTimeScale);
         repeatMaxDuration = Mathf.Max(0f, repeatMaxDuration);
+        maxDuration = Mathf.Max(0f, maxDuration);
         assistEnableDelayAfterEnemySpawn = Mathf.Max(0f, assistEnableDelayAfterEnemySpawn);
         cooldownTime = Mathf.Max(0f, cooldownTime);
         releaseDistance = Mathf.Max(0f, releaseDistance);
@@ -199,7 +213,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        float triggerDistance = currentAssistCount == 0 ? firstTriggerDistance : repeatTriggerDistance;
+        float triggerDistance = GetAssistTriggerDistance(currentAssistCount);
         if (currentFrontDistance <= triggerDistance)
         {
             if (CanStartAssistByDashAvailability())
@@ -357,7 +371,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         }
 
         float targetTimeScale = GetAssistTimeScale(currentAssistCount);
-        activeAssistMaxDuration = isFirstAssist ? firstMaxDuration : repeatMaxDuration;
+        activeAssistMaxDuration = maxDuration;
         assistTimer = 0f;
         isAssisting = true;
         currentAssistCount++;
@@ -400,6 +414,24 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         }
 
         return thirdAndLaterTimeScale;
+    }
+
+    private float GetAssistTriggerDistance(int assistCountBeforeStart)
+    {
+        // 発動前の回数を基準に、既存の2回目以降距離を保ちながら3回目以降の個別設定へ切り替える。
+        if (assistCountBeforeStart <= 0)
+        {
+            return firstTriggerDistance;
+        }
+
+        if (assistCountBeforeStart == 1)
+        {
+            return repeatTriggerDistance;
+        }
+
+        return useThirdAndLaterTriggerDistance
+            ? thirdAndLaterTriggerDistance
+            : repeatTriggerDistance;
     }
 
     private bool ShouldReleaseByDistance()
