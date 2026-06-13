@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -133,8 +134,22 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     private bool isTimeOverrideActive;
     private float originalTimeScale = 1f;
     private float originalFixedDeltaTime;
+    private readonly List<HandChaserEnemy> roomHandChaserBuffer = new();
 
+    private const string HitBoxObjectName = "HitBox";
     private const float MinFixedDeltaTimeScale = 0.0001f;
+
+    private struct HandChaserCandidate
+    {
+        public HandChaserCandidate(HandChaserMovement movement, BoxCollider boxCollider)
+        {
+            Movement = movement;
+            BoxCollider = boxCollider;
+        }
+
+        public HandChaserMovement Movement { get; }
+        public BoxCollider BoxCollider { get; }
+    }
 
     private void Awake()
     {
@@ -165,7 +180,8 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        if (handChaserMovement == null || !handChaserMovement.IsActive)
+        bool hasActiveHandChaserCandidate = HasActiveHandChaserCandidate();
+        if (!hasActiveHandChaserCandidate)
         {
             ForceClearRunningAssist("chaser inactive");
             ResetChaseDetection();
@@ -178,7 +194,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        UpdateChaseDetection();
+        UpdateChaseDetection(hasActiveHandChaserCandidate);
 
         if (!hasDetectedChaseStart)
         {
@@ -302,9 +318,9 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         return targetRoom != null && currentRoom == targetRoom;
     }
 
-    private void UpdateChaseDetection()
+    private void UpdateChaseDetection(bool hasActiveHandChaserCandidate)
     {
-        if (handChaserMovement == null || !handChaserMovement.IsActive)
+        if (!hasActiveHandChaserCandidate)
         {
             ResetChaseDetection();
             return;
@@ -492,17 +508,172 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
     private bool TryUpdateFrontDistance()
     {
-        if (handChaserBoxCollider == null || playerFacade == null)
+        if (playerFacade == null)
         {
             return false;
         }
 
-        if (!TryGetMoveAxis(out Vector3 axis))
+        if (TryUpdateCurrentRoomFrontDistance(out float nearestFrontDistance))
+        {
+            currentFrontDistance = nearestFrontDistance;
+            return true;
+        }
+
+        if (!TryCreateFallbackCandidate(out HandChaserCandidate fallbackCandidate))
         {
             return false;
         }
 
-        Bounds bounds = handChaserBoxCollider.bounds;
+        if (!TryCalculateFrontDistance(fallbackCandidate, out nearestFrontDistance))
+        {
+            return false;
+        }
+
+        currentFrontDistance = nearestFrontDistance;
+        return true;
+    }
+
+    private bool HasActiveHandChaserCandidate()
+    {
+        return HasActiveCurrentRoomHandChaserCandidate() || TryCreateFallbackCandidate(out _);
+    }
+
+    private bool HasActiveCurrentRoomHandChaserCandidate()
+    {
+        if (!TryGetCurrentRoom(out Room currentRoom))
+        {
+            return false;
+        }
+
+        roomHandChaserBuffer.Clear();
+        currentRoom.GetComponentsInChildren<HandChaserEnemy>(true, roomHandChaserBuffer);
+
+        for (int i = 0; i < roomHandChaserBuffer.Count; i++)
+        {
+            if (TryCreateCurrentRoomCandidate(roomHandChaserBuffer[i], out _))
+            {
+                roomHandChaserBuffer.Clear();
+                return true;
+            }
+        }
+
+        roomHandChaserBuffer.Clear();
+        return false;
+    }
+
+    private bool TryUpdateCurrentRoomFrontDistance(out float nearestFrontDistance)
+    {
+        nearestFrontDistance = 0f;
+
+        if (!TryGetCurrentRoom(out Room currentRoom))
+        {
+            return false;
+        }
+
+        bool hasDistance = false;
+        roomHandChaserBuffer.Clear();
+        currentRoom.GetComponentsInChildren<HandChaserEnemy>(true, roomHandChaserBuffer);
+
+        for (int i = 0; i < roomHandChaserBuffer.Count; i++)
+        {
+            if (!TryCreateCurrentRoomCandidate(roomHandChaserBuffer[i], out HandChaserCandidate candidate))
+            {
+                continue;
+            }
+
+            if (!TryCalculateFrontDistance(candidate, out float frontDistance))
+            {
+                continue;
+            }
+
+            // 複数の手がある場合は、プレイヤーに最も近い前面距離を危険側として採用する。
+            if (!hasDistance || frontDistance < nearestFrontDistance)
+            {
+                nearestFrontDistance = frontDistance;
+                hasDistance = true;
+            }
+        }
+
+        roomHandChaserBuffer.Clear();
+        return hasDistance;
+    }
+
+    private bool TryGetCurrentRoom(out Room currentRoom)
+    {
+        currentRoom = roomManager != null ? roomManager.CurrentRoom : null;
+        return currentRoom != null;
+    }
+
+    private bool TryCreateCurrentRoomCandidate(HandChaserEnemy enemy, out HandChaserCandidate candidate)
+    {
+        candidate = default;
+
+        if (enemy == null || !enemy.isActiveAndEnabled)
+        {
+            return false;
+        }
+
+        HandChaserMovement movement = enemy.GetComponent<HandChaserMovement>();
+        if (movement == null || !movement.IsActive)
+        {
+            return false;
+        }
+
+        BoxCollider hitBoxCollider = FindHitBoxCollider(enemy);
+        if (hitBoxCollider == null || !hitBoxCollider.enabled || !hitBoxCollider.gameObject.activeInHierarchy)
+        {
+            return false;
+        }
+
+        candidate = new HandChaserCandidate(movement, hitBoxCollider);
+        return true;
+    }
+
+    private BoxCollider FindHitBoxCollider(HandChaserEnemy enemy)
+    {
+        if (enemy == null)
+        {
+            return null;
+        }
+
+        // SafeZoneや起動判定用Colliderを拾わないよう、距離判定はHitBox名の子だけに限定する。
+        Transform hitBoxTransform = enemy.transform.Find(HitBoxObjectName);
+        if (hitBoxTransform == null)
+        {
+            return null;
+        }
+
+        return hitBoxTransform.GetComponent<BoxCollider>();
+    }
+
+    private bool TryCreateFallbackCandidate(out HandChaserCandidate candidate)
+    {
+        candidate = default;
+
+        if (handChaserMovement == null || handChaserBoxCollider == null || !handChaserMovement.IsActive)
+        {
+            return false;
+        }
+
+        candidate = new HandChaserCandidate(handChaserMovement, handChaserBoxCollider);
+        return true;
+    }
+
+    private bool TryCalculateFrontDistance(HandChaserCandidate candidate, out float frontDistance)
+    {
+        frontDistance = 0f;
+
+        if (candidate.Movement == null || candidate.BoxCollider == null || playerFacade == null)
+        {
+            return false;
+        }
+
+        if (!TryGetMoveAxis(candidate.Movement, out Vector3 axis))
+        {
+            return false;
+        }
+
+        Bounds bounds = candidate.BoxCollider.bounds;
         Vector3 absAxis = new Vector3(Mathf.Abs(axis.x), Mathf.Abs(axis.y), Mathf.Abs(axis.z));
         float projectedHalfExtent =
             bounds.extents.x * absAxis.x +
@@ -511,20 +682,25 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
         float frontPlane = Vector3.Dot(bounds.center, axis) + projectedHalfExtent;
         float playerPlane = Vector3.Dot(playerFacade.transform.position, axis);
-        currentFrontDistance = playerPlane - frontPlane;
+        frontDistance = playerPlane - frontPlane;
         return true;
     }
 
     private bool TryGetMoveAxis(out Vector3 axis)
     {
+        return TryGetMoveAxis(handChaserMovement, out axis);
+    }
+
+    private bool TryGetMoveAxis(HandChaserMovement movement, out Vector3 axis)
+    {
         axis = Vector3.right;
 
-        if (handChaserMovement == null)
+        if (movement == null)
         {
             return false;
         }
 
-        switch (handChaserMovement.Direction)
+        switch (movement.Direction)
         {
             case MoveDirection.Right:
                 axis = Vector3.right;
@@ -539,7 +715,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
                 axis = Vector3.down;
                 break;
             case MoveDirection.Custom:
-                axis = handChaserMovement.CustomMoveAxis;
+                axis = movement.CustomMoveAxis;
                 break;
             default:
                 axis = Vector3.right;
