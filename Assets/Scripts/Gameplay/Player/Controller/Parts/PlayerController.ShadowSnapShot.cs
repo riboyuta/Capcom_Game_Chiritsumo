@@ -8,31 +8,22 @@ public sealed partial class PlayerController
     // PlayerShadowRecorder が定期的に呼び出して履歴を作成する。
     public PlayerShadowSnapshot CaptureShadowSnapshot()
     {
+        Vector3 position = rb != null ? rb.position : transform.position;
+        Vector3 velocity = rb != null ? rb.linearVelocity : Vector3.zero;
+        int facing = NormalizeShadowFacing(ResolveAnimationFacing());
+
         PlayerShadowSnapshot snapshot = new PlayerShadowSnapshot();
 
         snapshot.time = Time.time;
 
-        // 位置、回転、速度を記録
-        snapshot.position = transform.position;
+        // 移動再生用
+        snapshot.position = position;
         snapshot.rotation = transform.rotation;
-        snapshot.velocity = rb != null ? rb.linearVelocity : Vector3.zero;
+        snapshot.velocity = velocity;
+        snapshot.facing = facing;
 
-        // 向きを正規化して記録
-        snapshot.facing = NormalizeShadowFacing(runtimeState.facing);
-
-        // 状態フラグを記録
-        snapshot.isGrounded = runtimeState.isGrounded;
-        snapshot.isTouchingWall = runtimeState.isTouchingWall;
-        snapshot.wallSide = runtimeState.wallSide;
-
-        snapshot.isWallSliding = runtimeState.isWallSliding;
-        snapshot.isDashing = runtimeState.isDashing;
-
-        snapshot.isActionLocked = IsActionLocked;
-        snapshot.isDead = IsDeadState;
-
-        // Player 側で確定済みの見た目状態をそのまま渡す。
-        snapshot.visualState = CurrentVisualState;
+        // モデル表示用
+        snapshot.animationSnapshot = CurrentAnimationSnapshot;
 
         return snapshot;
     }

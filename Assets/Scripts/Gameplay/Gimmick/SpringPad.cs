@@ -4,7 +4,7 @@ using UnityEngine;
 // 射出方向は transform.up で決まり、床・壁・下向き・斜めバネに対応する。
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider))]
-public sealed class SpringPad : MonoBehaviour
+public sealed class SpringPad : MonoBehaviour, IRespawnResettable
 {
     private const string InteractedTriggerName = "Interacted";
     private const string SpringPadSfxName = "SFX_gimmick_springpad";
@@ -62,10 +62,42 @@ public sealed class SpringPad : MonoBehaviour
     private Collider springCollider;
 
     private float lastBounceTime = float.NegativeInfinity;
+    private bool hasCapturedInitialState;
+    private float initialLastBounceTime = float.NegativeInfinity;
+    private bool initialColliderEnabled;
 
     private void Awake()
     {
         springCollider = GetComponent<Collider>();
+    }
+
+    public void CaptureInitialState()
+    {
+        if (hasCapturedInitialState)
+        {
+            return;
+        }
+
+        initialLastBounceTime = lastBounceTime;
+        initialColliderEnabled = springCollider != null && springCollider.enabled;
+        hasCapturedInitialState = true;
+    }
+
+    public void ResetToRespawnState()
+    {
+        if (!hasCapturedInitialState)
+        {
+            initialColliderEnabled = springCollider != null && springCollider.enabled;
+            hasCapturedInitialState = true;
+        }
+
+        // 死亡復帰直後に直前のバウンドCooldownを持ち越さない。
+        lastBounceTime = initialLastBounceTime;
+
+        if (springCollider != null)
+        {
+            springCollider.enabled = initialColliderEnabled;
+        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -177,15 +209,11 @@ public sealed class SpringPad : MonoBehaviour
             return;
         }
 
-        PlayFeedback();
-        lastBounceTime = Time.time;
-
-        facade.TryRefillDash(DashRefillReason.Gimmick);
-
         Vector3 launchDirection = transform.up.normalized;
         bool shouldApplyGravityModifier =
             useLaunchGravityModifier &&
             Vector3.Dot(launchDirection, Vector3.up) > UpwardGravityModifierThreshold;
+
         PlayerFixedLaunchRequest request = new PlayerFixedLaunchRequest
         {
             Owner = this,
@@ -207,7 +235,15 @@ public sealed class SpringPad : MonoBehaviour
             ForceUnground = true
         };
 
-        facade.ApplyFixedLaunch(in request);
+        if (!facade.TryApplyFixedLaunch(in request))
+        {
+            return;
+        }
+
+        PlayFeedback();
+        lastBounceTime = Time.time;
+
+        facade.TryRefillDash(DashRefillReason.Gimmick);
     }
 
     private float ComputeLaunchSpeed()

@@ -2,7 +2,8 @@ public enum DashRefillReason
 {
     Grounded,
     Gimmick,
-    Scripted
+    Scripted,
+    TutorialAssist
 }
 
 public struct PlayerLocomotionModifierRequest

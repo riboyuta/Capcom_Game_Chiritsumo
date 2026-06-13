@@ -347,7 +347,7 @@ public sealed class RoomManager : MonoBehaviour
                 this);
         }
     }
-    private void UpdateCheckpointForRoomEntry(Room room, RoomDirection direction)
+    private void UpdateCheckpointForRoomEntry(Room room)
     {
         // 遷移先の部屋が無ければ更新できない。
         if (room == null)
@@ -363,31 +363,14 @@ public sealed class RoomManager : MonoBehaviour
             return;
         }
 
-        // 遷移方向に対応する復帰位置を選ぶ。
-        Transform respawnPoint = null;
-        switch (direction)
-        {
-            case RoomDirection.Right:
-                respawnPoint = room.RespawnFromLeft;
-                break;
-            case RoomDirection.Left:
-                respawnPoint = room.RespawnFromRight;
-                break;
-            case RoomDirection.Up:
-                respawnPoint = room.RespawnFromDown;
-                break;
-            case RoomDirection.Down:
-                respawnPoint = room.RespawnFromUp;
-                break;
-            case RoomDirection.None:
-                return;
-        }
+        // 部屋ごとに1つだけ持つ復帰位置を使い、入室方向では分岐しない。
+        Transform respawnPoint = room.RespawnPoint;
 
-        // 対応する復帰位置が無い場合は遷移は維持して更新だけ見送る。
+        // 部屋単位の復帰位置が無い場合は遷移は維持して更新だけ見送る。
         if (respawnPoint == null)
         {
             Debug.LogWarning(
-                $"RoomManager: Room '{room.name}' の direction '{direction}' に対応する respawn point が未設定のため checkpoint 更新をスキップします。",
+                $"RoomManager: Room '{room.name}' の respawn point が未設定のため checkpoint 更新をスキップします。",
                 this);
             return;
         }
@@ -399,7 +382,7 @@ public sealed class RoomManager : MonoBehaviour
         if (enableDebugLog)
         {
             Debug.Log(
-                $"RoomManager: checkpoint を更新しました。Room='{room.name}', Direction={direction}, Checkpoint='{respawnPoint.name}'",
+                $"RoomManager: checkpoint を更新しました。Room='{room.name}', Checkpoint='{respawnPoint.name}'",
                 this);
         }
     }
@@ -552,7 +535,7 @@ public sealed class RoomManager : MonoBehaviour
         currentRoom = nextRoom;
         lastTransitionDirection = moveDirection;
         ApplyCurrentRoomCameraSettings();
-        UpdateCheckpointForRoomEntry(currentRoom, moveDirection);
+        UpdateCheckpointForRoomEntry(currentRoom);
         if (playerCameraController != null)
         {
             playerCameraController.BeginRoomTransition(currentRoom);
