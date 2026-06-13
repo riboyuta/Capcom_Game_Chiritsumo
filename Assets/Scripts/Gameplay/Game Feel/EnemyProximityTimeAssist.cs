@@ -39,9 +39,13 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [Tooltip("2回目以降の補助を発動する、追跡敵の前面からプレイヤーまでの距離です。")]
     [SerializeField, Min(0f)] private float repeatTriggerDistance = 2.5f;
 
-    [Header("2回目以降補助設定 / 時間倍率")]
-    [Tooltip("2回目以降の補助中の Time.timeScale です。0 に近いほど強いスローになります。")]
+    [Header("2回目補助設定 / 時間倍率")]
+    [Tooltip("2回目の補助中の Time.timeScale です。0 に近いほど強い時間補助になります。")]
     [SerializeField, Range(0f, 1f)] private float repeatTimeScale = 0.25f;
+
+    [Header("3回目以降補助設定 / 時間倍率")]
+    [Tooltip("3回目以降の補助中の Time.timeScale です。回数制限に達するまで、この値を使い続けます。")]
+    [SerializeField, Range(0f, 1f)] private float thirdAndLaterTimeScale = 0.15f;
 
     [Header("2回目以降補助設定 / 最大継続時間")]
     [Tooltip("2回目以降の補助が自動終了するまでの最大時間です。unscaledDeltaTime 基準で計測します。")]
@@ -54,6 +58,14 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [Header("共通設定 / クールダウン")]
     [Tooltip("補助終了後、次の補助が発動可能になるまでの待機時間です。連続発動を防ぎます。")]
     [SerializeField, Min(0f)] private float cooldownTime = 0.5f;
+
+    [Header("解除設定 / 距離解除")]
+    [Tooltip("有効にすると、補助中に追跡敵の前面からプレイヤーまでの距離が解除距離以上になった時点で補助を解除します。")]
+    [SerializeField] private bool releaseOnDistance;
+
+    [Header("解除設定 / 距離解除")]
+    [Tooltip("距離解除を行う前面距離です。発動距離より大きい値にすると、補助開始直後の即解除を避けやすくなります。")]
+    [SerializeField, Min(0f)] private float releaseDistance = 5f;
 
     [Header("共通設定 / 最大補助回数")]
     [Tooltip("1回の追跡中に発動できる補助の最大回数です。0 にすると補助は発動しません。")]
@@ -105,9 +117,11 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         firstMaxDuration = Mathf.Max(0f, firstMaxDuration);
         repeatTriggerDistance = Mathf.Max(0f, repeatTriggerDistance);
         repeatTimeScale = Mathf.Max(0f, repeatTimeScale);
+        thirdAndLaterTimeScale = Mathf.Max(0f, thirdAndLaterTimeScale);
         repeatMaxDuration = Mathf.Max(0f, repeatMaxDuration);
         assistEnableDelayAfterEnemySpawn = Mathf.Max(0f, assistEnableDelayAfterEnemySpawn);
         cooldownTime = Mathf.Max(0f, cooldownTime);
+        releaseDistance = Mathf.Max(0f, releaseDistance);
         maxAssistCount = Mathf.Max(0, maxAssistCount);
     }
 
@@ -264,6 +278,12 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         if (assistTimer >= activeAssistMaxDuration)
         {
             EndAssist("max duration");
+            return;
+        }
+
+        if (ShouldReleaseByDistance())
+        {
+            EndAssist("release distance");
         }
     }
 
@@ -277,7 +297,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         dashBaselineFrame = playerFacade.LastAcceptedDashInputFrame;
         playerFacade.TryRefillDash(DashRefillReason.TutorialAssist);
 
-        float targetTimeScale = isFirstAssist ? firstTimeScale : repeatTimeScale;
+        float targetTimeScale = GetAssistTimeScale(currentAssistCount);
         activeAssistMaxDuration = isFirstAssist ? firstMaxDuration : repeatMaxDuration;
         assistTimer = 0f;
         isAssisting = true;
@@ -294,6 +314,33 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         {
             Debug.Log($"[EnemyProximityTimeAssist] Assist started. type={(isFirstAssist ? "First" : "Repeat")}, count={currentAssistCount}, distance={currentFrontDistance:F3}, timeScale={targetTimeScale:F3}", this);
         }
+    }
+
+    private float GetAssistTimeScale(int assistCountBeforeStart)
+    {
+        // 発動前の回数を基準に、1回目・2回目・3回目以降の時間補助強度を選ぶ。
+        if (assistCountBeforeStart <= 0)
+        {
+            return firstTimeScale;
+        }
+
+        if (assistCountBeforeStart == 1)
+        {
+            return repeatTimeScale;
+        }
+
+        return thirdAndLaterTimeScale;
+    }
+
+    private bool ShouldReleaseByDistance()
+    {
+        if (!releaseOnDistance)
+        {
+            return false;
+        }
+
+        // 既存の前面距離計算を使い、敵から十分離れたときだけ補助を解除する。
+        return TryUpdateFrontDistance() && currentFrontDistance >= releaseDistance;
     }
 
     private void EndAssist(string reason)
