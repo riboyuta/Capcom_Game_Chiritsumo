@@ -68,6 +68,9 @@ public sealed class SonarChargerPlayerMotionDetector : MonoBehaviour
             case SonarChargerMoveDetectMode.Either:
                 return hasInputMove || hasPositionDeltaMove;
 
+            case SonarChargerMoveDetectMode.IgnoreMovement:
+                return true;
+
             default:
                 return false;
         }

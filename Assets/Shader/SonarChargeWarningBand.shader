@@ -27,6 +27,8 @@ Shader "Custom/Sonar/ChargeWarningBand"
 
         _WarningLength ("Warning Length", Float) = 1.0
         _WarningWidth ("Warning Width", Float) = 1.0
+
+        _PatternReferenceLength ("Pattern Reference Length", Float) = 12.0
     }
 
     SubShader
@@ -90,6 +92,8 @@ Shader "Custom/Sonar/ChargeWarningBand"
 
                 float _WarningLength;
                 float _WarningWidth;
+
+                float _PatternReferenceLength;
             CBUFFER_END
 
             float Hash21(float2 p)
@@ -143,20 +147,28 @@ Shader "Custom/Sonar/ChargeWarningBand"
 
                 float time = _Time.y;
 
+                // 帯が長くなるほど模様の繰り返し回数を増やす。
+                // 基準長さ以下では従来と同じ1回分として扱う。
+                float referenceLength = max(_PatternReferenceLength, 0.001);
+                float patternRepeat = max(_WarningLength / referenceLength, 1.0);
+                
+                // 模様計算専用のX座標。
+                // 前後端フェードには使わず、ノイズと流れ模様だけに使う。
+                float patternX = uv.x * patternRepeat;
+                
                 float noise = ValueNoise(float2(
-                    uv.x * _NoiseScale - time * _FlowSpeed,
+                    patternX * _NoiseScale - time * _FlowSpeed,
                     uv.y * _NoiseScale * 0.45));
+                
+                float flowRaw = sin(
+                    (patternX * _FlowStripeScale - time * _FlowSpeed)
+                    * 6.28318
+                    + noise * 2.0);
 
-                // ノイズで帯の透明度を少し崩す。
-                float noiseAlpha = lerp(1.0, noise, _NoiseStrength);
-
-                // 長さ方向へ流れる筋。
-                float flowRaw = sin((uv.x * _FlowStripeScale - time * _FlowSpeed) * 6.28318 + noise * 2.0);
                 float flow = smoothstep(0.15, 0.85, flowRaw * 0.5 + 0.5);
 
                 // 中央と外周で色を変える。
                 float edgeGlow = smoothstep(0.45, 1.0, across) * edgeFade;
-                float centerPower = 1.0 - saturate(across);
 
                 float lockedState = saturate(1.0 - abs(_WarningState - 1.0));
                 float chargingState = saturate(_WarningState - 1.0);
@@ -172,17 +184,26 @@ Shader "Custom/Sonar/ChargeWarningBand"
 
                 float3 color = _BaseColor.rgb;
                 color = lerp(color, _EdgeColor.rgb, edgeGlow * _EdgeGlowStrength);
-                color = lerp(color, _FlowColor.rgb, flow * _FlowStrength);
+                color += _FlowColor.rgb * flow * _FlowStrength * 0.8;
                 color *= brightness;
 
+                float baseMask = edgeFade * lengthFade;
+
+                float noiseAlpha = lerp(1.0, noise, saturate(_NoiseStrength));
+
+                // ノイズで完全に薄くなりすぎないよう、最低値を確保する
+                float stableNoiseAlpha = lerp(0.85, 1.0, noiseAlpha);
+                
                 float alpha =
                     _WarningAlpha
-                    * edgeFade
-                    * lengthFade
-                    * noiseAlpha;
-
-                alpha += edgeGlow * 0.15;
-                alpha += lockFlash * 0.2;
+                    * baseMask
+                    * stableNoiseAlpha;
+                
+                // 流れ模様と輪郭にも少しAlphaを足す
+                alpha += flow * _FlowStrength * 0.12 * baseMask;
+                alpha += edgeGlow * 0.20;
+                alpha += lockFlash * 0.20;
+                
                 alpha = saturate(alpha);
 
                 return half4(color, alpha);
