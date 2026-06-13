@@ -7,7 +7,9 @@ public enum SonarChargerMoveDetectMode
 {
     Input,          // 入力だけで判定（MoveInputDirectionの大きさ）
     PositionDelta,  // 位置差分だけで判定（前フレームからの移動量）
-    Either          // 入力または位置差分のいずれか（どちらかで検知）
+    Either,         // 入力または位置差分のいずれか（どちらかで検知）
+    IgnoreMovement  // 無条件検知
+
 }
 
 // SonarChargerEnemy のすべての調整パラメータ
