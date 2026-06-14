@@ -67,6 +67,11 @@ public sealed class PlayerCameraController : MonoBehaviour
     // ジャンプや落下時のカメラ感触に強く影響する。
     [SerializeField] private float smoothTimeY = 0.12f;
 
+    [Header("死亡復帰時の追従スムーズ時間")]
+    [Tooltip("死亡後にリスポーン地点へカメラを戻す間だけ使う追従スムーズ時間です。X/Y両方に同じ値を使い、小さいほど速く復帰地点へ追従します。")]
+    // 死亡復帰中だけ通常時や Room override より優先して使う追従時間。
+    [SerializeField, Min(0f)] private float deathReturnSmoothTime = 0.03f;
+
     [Header("横方向ダッシュカメラ補正を使うか")]
     [Tooltip("有効にすると、横方向ダッシュ時だけ X 軸追従と横方向 LookAhead に疾走感用の補正を加えます。")]
 [FormerlySerializedAs("dashCameraEnabled")]
@@ -207,6 +212,9 @@ public sealed class PlayerCameraController : MonoBehaviour
     private float activeSmoothTimeXOverride;
     private float activeSmoothTimeYOverride;
 
+    // 死亡復帰中だけ追従時間を一時的に高速化する。
+    private bool isDeathReturnFollowActive;
+
     // 通常時に戻るための World 基準 Orthographic Size 補間時間。
     private float worldOrthographicSizeSmoothTime;
 
@@ -294,13 +302,17 @@ public sealed class PlayerCameraController : MonoBehaviour
         : worldOrthographicSize;
 
     // 実際に使用する X/Y 追従スムーズ時間。
-    private float EffectiveSmoothTimeX => hasActiveFollowSmoothingOverride
-        ? activeSmoothTimeXOverride
-        : worldSmoothTimeX;
+    private float EffectiveSmoothTimeX => isDeathReturnFollowActive
+        ? Mathf.Max(0f, deathReturnSmoothTime)
+        : hasActiveFollowSmoothingOverride
+            ? activeSmoothTimeXOverride
+            : worldSmoothTimeX;
 
-    private float EffectiveSmoothTimeY => hasActiveFollowSmoothingOverride
-        ? activeSmoothTimeYOverride
-        : worldSmoothTimeY;
+    private float EffectiveSmoothTimeY => isDeathReturnFollowActive
+        ? Mathf.Max(0f, deathReturnSmoothTime)
+        : hasActiveFollowSmoothingOverride
+            ? activeSmoothTimeYOverride
+            : worldSmoothTimeY;
 
     // 実際に使用する Orthographic Size 補間時間。
     private float EffectiveOrthographicSizeSmoothTime => hasActiveOrthographicSizeSmoothTimeOverride
@@ -614,6 +626,9 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     public void ResetCameraMotionForRespawn()
     {
+        // 前回の死亡復帰モードが残っていた場合も、リスポーン初期化で必ず解除する。
+        isDeathReturnFollowActive = false;
+
         // リスポーン後に追従対象を通常状態へ戻す。
         ClearTemporaryTarget();
 
@@ -634,6 +649,31 @@ public sealed class PlayerCameraController : MonoBehaviour
         {
             CancelRoomTransitionAndSnapToTarget();
         }
+    }
+
+    public void BeginDeathReturnFollow()
+    {
+        isDeathReturnFollowActive = true;
+
+        // 通常追従や Room 遷移の慣性を死亡復帰用の高速追従へ持ち越さない。
+        velocityX = 0f;
+        velocityY = 0f;
+        ResetDashCameraState();
+    }
+
+    public void EndDeathReturnFollow()
+    {
+        if (!isDeathReturnFollowActive)
+        {
+            return;
+        }
+
+        isDeathReturnFollowActive = false;
+
+        // 通常追従へ戻る瞬間に死亡復帰中の速度が残らないようにする。
+        velocityX = 0f;
+        velocityY = 0f;
+        ResetDashCameraState();
     }
 
     // -----------------------------

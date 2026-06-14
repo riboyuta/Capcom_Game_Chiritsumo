@@ -171,6 +171,7 @@ internal sealed class PlayerJumpSystem
         }
 
         Vector3 velocity = deps.Rb.linearVelocity;
+        CancelWallwardHorizontalVelocityOnNormalJump(ref velocity);
         velocity.y = deps.Settings.Jump.JumpVelocity;
         deps.Rb.linearVelocity = velocity;
 
@@ -180,6 +181,28 @@ internal sealed class PlayerJumpSystem
         jumpHoldTimer = deps.Settings.Jump.MaxJumpHoldTime;
         justJumpedThisFrame = true;
         deps.PlayJumpSound?.Invoke();
+    }
+
+    // 通常ジャンプ開始時だけ、壁へ押し付ける横速度で上昇が削られないようにする。
+    private void CancelWallwardHorizontalVelocityOnNormalJump(ref Vector3 velocity)
+    {
+        if (!deps.RuntimeState.isTouchingWall || deps.RuntimeState.wallSide == 0)
+        {
+            return;
+        }
+
+        int wallSide = deps.RuntimeState.wallSide;
+        float inputX = Mathf.Clamp(deps.InputReader.Move.x, -1f, 1f);
+        float threshold = deps.Settings.Detection.WallInputThreshold;
+
+        bool pushingIntoWall = inputX * wallSide >= threshold;
+        bool movingIntoWall = velocity.x * wallSide > 0f;
+        if (!pushingIntoWall || !movingIntoWall)
+        {
+            return;
+        }
+
+        velocity.x = 0f;
     }
 
     // 壁掴まり中の真上ジャンプを試みる。
