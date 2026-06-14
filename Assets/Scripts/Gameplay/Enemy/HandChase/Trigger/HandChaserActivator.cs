@@ -166,7 +166,7 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         }
 
         isPlayerInsideSafeZone = false;
-        StopSpawnWarning();
+        FadeOutSpawnWarning();
 
         StartSpawnAfterSafeZoneExit();
     }
@@ -284,6 +284,16 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         }
 
         spawnWarningView.StopAndHide();
+    }
+
+    private void FadeOutSpawnWarning()
+    {
+        if (spawnWarningView == null)
+        {
+            return;
+        }
+
+        spawnWarningView.FadeOutAndHide();
     }
 
     public void CaptureInitialState()
