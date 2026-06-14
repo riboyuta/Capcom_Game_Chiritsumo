@@ -151,6 +151,7 @@ internal sealed class PlayerDeathCoordinator
         }
 
         ResetCameraToWorldDefaults();
+        BeginCameraDeathReturnFollow();
 
         LogRespawn($"Respawn checkpoint resolved: {checkpoint.name}");
         RespawnAt(checkpoint.position);
@@ -174,6 +175,8 @@ internal sealed class PlayerDeathCoordinator
             LogRespawn("Respawn blink open complete");
         }
 
+        EndCameraDeathReturnFollow();
+
         respawnSequenceCoroutine = null;
         isDead = false;
         isDeathSequencePlaying = false;
@@ -193,6 +196,26 @@ internal sealed class PlayerDeathCoordinator
         }
 
         playerCameraController.ResetRuntimeStateForRespawn();
+    }
+
+    private void BeginCameraDeathReturnFollow()
+    {
+        if (playerCameraController == null)
+        {
+            return;
+        }
+
+        playerCameraController.BeginDeathReturnFollow();
+    }
+
+    private void EndCameraDeathReturnFollow()
+    {
+        if (playerCameraController == null)
+        {
+            return;
+        }
+
+        playerCameraController.EndDeathReturnFollow();
     }
 
     private void PlayDamageDeathIntro()
