@@ -1152,17 +1152,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         Transform effectiveTarget = GetEffectiveTargetAnchor();
         if (effectiveTarget != null)
         {
-            Vector3 baseDesiredPosition = effectiveTarget.position + cameraOffset;
-            if (hasActiveRoomFocusOffset)
-            {
-                Vector3 focusOffset3D = new Vector3(-activeRoomFocusOffset.x, -activeRoomFocusOffset.y, 0f);
-                desiredPosition = baseDesiredPosition + focusOffset3D;
-            }
-            else
-            {
-                desiredPosition = baseDesiredPosition;
-            }
-
+            desiredPosition = BuildFollowDesiredPosition(effectiveTarget);
             clampedPosition = GetClampedPosition(desiredPosition);
             roomTransitionTargetPosition = clampedPosition;
         }
