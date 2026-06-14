@@ -170,6 +170,7 @@ GameObject:
   - component: {fileID: 6611207109860754603}
   - component: {fileID: 2433565921475156991}
   - component: {fileID: 8742252961490900893}
+  - component: {fileID: 4561821479067224818}
   m_Layer: 0
   m_Name: HandEnemy
   m_TagString: Untagged
@@ -267,8 +268,6 @@ MonoBehaviour:
   disableAfterKill: 0
   enableDebugLog: 0
   autoAdjustHitbox: 1
-  visualizeHitbox: 1
-  hitboxColor: {r: 1, g: 0, b: 0, a: 0.8}
 --- !u!114 &2433565921475156991
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -332,3 +331,16 @@ MonoBehaviour:
   idleAnimationStateName: Move
   animationOffsetStep: 0.11
   enableDebugLog: 0
+--- !u!114 &4561821479067224818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8533222570096685435}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 376439d1375b4b74e9651641f22443eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyProximityAssistTarget
+  roomOverride: {fileID: 0}
