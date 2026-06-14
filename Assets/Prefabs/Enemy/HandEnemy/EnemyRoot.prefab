@@ -62,7 +62,7 @@ Transform:
   m_GameObject: {fileID: 4050707637116078813}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -57.7, y: 53.04, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 7.5126, y: 20.925, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -356,6 +356,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3268368376347136408, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7578727491093156910}
+    - targetCorrespondingSourceObject: {fileID: 3268368376347136408, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2568258527441766559}
   m_SourcePrefab: {fileID: 100100000, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
 --- !u!1 &48466198151613933 stripped
 GameObject:
@@ -447,6 +450,19 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &2568258527441766559
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 48466198151613933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 376439d1375b4b74e9651641f22443eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyProximityAssistTarget
+  roomOverride: {fileID: 0}
 --- !u!114 &901219864987855626 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2411249658003863423, guid: 756d29b100f132947ba547a8e2fc8dd9, type: 3}
