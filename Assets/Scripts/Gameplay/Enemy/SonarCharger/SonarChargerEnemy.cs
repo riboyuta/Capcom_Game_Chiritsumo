@@ -542,30 +542,55 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         chargeWarningView.UpdateWarning(start, chargeWarningEndPosition, 1.0f, 0.0f, Settings);
     }
 
-    // Charge 中：確定済みの終端座標を基に警告ラインを更新する
+    // Charge中：確定済みの終端座標を基に警告帯を更新する
     private void UpdateChargeWarningDuringCharge()
     {
         if (chargeWarningView == null)
+        {
             return;
+        }
 
-        if (!Settings.showAlertPredictionLine || !hasChargeWarningEndPosition)
+        if (!Settings.showAlertPredictionLine ||
+            !hasChargeWarningEndPosition)
         {
             chargeWarningView.Hide();
             return;
         }
 
         Vector3 start = transform.position;
-        Vector3 remaining = chargeWarningEndPosition - start;
+        Vector3 end = chargeWarningEndPosition;
+
+        Vector3 remaining = end - start;
         remaining.z = 0.0f;
 
-        // 終端付近まで来たらラインを消す
-        if (remaining.sqrMagnitude <= 0.05f * 0.05f)
+        const float EndThreshold = 0.05f;
+
+        bool reachedEnd =
+            remaining.sqrMagnitude
+            <= EndThreshold * EndThreshold;
+
+        // remainingが突進方向と逆向きになった場合、
+        // 敵が帯の終点を通り過ぎたと判断する。
+        bool passedEnd =
+            Vector3.Dot(
+                remaining,
+                movement.ChargeDirection)
+            <= 0.0f;
+
+        if (reachedEnd || passedEnd)
         {
-            chargeWarningView.Hide();
+            HideChargeWarning();
             return;
         }
 
-        chargeWarningView.UpdateWarning(start, chargeWarningEndPosition, 1.0f, stateTimer, Settings);
+        // 始点を現在の敵位置へ更新することで、
+        // 敵が通過した部分の帯が短くなっていく。
+        chargeWarningView.UpdateWarning(
+            start,
+            end,
+            1.0f,
+            stateTimer,
+            Settings);
     }
 
     // 警告ラインを非表示にして終端フラグをリセットする
