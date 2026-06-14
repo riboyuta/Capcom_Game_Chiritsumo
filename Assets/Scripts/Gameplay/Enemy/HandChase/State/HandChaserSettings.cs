@@ -93,12 +93,6 @@ public sealed class HandChaserSettings
     [Tooltip("部屋サイズに応じてヒットボックスを自動調整するかどうかです。")]
     public bool autoAdjustHitbox = true;
 
-    [Tooltip("ヒットボックスを視覚化するかどうかです。")]
-    public bool visualizeHitbox = true;
-
-    [Tooltip("ヒットボックス視覚化の色です。")]
-    public Color hitboxColor = new Color(1f, 0f, 0f, 0.8f);
-
     [Header("デバッグ")]
     [Tooltip("デバッグログを出すかどうかです。")]
     public bool enableDebugLog = false;
@@ -129,8 +123,6 @@ public sealed class HandChaserSettings
         adaptiveSpeed = source.adaptiveSpeed;
 
         autoAdjustHitbox = source.autoAdjustHitbox;
-        visualizeHitbox = source.visualizeHitbox;
-        hitboxColor = source.hitboxColor;
 
         enableDebugLog = source.enableDebugLog;
     }
