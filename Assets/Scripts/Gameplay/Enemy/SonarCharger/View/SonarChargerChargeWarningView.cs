@@ -20,13 +20,14 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
     // シェーダープロパティ ID キャッシュ
     // =========================================================
 
-    private static readonly int WarningAlphaId    = Shader.PropertyToID("_WarningAlpha");
-    private static readonly int WarningPulseId    = Shader.PropertyToID("_WarningPulse");
-    private static readonly int WarningProgressId = Shader.PropertyToID("_WarningProgress");
-    private static readonly int WarningStateId    = Shader.PropertyToID("_WarningState");
-    private static readonly int WarningLengthId   = Shader.PropertyToID("_WarningLength");
-    private static readonly int WarningWidthId    = Shader.PropertyToID("_WarningWidth");
-    private static readonly int LockFlashId       = Shader.PropertyToID("_LockFlash");
+    private static readonly int WarningAlphaId      = Shader.PropertyToID("_WarningAlpha");
+    private static readonly int WarningPulseId      = Shader.PropertyToID("_WarningPulse");
+    private static readonly int WarningProgressId   = Shader.PropertyToID("_WarningProgress");
+    private static readonly int WarningStateId      = Shader.PropertyToID("_WarningState");
+    private static readonly int WarningLengthId     = Shader.PropertyToID("_WarningLength");
+    private static readonly int WarningWidthId      = Shader.PropertyToID("_WarningWidth");
+    private static readonly int LockFlashId         = Shader.PropertyToID("_LockFlash");
+    private static readonly int LockSweepProgressId = Shader.PropertyToID("_LockSweepProgress");
 
     // =========================================================
     // インスペクター設定
@@ -88,11 +89,15 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
         if (bandRoot == null)
             bandRoot = transform;
 
-        if (bandQuadTransform == null && bandRenderer != null)
-            bandQuadTransform = bandRenderer.transform;
-
         if (bandRenderer == null)
+        {
             bandRenderer = GetComponentInChildren<MeshRenderer>(true);
+        }
+
+        if (bandQuadTransform == null && bandRenderer != null)
+        {
+            bandQuadTransform = bandRenderer.transform;
+        }
 
         if (bandRoot != null && !hasInitialBandScale)
         {
@@ -167,9 +172,22 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
             lockedEffectTimer += Time.deltaTime;
 
         Vector3 normalizedDirection = direction / length;
+        float currentBandWidth = CalculateCurrentBandWidth(settings);
 
-        UpdateBandTransform(start, normalizedDirection, length, settings);
-        UpdateShaderParameters(Mathf.Clamp01(alertT), elapsedTime, length, settings);
+        UpdateBandTransform(
+            start,
+            normalizedDirection,
+            length,
+            currentBandWidth,
+            settings);
+
+        UpdateShaderParameters(
+            Mathf.Clamp01(alertT),
+            elapsedTime,
+            length,
+            currentBandWidth,
+            settings);
+
         UpdateMarker(end, elapsedTime, settings);
     }
 
@@ -191,17 +209,53 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
     public void SetCharging()
     {
         visualState = SonarChargeWarningVisualState.Charging;
+        lockedEffectTimer = 0.0f;
     }
 
     // =========================================================
     // 内部更新
     // =========================================================
 
+    private float CalculateCurrentBandWidth(
+    SonarChargerSettings settings)
+    {
+        float baseWidth = Mathf.Max(
+            0.01f,
+            settings.alertPredictionBandWidth);
+
+        if (visualState != SonarChargeWarningVisualState.Locked)
+        {
+            return baseWidth;
+        }
+
+        float duration = Mathf.Max(
+            0.001f,
+            settings.lockConfirmTime);
+
+        float progress = Mathf.Clamp01(
+            lockedEffectTimer / duration);
+
+        // Locked開始時は最大倍率。
+        // LockConfirm終了時に通常幅へ滑らかに戻る。
+        float easedProgress = Mathf.SmoothStep(
+            0.0f,
+            1.0f,
+            progress);
+
+        float widthMultiplier = Mathf.Lerp(
+            settings.lockConfirmBandWidthMultiplier,
+            1.0f,
+            easedProgress);
+
+        return baseWidth * widthMultiplier;
+    }
+
     // bandRoot を start に配置し、bandQuad を length に合わせてスケーリングする
     private void UpdateBandTransform(
         Vector3 start,
         Vector3 normalizedDirection,
         float length,
+        float bandWidth,
         SonarChargerSettings settings)
     {
         if (bandRoot == null)
@@ -224,7 +278,7 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
         // Root 位置から前方にだけ伸びるようにする
         bandQuadTransform.localPosition = new Vector3(length * 0.5f, 0.0f, 0.0f);
         bandQuadTransform.localRotation = Quaternion.identity;
-        bandQuadTransform.localScale    = new Vector3(length, settings.alertPredictionBandWidth, 1.0f);
+        bandQuadTransform.localScale = new Vector3(length, bandWidth, 1.0f);
     }
 
     // 状態に応じたパルス速度・アルファ・フラッシュ値を計算してシェーダーへ渡す
@@ -232,6 +286,7 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
         float alertT,
         float elapsedTime,
         float length,
+        float bandWidth,
         SonarChargerSettings settings)
     {
         if (bandRenderer == null)
@@ -244,6 +299,7 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
         float baseAlpha  = settings.alertPredictionBandAlpha;
         float stateValue = 0.0f;
         float lockFlash  = 0.0f;
+        float lockSweepProgress = 0.0f;
 
         switch (visualState)
         {
@@ -252,12 +308,20 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
                 break;
 
             case SonarChargeWarningVisualState.Locked:
-                stateValue  = 1.0f;
-                pulseSpeed *= 1.5f;
-                baseAlpha  *= 1.2f;
-                // Locked 突入直後ほど強く光る
-                lockFlash   = Mathf.Clamp01(1.0f - lockedEffectTimer / Mathf.Max(0.001f, settings.lockConfirmTime));
-                break;
+                    stateValue = 1.0f;
+                    pulseSpeed *= 1.5f;
+                    baseAlpha *= 1.2f;
+
+                    float lockDuration = Mathf.Max(
+                        0.001f,
+                        settings.lockConfirmTime);
+
+                    lockSweepProgress = Mathf.Clamp01(
+                        lockedEffectTimer / lockDuration);
+
+                    // 開始時に最大、終了時に0へ減衰するフラッシュ。
+                    lockFlash = 1.0f - lockSweepProgress;
+                    break;
 
             case SonarChargeWarningVisualState.Charging:
                 stateValue  = 2.0f;
@@ -274,8 +338,9 @@ public sealed class SonarChargerChargeWarningView : MonoBehaviour
         propertyBlock.SetFloat(WarningProgressId, alertT);
         propertyBlock.SetFloat(WarningStateId, stateValue);
         propertyBlock.SetFloat(WarningLengthId, length);
-        propertyBlock.SetFloat(WarningWidthId, settings.alertPredictionBandWidth);
+        propertyBlock.SetFloat(WarningWidthId, bandWidth);
         propertyBlock.SetFloat(LockFlashId, lockFlash);
+        propertyBlock.SetFloat(LockSweepProgressId, lockSweepProgress);
 
         bandRenderer.SetPropertyBlock(propertyBlock);
     }
