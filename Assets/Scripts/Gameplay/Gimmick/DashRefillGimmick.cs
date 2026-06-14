@@ -126,10 +126,7 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
         SetVisualActive(false);
 
         // SE: 回復音
-        if (AudioManager.Instance != null)
-        {
-            //AudioManager.Instance.PlayOverlap("SFX_gimmick_dash_refill");
-        }
+        AudioEvent.Emit(this, "Consumed");
     }
 
     // ギミックを再びアクティブにする。

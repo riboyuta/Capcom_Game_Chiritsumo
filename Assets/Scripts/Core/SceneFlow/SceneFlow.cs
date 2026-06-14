@@ -5,7 +5,7 @@ public static class SceneFlow
 {
     private const string BootSceneName = "Boot";
     private const string TitleSceneName = "Title";
-    private const string GameSceneName = "Game";
+    private const string GameSceneName = "Stage1";
     private const string ResultSceneName = "Result";
 
     public static void LoadBoot()
@@ -24,6 +24,12 @@ public static class SceneFlow
     {
         Debug.Log("[SceneFlow] LoadGame requested.");
         SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
+
+        // Title からの遷移では直前に FadeOut 済みなので、Stage1 読み込み後に画面を明転させる。
+        if (FadeController.Instance != null)
+        {
+            FadeController.Instance.FadeIn();
+        }
     }
 
     public static void LoadResult()

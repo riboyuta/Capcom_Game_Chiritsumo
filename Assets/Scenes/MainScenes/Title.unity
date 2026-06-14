@@ -557,30 +557,37 @@ MonoBehaviour:
       _primaryKeyboardKey: 37
       _secondaryKeyboardKey: 63
       _gamepadButton: 12
+      _secondaryGamepadButton: 16
     _down:
       _primaryKeyboardKey: 33
       _secondaryKeyboardKey: 64
       _gamepadButton: 13
+      _secondaryGamepadButton: 16
     _left:
       _primaryKeyboardKey: 15
       _secondaryKeyboardKey: 61
       _gamepadButton: 14
+      _secondaryGamepadButton: 16
     _right:
       _primaryKeyboardKey: 18
       _secondaryKeyboardKey: 62
       _gamepadButton: 15
+      _secondaryGamepadButton: 16
     _submit:
       _primaryKeyboardKey: 1
       _secondaryKeyboardKey: 40
       _gamepadButton: 0
+      _secondaryGamepadButton: 16
     _cancel:
       _primaryKeyboardKey: 38
       _secondaryKeyboardKey: 60
       _gamepadButton: 1
+      _secondaryGamepadButton: 16
     _pause:
       _primaryKeyboardKey: 30
       _secondaryKeyboardKey: 0
       _gamepadButton: 4
+      _secondaryGamepadButton: 16
 --- !u!4 &855637338
 Transform:
   m_ObjectHideFlags: 0
@@ -1003,6 +1010,78 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1282024538}
   m_CullTransparentMesh: 1
+--- !u!1 &1477886433
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1477886436}
+  - component: {fileID: 1477886435}
+  - component: {fileID: 1477886434}
+  m_Layer: 0
+  m_Name: SceneAudio
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1477886434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1477886433}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccfece947a643bb4183b7bf097a7bf41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneAudioEmitter
+--- !u!114 &1477886435
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1477886433}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5e8adf38d7a5b04d9c9c0e075b59010, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioEventBinder
+  defaultSpatialOrigin: {fileID: 0}
+  warnMissingEvent: 1
+  warnMissingAudioManager: 1
+  bindings:
+  - eventName: SceneStart
+    actions:
+    - enabled: 0
+      audioId: BGM_title
+      playMode: 5
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 1
+      spatialOrigin: {fileID: 0}
+--- !u!4 &1477886436
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1477886433}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -17.9805, y: 51.21643, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1488504187
 GameObject:
   m_ObjectHideFlags: 0
@@ -1440,3 +1519,4 @@ SceneRoots:
   - {fileID: 855637338}
   - {fileID: 1679026805}
   - {fileID: 1102344663}
+  - {fileID: 1477886436}
