@@ -5,6 +5,7 @@ public static class SceneFlow
 {
     private const string BootSceneName = "Boot";
     private const string TitleSceneName = "Title";
+    private const string TutorialSceneName = "Tutorial";
     private const string GameSceneName = "Stage1";
     private const string ResultSceneName = "Result";
 
@@ -20,16 +21,22 @@ public static class SceneFlow
         SceneManager.LoadScene(TitleSceneName, LoadSceneMode.Single);
     }
 
-    public static void LoadGame()
+    public static void LoadTutorial()
     {
-        Debug.Log("[SceneFlow] LoadGame requested.");
-        SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
+        Debug.Log("[SceneFlow] LoadTutorial requested.");
+        SceneManager.LoadScene(TutorialSceneName, LoadSceneMode.Single);
 
-        // Title からの遷移では直前に FadeOut 済みなので、Stage1 読み込み後に画面を明転させる。
         if (FadeController.Instance != null)
         {
             FadeController.Instance.FadeIn();
         }
+    }
+
+    public static void LoadGame()
+    {
+        Debug.Log("[SceneFlow] LoadGame requested.");
+        SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
+        // FadeIn は Stage1 の GameRoot.Start() が担当する。
     }
 
     public static void LoadResult()
@@ -53,6 +60,10 @@ public static class SceneFlow
         switch (currentSceneName)
         {
             case TitleSceneName:
+                LoadTutorial();
+                break;
+
+            case TutorialSceneName:
                 LoadGame();
                 break;
 
@@ -81,8 +92,12 @@ public static class SceneFlow
                 LoadResult();
                 break;
 
-            case GameSceneName:
+            case TutorialSceneName:
                 LoadTitle();
+                break;
+
+            case GameSceneName:
+                LoadTutorial();
                 break;
 
             case ResultSceneName:
