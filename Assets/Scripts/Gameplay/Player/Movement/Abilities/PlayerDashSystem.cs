@@ -245,22 +245,14 @@ internal sealed class PlayerDashSystem
         deps.RuntimeState.isDashing = true;
         deps.RuntimeState.dashTimer = deps.Settings.Dash.Duration;
 
-        // 見た目用のダッシュ開始イベントを更新する。
+        // 見た目用の単発イベントとフード状態を更新する。
         deps.RuntimeState.justDashStartedThisFrame = true;
-        deps.RuntimeState.dashStartRequestId++;
+        deps.RuntimeState.requestHoodRecoverThisFrame = false;
+        deps.RuntimeState.hoodVisualState = PlayerHoodVisualState.Down;
 
-        // 空中ダッシュ時だけフードを下げる。
-        // 地上ダッシュ時は現在のフード状態を変更しない。
-        if (!deps.RuntimeState.isGrounded)
-        {
-            deps.RuntimeState.requestHoodRecoverThisFrame = false;
-            deps.RuntimeState.hoodVisualState = PlayerHoodVisualState.Down;
-
-            // フードを下げたときだけ世代を進める。
-            // 古い HoodRecover 完了が、新しい Down 状態を
-            // Up に戻してしまうことを防ぐ。
-            deps.RuntimeState.hoodVisualVersion++;
-        }
+        // 新しいダッシュでフード状態の世代を進める。
+        // これにより、古い HoodRecover 完了がこの Down 状態を Up に戻すのを防ぐ。
+        deps.RuntimeState.hoodVisualVersion++;
 
         if (deps.RuntimeState.isGrounded)
         {

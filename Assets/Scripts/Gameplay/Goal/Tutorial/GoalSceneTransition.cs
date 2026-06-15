@@ -1,11 +1,16 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 
 // ゴールオブジェクト用のシーン遷移スクリプト。
-// Player（Tag="Player"）が Trigger に接触すると Stage1 へ遷移する。
+// Player（Tag="Player"）が Trigger に接触すると指定されたシーンへ遷移する。
 [RequireComponent(typeof(Collider))]
 public sealed class GoalSceneTransition : MonoBehaviour
 {
+    [Header("Scene Settings")]
+    [SerializeField, Tooltip("遷移先のシーン名またはパス")]
+    private string targetScenePath = "Assets/Scenes/DebugScenes/Tomoya/DebugMapScenes/TestPlay/DebugMapTestPlay_v4";
+
     [Header("Fade Settings")]
     [SerializeField, Tooltip("フェードアウト時間（秒）")]
     private float fadeOutDuration = 1.0f;
@@ -31,26 +36,29 @@ public sealed class GoalSceneTransition : MonoBehaviour
         }
 
         isTriggered = true;
-        Debug.Log("[GoalSceneTransition] Player reached the goal. Transitioning to Stage1.");
+        Debug.Log($"[GoalSceneTransition] Player reached the goal. Transitioning to: {targetScenePath}");
 
-        StartCoroutine(TransitionToStage1());
+        StartCoroutine(TransitionToScene());
     }
 
-    private System.Collections.IEnumerator TransitionToStage1()
+    private System.Collections.IEnumerator TransitionToScene()
     {
+        // フェードアウト処理
         if (FadeController.Instance != null)
         {
-            bool fadeComplete = false;
-            FadeController.Instance.FadeOut(fadeOutDuration, onComplete: () => fadeComplete = true);
-            yield return new UnityEngine.WaitUntil(() => fadeComplete);
-            yield return new UnityEngine.WaitForSeconds(waitAfterFade);
+            FadeController.Instance.FadeOut(fadeOutDuration);
+            yield return new WaitForSeconds(fadeOutDuration + waitAfterFade);
         }
         else
         {
             Debug.LogWarning("[GoalSceneTransition] FadeController not found. Skipping fade effect.");
-            yield return new UnityEngine.WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.5f);
         }
 
-        SceneFlow.LoadGame();
+        // シーン名を取得（パスからファイル名のみ抽出）
+        string sceneName = System.IO.Path.GetFileNameWithoutExtension(targetScenePath);
+
+        Debug.Log($"[GoalSceneTransition] Loading scene: {sceneName}");
+        SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
     }
 }

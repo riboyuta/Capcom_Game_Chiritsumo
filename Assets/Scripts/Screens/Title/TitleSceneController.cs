@@ -223,7 +223,7 @@ public sealed class TitleSceneController : MonoBehaviour
 
         yield return new WaitForSeconds(titleFadeDuration);
 
-        SceneFlow.LoadTutorial();
+        SceneFlow.LoadGame();
     }
 
     // 終了遷移を開始する。

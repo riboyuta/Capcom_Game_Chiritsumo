@@ -21,7 +21,6 @@ internal readonly struct PlayerAnimationSnapshot
     public readonly bool justCrossedApex;
     public readonly bool justDashStarted;
     public readonly bool requestHoodRecover;
-    public readonly int dashStartRequestId;
 
     // 移動情報
     public readonly float velocityX;
@@ -45,7 +44,6 @@ internal readonly struct PlayerAnimationSnapshot
     // 古い HoodRecover 完了で、新しい Dash 後の Down 状態を Up にしないために使う。
     public readonly int hoodRecoverTargetVersion;
 
-
     // 現在のフード世代。
     public readonly int hoodVisualVersion;
 
@@ -65,7 +63,6 @@ internal readonly struct PlayerAnimationSnapshot
     justCrossedApex: false,
     justDashStarted: false,
     requestHoodRecover: false,
-    dashStartRequestId: 0,
     velocityX: 0f,
     velocityY: 0f,
     moveInputX: 0f,
@@ -93,7 +90,6 @@ internal readonly struct PlayerAnimationSnapshot
         bool justCrossedApex,
         bool justDashStarted,
         bool requestHoodRecover,
-        int dashStartRequestId,
         float velocityX,
         float velocityY,
         float moveInputX,
@@ -121,7 +117,6 @@ internal readonly struct PlayerAnimationSnapshot
         this.justCrossedApex = justCrossedApex;
         this.justDashStarted = justDashStarted;
         this.requestHoodRecover = requestHoodRecover;
-        this.dashStartRequestId = dashStartRequestId;
 
         this.velocityX = velocityX;
         this.velocityY = velocityY;
