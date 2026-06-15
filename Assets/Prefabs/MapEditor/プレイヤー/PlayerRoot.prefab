@@ -260,7 +260,7 @@ MonoBehaviour:
       ledgeDetectForwardDistance: 0.1
       ledgeDetectUpDistance: 0.4
       ledgeGroundCheckDistance: 0.3
-      ledgeClimbDuration: 0.3
+      ledgeClimbDuration: 0.24
       ledgeClimbForwardOffset: 0.04
       ledgeClimbUpOffset: 1
     dash:
