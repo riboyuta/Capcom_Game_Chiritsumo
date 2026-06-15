@@ -7,7 +7,9 @@ public enum SonarChargerMoveDetectMode
 {
     Input,          // 入力だけで判定（MoveInputDirectionの大きさ）
     PositionDelta,  // 位置差分だけで判定（前フレームからの移動量）
-    Either          // 入力または位置差分のいずれか（どちらかで検知）
+    Either,         // 入力または位置差分のいずれか（どちらかで検知）
+    IgnoreMovement  // 無条件検知
+
 }
 
 // SonarChargerEnemy のすべての調整パラメータ
@@ -92,6 +94,11 @@ public sealed class SonarChargerSettings
     [Tooltip("Alertで突進方向を確定した後、実際に突進するまでの短い硬直時間です。")]
     [Min(0.0f)]
     public float lockConfirmTime = 0.15f;
+
+    [Header("方向確定時の帯幅倍率")]
+    [Tooltip("LockConfirmに入った瞬間の突進予測帯の幅倍率です。硬直終了までに通常幅へ戻ります。")]
+    [Min(1.0f)]
+    public float lockConfirmBandWidthMultiplier = 1.3f;
 
     [Header("突進方向の最低距離")]
     [Tooltip("突進方向が短すぎる時の最低距離です。")]
@@ -242,6 +249,7 @@ public sealed class SonarChargerSettings
 
         alertTime = Mathf.Max(0.0f, source.alertTime);
         lockConfirmTime = Mathf.Max(0.0f, source.lockConfirmTime);
+        lockConfirmBandWidthMultiplier = Mathf.Max(1.0f, source.lockConfirmBandWidthMultiplier);
         minChargeTargetDistance = Mathf.Max(0.001f, source.minChargeTargetDistance);
         chargeSpeed = Mathf.Max(0.0f, source.chargeSpeed);
         cameraBoundaryPadding = Mathf.Max(0.0f, source.cameraBoundaryPadding);

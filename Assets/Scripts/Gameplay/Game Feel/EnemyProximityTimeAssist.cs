@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -6,10 +7,6 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [Header("参照 / ルーム管理")]
     [Tooltip("現在の部屋と部屋遷移状態を確認するための RoomManager です。未設定の場合は Awake で自動取得します。")]
     [SerializeField] private RoomManager roomManager;
-
-    [Header("参照 / 対象ルーム")]
-    [Tooltip("このヒットストップ・スロー補助を有効にする対象ルームです。未設定の場合はルーム制限なしで動作します。")]
-    [SerializeField] private Room targetRoom;
 
     [Header("参照 / プレイヤー")]
     [Tooltip("プレイヤーの位置、ダッシュ入力受付フレーム、ダッシュ回復処理を参照するための PlayerFacade です。未設定の場合は Awake で自動取得します。")]
@@ -23,49 +20,96 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     [Tooltip("追跡敵の前面位置を計算するために使用する BoxCollider です。プレイヤーとの前方距離判定に使います。")]
     [SerializeField] private BoxCollider handChaserBoxCollider;
 
-    [Header("初回 Stop 設定 / 発動距離")]
-    [Tooltip("初回補助を発動する、追跡敵の前面からプレイヤーまでの距離です。値が小さいほどギリギリで発動します。")]
-    [SerializeField, Min(0f)] private float firstTriggerDistance = 2f;
 
-    [Header("初回 Stop 設定 / 時間倍率")]
-    [Tooltip("初回補助中の Time.timeScale です。0 にすると完全停止、1 に近いほど通常速度に近づきます。")]
-    [SerializeField, Range(0f, 1f)] private float firstTimeScale = 0f;
+    [Header("対象ルーム / 有効ルーム一覧")]
+    [Tooltip("この敵接近時の時間補助を有効にする対象ルーム一覧です。1つ以上設定されている場合は、この一覧を優先して判定します。")]
+    [SerializeField] private Room[] targetRooms;
 
-    [Header("初回 Stop 設定 / 最大継続時間")]
-    [Tooltip("初回補助が自動終了するまでの最大時間です。unscaledDeltaTime 基準で計測します。")]
-    [SerializeField, Min(0f)] private float firstMaxDuration = 0.18f;
+    [Header("対象ルーム / 移行用")]
+    [Tooltip("旧設定用の対象ルームです。targetRooms に有効な Room がない場合だけ参照します。既存 Scene の参照保護のため残しています。")]
+    [SerializeField] private Room targetRoom;
 
-    [Header("2回目以降 Slow 設定 / 発動距離")]
-    [Tooltip("2回目以降の補助を発動する、追跡敵の前面からプレイヤーまでの距離です。")]
-    [SerializeField, Min(0f)] private float repeatTriggerDistance = 2.5f;
 
-    [Header("2回目以降 Slow 設定 / 時間倍率")]
-    [Tooltip("2回目以降の補助中の Time.timeScale です。0 に近いほど強いスローになります。")]
-    [SerializeField, Range(0f, 1f)] private float repeatTimeScale = 0.25f;
-
-    [Header("2回目以降 Slow 設定 / 最大継続時間")]
-    [Tooltip("2回目以降の補助が自動終了するまでの最大時間です。unscaledDeltaTime 基準で計測します。")]
-    [SerializeField, Min(0f)] private float repeatMaxDuration = 0.35f;
-
-    [Header("共通設定 / 補助開始待機時間")]
+    [Header("発動条件 / 追跡開始後の待機時間")]
     [Tooltip("追跡開始直後に補助が即発動しないようにする待機時間です。敵出現直後の誤発動防止に使います。")]
     [SerializeField, Min(0f)] private float assistEnableDelayAfterEnemySpawn = 0.25f;
 
-    [Header("共通設定 / クールダウン")]
+    [Header("発動条件 / クールダウン")]
     [Tooltip("補助終了後、次の補助が発動可能になるまでの待機時間です。連続発動を防ぎます。")]
     [SerializeField, Min(0f)] private float cooldownTime = 0.5f;
 
-    [Header("共通設定 / 最大補助回数")]
+    [Header("発動条件 / ダッシュ可否")]
+    [Tooltip("有効にすると、補助開始前にプレイヤーが今ダッシュ可能かを確認し、ダッシュ可能な場合だけ補助を開始します。")]
+    [SerializeField] private bool requireDashAvailableToStart;
+
+    [Header("発動条件 / 最大補助回数を使う")]
+    [Tooltip("有効にすると、1回の追跡中に発動できる補助回数を maxAssistCount で制限します。無効時は回数制限なしで発動します。")]
+    [SerializeField] private bool useAssistCountLimit = true;
+
+    [Header("発動条件 / 最大補助回数")]
     [Tooltip("1回の追跡中に発動できる補助の最大回数です。0 にすると補助は発動しません。")]
     [SerializeField, Min(0)] private int maxAssistCount = 3;
 
-    [Header("共通設定 / デバッグログ")]
+
+    [Header("補助開始時 / ダッシュ回復")]
+    [Tooltip("有効にすると、補助開始時にプレイヤーのダッシュを1回だけ回復します。チュートリアル用の救済として使います。")]
+    [SerializeField] private bool refillDashOnAssistStart = true;
+
+
+    [Header("1回目補助 / 発動距離")]
+    [Tooltip("初回補助を発動する、追跡敵の前面からプレイヤーまでの距離です。値が小さいほどギリギリで発動します。")]
+    [SerializeField, Min(0f)] private float firstTriggerDistance = 2f;
+
+    [Header("1回目補助 / 時間倍率")]
+    [Tooltip("初回補助中の Time.timeScale です。0 にすると完全停止、1 に近いほど通常速度に近づきます。")]
+    [SerializeField, Range(0f, 1f)] private float firstTimeScale = 0f;
+
+    [Header("2回目補助 / 発動距離")]
+    [Tooltip("2回目の補助を発動する、追跡敵の前面からプレイヤーまでの距離です。")]
+    [SerializeField, Min(0f)] private float repeatTriggerDistance = 2.5f;
+
+    [Header("2回目補助 / 時間倍率")]
+    [Tooltip("2回目の補助中の Time.timeScale です。0 に近いほど強い時間補助になります。")]
+    [SerializeField, Range(0f, 1f)] private float repeatTimeScale = 0.25f;
+
+    [Header("3回目以降補助 / 発動距離")]
+    [Tooltip("3回目以降の補助を発動する距離です。既存 Scene 維持のため、初期値は4mです。")]
+    [SerializeField, Min(0f)] private float thirdAndLaterTriggerDistance = 4f;
+
+    [Header("3回目以降補助 / 時間倍率")]
+    [Tooltip("3回目以降の補助中の Time.timeScale です。回数制限に達するまで、この値を使い続けます。")]
+    [SerializeField, Range(0f, 1f)] private float thirdAndLaterTimeScale = 0.15f;
+
+
+    [Header("解除条件 / ダッシュ入力で解除")]
+    [Tooltip("有効にすると、補助開始後にプレイヤーのダッシュ入力が受理された時点で補助を解除します。")]
+    [SerializeField] private bool releaseOnDashInput = true;
+
+    [Header("解除条件 / 最大継続時間を使う")]
+    [Tooltip("有効にすると、最大継続時間に達した時点で補助を解除します。時間計測は Time.timeScale の影響を受けません。")]
+    [SerializeField] private bool useMaxDuration = true;
+
+    [Header("解除条件 / 最大継続時間")]
+    [Tooltip("補助が自動終了するまでの共通最大時間です。1回目、2回目、3回目以降のすべてで使います。unscaledDeltaTime 基準で計測します。")]
+    [SerializeField, Min(0f)] private float maxDuration = 5f;
+
+    [Header("解除条件 / 距離で解除")]
+    [Tooltip("有効にすると、補助中に追跡敵の前面からプレイヤーまでの距離が解除距離以上になった時点で補助を解除します。")]
+    [SerializeField] private bool releaseOnDistance;
+
+    [Header("解除条件 / 距離解除しきい値")]
+    [Tooltip("距離解除を行う前面距離です。発動距離より大きい値にすると、補助開始直後の即解除を避けやすくなります。")]
+    [SerializeField, Min(0f)] private float releaseDistance = 5f;
+
+
+    [Header("表示 / ギズモ表示")]
+    [Tooltip("Scene ビューで追跡敵の範囲、前面位置、発動距離の目安を表示するかどうかです。")]
+    [SerializeField] private bool showGizmos = true;
+
+    [Header("表示 / デバッグログ")]
     [Tooltip("補助開始、補助終了、時間倍率復元などのログを Console に出力するかどうかです。")]
     [SerializeField] private bool showDebugLog;
 
-    [Header("共通設定 / ギズモ表示")]
-    [Tooltip("Scene ビューで追跡敵の範囲、前面位置、発動距離の目安を表示するかどうかです。")]
-    [SerializeField] private bool showGizmos = true;
 
     [Header("デバッグ確認 / 現在の前方距離")]
     [Tooltip("追跡敵の前面からプレイヤーまでの現在距離です。実行中の発動条件確認に使います。")]
@@ -90,6 +134,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     private bool isTimeOverrideActive;
     private float originalTimeScale = 1f;
     private float originalFixedDeltaTime;
+    private readonly List<EnemyProximityAssistTarget> assistTargetBuffer = new List<EnemyProximityAssistTarget>();
 
     private const float MinFixedDeltaTimeScale = 0.0001f;
 
@@ -102,12 +147,14 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     {
         firstTriggerDistance = Mathf.Max(0f, firstTriggerDistance);
         firstTimeScale = Mathf.Max(0f, firstTimeScale);
-        firstMaxDuration = Mathf.Max(0f, firstMaxDuration);
         repeatTriggerDistance = Mathf.Max(0f, repeatTriggerDistance);
+        thirdAndLaterTriggerDistance = Mathf.Max(0f, thirdAndLaterTriggerDistance);
         repeatTimeScale = Mathf.Max(0f, repeatTimeScale);
-        repeatMaxDuration = Mathf.Max(0f, repeatMaxDuration);
+        thirdAndLaterTimeScale = Mathf.Max(0f, thirdAndLaterTimeScale);
+        maxDuration = Mathf.Max(0f, maxDuration);
         assistEnableDelayAfterEnemySpawn = Mathf.Max(0f, assistEnableDelayAfterEnemySpawn);
         cooldownTime = Mathf.Max(0f, cooldownTime);
+        releaseDistance = Mathf.Max(0f, releaseDistance);
         maxAssistCount = Mathf.Max(0, maxAssistCount);
     }
 
@@ -120,7 +167,8 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        if (handChaserMovement == null || !handChaserMovement.IsActive)
+        bool hasActiveAssistSource = HasActiveAssistSource();
+        if (!hasActiveAssistSource)
         {
             ForceClearRunningAssist("chaser inactive");
             ResetChaseDetection();
@@ -133,7 +181,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        UpdateChaseDetection();
+        UpdateChaseDetection(hasActiveAssistSource);
 
         if (!hasDetectedChaseStart)
         {
@@ -151,7 +199,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        if (currentAssistCount >= maxAssistCount)
+        if (useAssistCountLimit && currentAssistCount >= maxAssistCount)
         {
             return;
         }
@@ -161,10 +209,13 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        float triggerDistance = currentAssistCount == 0 ? firstTriggerDistance : repeatTriggerDistance;
+        float triggerDistance = GetAssistTriggerDistance(currentAssistCount);
         if (currentFrontDistance <= triggerDistance)
         {
-            StartAssist(currentAssistCount == 0);
+            if (CanStartAssistByDashAvailability())
+            {
+                StartAssist(currentAssistCount == 0);
+            }
         }
     }
 
@@ -217,17 +268,46 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             return false;
         }
 
-        if (targetRoom == null)
-        {
-            return true;
-        }
-
-        return roomManager != null && roomManager.CurrentRoom == targetRoom;
+        return roomManager != null && IsCurrentRoomTarget(roomManager.CurrentRoom);
     }
 
-    private void UpdateChaseDetection()
+    private bool IsCurrentRoomTarget(Room currentRoom)
     {
-        if (handChaserMovement == null || !handChaserMovement.IsActive)
+        if (currentRoom == null)
+        {
+            return false;
+        }
+
+        bool hasTargetRooms = false;
+        if (targetRooms != null)
+        {
+            for (int i = 0; i < targetRooms.Length; i++)
+            {
+                Room candidate = targetRooms[i];
+                if (candidate == null)
+                {
+                    continue;
+                }
+
+                hasTargetRooms = true;
+                if (candidate == currentRoom)
+                {
+                    return true;
+                }
+            }
+        }
+
+        if (hasTargetRooms)
+        {
+            return false;
+        }
+
+        return targetRoom != null && currentRoom == targetRoom;
+    }
+
+    private void UpdateChaseDetection(bool hasActiveAssistSource)
+    {
+        if (!hasActiveAssistSource)
         {
             ResetChaseDetection();
             return;
@@ -255,15 +335,21 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
     {
         assistTimer += Time.unscaledDeltaTime;
 
-        if (playerFacade != null && playerFacade.LastAcceptedDashInputFrame > dashBaselineFrame)
+        if (releaseOnDashInput && playerFacade != null && playerFacade.LastAcceptedDashInputFrame > dashBaselineFrame)
         {
             EndAssist("dash input accepted");
             return;
         }
 
-        if (assistTimer >= activeAssistMaxDuration)
+        if (useMaxDuration && assistTimer >= activeAssistMaxDuration)
         {
             EndAssist("max duration");
+            return;
+        }
+
+        if (ShouldReleaseByDistance())
+        {
+            EndAssist("release distance");
         }
     }
 
@@ -275,10 +361,13 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         }
 
         dashBaselineFrame = playerFacade.LastAcceptedDashInputFrame;
-        playerFacade.TryRefillDash(DashRefillReason.TutorialAssist);
+        if (refillDashOnAssistStart)
+        {
+            playerFacade.TryRefillDash(DashRefillReason.TutorialAssist);
+        }
 
-        float targetTimeScale = isFirstAssist ? firstTimeScale : repeatTimeScale;
-        activeAssistMaxDuration = isFirstAssist ? firstMaxDuration : repeatMaxDuration;
+        float targetTimeScale = GetAssistTimeScale(currentAssistCount);
+        activeAssistMaxDuration = maxDuration;
         assistTimer = 0f;
         isAssisting = true;
         currentAssistCount++;
@@ -292,8 +381,63 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
         if (showDebugLog)
         {
-            Debug.Log($"[TimeHitStopSlow] Assist started. type={(isFirstAssist ? "Stop" : "Slow")}, count={currentAssistCount}, distance={currentFrontDistance:F3}, timeScale={targetTimeScale:F3}", this);
+            Debug.Log($"[EnemyProximityTimeAssist] Assist started. type={(isFirstAssist ? "First" : "Repeat")}, count={currentAssistCount}, distance={currentFrontDistance:F3}, timeScale={targetTimeScale:F3}", this);
         }
+    }
+
+    private bool CanStartAssistByDashAvailability()
+    {
+        if (!requireDashAvailableToStart)
+        {
+            return true;
+        }
+
+        // ダッシュ可能な場面だけ時間補助を開始し、回復やTimeScale変更へ入る前に止める。
+        return playerFacade != null && playerFacade.CanUseDashNow;
+    }
+
+    private float GetAssistTimeScale(int assistCountBeforeStart)
+    {
+        // 発動前の回数を基準に、1回目・2回目・3回目以降の時間補助強度を選ぶ。
+        if (assistCountBeforeStart <= 0)
+        {
+            return firstTimeScale;
+        }
+
+        if (assistCountBeforeStart == 1)
+        {
+            return repeatTimeScale;
+        }
+
+        return thirdAndLaterTimeScale;
+    }
+
+    private float GetAssistTriggerDistance(int assistCountBeforeStart)
+    {
+        // 発動前の回数を基準に、既存の2回目以降距離を保ちながら3回目以降の個別設定へ切り替える。
+        if (assistCountBeforeStart <= 0)
+        {
+            return firstTriggerDistance;
+        }
+
+        if (assistCountBeforeStart == 1)
+        {
+            return repeatTriggerDistance;
+        }
+
+        return thirdAndLaterTriggerDistance;
+
+    }
+
+    private bool ShouldReleaseByDistance()
+    {
+        if (!releaseOnDistance)
+        {
+            return false;
+        }
+
+        // 既存の前面距離計算を使い、敵から十分離れたときだけ補助を解除する。
+        return TryUpdateFrontDistance() && currentFrontDistance >= releaseDistance;
     }
 
     private void EndAssist(string reason)
@@ -308,7 +452,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
         if (showDebugLog)
         {
-            Debug.Log($"[TimeHitStopSlow] Assist ended. reason={reason}, cooldown={cooldownTimer:F3}", this);
+            Debug.Log($"[EnemyProximityTimeAssist] Assist ended. reason={reason}, cooldown={cooldownTimer:F3}", this);
         }
     }
 
@@ -328,7 +472,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
         if (showDebugLog)
         {
-            Debug.Log($"[TimeHitStopSlow] Running assist force-cleared. reason={reason}", this);
+            Debug.Log($"[EnemyProximityTimeAssist] Running assist force-cleared. reason={reason}", this);
         }
     }
 
@@ -345,23 +489,119 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
         if (showDebugLog)
         {
-            Debug.Log($"[TimeHitStopSlow] Time scale restored. reason={reason}, timeScale={originalTimeScale:F3}, fixedDeltaTime={originalFixedDeltaTime:F5}", this);
+            Debug.Log($"[EnemyProximityTimeAssist] Time scale restored. reason={reason}, timeScale={originalTimeScale:F3}, fixedDeltaTime={originalFixedDeltaTime:F5}", this);
         }
     }
 
     private bool TryUpdateFrontDistance()
     {
-        if (handChaserBoxCollider == null || playerFacade == null)
+        if (playerFacade == null)
         {
             return false;
         }
 
-        if (!TryGetMoveAxis(out Vector3 axis))
+        if (TryUpdateMarkerFrontDistance(out float nearestFrontDistance))
+        {
+            currentFrontDistance = nearestFrontDistance;
+            return true;
+        }
+
+        if (!TryUpdateLegacyFrontDistance(out nearestFrontDistance))
         {
             return false;
         }
 
-        Bounds bounds = handChaserBoxCollider.bounds;
+        currentFrontDistance = nearestFrontDistance;
+        return true;
+    }
+
+    private bool HasActiveAssistSource()
+    {
+        if (TryGetCurrentRoom(out Room currentRoom))
+        {
+            EnemyProximityAssistTarget.CollectValidTargets(currentRoom, assistTargetBuffer);
+            if (assistTargetBuffer.Count > 0)
+            {
+                return true;
+            }
+        }
+        else
+        {
+            assistTargetBuffer.Clear();
+        }
+
+        return handChaserMovement != null && handChaserMovement.IsActive;
+    }
+
+    private bool TryUpdateMarkerFrontDistance(out float nearestFrontDistance)
+    {
+        nearestFrontDistance = 0f;
+
+        if (!TryGetCurrentRoom(out Room currentRoom))
+        {
+            assistTargetBuffer.Clear();
+            return false;
+        }
+
+        EnemyProximityAssistTarget.CollectValidTargets(currentRoom, assistTargetBuffer);
+
+        bool hasDistance = false;
+        for (int i = 0; i < assistTargetBuffer.Count; i++)
+        {
+            EnemyProximityAssistTarget target = assistTargetBuffer[i];
+            if (target == null)
+            {
+                continue;
+            }
+
+            if (!TryCalculateFrontDistance(target.Movement, target.Collider, out float frontDistance))
+            {
+                continue;
+            }
+
+            if (!hasDistance || frontDistance < nearestFrontDistance)
+            {
+                nearestFrontDistance = frontDistance;
+                hasDistance = true;
+            }
+        }
+
+        return hasDistance;
+    }
+
+    private bool TryUpdateLegacyFrontDistance(out float frontDistance)
+    {
+        frontDistance = 0f;
+
+        if (!TryCalculateFrontDistance(handChaserMovement, handChaserBoxCollider, out frontDistance))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool TryGetCurrentRoom(out Room currentRoom)
+    {
+        currentRoom = roomManager != null ? roomManager.CurrentRoom : null;
+        return currentRoom != null;
+    }
+
+    private bool TryCalculateFrontDistance(HandChaserMovement movement, BoxCollider boxCollider, out float frontDistance)
+    {
+        frontDistance = 0f;
+
+        if (movement == null || boxCollider == null || playerFacade == null)
+        {
+            return false;
+        }
+
+        if (!TryGetMoveAxis(movement, out Vector3 axis))
+        {
+            return false;
+        }
+
+        Bounds bounds = boxCollider.bounds;
         Vector3 absAxis = new Vector3(Mathf.Abs(axis.x), Mathf.Abs(axis.y), Mathf.Abs(axis.z));
         float projectedHalfExtent =
             bounds.extents.x * absAxis.x +
@@ -370,20 +610,25 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
         float frontPlane = Vector3.Dot(bounds.center, axis) + projectedHalfExtent;
         float playerPlane = Vector3.Dot(playerFacade.transform.position, axis);
-        currentFrontDistance = playerPlane - frontPlane;
+        frontDistance = playerPlane - frontPlane;
         return true;
     }
 
     private bool TryGetMoveAxis(out Vector3 axis)
     {
+        return TryGetMoveAxis(handChaserMovement, out axis);
+    }
+
+    private bool TryGetMoveAxis(HandChaserMovement movement, out Vector3 axis)
+    {
         axis = Vector3.right;
 
-        if (handChaserMovement == null)
+        if (movement == null)
         {
             return false;
         }
 
-        switch (handChaserMovement.Direction)
+        switch (movement.Direction)
         {
             case MoveDirection.Right:
                 axis = Vector3.right;
@@ -398,7 +643,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
                 axis = Vector3.down;
                 break;
             case MoveDirection.Custom:
-                axis = handChaserMovement.CustomMoveAxis;
+                axis = movement.CustomMoveAxis;
                 break;
             default:
                 axis = Vector3.right;

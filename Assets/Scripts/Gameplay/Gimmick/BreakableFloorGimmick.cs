@@ -326,10 +326,7 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
             sequenceCoroutine = StartCoroutine(BreakSequence());
 
             // SE:崩壊を始めた瞬間
-            if (AudioManager.Instance != null)
-            {
-                AudioManager.Instance.PlayOverlap("SFX_gimmick_breakable_enter");
-            }
+            AudioEvent.Emit(this, "BreakStart");
 
             // アニメーション再生
             for (int i = 0; i < 6; i++)
@@ -392,10 +389,7 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
         }
 
         // SE:壊れる瞬間
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlayOverlap("SFX_gimmick_breakable_break");
-        }
+        AudioEvent.Emit(this, "Break");
     }
 
     private void RespawnFloor()
@@ -408,4 +402,5 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
             r.enabled = true;
         }
     }
+
 }

@@ -166,7 +166,7 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         }
 
         isPlayerInsideSafeZone = false;
-        StopSpawnWarning();
+        FadeOutSpawnWarning();
 
         StartSpawnAfterSafeZoneExit();
     }
@@ -258,6 +258,9 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         }
 
         targetEnemy.BeginChase();
+
+        // BeginChase 内でスポーン位置へ移動する場合があるため、移動後の位置から通知する。
+        AudioEvent.EmitAt(this, "Spawn", targetEnemy.transform.position);
     }
 
     private void StartSpawnWarningIfNeeded()
@@ -284,6 +287,16 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         }
 
         spawnWarningView.StopAndHide();
+    }
+
+    private void FadeOutSpawnWarning()
+    {
+        if (spawnWarningView == null)
+        {
+            return;
+        }
+
+        spawnWarningView.FadeOutAndHide();
     }
 
     public void CaptureInitialState()

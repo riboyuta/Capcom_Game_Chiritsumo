@@ -19,6 +19,7 @@ internal sealed class PlayerDeathCoordinator
     private readonly PlayerMovementSettings movementSettings;
     private readonly Action stopAllRumble;
     private readonly Action stopAllSounds;
+    private readonly Action playRespawnSound;
     private readonly Action resetVisualOneShotFlags;
     private readonly Action<Vector3> resetShadowHistoryForRespawn;
     private readonly Action<string> logRespawn;
@@ -33,6 +34,7 @@ internal sealed class PlayerDeathCoordinator
 
     private bool isDead;
     private bool isDeathSequencePlaying;
+    private bool didRespawnThisSequence;
 
     internal bool IsDead => isDead;
     internal bool IsDeadState => isDead;
@@ -52,6 +54,7 @@ internal sealed class PlayerDeathCoordinator
         PlayerMovementSettings movementSettings,
         Action stopAllRumble,
         Action stopAllSounds,
+        Action playRespawnSound,
         Action resetVisualOneShotFlags,
         Action<Vector3> resetShadowHistoryForRespawn,
         Action<string> logRespawn,
@@ -70,6 +73,7 @@ internal sealed class PlayerDeathCoordinator
         this.movementSettings = movementSettings;
         this.stopAllRumble = stopAllRumble;
         this.stopAllSounds = stopAllSounds;
+        this.playRespawnSound = playRespawnSound;
         this.resetVisualOneShotFlags = resetVisualOneShotFlags;
         this.resetShadowHistoryForRespawn = resetShadowHistoryForRespawn;
         this.logRespawn = logRespawn;
@@ -80,6 +84,7 @@ internal sealed class PlayerDeathCoordinator
     {
         isDead = true;
         isDeathSequencePlaying = true;
+        didRespawnThisSequence = false;
         lastDeathCause = deathCause;
         CaptureDeathFacingForVisual();
 
@@ -151,6 +156,7 @@ internal sealed class PlayerDeathCoordinator
         }
 
         ResetCameraToWorldDefaults();
+        BeginCameraDeathReturnFollow();
 
         LogRespawn($"Respawn checkpoint resolved: {checkpoint.name}");
         RespawnAt(checkpoint.position);
@@ -174,9 +180,17 @@ internal sealed class PlayerDeathCoordinator
             LogRespawn("Respawn blink open complete");
         }
 
+        if (didRespawnThisSequence)
+        {
+            playRespawnSound?.Invoke();
+        }
+
+        EndCameraDeathReturnFollow();
+
         respawnSequenceCoroutine = null;
         isDead = false;
         isDeathSequencePlaying = false;
+        didRespawnThisSequence = false;
     }
 
     private void ResetCameraToWorldDefaults()
@@ -193,6 +207,26 @@ internal sealed class PlayerDeathCoordinator
         }
 
         playerCameraController.ResetRuntimeStateForRespawn();
+    }
+
+    private void BeginCameraDeathReturnFollow()
+    {
+        if (playerCameraController == null)
+        {
+            return;
+        }
+
+        playerCameraController.BeginDeathReturnFollow();
+    }
+
+    private void EndCameraDeathReturnFollow()
+    {
+        if (playerCameraController == null)
+        {
+            return;
+        }
+
+        playerCameraController.EndDeathReturnFollow();
     }
 
     private void PlayDamageDeathIntro()
@@ -268,6 +302,7 @@ internal sealed class PlayerDeathCoordinator
 
         Physics.SyncTransforms();
 
+        didRespawnThisSequence = true;
         resetShadowHistoryForRespawn?.Invoke(worldPosition);
     }
 
