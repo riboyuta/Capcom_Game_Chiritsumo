@@ -210,7 +210,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         }
 
         float triggerDistance = GetAssistTriggerDistance(currentAssistCount);
-        if (currentFrontDistance <= triggerDistance)
+        if (currentFrontDistance >= 0f && currentFrontDistance <= triggerDistance)
         {
             if (CanStartAssistByDashAvailability())
             {
@@ -555,6 +555,11 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             }
 
             if (!TryCalculateFrontDistance(target.Movement, target.Collider, out float frontDistance))
+            {
+                continue;
+            }
+
+            if (frontDistance < 0f)
             {
                 continue;
             }
