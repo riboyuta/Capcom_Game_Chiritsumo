@@ -7,6 +7,7 @@ using UnityEngine;
 public sealed class SpringPad : MonoBehaviour, IRespawnResettable
 {
     private const string InteractedTriggerName = "Interacted";
+    private const string SpringPadSfxName = "SFX_gimmick_springpad";
     private const float UpwardGravityModifierThreshold = 0.5f;
 
     [Header("射出: 距離")]
@@ -53,10 +54,6 @@ public sealed class SpringPad : MonoBehaviour, IRespawnResettable
     [Tooltip("発動面から触れたかを判定するしきい値です。0.5なら約60度以内、0.707なら約45度以内です。")]
     [SerializeField, Range(0f, 1f)] private float activationNormalThreshold = 0.5f;
 
-    [Header("発動判定: プレイヤーレイヤー")]
-    [Tooltip("バネを発動させるレイヤーマスクです。プレイヤー専用レイヤーを指定してください。")]
-    [SerializeField] private LayerMask playerLayers = ~0;
-
     [Header("アニメーション")]
     [Tooltip("使用するアニメーターを入れる")]
     [SerializeField] private Animator anim;
@@ -72,7 +69,6 @@ public sealed class SpringPad : MonoBehaviour, IRespawnResettable
     private void Awake()
     {
         springCollider = GetComponent<Collider>();
-
     }
 
     public void CaptureInitialState()
@@ -152,11 +148,6 @@ public sealed class SpringPad : MonoBehaviour, IRespawnResettable
     private bool TryGetPlayerFacade(Collider hitCollider, out PlayerFacade facade)
     {
         facade = null;
-
-        if (((1 << hitCollider.gameObject.layer) & playerLayers) == 0)
-        {
-            return false;
-        }
 
         Rigidbody attachedRigidbody = hitCollider.attachedRigidbody;
         if (attachedRigidbody == null)
@@ -268,6 +259,9 @@ public sealed class SpringPad : MonoBehaviour, IRespawnResettable
             anim.SetTrigger(InteractedTriggerName);
         }
 
-        AudioEvent.Emit(this, "Bounce");
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayOverlap(SpringPadSfxName);
+        }
     }
 }
