@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 8807462818072717450}
   - component: {fileID: -4463154858334726804}
   - component: {fileID: -109774119730571093}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: Gimmick_Springpad
   m_TagString: Untagged
   m_Icon: {fileID: 0}

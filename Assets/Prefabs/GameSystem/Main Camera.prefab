@@ -182,7 +182,7 @@ MonoBehaviour:
   diagonalDashLookAheadMultiplier: 0
   dashStartMicroShakeEnabled: 1
   dashStartMicroShakeDuration: 0.04
-  dashStartMicroShakeAmplitude: 0.15
+  dashStartMicroShakeAmplitude: 0.1
   orthographicSizeSmoothTime: 0.1
   defaultRoomTransitionDuration: 1
   roomTransitionCompleteDistance: 0.005
