@@ -451,6 +451,7 @@ internal bool CanAcceptFixedLaunch(in PlayerFixedLaunchRequest request)
             movementSettings,
             () => vibrationController?.StopAllRumble(),
             () => audioController?.StopAllSounds(),
+            PlayRespawnSound,
             () =>
             {
                 justLandedThisFrame = false;
