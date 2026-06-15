@@ -297,7 +297,7 @@ MonoBehaviour:
       cornerCorrectionUpCheckDistance: 5
       cornerCorrectionProbeCount: 4
     stomp:
-      useStomp: 1
+      useStomp: 0
       useKeyboardDownOnly: 1
       preferStompOverDownStepDash: 0
       allowStartWhileDashing: 0
