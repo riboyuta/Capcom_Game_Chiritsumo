@@ -96,6 +96,10 @@ public sealed class PlayerModelView : MonoBehaviour
     [Tooltip("現在反映しているフード見た目状態です。")]
     [SerializeField] private PlayerHoodVisualState currentHoodState = PlayerHoodVisualState.Up;
 
+    [Header("デバッグ(Runtime): Dash")]
+    [Tooltip("最後に処理したダッシュ開始イベントIDです。")]
+    [SerializeField] private int lastHandledDashStartRequestId;
+
     [Header("デバッグ(Runtime): 状態経過時間")]
     [Tooltip("現在のアニメーション状態に入ってからの経過時間です。")]
     [SerializeField] private float currentStateElapsed;
@@ -199,6 +203,7 @@ public sealed class PlayerModelView : MonoBehaviour
         wallJumpLockedFacing = 1;
         previousDesiredState = PlayerAnimationState.Idle;
 
+        lastHandledDashStartRequestId = 0;
         lastHandledHoodRecoverRequestId = 0;
         playingHoodRecoverTargetVersion = 0;
     }
@@ -216,26 +221,59 @@ public sealed class PlayerModelView : MonoBehaviour
         currentStateElapsed = resolver.CurrentStateElapsed;
         currentStateLockRemaining = resolver.CurrentStateLockRemaining;
 
+        bool restartDashAnimation =
+            desiredState == PlayerAnimationState.Dash &&
+            snapshot.isDashing &&
+            snapshot.dashStartRequestId != 0 &&
+            snapshot.dashStartRequestId != lastHandledDashStartRequestId;
+
+        if (restartDashAnimation)
+        {
+            lastHandledDashStartRequestId = snapshot.dashStartRequestId;
+        }
+
         TickWallJumpFacingLock(snapshot.facing, desiredState, Time.deltaTime);
 
         int displayFacing = ResolveDisplayFacing(snapshot.facing);
 
-        ApplyBaseAnimation(desiredState);
+        ApplyBaseAnimation(desiredState, restartDashAnimation);
         ApplyModelTransform(displayFacing, desiredState);
 
         TickHoodRecover(snapshot, Time.deltaTime);
         ApplyHoodState(GetDisplayHoodState(snapshot));
     }
 
-    private void ApplyBaseAnimation(PlayerAnimationState nextState)
+    private void ApplyBaseAnimation(PlayerAnimationState nextState,　bool restartSameState)
     {
-        if (!TryResolveAnimatorState(nextState, out int stateHash, out PlayerAnimationState resolvedState, out string resolvedName))
+        if (!TryResolveAnimatorState(
+                nextState,
+                out int stateHash,
+                out PlayerAnimationState resolvedState,
+                out string resolvedName))
         {
             return;
         }
 
-        if (hasAnimatorState && currentState == nextState && currentAnimatorStateHash == stateHash)
+        bool isSameState =
+            hasAnimatorState &&
+            currentState == nextState &&
+            currentAnimatorStateHash == stateHash;
+
+        if (isSameState)
         {
+            if (!restartSameState || resolvedState != nextState)
+            {
+                return;
+            }
+
+            // 高速連打で Dash から別ステートへ切り替わる前に
+            // 次の Dash が始まった場合も、先頭から再生し直す。
+            animator.Play(
+                stateHash,
+                baseLayerIndex,
+                0f);
+
+            playingAnimatorStateName = resolvedName;
             return;
         }
 
