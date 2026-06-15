@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 6345188802289374951}
   - component: {fileID: 5446113985601809809}
   - component: {fileID: -8577416019632356907}
+  - component: {fileID: 8975578643097768172}
   m_Layer: 0
   m_Name: Gimmick_Dashrefill
   m_TagString: Untagged
@@ -146,3 +147,30 @@ MonoBehaviour:
     icon: {fileID: 0}
   gimmickType: 0
   gimmickID: 0
+--- !u!114 &8975578643097768172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8439962590618837852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5e8adf38d7a5b04d9c9c0e075b59010, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioEventBinder
+  defaultSpatialOrigin: {fileID: 0}
+  warnMissingEvent: 1
+  warnMissingAudioManager: 1
+  bindings:
+  - eventName: Consumed
+    actions:
+    - enabled: 1
+      audioId: SE_GIMMICK_DASHHEAL
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}

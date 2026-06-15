@@ -1,143 +1,102 @@
-using System;
 using UnityEngine;
 
-// 同じ GameObject に複数付けて、音声制御が競合しないようにする。
 [DisallowMultipleComponent]
-
-// PlayerController と同一 GameObject 上での利用を前提にする。
 [RequireComponent(typeof(PlayerController))]
 public sealed class PlayerAudioSettings : MonoBehaviour
 {
-    [Header("音声コントローラー参照")]
-    [Tooltip("プレイヤー操作に応じた音声を再生する PlayerController 参照です。未設定時は Awake 初期化時に同一 GameObject から取得を試みます。")]
-    [SerializeField]
-    private PlayerController playerController;
+    private enum WalkAudioMode
+    {
+        WalkInterval,
+        WalkStartStop
+    }
 
-    // ======================================================================
-    //  イベント有効化トグル
-    // ======================================================================
+    [Header("参照")]
+    [Tooltip("音声イベントを通知する対象の PlayerController です。未設定の場合は同じ GameObject から自動取得します。")]
+    [SerializeField] private PlayerController playerController;
 
-    [Header("音声イベント有効化: ジャンプ")]
-    [Tooltip("有効時、通常ジャンプ開始時に音声を再生します。")]
-    [SerializeField]
-    private bool enableJump = true;
+    [Header("ジャンプ音を使う")]
+    [Tooltip("通常ジャンプに成功したとき、Jump イベントを通知するかを設定します。")]
+    [SerializeField] private bool enableJump = true;
 
-    [Header("音声イベント有効化: 壁ジャンプ")]
-    [Tooltip("有効時、壁ジャンプ発生時に音声を再生します。")]
-    [SerializeField]
-    private bool enableWallJump = true;
+    [Header("壁ジャンプ音を使う")]
+    [Tooltip("壁キックまたは壁捕まりジャンプに成功したとき、WallJump イベントを通知するかを設定します。")]
+    [SerializeField] private bool enableWallJump = true;
 
-    [Header("音声イベント有効化: 通常着地")]
-    [Tooltip("有効時、通常着地時に音声を再生します。")]
-    [SerializeField]
-    private bool enableNormalLanding = true;
+    [Header("通常着地音を使う")]
+    [Tooltip("強い着地条件を満たさない着地時に、Land イベントを通知するかを設定します。")]
+    [SerializeField] private bool enableNormalLanding = true;
 
-    [Header("音声イベント有効化: 強着地")]
-    [Tooltip("有効時、強着地判定を満たした着地で強着地用の音声を再生します。")]
-    [SerializeField]
-    private bool enableStrongLanding = true;
+    [Header("強い着地音を使う")]
+    [Tooltip("滞空時間や落下距離の条件を満たした着地時に、StrongLand イベントを通知するかを設定します。")]
+    [SerializeField] private bool enableStrongLanding = true;
 
-    [Header("音声イベント有効化: 壁滑り")]
-    [Tooltip("有効時、壁滑り中にループ音声を再生します。")]
-    [SerializeField]
-    private bool enableWallSlide = true;
+    [Header("壁滑り音を使う")]
+    [Tooltip("壁滑りの開始時に WallSlideStart、終了時に WallSlideStop イベントを通知するかを設定します。")]
+    [SerializeField] private bool enableWallSlide = true;
 
-    [Header("音声イベント有効化: 地上ダッシュ")]
-    [Tooltip("有効時、地上でのダッシュ開始時に音声を再生します。")]
-    [SerializeField]
-    private bool enableGroundDash = true;
+    [Header("地上ダッシュ音を使う")]
+    [Tooltip("接地中にダッシュを開始したとき、GroundDash イベントを通知するかを設定します。")]
+    [SerializeField] private bool enableGroundDash = true;
 
-    [Header("音声イベント有効化: 空中ダッシュ")]
-    [Tooltip("有効時、空中でのダッシュ開始時に音声を再生します。")]
-    [SerializeField]
-    private bool enableAirDash = true;
+    [Header("空中ダッシュ音を使う")]
+    [Tooltip("空中でダッシュを開始したとき、AirDash イベントを通知するかを設定します。")]
+    [SerializeField] private bool enableAirDash = true;
 
-    [Header("音声イベント有効化: 死亡(Damage)")]
-    [Tooltip("有効時、Damage 死亡開始時に音声を再生します。")]
-    [SerializeField]
-    private bool enableDamageDeath = true;
+    [Header("ダメージ死亡音を使う")]
+    [Tooltip("ダメージ扱いで死亡したとき、DamageDeath イベントを通知するかを設定します。")]
+    [SerializeField] private bool enableDamageDeath = true;
 
-    [Header("音声イベント有効化: 死亡(Hazard)")]
-    [Tooltip("有効時、Hazard 死亡開始時に音声を再生します。")]
-    [SerializeField]
-    private bool enableHazardDeath = true;
+    [Header("ハザード死亡音を使う")]
+    [Tooltip("落下や即死ギミックなどのハザード扱いで死亡したとき、HazardDeath イベントを通知するかを設定します。")]
+    [SerializeField] private bool enableHazardDeath = true;
 
-    // ======================================================================
-    //  Audio ID 設定
-    // ======================================================================
+    [Header("リスポーン音を使う")]
+    [Tooltip("チェックポイントへのリスポーン演出が完了したとき、Respawn イベントを通知するかを設定します。")]
+    [SerializeField] private bool enableRespawn = true;
 
-    [Header("Audio ID: ジャンプ")]
-    [Tooltip("通常ジャンプ時に再生する AudioDef の ID です。")]
-    [SerializeField]
-    private string jumpAudioId = "";
+    [Header("歩行音を使う")]
+    [Tooltip("接地中に横移動している間、歩行音イベントを通知するかを設定します。通知方式は下の歩行音の再生方式で選びます。")]
+    [SerializeField] private bool enableWalk = true;
 
-    [Header("Audio ID: 壁ジャンプ")]
-    [Tooltip("壁ジャンプ時に再生する AudioDef の ID です。")]
-    [SerializeField]
-    private string wallJumpAudioId = "";
+    [Header("歩行音の再生方式")]
+    [Tooltip("歩行音の通知方式です。短い足音素材は Walk を一定間隔で通知、長い歩行音素材は WalkStart / WalkStop で開始と停止を分けます。")]
+    [SerializeField] private WalkAudioMode walkAudioMode = WalkAudioMode.WalkStartStop;
 
-    [Header("Audio ID: 通常着地")]
-    [Tooltip("通常着地時に再生する AudioDef の ID です。")]
-    [SerializeField]
-    private string normalLandingAudioId = "";
+    [Header("登り音を使う")]
+    [Tooltip("壁捕まり中の上下移動、または崖乗り上げ中に、一定間隔で Climb イベントを通知するかを設定します。")]
+    [SerializeField] private bool enableClimb = true;
 
-    [Header("Audio ID: 強着地")]
-    [Tooltip("強着地時に再生する AudioDef の ID です。")]
-    [SerializeField]
-    private string strongLandingAudioId = "";
+    [Header("掴み音を使う")]
+    [Tooltip("壁捕まり状態に入った瞬間、Grab イベントを通知するかを設定します。")]
+    [SerializeField] private bool enableGrab = true;
 
-    [Header("Audio ID: 壁滑り")]
-    [Tooltip("壁滑り中にループ再生する AudioDef の ID です。")]
-    [SerializeField]
-    private string wallSlideAudioId = "";
+    [Header("強い着地: 滞空時間条件を使う")]
+    [Tooltip("StrongLand 判定に、ジャンプや落下で空中にいた時間の下限を使うかを設定します。")]
+    [SerializeField] private bool useStrongLandingMinAirTime = true;
 
-    [Header("Audio ID: 地上ダッシュ")]
-    [Tooltip("地上ダッシュ開始時に再生する AudioDef の ID です。")]
-    [SerializeField]
-    private string groundDashAudioId = "";
+    [Header("強い着地: 最小滞空時間")]
+    [Tooltip("StrongLand とみなすために必要な最小滞空時間です。値が大きいほど、短い落下では通常着地音になります。")]
+    [SerializeField, Min(0f)] private float strongLandingMinAirTime = 0.20f;
 
-    [Header("Audio ID: 空中ダッシュ")]
-    [Tooltip("空中ダッシュ開始時に再生する AudioDef の ID です。")]
-    [SerializeField]
-    private string airDashAudioId = "";
+    [Header("強い着地: 落下距離条件を使う")]
+    [Tooltip("StrongLand 判定に、空中へ出てから着地するまでの落下距離下限を使うかを設定します。")]
+    [SerializeField] private bool useStrongLandingMinFallHeight = true;
 
-    [Header("Audio ID: 死亡(Damage)")]
-    [Tooltip("Damage 死亡開始時に再生する AudioDef の ID です。")]
-    [SerializeField]
-    private string damageDeathAudioId = "";
+    [Header("強い着地: 最小落下距離")]
+    [Tooltip("StrongLand とみなすために必要な最小落下距離です。値が大きいほど、高い場所から落ちたときだけ強い着地音になります。")]
+    [SerializeField, Min(0f)] private float strongLandingMinFallHeight = 6.00f;
 
-    [Header("Audio ID: 死亡(Hazard)")]
-    [Tooltip("Hazard 死亡開始時に再生する AudioDef の ID です。")]
-    [SerializeField]
-    private string hazardDeathAudioId = "";
+    [Header("歩行音の通知間隔")]
+    [Tooltip("歩行音の再生方式が WalkInterval のときに、Walk イベントを連続通知する間隔です。0.01 秒未満にはできません。")]
+    [SerializeField, Min(0.01f)] private float walkInterval = 0.30f;
 
-    // ======================================================================
-    //  強着地判定しきい値
-    // ======================================================================
+    [Header("登り音の通知間隔")]
+    [Tooltip("Climb イベントを連続通知する間隔です。壁登りや崖乗り上げ中の音のテンポを調整します。0.01 秒未満にはできません。")]
+    [SerializeField, Min(0.01f)] private float climbInterval = 0.35f;
 
-    [Header("強着地判定: 空中時間チェック有効")]
-    [Tooltip("有効時、強着地判定に最小空中時間の条件を使用します。")]
-    [SerializeField]
-    private bool useStrongLandingMinAirTime = true;
-
-    [Header("強着地判定: 最小空中時間")]
-    [Tooltip("強着地として扱うために必要な最小空中時間(秒)です。")]
-    [SerializeField, Min(0f)]
-    private float strongLandingMinAirTime = 0.20f;
-
-    [Header("強着地判定: 落差チェック有効")]
-    [Tooltip("有効時、強着地判定に最高点から着地点までの落差条件を使用します。")]
-    [SerializeField]
-    private bool useStrongLandingMinFallHeight = true;
-
-    [Header("強着地判定: 最小落差")]
-    [Tooltip("強着地として扱う最高点から着地点までの最小落差です。")]
-    [SerializeField, Min(0f)]
-    private float strongLandingMinFallHeight = 6.00f;
-
-    // ======================================================================
-    //  Lifecycle
-    // ======================================================================
+    private float walkTimer;
+    private float climbTimer;
+    private bool isWalkSoundPlaying;
 
     private void Awake()
     {
@@ -152,26 +111,18 @@ public sealed class PlayerAudioSettings : MonoBehaviour
         }
     }
 
-    // ======================================================================
-    //  Public API — PlayerController.Audio.cs から呼ばれる
-    // ======================================================================
-
-    // 通常ジャンプ音を再生する。
     public void PlayJump()
     {
         if (!enableJump) return;
-        PlayOverlapSafe(jumpAudioId);
+        AudioEvent.Emit(this, "Jump");
     }
 
-    // 壁ジャンプ音を再生する。
     public void PlayWallJump()
     {
         if (!enableWallJump) return;
-        PlayOverlapSafe(wallJumpAudioId);
+        AudioEvent.Emit(this, "WallJump");
     }
 
-    // 着地音を再生する。
-    // airborneTime と fallHeight から通常/強着地を判定する。
     public void PlayLanding(float airborneTime, float fallHeight)
     {
         bool passesAirTime = !useStrongLandingMinAirTime || airborneTime >= strongLandingMinAirTime;
@@ -180,91 +131,152 @@ public sealed class PlayerAudioSettings : MonoBehaviour
 
         if (shouldPlayStrongLanding)
         {
-            PlayOverlapSafe(strongLandingAudioId);
+            AudioEvent.Emit(this, "StrongLand");
             return;
         }
 
         if (!enableNormalLanding) return;
-        PlayOverlapSafe(normalLandingAudioId);
+        AudioEvent.Emit(this, "Land");
     }
 
-    // 壁滑りループ音を開始する。
     public void StartWallSlideSound()
     {
         if (!enableWallSlide) return;
-        PlaySafe(wallSlideAudioId);
+        AudioEvent.Emit(this, "WallSlideStart");
     }
 
-    // 壁滑りループ音を停止する。
     public void StopWallSlideSound()
     {
-        StopSafe(wallSlideAudioId);
+        AudioEvent.Emit(this, "WallSlideStop");
     }
 
-    // 地上ダッシュ音を再生する。
     public void PlayGroundDash()
     {
         if (!enableGroundDash) return;
-        PlayOverlapSafe(groundDashAudioId);
+        AudioEvent.Emit(this, "GroundDash");
     }
 
-    // 空中ダッシュ音を再生する。
     public void PlayAirDash()
     {
         if (!enableAirDash) return;
-        PlayOverlapSafe(airDashAudioId);
+        AudioEvent.Emit(this, "AirDash");
     }
 
-    // 死亡音を再生する。
-    // 死亡開始時は壁滑りループを止めてから再生する。
+    public void UpdateWalk(bool isWalking, float deltaTime)
+    {
+        if (!enableWalk)
+        {
+            StopWalkStartStopIfNeeded();
+            walkTimer = 0f;
+            return;
+        }
+
+        if (walkAudioMode == WalkAudioMode.WalkStartStop)
+        {
+            UpdateWalkStartStop(isWalking);
+            return;
+        }
+
+        StopWalkStartStopIfNeeded();
+        if (ShouldEmitLoopEvent(isWalking, ref walkTimer, walkInterval, deltaTime))
+        {
+            AudioEvent.Emit(this, "Walk");
+        }
+    }
+
+    public void UpdateClimb(bool isClimbing, float deltaTime)
+    {
+        if (ShouldEmitLoopEvent(isClimbing && enableClimb, ref climbTimer, climbInterval, deltaTime))
+        {
+            AudioEvent.Emit(this, "Climb");
+        }
+    }
+
+    public void PlayGrab()
+    {
+        if (!enableGrab) return;
+        AudioEvent.Emit(this, "Grab");
+    }
+
     public void PlayDeath(PlayerDeathCause cause)
     {
-        StopSafe(wallSlideAudioId);
+        StopWalkStartStopIfNeeded();
+        AudioEvent.Emit(this, "WallSlideStop");
 
         if (cause == PlayerDeathCause.Hazard)
         {
             if (!enableHazardDeath) return;
-            PlayOverlapSafe(hazardDeathAudioId);
+            AudioEvent.Emit(this, "HazardDeath");
+            return;
         }
-        else
-        {
-            if (!enableDamageDeath) return;
-            PlayOverlapSafe(damageDeathAudioId);
-        }
+
+        if (!enableDamageDeath) return;
+        AudioEvent.Emit(this, "DamageDeath");
     }
 
-    // すべての管理音を停止する。
-    // 復帰時などに呼ばれる。
+    public void PlayRespawn()
+    {
+        if (!enableRespawn) return;
+        AudioEvent.Emit(this, "Respawn");
+    }
+
     public void StopAllSounds()
     {
-        StopSafe(wallSlideAudioId);
+        StopWalkStartStopIfNeeded();
+        ResetLoopTimers();
+        AudioEvent.Emit(this, "WallSlideStop");
     }
 
-    // ======================================================================
-    //  Private — AudioManager ラッパー
-    // ======================================================================
-
-    // ID が空でなければ PlayOverlap で再生する。
-    private void PlayOverlapSafe(string audioId)
+    private void UpdateWalkStartStop(bool isWalking)
     {
-        if (string.IsNullOrEmpty(audioId)) return;
-        if (AudioManager.Instance == null) return;
-        AudioManager.Instance.PlayOverlap(audioId);
+        walkTimer = 0f;
+
+        if (!isWalking)
+        {
+            StopWalkStartStopIfNeeded();
+            return;
+        }
+
+        if (isWalkSoundPlaying) return;
+
+        // 長めの歩行音は、歩き始めと歩き終わりを別イベントにして重複再生を避ける。
+        isWalkSoundPlaying = true;
+        AudioEvent.Emit(this, "WalkStart");
     }
 
-    // ID が空でなければ Play で再生する（ループ用）。
-    private void PlaySafe(string audioId)
+    private void StopWalkStartStopIfNeeded()
     {
-        if (string.IsNullOrEmpty(audioId)) return;
-        if (AudioManager.Instance == null) return;
-        AudioManager.Instance.Play(audioId);
+        if (!isWalkSoundPlaying) return;
+
+        isWalkSoundPlaying = false;
+        AudioEvent.Emit(this, "WalkStop");
     }
 
-    // ID が空でなければ Stop する。
-    private void StopSafe(string audioId)
+    private bool ShouldEmitLoopEvent(
+        bool isActive,
+        ref float timer,
+        float interval,
+        float deltaTime)
     {
-        if (string.IsNullOrEmpty(audioId)) return;
-        if (AudioManager.Instance == null) return;
-        AudioManager.Instance.Stop(audioId);
+        if (!isActive)
+        {
+            timer = 0f;
+            return false;
+        }
+
+        timer -= deltaTime;
+        if (timer > 0f)
+        {
+            return false;
+        }
+
+        timer = Mathf.Max(0.01f, interval);
+        return true;
+    }
+
+    private void ResetLoopTimers()
+    {
+        walkTimer = 0f;
+        climbTimer = 0f;
     }
 }

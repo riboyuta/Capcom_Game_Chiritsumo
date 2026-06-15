@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 6819839688168534529}
   - component: {fileID: 8807462818072717450}
   - component: {fileID: -4463154858334726804}
+  - component: {fileID: -109774119730571093}
   m_Layer: 6
   m_Name: Gimmick_Springpad
   m_TagString: Untagged
@@ -156,3 +157,30 @@ MonoBehaviour:
     icon: {fileID: 0}
   gimmickType: 0
   gimmickID: 0
+--- !u!114 &-109774119730571093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5335550493632219275}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5e8adf38d7a5b04d9c9c0e075b59010, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioEventBinder
+  defaultSpatialOrigin: {fileID: 0}
+  warnMissingEvent: 1
+  warnMissingAudioManager: 1
+  bindings:
+  - eventName: Bounce
+    actions:
+    - enabled: 1
+      audioId: SE_GIMMICK_JUMP
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}

@@ -78,6 +78,8 @@ GameObject:
   - component: {fileID: 3856591718426588387}
   - component: {fileID: 3658095523632827249}
   - component: {fileID: 5756467161709318609}
+  - component: {fileID: 4331774699068503075}
+  - component: {fileID: 8263088401471257447}
   m_Layer: 0
   m_Name: PlayerController
   m_TagString: Player
@@ -398,6 +400,222 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b64a9ecd6764a34f880f38d72ab4c9c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerFacade
+--- !u!114 &4331774699068503075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4945451766695654239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0176c90e384004d4eb0990f45007c65f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAudioSettings
+  playerController: {fileID: 9145140670336257411}
+  enableJump: 1
+  enableWallJump: 1
+  enableNormalLanding: 1
+  enableStrongLanding: 1
+  enableWallSlide: 1
+  enableGroundDash: 1
+  enableAirDash: 1
+  enableDamageDeath: 1
+  enableHazardDeath: 1
+  enableRespawn: 1
+  enableWalk: 1
+  walkAudioMode: 1
+  enableClimb: 1
+  enableGrab: 1
+  useStrongLandingMinAirTime: 1
+  strongLandingMinAirTime: 0.2
+  useStrongLandingMinFallHeight: 1
+  strongLandingMinFallHeight: 6
+  walkInterval: 0.3
+  climbInterval: 0.35
+--- !u!114 &8263088401471257447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4945451766695654239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5e8adf38d7a5b04d9c9c0e075b59010, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioEventBinder
+  defaultSpatialOrigin: {fileID: 0}
+  warnMissingEvent: 1
+  warnMissingAudioManager: 1
+  bindings:
+  - eventName: Jump
+    actions:
+    - enabled: 1
+      audioId: SE_PLAYER_JUMP
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: Land
+    actions:
+    - enabled: 1
+      audioId: SFX_player_land
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: Climb
+    actions:
+    - enabled: 1
+      audioId: SE_PLAYER_CLIMB
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: Grab
+    actions:
+    - enabled: 1
+      audioId: SE_PLAYER_GRAB
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: Walk
+    actions:
+    - enabled: 1
+      audioId: SE_PLAYER_WALK
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: WalkStart
+    actions:
+    - enabled: 1
+      audioId: SE_PLAYER_WALK
+      playMode: 0
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: WalkStop
+    actions:
+    - enabled: 1
+      audioId: SE_PLAYER_WALK
+      playMode: 4
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: GroundDash
+    actions:
+    - enabled: 1
+      audioId: SE_PLAYER_DASH
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: AirDash
+    actions:
+    - enabled: 1
+      audioId: SE_PLAYER_DASH
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: DamageDeath
+    actions:
+    - enabled: 1
+      audioId: SE_PLAYER_DIE
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: HazardDeath
+    actions:
+    - enabled: 1
+      audioId: SE_PLAYER_DIE
+      playMode: 0
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: StrongLand
+    actions:
+    - enabled: 1
+      audioId: SFX_player_land
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: WallJump
+    actions:
+    - enabled: 1
+      audioId: SE_PLAYER_JUMP
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: WallSlideStart
+    actions:
+    - enabled: 1
+      audioId: SFX_player_wallslide
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
+  - eventName: WallSlideStop
+    actions: []
+  - eventName: Respawn
+    actions:
+    - enabled: 1
+      audioId: SE_PLAYER_SPAWN
+      playMode: 1
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 0
+      spatialOrigin: {fileID: 0}
 --- !u!1 &5225245139231994638
 GameObject:
   m_ObjectHideFlags: 0
