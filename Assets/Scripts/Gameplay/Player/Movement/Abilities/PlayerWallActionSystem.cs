@@ -283,7 +283,7 @@ internal sealed class PlayerWallActionSystem
             origin,
             wallDir,
             maxDistance + 0.01f,
-            deps.Settings.Detection.GroundLayerMask,
+            deps.Settings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
     }
 
