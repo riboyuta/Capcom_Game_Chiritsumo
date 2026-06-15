@@ -49,6 +49,10 @@ public sealed class HandEnemySpawnWarningView : MonoBehaviour
     [Tooltip("点滅時の最低明るさです。0に近いほど強く点滅します。")]
     [SerializeField, Range(0f, 1f)] private float minBlinkRate = 0.25f;
 
+    [Header("フェードアウト")]
+    [Tooltip("安全エリア退出時など、現在の表示濃度から非表示へ自然に消す時間です。0にすると即座に非表示になります。推奨値は0.3秒です。")]
+    [SerializeField, Min(0f)] private float fadeOutDuration = 0.3f;
+
     [Header("時間")]
     [Tooltip("Time.timeScale の影響を受けずに再生するかです。")]
     [SerializeField] private bool useUnscaledTime = false;
@@ -63,6 +67,7 @@ public sealed class HandEnemySpawnWarningView : MonoBehaviour
 
     private Material runtimeMaterial;
     private Coroutine runningCoroutine;
+    private float currentAlpha;
 
     public bool IsPlaying => runningCoroutine != null;
 
@@ -151,7 +156,7 @@ public sealed class HandEnemySpawnWarningView : MonoBehaviour
             }
 
             float alpha = maxAlpha * fadeIn * blinkRate;
-            runtimeMaterial.SetFloat(WarningAlphaId, alpha);
+            SetWarningAlpha(alpha);
 
             yield return null;
         }
@@ -166,6 +171,27 @@ public sealed class HandEnemySpawnWarningView : MonoBehaviour
         }
 
         ResetImmediate();
+    }
+
+    /// <summary>
+    /// 安全エリア退出時に、点滅を止めて現在の濃度から自然に非表示へ戻す。
+    /// </summary>
+    public void FadeOutAndHide()
+    {
+        if (runningCoroutine != null)
+        {
+            StopCoroutine(runningCoroutine);
+            runningCoroutine = null;
+        }
+
+        if (screenImage == null || runtimeMaterial == null || currentAlpha <= 0f || fadeOutDuration <= 0f)
+        {
+            ResetImmediate();
+            return;
+        }
+
+        SetImageEnabled(true);
+        runningCoroutine = StartCoroutine(FadeOutRoutine());
     }
 
     private IEnumerator PlayRoutine(SpawnWarningScreenEdge edge, float duration)
@@ -191,7 +217,7 @@ public sealed class HandEnemySpawnWarningView : MonoBehaviour
             float blinkRate = Mathf.Lerp(minBlinkRate, 1f, blink);
 
             float alpha = maxAlpha * envelope * blinkRate;
-            runtimeMaterial.SetFloat(WarningAlphaId, alpha);
+            SetWarningAlpha(alpha);
 
             yield return null;
         }
@@ -203,7 +229,7 @@ public sealed class HandEnemySpawnWarningView : MonoBehaviour
     private void SetStaticMaterialValues(SpawnWarningScreenEdge edge)
     {
         runtimeMaterial.SetColor(WarningColorId, warningColor);
-        runtimeMaterial.SetFloat(WarningAlphaId, 0f);
+        SetWarningAlpha(0f);
         runtimeMaterial.SetFloat(EdgeId, ToShaderEdgeValue(edge));
         runtimeMaterial.SetFloat(EdgeThicknessId, edgeThickness);
         runtimeMaterial.SetFloat(EdgeSoftnessId, edgeSoftness);
@@ -211,14 +237,43 @@ public sealed class HandEnemySpawnWarningView : MonoBehaviour
         runtimeMaterial.SetFloat(NoiseStrengthId, noiseStrength);
     }
 
-    private void ResetImmediate()
+    private IEnumerator FadeOutRoutine()
     {
-        if (runtimeMaterial != null)
+        float startAlpha = currentAlpha;
+        float elapsed = 0f;
+        float duration = Mathf.Max(0.01f, fadeOutDuration);
+
+        while (elapsed < duration)
         {
-            runtimeMaterial.SetFloat(WarningAlphaId, 0f);
+            float deltaTime = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
+            elapsed += deltaTime;
+
+            float t = Mathf.Clamp01(elapsed / duration);
+            float eased = 1f - (1f - t) * (1f - t);
+            float alpha = Mathf.Lerp(startAlpha, 0f, eased);
+            SetWarningAlpha(alpha);
+
+            yield return null;
         }
 
+        ResetImmediate();
+        runningCoroutine = null;
+    }
+
+    private void ResetImmediate()
+    {
+        SetWarningAlpha(0f);
         SetImageEnabled(false);
+    }
+
+    private void SetWarningAlpha(float alpha)
+    {
+        currentAlpha = Mathf.Clamp01(alpha);
+
+        if (runtimeMaterial != null)
+        {
+            runtimeMaterial.SetFloat(WarningAlphaId, currentAlpha);
+        }
     }
 
     private void SetImageEnabled(bool enabled)

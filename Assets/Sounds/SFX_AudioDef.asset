@@ -142,13 +142,13 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: afba699723254ea4face401cd29f55e6, type: 3}
     channel: 1
     defaultVolume: 1
-    loop: 0
+    loop: 1
   - id: SE_PLAYER_JUMP
     clip: {fileID: 8300000, guid: e97f6d80f3b8b744d83bc3e6ae80c9b4, type: 3}
     channel: 1
     defaultVolume: 1
     loop: 0
-  - id: SE_PLAYER_DUSH
+  - id: SE_PLAYER_DASH
     clip: {fileID: 8300000, guid: 22336fb49da021a418906421975ad5d6, type: 3}
     channel: 1
     defaultVolume: 1

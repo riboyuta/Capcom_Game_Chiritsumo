@@ -75,7 +75,7 @@ public sealed class PlayerCameraController : MonoBehaviour
     [Header("横方向ダッシュカメラ補正を使うか")]
     [Tooltip("有効にすると、横方向ダッシュ時だけ X 軸追従と横方向 LookAhead に疾走感用の補正を加えます。")]
 [FormerlySerializedAs("dashCameraEnabled")]
-[SerializeField] private bool horizontalDashCameraEnabled = true;
+[SerializeField] private bool horizontalDashCameraEnabled = false;
 
     [Header("横方向ダッシュ判定 X しきい値")]
     [Tooltip("ダッシュ方向の X 絶対値がこの値以上の場合に、横方向ダッシュ候補として扱います。")]
@@ -148,6 +148,18 @@ public sealed class PlayerCameraController : MonoBehaviour
     [Header("斜め方向ダッシュ LookAhead 倍率")]
     [Tooltip("斜め方向ダッシュ時の X / Y LookAhead に掛ける倍率です。両軸を同時に動かすため、横方向・上下方向単体より弱める目的で使います。")]
     [SerializeField] private float diagonalDashLookAheadMultiplier = 1.0f;
+
+    [Header("ダッシュ開始極小シェイク: 有効化")]
+    [Tooltip("有効にすると、ダッシュ開始が成立した瞬間だけカメラへ極小の揺れを加えます。足場や敵の視認性を邪魔しない程度で使います。")]
+    [SerializeField] private bool dashStartMicroShakeEnabled = true;
+
+    [Header("ダッシュ開始極小シェイク: 時間")]
+    [Tooltip("ダッシュ開始シェイクが続く時間です。短いほど入力成立の一瞬だけ揺れます。推奨値は0.04秒です。")]
+    [SerializeField, Min(0f)] private float dashStartMicroShakeDuration = 0.04f;
+
+    [Header("ダッシュ開始極小シェイク: 強度")]
+    [Tooltip("ダッシュ開始シェイクの最大オフセット量です。値を大きくすると揺れが目立つため、0.03程度の極小値を基準に調整します。")]
+    [SerializeField, Min(0f)] private float dashStartMicroShakeAmplitude = 0.03f;
 
     [Header("Orthographic Size 補間時間")]
     [Tooltip("Room ベースの orthographicSize 上書きが切り替わる際の補間時間です。0 のときは即時反映します。")]
@@ -255,6 +267,11 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     // ダッシュ開始フレームを Facade 経由で補完するためのランタイム状態。
     private bool wasDashActivePreviousFrame;
+
+    // シェイク済み transform.position を追従計算へ混ぜないため、非シェイクの基準位置を保持する。
+    private readonly DashStartMicroShakeOffset dashStartMicroShake = new DashStartMicroShakeOffset();
+    private Vector3 baseCameraPosition;
+    private bool hasBaseCameraPosition;
 
     // 一時追従ターゲットのランタイム状態。
     // Inspector では設定せず、SetTemporaryTarget / ClearTemporaryTarget でのみ変更する。
@@ -390,6 +407,8 @@ public sealed class PlayerCameraController : MonoBehaviour
         // 必要に応じて追従対象アンカーとプレイヤー状態 Facade を自動解決する。
         ResolveTargetAnchor();
         ResolvePlayerFacade();
+
+        SetBaseCameraPosition(transform.position);
     }
 
     private void LateUpdate()
@@ -444,10 +463,11 @@ public sealed class PlayerCameraController : MonoBehaviour
             // Linear の進行率を EaseInOut に変換する。
             float easedT = EvaluateRoomTransitionEaseInOut(linearT);
 
-            transform.position = Vector3.Lerp(
+            Vector3 transitionBasePosition = Vector3.Lerp(
                 roomTransitionStartPosition,
                 roomTransitionTargetPosition,
                 easedT);
+            ApplyCameraPositionWithShake(transitionBasePosition);
 
             // 距離しきい値で早期終了すると終端でガクつきやすい。
             // そのため、遷移終了は「時間が最後まで進み切ったか」で判定する。
@@ -461,20 +481,21 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         // X と Y を別々の SmoothDamp で補間する。
         // これにより、軸ごとの追従感を個別に調整できる。
+        Vector3 currentBasePosition = GetCurrentBaseCameraPosition();
         float finalX = Mathf.SmoothDamp(
-            current: transform.position.x,
+            current: currentBasePosition.x,
             target: clampedPosition.x,
             currentVelocity: ref velocityX,
             smoothTime: activeSmoothTimeXForDebug);
 
         float finalY = Mathf.SmoothDamp(
-            current: transform.position.y,
+            current: currentBasePosition.y,
             target: clampedPosition.y,
             currentVelocity: ref velocityY,
             smoothTime: activeSmoothTimeYForDebug);
 
-        // Z は Clamp 後位置をそのまま採用する。
-        transform.position = new Vector3(finalX, finalY, clampedPosition.z);
+        // Z は Clamp 後位置をそのまま採用し、最後だけシェイクオフセットを加える。
+        ApplyCameraPositionWithShake(new Vector3(finalX, finalY, clampedPosition.z));
 
         // 必要なら、追従対象が画面内のどこに居るかを Viewport 座標で確認する。
         if (logViewportPosition)
@@ -489,6 +510,46 @@ public sealed class PlayerCameraController : MonoBehaviour
     // -----------------------------
     // 初期化・参照解決
     // -----------------------------
+
+    private Vector3 GetCurrentBaseCameraPosition()
+    {
+        if (!hasBaseCameraPosition)
+        {
+            SetBaseCameraPosition(transform.position);
+        }
+
+        return baseCameraPosition;
+    }
+
+    private void SetBaseCameraPosition(Vector3 position)
+    {
+        baseCameraPosition = position;
+        hasBaseCameraPosition = true;
+    }
+
+    private void ApplyCameraPositionWithShake(Vector3 position)
+    {
+        SetBaseCameraPosition(position);
+
+        transform.position = baseCameraPosition + dashStartMicroShake.CurrentOffset;
+        dashStartMicroShake.Tick(Time.deltaTime);
+    }
+
+    private void SnapCameraPosition(Vector3 position)
+    {
+        SetBaseCameraPosition(position);
+        transform.position = position;
+    }
+
+    private void ClearDashStartMicroShake()
+    {
+        dashStartMicroShake.Clear();
+
+        if (hasBaseCameraPosition)
+        {
+            transform.position = baseCameraPosition;
+        }
+    }
 
     private bool ValidateRuntimeReferences()
     {
@@ -851,12 +912,12 @@ public sealed class PlayerCameraController : MonoBehaviour
         isRoomLookReturning = false;
         roomLookReturnElapsed = 0f;
 
-        // 現在位置を基準に、RoomLook 用 Bounds 内へ収める。
-        desiredPosition = transform.position;
+        // 現在の非シェイク基準位置を基準に、RoomLook 用 Bounds 内へ収める。
+        desiredPosition = GetCurrentBaseCameraPosition();
         clampedPosition = GetClampedPositionInBounds(desiredPosition, roomLookBounds);
 
         roomLookManualPosition = clampedPosition;
-        transform.position = roomLookManualPosition;
+        SnapCameraPosition(roomLookManualPosition);
 
         // 通常追従の慣性を持ち越さない。
         velocityX = 0f;
@@ -880,12 +941,12 @@ public sealed class PlayerCameraController : MonoBehaviour
             0f) * Mathf.Max(0f, roomLookMoveSpeed) * Mathf.Max(0f, deltaTime);
 
         desiredPosition = roomLookManualPosition + moveDelta;
-        desiredPosition.z = transform.position.z;
+        desiredPosition.z = GetCurrentBaseCameraPosition().z;
 
         clampedPosition = GetClampedPositionInBounds(desiredPosition, roomLookBounds);
 
         roomLookManualPosition = clampedPosition;
-        transform.position = roomLookManualPosition;
+        SnapCameraPosition(roomLookManualPosition);
     }
 
     public void EndRoomLook()
@@ -899,7 +960,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         isRoomLookReturning = true;
         roomLookReturnElapsed = 0f;
 
-        roomLookReturnStartPosition = transform.position;
+        roomLookReturnStartPosition = GetCurrentBaseCameraPosition();
         roomLookReturnTargetPosition = ComputeFollowClampedPosition();
 
         velocityX = 0f;
@@ -914,7 +975,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         isRoomLookReturning = false;
 
         Vector3 targetPosition = ComputeFollowClampedPosition();
-        transform.position = targetPosition;
+        SnapCameraPosition(targetPosition);
 
         desiredPosition = targetPosition;
         clampedPosition = targetPosition;
@@ -938,10 +999,11 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         float easedT = EvaluateRoomTransitionEaseInOut(linearT);
 
-        transform.position = Vector3.Lerp(
+        Vector3 roomLookBasePosition = Vector3.Lerp(
             roomLookReturnStartPosition,
             roomLookReturnTargetPosition,
             easedT);
+        SnapCameraPosition(roomLookBasePosition);
 
         desiredPosition = roomLookReturnTargetPosition;
         clampedPosition = roomLookReturnTargetPosition;
@@ -949,7 +1011,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         if (linearT >= 1f)
         {
             isRoomLookReturning = false;
-            transform.position = roomLookReturnTargetPosition;
+            SnapCameraPosition(roomLookReturnTargetPosition);
             ResetDashCameraState();
 
             velocityX = 0f;
@@ -962,7 +1024,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         Transform effectiveTarget = GetEffectiveTargetAnchor();
         if (effectiveTarget == null)
         {
-            return transform.position;
+            return GetCurrentBaseCameraPosition();
         }
 
         Vector3 followDesired = BuildFollowDesiredPosition(effectiveTarget);
@@ -986,6 +1048,11 @@ public sealed class PlayerCameraController : MonoBehaviour
         bool didDashStart = playerFacade != null
             && (playerFacade.JustDashStartedThisFrame || (!wasDashActivePreviousFrame && isDashActive));
         Vector2 dashDirection = playerFacade != null ? playerFacade.DashDirection : Vector2.zero;
+
+        if (didDashStart)
+        {
+            PlayDashStartMicroShake(dashDirection);
+        }
 
         // 斜め方向を先に判定し、斜めの場合は横・上下方向単体の判定から除外する。
         float absX = Mathf.Abs(dashDirection.x);
@@ -1011,6 +1078,19 @@ public sealed class PlayerCameraController : MonoBehaviour
         TickHorizontalDashCamera(isDashActive, didDashStart, dashDirection, shouldUseHorizontalDashCamera, horizontalLookAheadMultiplier);
         TickVerticalDashCamera(isDashActive, didDashStart, dashDirection, shouldUseVerticalDashCamera, verticalLookAheadMultiplier);
         wasDashActivePreviousFrame = isDashActive;
+    }
+
+    private void PlayDashStartMicroShake(Vector2 dashDirection)
+    {
+        if (!dashStartMicroShakeEnabled)
+        {
+            return;
+        }
+
+        dashStartMicroShake.Play(
+            dashDirection,
+            dashStartMicroShakeDuration,
+            dashStartMicroShakeAmplitude);
     }
 
     private void TickHorizontalDashCamera(bool isDashActive, bool didDashStart, Vector2 dashDirection, bool shouldUseHorizontalDashCamera, float lookAheadMultiplier)
@@ -1131,6 +1211,7 @@ public sealed class PlayerCameraController : MonoBehaviour
     {
         ResetHorizontalDashCameraState();
         ResetVerticalDashCameraState();
+        ClearDashStartMicroShake();
         wasDashActivePreviousFrame = playerFacade != null && playerFacade.IsDashActive;
     }
 
@@ -1145,8 +1226,8 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         ResetDashCameraState();
 
-        // 現在位置を開始地点として保存する。
-        roomTransitionStartPosition = transform.position;
+        // 現在の非シェイク基準位置を開始地点として保存する。
+        roomTransitionStartPosition = GetCurrentBaseCameraPosition();
 
         // 現在の反映済み設定から遷移目標位置を再計算して保存する。
         Transform effectiveTarget = GetEffectiveTargetAnchor();
@@ -1158,7 +1239,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         }
         else
         {
-            roomTransitionTargetPosition = transform.position;
+            roomTransitionTargetPosition = GetCurrentBaseCameraPosition();
         }
 
         // 遷移時間を部屋設定とデフォルトから確定する。
@@ -1173,7 +1254,7 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         if (activeRoomTransitionDuration <= 0f)
         {
-            transform.position = roomTransitionTargetPosition;
+            SnapCameraPosition(roomTransitionTargetPosition);
             isRoomTransitionRunning = false;
             return;
         }
@@ -1187,7 +1268,7 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         // 遷移中フラグを落として目標位置へ即時スナップする。
         isRoomTransitionRunning = false;
-        transform.position = roomTransitionTargetPosition;
+        SnapCameraPosition(roomTransitionTargetPosition);
 
         // 遷移キャンセル後に余計な慣性が残らないよう内部速度を初期化する。
         velocityX = 0f;
@@ -1198,7 +1279,7 @@ public sealed class PlayerCameraController : MonoBehaviour
     {
         // 遷移終了時は最終目標位置へ確定させてから通常追従へ戻す。
         isRoomTransitionRunning = false;
-        transform.position = roomTransitionTargetPosition;
+        SnapCameraPosition(roomTransitionTargetPosition);
         ResetDashCameraState();
 
         // 通常追従へ戻る瞬間のガクつきを防ぐため、

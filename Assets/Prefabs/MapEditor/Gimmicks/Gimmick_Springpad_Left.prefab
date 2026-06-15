@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5514618169620619977}
   - component: {fileID: 8233945142926339805}
   - component: {fileID: 5838003294165485150}
-  m_Layer: 10
+  m_Layer: 0
   m_Name: Gimmick_Springpad_Left
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -137,9 +137,6 @@ MonoBehaviour:
   gravityModifierDuration: 0.6
   bounceCooldown: 0.2
   activationNormalThreshold: 0.5
-  playerLayers:
-    serializedVersion: 2
-    m_Bits: 512
   anim: {fileID: 0}
 --- !u!114 &5838003294165485150
 MonoBehaviour:

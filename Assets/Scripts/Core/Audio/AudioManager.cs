@@ -24,24 +24,24 @@ public sealed class AudioManager : MonoBehaviour
     // ======================================================================
 
     [Header("AudioMixer")]
-    [Tooltip("メインの AudioMixer アセットを指定")]
+    [Tooltip("全体の音量管理に使う AudioMixer アセットです。")]
     [SerializeField] private AudioMixer _mixer;
 
-    [Tooltip("BGM 用の Mixer Group")]
+    [Tooltip("BGM を出力する Mixer Group です。AudioDef の Channel が BGM の音に使います。")]
     [SerializeField] private AudioMixerGroup _bgmGroup;
 
-    [Tooltip("SFX 用の Mixer Group")]
+    [Tooltip("効果音を出力する Mixer Group です。AudioDef の Channel が SFX の音に使います。")]
     [SerializeField] private AudioMixerGroup _sfxGroup;
 
-    [Tooltip("Voice 用の Mixer Group")]
+    [Tooltip("ボイスを出力する Mixer Group です。AudioDef の Channel が Voice の音に使います。")]
     [SerializeField] private AudioMixerGroup _voiceGroup;
 
     [Header("AudioDef (プリロード)")]
-    [Tooltip("起動時に読み込む AudioDef 一覧")]
+    [Tooltip("起動時に読み込む AudioDef 一覧です。ここに登録された ID を AudioEventBinder の Audio ID から参照します。")]
     [SerializeField] private AudioDef[] _audioDefs;
 
     [Header("Pool")]
-    [Tooltip("SFX / Voice 用 AudioSource プールの初期数")]
+    [Tooltip("SFX / Voice の同時再生に使う AudioSource の初期数です。不足した場合は実行中に追加されます。")]
     [SerializeField] private int _initialPoolSize = 8;
 
     // Mixer Exposed Parameter 名 (Mixer 側で Expose した名前と一致させる)

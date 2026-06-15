@@ -2,12 +2,17 @@ using UnityEngine;
 
 public sealed partial class PlayerController
 {
+    private const float WalkAudioInputThreshold = 0.5f;
+    private const float WalkAudioVelocityThreshold = 0.05f;
+    private const float ClimbAudioVelocityThreshold = 0.05f;
+
     // 実際の音声再生を担当するコンポーネント。
     // この partial は「いつ音を鳴らすか」を決める役割で、
     // 実際の AudioManager 呼び出しは PlayerAudioSettings 側に任せる。
     private PlayerAudioSettings audioController;
+    private bool wasWallGrabbingForAudio;
 
-    // PlayerAudioController.Awake() から呼ばれて自身を登録する。
+    // PlayerAudioSettings.Awake() から呼ばれて自身を登録する。
     internal void SetAudioController(PlayerAudioSettings controller)
     {
         audioController = controller;
@@ -25,8 +30,12 @@ public sealed partial class PlayerController
 
         // 状態変化に応じて各種音声イベントを判定する。
         UpdateWallSlideSound();
+        UpdateGrabSound();
         UpdateDashSound();
         UpdateLandingSound();
+        UpdateWalkSound();
+        UpdateClimbSound();
+        CacheAudioState();
     }
 
     // 壁滑り開始/終了に応じてループ音を開始/停止する。
@@ -83,6 +92,71 @@ public sealed partial class PlayerController
         audioController.PlayLanding(landingAirborneTime, landingFallHeight);
     }
 
+    // 接地中に横移動している間、一定間隔で歩行音を通知する。
+    private void UpdateWalkSound()
+    {
+        audioController.UpdateWalk(IsWalkSoundActive(), Time.fixedDeltaTime);
+    }
+
+    private bool IsWalkSoundActive()
+    {
+        if (!runtimeState.isGrounded || landingOccurredThisFrame)
+        {
+            return false;
+        }
+
+        if (runtimeState.isDashing
+            || runtimeState.isWallGrabbing
+            || runtimeState.isLedgeClimbing
+            || IsExternallyControlled
+            || IsActionLocked)
+        {
+            return false;
+        }
+
+        if (playerInputReader == null || rb == null)
+        {
+            return false;
+        }
+
+        if (Mathf.Abs(playerInputReader.Move.x) < WalkAudioInputThreshold)
+        {
+            return false;
+        }
+
+        return Mathf.Abs(rb.linearVelocity.x) > WalkAudioVelocityThreshold;
+    }
+
+    // 壁掴み中の上下移動、または崖乗り上げ中に一定間隔で登り音を通知する。
+    private void UpdateClimbSound()
+    {
+        audioController.UpdateClimb(IsClimbSoundActive(), Time.fixedDeltaTime);
+    }
+
+    private bool IsClimbSoundActive()
+    {
+        if (runtimeState.isLedgeClimbing)
+        {
+            return true;
+        }
+
+        if (!runtimeState.isWallGrabbing || rb == null)
+        {
+            return false;
+        }
+
+        return Mathf.Abs(rb.linearVelocity.y) > ClimbAudioVelocityThreshold;
+    }
+
+    // 壁掴みに入った瞬間だけ掴み音を通知する。
+    private void UpdateGrabSound()
+    {
+        if (!wasWallGrabbingForAudio && runtimeState.isWallGrabbing)
+        {
+            audioController.PlayGrab();
+        }
+    }
+
     // 壁キック成功地点から直接呼ぶ用。
     private void PlayWallKickSound()
     {
@@ -109,7 +183,7 @@ public sealed partial class PlayerController
     }
 
     // 死亡開始時の音声を再生する。
-    // 「いつ鳴らすか」は Controller 側で決め、実際の再生内容は AudioController 側へ委譲する。
+    // 「いつ鳴らすか」は Controller 側で決め、実際の再生内容は PlayerAudioSettings 側へ委譲する。
     private void PlayDeathSound(PlayerDeathCause cause)
     {
         if (audioController == null)
@@ -118,5 +192,21 @@ public sealed partial class PlayerController
         }
 
         audioController.PlayDeath(cause);
+    }
+
+    // リスポーン完了時の音声を再生する。
+    private void PlayRespawnSound()
+    {
+        if (audioController == null)
+        {
+            return;
+        }
+
+        audioController.PlayRespawn();
+    }
+
+    private void CacheAudioState()
+    {
+        wasWallGrabbingForAudio = runtimeState.isWallGrabbing;
     }
 }

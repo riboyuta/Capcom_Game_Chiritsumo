@@ -7,7 +7,6 @@ using UnityEngine;
 public sealed class SpringPad : MonoBehaviour, IRespawnResettable
 {
     private const string InteractedTriggerName = "Interacted";
-    private const string SpringPadSfxName = "SFX_gimmick_springpad";
     private const float UpwardGravityModifierThreshold = 0.5f;
 
     [Header("射出: 距離")]
@@ -73,6 +72,7 @@ public sealed class SpringPad : MonoBehaviour, IRespawnResettable
     private void Awake()
     {
         springCollider = GetComponent<Collider>();
+
     }
 
     public void CaptureInitialState()
@@ -268,9 +268,6 @@ public sealed class SpringPad : MonoBehaviour, IRespawnResettable
             anim.SetTrigger(InteractedTriggerName);
         }
 
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlayOverlap(SpringPadSfxName);
-        }
+        AudioEvent.Emit(this, "Bounce");
     }
 }
