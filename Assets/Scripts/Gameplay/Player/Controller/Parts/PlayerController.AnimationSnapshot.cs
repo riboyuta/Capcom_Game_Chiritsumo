@@ -27,8 +27,7 @@ public sealed partial class PlayerController
             justCrossedApex: justCrossedApexThisFrame,
             justDashStarted: runtimeState.justDashStartedThisFrame,
             requestHoodRecover: runtimeState.requestHoodRecoverThisFrame,
-            dashStartRequestId: runtimeState.dashStartRequestId,
-            
+
             velocityX: velocity.x,
             velocityY: velocity.y,
             moveInputX: moveInput.x,
