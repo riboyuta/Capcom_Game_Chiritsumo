@@ -237,8 +237,9 @@ public sealed class GameRoot : MonoBehaviour
         }
 
         goalClearAccepted = true;
-        ResultSceneTransitData.SetClearElapsedTime(elapsedTime);
-        Debug.Log($"[GameRoot] GoalClear accepted. elapsedTime={elapsedTime:F2}s");
+        PauseElapsedTime();
+        ResultSceneTransitData.SetClearResult(elapsedTime, deathCount);
+        Debug.Log($"[GameRoot] GoalClear accepted. elapsedTime={elapsedTime:F2}s, deathCount={deathCount}");
 
         EnterResult();
         return true;
