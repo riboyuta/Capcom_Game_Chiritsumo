@@ -58,6 +58,10 @@ internal sealed class PlayerRuntimeState
     // 見た目用: 現在の HoodRecover 要求が対象にするフード世代。
     public int hoodRecoverTargetVersion;
 
+    // 見た目用: ダッシュ開始のイベントID。
+    // bool だけでは高速な連続開始を区別できないため、開始ごとに増やす。
+    public int dashStartRequestId;
+
     // 見た目用: この物理フレームでダッシュ開始したか。
     // Snapshot 側で justDashStarted として読むための単発フラグ。
     public bool justDashStartedThisFrame;
