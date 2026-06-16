@@ -177,7 +177,7 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
 
         if (gameRoot != null)
         {
-            gameRoot.StartElapsedTimeIfNeeded();
+            gameRoot.StartOrResumeElapsedTime();
         }
 
         if (spawnDelay > 0f)

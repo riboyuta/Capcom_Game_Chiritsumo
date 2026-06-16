@@ -16,19 +16,40 @@ public sealed class GameRoot : MonoBehaviour
     [Header("進行フロー: Play時間")]
     [Tooltip("Play 状態を維持する時間(秒)です。実際にプレイ可能な制限時間を調整します。")]
     [SerializeField, Min(0f)] private float playDuration = 10.0f;
-
+    [Header("プレイヤー参照")]
+    [Tooltip("死亡受理イベントを購読する PlayerFacade です。未設定時は実行時にシーン内から自動取得します。")]
+    [SerializeField] private PlayerFacade playerFacade;
     private State currentState;
     private float playTimer;
     private float readyTimer;
     private float elapsedTime;
+    private int deathCount;
     private bool isElapsedTimeRunning;
     private bool hasElapsedTimeStarted;
     private bool isTransitioning;
     private bool goalClearAccepted;
+    private bool isPlayerDeathEventSubscribed;
     private float lastLoggedTime;
+    private void Awake()
+    {
+        ResolvePlayerFacadeIfNeeded();
+    }
+
+    private void OnEnable()
+    {
+        SubscribePlayerDeathEventIfNeeded();
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribePlayerDeathEventIfNeeded();
+    }
 
     private void Start()
     {
+        ResolvePlayerFacadeIfNeeded();
+        SubscribePlayerDeathEventIfNeeded();
+
         // シーン開始時に明転させる。
         if (FadeController.Instance != null)
         {
@@ -41,6 +62,7 @@ public sealed class GameRoot : MonoBehaviour
         }
 
         elapsedTime = 0f;
+        deathCount = 0;
         isElapsedTimeRunning = false;
         hasElapsedTimeStarted = false;
         goalClearAccepted = false;
@@ -83,7 +105,7 @@ public sealed class GameRoot : MonoBehaviour
             return;
         }
 
-        elapsedTime += Time.deltaTime;
+        elapsedTime += Time.unscaledDeltaTime;
 
         // 1秒ごとにログ出力する。
         if (Mathf.FloorToInt(elapsedTime) > Mathf.FloorToInt(lastLoggedTime))
@@ -157,27 +179,46 @@ public sealed class GameRoot : MonoBehaviour
     }
 
     // EnemySpawnTrigger から最初の有効発動時に呼ばせる。
+    public void StartOrResumeElapsedTime()
+    {
+        if (!hasElapsedTimeStarted)
+        {
+            elapsedTime = 0f;
+            hasElapsedTimeStarted = true;
+            lastLoggedTime = -1f;
+
+            // BGM を変更する。
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.Stop("BGM_main_beforechase");
+                AudioManager.Instance.FadeIn("BGM_main_afterchase", 2.0f);
+
+                // SE:最初のスポーン時
+                //AudioManager.Instance.PlayOverlap("SFX_boss_spawn");
+            }
+        }
+
+        isElapsedTimeRunning = true;
+    }
+
+    // 既存の外部参照を残しつつ、新しい開始/再開処理へ委譲する。
     public void StartElapsedTimeIfNeeded()
     {
-        if (hasElapsedTimeStarted)
-        {
-            return;
-        }
+        StartOrResumeElapsedTime();
+    }
 
-        elapsedTime = 0f;
-        isElapsedTimeRunning = true;
-        hasElapsedTimeStarted = true;
-        lastLoggedTime = -1f;
+    // 累積値は保持したまま、次の安全エリア退出まで計測を止める。
+    public void PauseElapsedTime()
+    {
+        isElapsedTimeRunning = false;
+    }
 
-        // BGM を変更する。
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.Stop("BGM_main_beforechase");
-            AudioManager.Instance.FadeIn("BGM_main_afterchase", 2.0f);
-
-            // SE:最初のスポーン時
-            //AudioManager.Instance.PlayOverlap("SFX_boss_spawn");
-        }
+    // 死亡受理ごとに死亡回数を加算し、リスポーン待機中の時間を累積しない。
+    public void RecordPlayerDeathAndPauseTimer(PlayerDeathCause deathCause)
+    {
+        deathCount++;
+        PauseElapsedTime();
+        Debug.Log($"[GameRoot] Player death recorded. cause={deathCause}, deathCount={deathCount}, elapsedTime={elapsedTime:F2}s");
     }
 
     /// ゴール到達を受け付け、Result遷移を開始する。
@@ -206,4 +247,53 @@ public sealed class GameRoot : MonoBehaviour
     public string GetCurrentStateName() { return currentState.ToString(); }
     public float GetRemainingPlayTime() { return playTimer; }
     public float GetElapsedTime() { return elapsedTime; }
+    public int GetDeathCount() { return deathCount; }
+
+    private void ResolvePlayerFacadeIfNeeded()
+    {
+        if (playerFacade != null)
+        {
+            return;
+        }
+
+        playerFacade = FindFirstObjectByType<PlayerFacade>();
+    }
+
+    private void SubscribePlayerDeathEventIfNeeded()
+    {
+        if (isPlayerDeathEventSubscribed)
+        {
+            return;
+        }
+
+        ResolvePlayerFacadeIfNeeded();
+
+        if (playerFacade == null)
+        {
+            return;
+        }
+
+        playerFacade.DeathAccepted += OnPlayerDeathAccepted;
+        isPlayerDeathEventSubscribed = true;
+    }
+
+    private void UnsubscribePlayerDeathEventIfNeeded()
+    {
+        if (!isPlayerDeathEventSubscribed)
+        {
+            return;
+        }
+
+        if (playerFacade != null)
+        {
+            playerFacade.DeathAccepted -= OnPlayerDeathAccepted;
+        }
+
+        isPlayerDeathEventSubscribed = false;
+    }
+
+    private void OnPlayerDeathAccepted(PlayerDeathCause deathCause)
+    {
+        RecordPlayerDeathAndPauseTimer(deathCause);
+    }
 }
