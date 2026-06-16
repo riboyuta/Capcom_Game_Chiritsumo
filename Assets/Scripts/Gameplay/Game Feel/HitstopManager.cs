@@ -41,6 +41,7 @@ public class HitStopManager : MonoBehaviour
     }
 
 
+    //この関数はDOHitStopに内蔵されているため、これを直接呼ばない
     IEnumerator HitStop(float duration, float strength)
     {
         Time.timeScale = strength;
@@ -65,8 +66,11 @@ public class HitStopManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.H))
         {
             DoHitStop();
+            //この関数をどこからでも呼べる
+            //引数無しだとインスペクタの値を参照してくれる。デバッグにどうぞ
+            //引数を指定することで呼ばれたタイミングごとにヒットストップを設定できる。
         }
-                
+
     }
 
     //===========================-------

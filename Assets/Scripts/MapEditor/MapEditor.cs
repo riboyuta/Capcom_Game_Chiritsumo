@@ -100,6 +100,10 @@ public class MapEditor : MonoBehaviour
     [Tooltip("TileDatabaseスクリプトをここにドラッグしてね")]
     [SerializeField] private TileDatabase tileDatabase;
 
+    [Header("mapRoot")]
+    [Tooltip("mapRoot�I�u�W�F�N�g�������Ƀh���b�v���Ă�")]
+    [SerializeField] private Transform mapRoot;
+
 
     [SerializeField] private int chunkSize = 16;
 
@@ -384,6 +388,7 @@ public class MapEditor : MonoBehaviour
         }
 
         GameObject tile = Instantiate(currentTile.prefab, spawnPos, Quaternion.identity);
+        tile.transform.SetParent(mapRoot);
         TileType tileType = tile.GetComponent<TileType>();
         tileType.tileDefinition = currentTile;
 
@@ -644,6 +649,7 @@ public class MapEditor : MonoBehaviour
             }
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
+            tile.transform.SetParent(mapRoot);
             TileType tileType = tile.GetComponent<TileType>();
 
             tileType.tileDefinition = def;
@@ -857,6 +863,7 @@ public class MapEditor : MonoBehaviour
             }
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
+            tile.transform.SetParent(mapRoot);
             TileType tileType = tile.GetComponent<TileType>();
 
             tileType.tileDefinition = def;
@@ -1018,6 +1025,7 @@ public class MapEditor : MonoBehaviour
             }
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
+            tile.transform.SetParent(mapRoot);
             TileType tileType = tile.GetComponent<TileType>();
 
             tileType.tileDefinition = def;
