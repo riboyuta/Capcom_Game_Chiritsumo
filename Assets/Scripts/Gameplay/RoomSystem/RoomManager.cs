@@ -28,6 +28,9 @@ public sealed class RoomManager : MonoBehaviour
     [Header("参照: プレイヤー公開窓口")]
     [Tooltip("部屋遷移中の入力遮断要求を送る公開窓口です。未設定時は実行時に探索を試みます。")]
     [SerializeField] private PlayerFacade playerFacade;
+    [Header("参照: GameRoot")]
+    [Tooltip("部屋遷移開始時にランキング用タイマーを停止する GameRoot です。未設定時は実行時に自動取得します。")]
+    [SerializeField] private GameRoot gameRoot;
 
     [Header("参照: カメラ")]
     [Tooltip("部屋ごとのカメラ境界と注視設定を反映するカメラ制御です。")]
@@ -184,6 +187,11 @@ public sealed class RoomManager : MonoBehaviour
             playerFacade = FindFirstObjectByType<PlayerFacade>();
         }
 
+        if (gameRoot == null)
+        {
+            gameRoot = FindFirstObjectByType<GameRoot>();
+        }
+
         // 未設定のカメラ参照だけを補完する。
         if (playerCameraController == null)
         {
@@ -201,6 +209,22 @@ public sealed class RoomManager : MonoBehaviour
         {
             stageResetSystem = FindFirstObjectByType<StageResetSystem>();
         }
+    }
+
+    private void PauseRankingTimerOnRoomTransitionBegin()
+    {
+        if (gameRoot == null)
+        {
+            gameRoot = FindFirstObjectByType<GameRoot>();
+        }
+
+        if (gameRoot == null)
+        {
+            return;
+        }
+
+        // 部屋遷移中のカメラ移動時間と次部屋安全エリア待機時間をランキングタイムに含めない。
+        gameRoot.PauseElapsedTime();
     }
 
     private bool BeginRoomTransitionExternalControl()
@@ -524,6 +548,8 @@ public sealed class RoomManager : MonoBehaviour
 
             return false;
         }
+
+        PauseRankingTimerOnRoomTransitionBegin();
 
         // 状態切り替え直後にステージ全体をリセット（カメラ遷移直前に敵を消すため）
         ResetStageOnRoomTransitionBegin();

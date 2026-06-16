@@ -183,7 +183,7 @@ public sealed class SonarChargerActivator : MonoBehaviour, IRespawnResettable
         // GameRootに経過時間開始を通知
         if (gameRoot != null)
         {
-            gameRoot.StartElapsedTimeIfNeeded();
+            gameRoot.StartOrResumeElapsedTime();
         }
 
         // 遅延設定があればコルーチンで遅延起動、なければ即起動

@@ -926,6 +926,7 @@ GameObject:
   - component: {fileID: 1904320903}
   - component: {fileID: 1904320902}
   - component: {fileID: 1904320904}
+  - component: {fileID: 1904320905}
   m_Layer: 0
   m_Name: ResultSceneController
   m_TagString: Untagged
@@ -954,30 +955,37 @@ MonoBehaviour:
       _primaryKeyboardKey: 37
       _secondaryKeyboardKey: 63
       _gamepadButton: 12
+      _secondaryGamepadButton: 16
     _down:
       _primaryKeyboardKey: 33
       _secondaryKeyboardKey: 64
       _gamepadButton: 13
+      _secondaryGamepadButton: 16
     _left:
       _primaryKeyboardKey: 15
       _secondaryKeyboardKey: 61
       _gamepadButton: 14
+      _secondaryGamepadButton: 16
     _right:
       _primaryKeyboardKey: 18
       _secondaryKeyboardKey: 62
       _gamepadButton: 15
+      _secondaryGamepadButton: 16
     _submit:
       _primaryKeyboardKey: 1
       _secondaryKeyboardKey: 40
       _gamepadButton: 0
+      _secondaryGamepadButton: 16
     _cancel:
       _primaryKeyboardKey: 38
       _secondaryKeyboardKey: 60
       _gamepadButton: 1
+      _secondaryGamepadButton: 16
     _pause:
       _primaryKeyboardKey: 30
       _secondaryKeyboardKey: 0
       _gamepadButton: 4
+      _secondaryGamepadButton: 16
 --- !u!4 &1904320903
 Transform:
   m_ObjectHideFlags: 0
@@ -1007,6 +1015,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Input.RawInputSource
   _leftStickDeadzone: 0.2
   _rightStickDeadzone: 0.2
+--- !u!114 &1904320905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1904320901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a0b2d9b9a77e4cedb5c8ab46e4b0d0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: unityroom::unityroom.Api.UnityroomApiClient
+  HmacKey: FVJ3J7ODeNli0EGBqF4zzidWiKdTPgQ5zTxvBaw6Ah1V/0b1phmIwr0Vx6ldoB2MPWlZgbS6klabZkwCAKVOBw==
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

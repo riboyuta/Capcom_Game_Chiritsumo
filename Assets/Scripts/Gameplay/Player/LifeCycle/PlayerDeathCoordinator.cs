@@ -22,6 +22,7 @@ internal sealed class PlayerDeathCoordinator
     private readonly Action playRespawnSound;
     private readonly Action resetVisualOneShotFlags;
     private readonly Action<Vector3> resetShadowHistoryForRespawn;
+    private readonly Action<PlayerDeathCause> notifyDeathAccepted;
     private readonly Action<string> logRespawn;
     private readonly Action<string> logRespawnWarning;
 
@@ -57,6 +58,7 @@ internal sealed class PlayerDeathCoordinator
         Action playRespawnSound,
         Action resetVisualOneShotFlags,
         Action<Vector3> resetShadowHistoryForRespawn,
+        Action<PlayerDeathCause> notifyDeathAccepted,
         Action<string> logRespawn,
         Action<string> logRespawnWarning)
     {
@@ -76,16 +78,24 @@ internal sealed class PlayerDeathCoordinator
         this.playRespawnSound = playRespawnSound;
         this.resetVisualOneShotFlags = resetVisualOneShotFlags;
         this.resetShadowHistoryForRespawn = resetShadowHistoryForRespawn;
+        this.notifyDeathAccepted = notifyDeathAccepted;
         this.logRespawn = logRespawn;
         this.logRespawnWarning = logRespawnWarning;
     }
 
     internal void StartRespawnSequence(PlayerDeathCause deathCause)
     {
+        if (isDead || isDeathSequencePlaying)
+        {
+            LogRespawn($"Death request ignored: already processing ({deathCause})");
+            return;
+        }
+
         isDead = true;
         isDeathSequencePlaying = true;
         didRespawnThisSequence = false;
         lastDeathCause = deathCause;
+        notifyDeathAccepted?.Invoke(deathCause);
         CaptureDeathFacingForVisual();
 
         if (respawnSequenceCoroutine != null)

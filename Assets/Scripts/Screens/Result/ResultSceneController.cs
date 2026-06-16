@@ -6,6 +6,9 @@ using unityroom.Api;
 
 public sealed class ResultSceneController : MonoBehaviour
 {
+    private const int ClearTimeBoardNumber = 1;
+    private const int DeathCountBoardNumber = 2;
+
     [Header("Result UI")]
     [SerializeField] private TMP_Text clearElapsedTimeText;
     [SerializeField] private string clearElapsedTimeFormat = "Clear Time: {0:F2}s";
@@ -23,6 +26,7 @@ public sealed class ResultSceneController : MonoBehaviour
     private bool isTransitioning;
     private bool isCountingUp;
     private float targetClearTime;
+    private int targetDeathCount;
     private void Awake()
     {
         if (!TryResolveRawInputSource())
@@ -59,10 +63,10 @@ public sealed class ResultSceneController : MonoBehaviour
             Debug.LogWarning("[ResultSceneController] FadeController not found.");
         }
 
-        if (ResultSceneTransitData.TryConsumeClearElapsedTime(out float clearElapsedTime))
+        if (ResultSceneTransitData.TryConsumeClearResult(out float clearElapsedTime, out int deathCount))
         {
-            Debug.Log($"[ResultSceneController] clearElapsedTime received={clearElapsedTime:F2}s");
-            ApplyClearElapsedTime(clearElapsedTime);
+            Debug.Log($"[ResultSceneController] clearElapsedTime received={clearElapsedTime:F2}s, deathCount={deathCount}");
+            ApplyClearResult(clearElapsedTime, deathCount);
             return;
         }
 
@@ -145,7 +149,12 @@ public sealed class ResultSceneController : MonoBehaviour
 
     private void ApplyClearElapsedTime(float clearElapsedTime)
     {
-        Debug.Log($"[ResultSceneController] ApplyClearElapsedTime called with time={clearElapsedTime:F2}s");
+        ApplyClearResult(clearElapsedTime, 0);
+    }
+
+    private void ApplyClearResult(float clearElapsedTime, int deathCount)
+    {
+        Debug.Log($"[ResultSceneController] ApplyClearResult called with time={clearElapsedTime:F2}s, deathCount={deathCount}");
         Debug.Log($"[ResultSceneController] clearElapsedTimeText is null: {clearElapsedTimeText == null}");
 
         if (clearElapsedTimeText == null)
@@ -159,6 +168,7 @@ public sealed class ResultSceneController : MonoBehaviour
         Debug.Log($"[ResultSceneController] Text object: {clearElapsedTimeText.gameObject.name}, Active: {clearElapsedTimeText.gameObject.activeInHierarchy}");
 
         targetClearTime = clearElapsedTime;
+        targetDeathCount = Mathf.Max(0, deathCount);
 
         // SE: ドラムロール開始
         if (AudioManager.Instance != null)
@@ -232,7 +242,8 @@ public sealed class ResultSceneController : MonoBehaviour
     {
         // ボード番号(1)にスコアを送信します。
         // 第3引数の ScoreboardWriteMode は適宜変更
-        Debug.Log($"[ResultSceneController] Send ranking score: {targetClearTime}s");
-        UnityroomApiClient.Instance.SendScore(1, targetClearTime, ScoreboardWriteMode.HighScoreAsc);
+        Debug.Log($"[ResultSceneController] Send ranking score: clearTime={targetClearTime}s, deathCount={targetDeathCount}");
+        UnityroomApiClient.Instance.SendScore(ClearTimeBoardNumber, targetClearTime, ScoreboardWriteMode.HighScoreAsc);
+        UnityroomApiClient.Instance.SendScore(DeathCountBoardNumber, targetDeathCount, ScoreboardWriteMode.HighScoreAsc);
     }
 }
