@@ -117,7 +117,7 @@ MonoBehaviour:
   - eventName: Consumed
     actions:
     - enabled: 1
-      audioId: SE_GIMMICK_DASHHEAL
+      audioId: SE_GIMMICK_DASHHEALV2
       playMode: 1
       overrideVolume: 0
       volume: 0

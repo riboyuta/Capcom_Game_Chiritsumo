@@ -41,10 +41,10 @@ MonoBehaviour:
   - id: BGM_STAGE1_ENEMY
     clip: {fileID: 8300000, guid: 18fe98a85c8079d449b81275ce6c6128, type: 3}
     channel: 0
-    defaultVolume: 0.5
+    defaultVolume: 0.4
     loop: 1
   - id: BGM_STAGE1_CLEAR
     clip: {fileID: 8300000, guid: a090ad553a94686498c3098b84c52b4e, type: 3}
     channel: 0
-    defaultVolume: 0.5
+    defaultVolume: 0.3
     loop: 1

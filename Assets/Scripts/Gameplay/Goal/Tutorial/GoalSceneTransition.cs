@@ -6,6 +6,8 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public sealed class GoalSceneTransition : MonoBehaviour
 {
+    private const float DefaultFadeOutDuration = 1.0f;
+
     [Header("Fade Settings")]
     [SerializeField, Tooltip("フェードアウト時間（秒）")]
     private float fadeOutDuration = 1.0f;
@@ -38,18 +40,11 @@ public sealed class GoalSceneTransition : MonoBehaviour
 
     private System.Collections.IEnumerator TransitionToStage1()
     {
-        if (FadeController.Instance != null)
-        {
-            bool fadeComplete = false;
-            FadeController.Instance.FadeOut(fadeOutDuration, onComplete: () => fadeComplete = true);
-            yield return new UnityEngine.WaitUntil(() => fadeComplete);
-            yield return new UnityEngine.WaitForSeconds(waitAfterFade);
-        }
-        else
-        {
-            Debug.LogWarning("[GoalSceneTransition] FadeController not found. Skipping fade effect.");
-            yield return new UnityEngine.WaitForSeconds(0.5f);
-        }
+        float actualFadeOutDuration = fadeOutDuration > 0f ? fadeOutDuration : DefaultFadeOutDuration;
+        bool fadeComplete = false;
+        FadeController.EnsureInstance().FadeOut(actualFadeOutDuration, onComplete: () => fadeComplete = true);
+        yield return new UnityEngine.WaitUntil(() => fadeComplete);
+        yield return new UnityEngine.WaitForSeconds(waitAfterFade);
 
         SceneFlow.LoadGame();
     }

@@ -8,6 +8,8 @@ public sealed class ResultSceneController : MonoBehaviour
 {
     private const int ClearTimeBoardNumber = 1;
     private const int DeathCountBoardNumber = 2;
+    private const string ResultBgmCueName = "BGM_result";
+    private const float ResultBgmFadeDuration = 1.0f;
 
     [Header("Result UI")]
     [SerializeField] private TMP_Text clearElapsedTimeText;
@@ -42,7 +44,7 @@ public sealed class ResultSceneController : MonoBehaviour
         // Result シーンの BGM を再生する。
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.FadeIn("BGM_result", 1.0f);
+            AudioManager.Instance.FadeIn(ResultBgmCueName, ResultBgmFadeDuration);
         }
 
         Debug.Log("[ResultSceneController] Start - Scene initialized.");
@@ -51,16 +53,6 @@ public sealed class ResultSceneController : MonoBehaviour
         if (clearElapsedTimeText != null)
         {
             Debug.Log($"[ResultSceneController] Text component name: {clearElapsedTimeText.gameObject.name}");
-        }
-
-        if (FadeController.Instance != null)
-        {
-            Debug.Log("[ResultSceneController] FadeController found. Starting fade in.");
-            FadeController.Instance.FadeIn();
-        }
-        else
-        {
-            Debug.LogWarning("[ResultSceneController] FadeController not found.");
         }
 
         if (ResultSceneTransitData.TryConsumeClearResult(out float clearElapsedTime, out int deathCount))
@@ -89,10 +81,15 @@ public sealed class ResultSceneController : MonoBehaviour
         {
             return;
         }
-        systemInputReader.Update();
-        Debug.Log($"[ResultSceneController] SubmitPressed={systemInputReader.SubmitPressed}");
 
-        if (systemInputReader.SubmitPressed)
+        if (systemInputReader == null)
+        {
+            return;
+        }
+
+        systemInputReader.Update();
+
+        if (WasAdvancePressedThisFrame())
         {
             if (isCountingUp)
             {
@@ -115,13 +112,17 @@ public sealed class ResultSceneController : MonoBehaviour
         }
     }
 
+    private bool WasAdvancePressedThisFrame()
+    {
+        bool submitPressed = systemInputReader != null && systemInputReader.SubmitPressed;
+        bool leftMousePressed = rawInputSource != null && rawInputSource.LeftMouseButtonState.PressedThisFrame;
+
+        return submitPressed || leftMousePressed;
+    }
+
     public void ReturnToTitle()
     {
-        // BGM を停止する。
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.Stop("BGM_result");
-        }
+        // BGM をフェードアウトしてからTitleへ戻る。
         if (isTransitioning)
         {
             Debug.LogWarning("[ResultSceneController] ReturnToTitle called but already transitioning.");
@@ -129,22 +130,19 @@ public sealed class ResultSceneController : MonoBehaviour
         }
 
         isTransitioning = true;
-        Debug.Log("[ResultSceneController] ReturnToTitle - Starting transition to Boot scene.");
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.FadeOut(ResultBgmCueName, ResultBgmFadeDuration);
+        }
 
-        if (FadeController.Instance != null)
+        Debug.Log("[ResultSceneController] ReturnToTitle - Starting transition to Title scene.");
+
+        Debug.Log("[ResultSceneController] Starting fade out...");
+        FadeController.EnsureInstance().FadeOut(onComplete: () =>
         {
-            Debug.Log("[ResultSceneController] Starting fade out...");
-            FadeController.Instance.FadeOut(onComplete: () =>
-            {
-                Debug.Log("[ResultSceneController] Fade out complete. Loading Boot scene.");
-                SceneFlow.LoadTitle();
-            });
-        }
-        else
-        {
-            Debug.LogWarning("[ResultSceneController] FadeController not found. Loading boot without fade.");
+            Debug.Log("[ResultSceneController] Fade out complete. Loading Title scene.");
             SceneFlow.LoadTitle();
-        }
+        });
     }
 
     private void ApplyClearElapsedTime(float clearElapsedTime)

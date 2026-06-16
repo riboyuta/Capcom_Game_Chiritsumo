@@ -9,14 +9,28 @@ using UnityEngine.UI;
 /// 
 public sealed class FadeController : MonoBehaviour
 {
+    private const float MaxFadeDeltaTime = 1f / 30f;
+
     public static FadeController Instance { get; private set; }
+
+    public static FadeController EnsureInstance()
+    {
+        if (Instance != null)
+        {
+            return Instance;
+        }
+
+        // Boot以外から再生した場合でも、画面フェードを必ず使えるように実行時生成する。
+        GameObject fadeControllerObject = new GameObject("FadeController");
+        return fadeControllerObject.AddComponent<FadeController>();
+    }
 
     [Header("フェード設定")]
     [Tooltip("デフォルトのフェードイン時間（秒）")]
-    [SerializeField, Min(0f)] private float defaultFadeInDuration = 0.5f;
+    [SerializeField, Min(0f)] private float defaultFadeInDuration = 2.0f;
 
     [Tooltip("デフォルトのフェードアウト時間（秒）")]
-    [SerializeField, Min(0f)] private float defaultFadeOutDuration = 0.5f;
+    [SerializeField, Min(0f)] private float defaultFadeOutDuration = 2.0f;
 
     // フェード中かどうか。
     public bool IsFading { get; private set; }
@@ -99,11 +113,19 @@ public sealed class FadeController : MonoBehaviour
         }
         else
         {
+            // ロード直後の重いフレームをフェード時間に混ぜないよう、黒/透明の初期状態を1フレーム描画する。
+            yield return null;
+
             float elapsed = 0f;
 
             while (elapsed < duration)
             {
-                elapsed += Time.unscaledDeltaTime;
+                // 同期ロード直後などの大きなdeltaでフェードが飛ばないよう、1フレームの進行量を制限する。
+                float deltaTime = Time.unscaledDeltaTime > MaxFadeDeltaTime
+                    ? MaxFadeDeltaTime
+                    : Time.unscaledDeltaTime;
+
+                elapsed += deltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
                 canvasGroup.alpha = Mathf.Lerp(fromAlpha, toAlpha, t);
                 yield return null;
