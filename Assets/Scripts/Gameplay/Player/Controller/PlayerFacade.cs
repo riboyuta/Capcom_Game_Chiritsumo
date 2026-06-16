@@ -326,11 +326,72 @@ public sealed class PlayerFacade : MonoBehaviour
 {
     // 実際のプレイヤー制御本体。
     private PlayerController playerController;
+    private bool isDeathEventSubscribed;
+
+    public event System.Action<PlayerDeathCause> DeathAccepted;
 
     // 必須コンポーネントを取得してキャッシュする。
     private void Awake()
     {
+        ResolvePlayerControllerIfNeeded();
+    }
+
+    private void OnEnable()
+    {
+        SubscribeDeathAcceptedIfNeeded();
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribeDeathAcceptedIfNeeded();
+    }
+
+    private void ResolvePlayerControllerIfNeeded()
+    {
+        if (playerController != null)
+        {
+            return;
+        }
+
         playerController = GetComponent<PlayerController>();
+    }
+
+    private void SubscribeDeathAcceptedIfNeeded()
+    {
+        if (isDeathEventSubscribed)
+        {
+            return;
+        }
+
+        ResolvePlayerControllerIfNeeded();
+
+        if (playerController == null)
+        {
+            return;
+        }
+
+        playerController.DeathAccepted += OnPlayerDeathAccepted;
+        isDeathEventSubscribed = true;
+    }
+
+    private void UnsubscribeDeathAcceptedIfNeeded()
+    {
+        if (!isDeathEventSubscribed)
+        {
+            return;
+        }
+
+        if (playerController != null)
+        {
+            playerController.DeathAccepted -= OnPlayerDeathAccepted;
+        }
+
+        isDeathEventSubscribed = false;
+    }
+
+    private void OnPlayerDeathAccepted(PlayerDeathCause deathCause)
+    {
+        DeathAccepted?.Invoke(deathCause);
     }
 
     // 現在ダッシュ中か。

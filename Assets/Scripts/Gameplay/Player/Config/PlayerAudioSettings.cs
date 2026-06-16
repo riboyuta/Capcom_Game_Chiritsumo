@@ -4,6 +4,9 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerController))]
 public sealed class PlayerAudioSettings : MonoBehaviour
 {
+    private const string WalkAudioId = "SE_PLAYER_WALK";
+    private const string WallSlideAudioId = "SFX_player_wallslide";
+
     private enum WalkAudioMode
     {
         WalkInterval,
@@ -109,6 +112,16 @@ public sealed class PlayerAudioSettings : MonoBehaviour
         {
             playerController.SetAudioController(this);
         }
+    }
+
+    private void OnDisable()
+    {
+        StopAllSounds();
+    }
+
+    private void OnDestroy()
+    {
+        StopAllSounds();
     }
 
     public void PlayJump()
@@ -225,6 +238,20 @@ public sealed class PlayerAudioSettings : MonoBehaviour
         StopWalkStartStopIfNeeded();
         ResetLoopTimers();
         AudioEvent.Emit(this, "WallSlideStop");
+        StopKnownLoopSounds();
+    }
+
+    private void StopKnownLoopSounds()
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager == null)
+        {
+            return;
+        }
+
+        // シーン遷移や破棄時は AudioEventBinder が動けない場合があるため、残りやすいループ音を直接止める。
+        audioManager.Stop(WalkAudioId);
+        audioManager.Stop(WallSlideAudioId);
     }
 
     private void UpdateWalkStartStop(bool isWalking)

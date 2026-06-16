@@ -40,8 +40,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
 
     [Header("発動条件 / ダッシュ可否")]
     [Tooltip("有効にすると、補助開始前にプレイヤーが今ダッシュ可能かを確認し、ダッシュ可能な場合だけ補助を開始します。")]
-    [SerializeField] private bool requireDashAvailableToStart;
-
+    [SerializeField] private bool requireDashAvailableToStart = true;
     [Header("発動条件 / 最大補助回数を使う")]
     [Tooltip("有効にすると、1回の追跡中に発動できる補助回数を maxAssistCount で制限します。無効時は回数制限なしで発動します。")]
     [SerializeField] private bool useAssistCountLimit = true;
@@ -210,7 +209,7 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
         }
 
         float triggerDistance = GetAssistTriggerDistance(currentAssistCount);
-        if (currentFrontDistance <= triggerDistance)
+        if (currentFrontDistance >= 0f && currentFrontDistance <= triggerDistance)
         {
             if (CanStartAssistByDashAvailability())
             {
@@ -555,6 +554,11 @@ public sealed class EnemyProximityTimeAssist : MonoBehaviour, IRespawnResettable
             }
 
             if (!TryCalculateFrontDistance(target.Movement, target.Collider, out float frontDistance))
+            {
+                continue;
+            }
+
+            if (frontDistance < 0f)
             {
                 continue;
             }

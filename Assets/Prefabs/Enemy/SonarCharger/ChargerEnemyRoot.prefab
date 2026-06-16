@@ -350,6 +350,7 @@ MonoBehaviour:
     enableDashInputAlertTrigger: 0
     alertTime: 1
     lockConfirmTime: 0.15
+    lockConfirmBandWidthMultiplier: 1.3
     minChargeTargetDistance: 0.05
     chargeSpeed: 12
     cameraBoundaryPadding: 0.1
@@ -734,7 +735,7 @@ Transform:
   m_GameObject: {fileID: 6866329369085899653}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 13.9, y: 11.4, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 6.8363, y: 14.601, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

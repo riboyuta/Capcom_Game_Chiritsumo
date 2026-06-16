@@ -1,4 +1,5 @@
 using Game.Input;
+using System;
 using UnityEngine;
 
 // 同一 GameObject への多重アタッチを防ぐ。
@@ -94,6 +95,8 @@ public sealed partial class PlayerController : MonoBehaviour
     internal PlayerAnimationSnapshot CurrentAnimationSnapshot => currentAnimationSnapshot;
 
     // 死亡状態プロパティ
+    internal event Action<PlayerDeathCause> DeathAccepted;
+
     public bool IsDeadState => deathCoordinator != null && deathCoordinator.IsDeadState;
     public bool IsDeathSequencePlaying => deathCoordinator != null && deathCoordinator.IsDeathSequencePlaying;
     public bool IsActionLocked => IsDeadState;
@@ -256,7 +259,7 @@ internal bool CanAcceptFixedLaunch(in PlayerFixedLaunchRequest request)
 
     private bool RequestDeathStart(PlayerDeathCause cause)
     {
-        if (deathCoordinator != null && deathCoordinator.IsDeathSequencePlaying)
+        if (deathCoordinator != null && (deathCoordinator.IsDeadState || deathCoordinator.IsDeathSequencePlaying))
         {
             Debug.Log("[PlayerDeath] Death request ignored: already processing");
             return false;
@@ -268,6 +271,11 @@ internal bool CanAcceptFixedLaunch(in PlayerFixedLaunchRequest request)
         PlayDeathSound(cause);
         deathCoordinator?.StartRespawnSequence(cause);
         return true;
+    }
+
+    private void NotifyDeathAccepted(PlayerDeathCause cause)
+    {
+        DeathAccepted?.Invoke(cause);
     }
 
     private void ResetInputBlockRequestsThisFrame()
@@ -457,7 +465,8 @@ internal bool CanAcceptFixedLaunch(in PlayerFixedLaunchRequest request)
                 justLandedThisFrame = false;
                 justCrossedApexThisFrame = false;
             },
-            respawnPosition => playerShadowRecorder?.ResetHistoryToPosition(respawnPosition), 
+            respawnPosition => playerShadowRecorder?.ResetHistoryToPosition(respawnPosition),
+            NotifyDeathAccepted,
             LogRespawn,
             LogRespawnWarning);
     }

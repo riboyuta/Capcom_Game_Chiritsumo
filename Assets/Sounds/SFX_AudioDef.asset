@@ -193,3 +193,8 @@ MonoBehaviour:
     channel: 1
     defaultVolume: 1
     loop: 0
+  - id: SE_GIMMICK_DASHHEALV2
+    clip: {fileID: 8300000, guid: 843607f4e7f1d9444a3234beff9a2059, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 0

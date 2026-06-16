@@ -6,6 +6,11 @@ using unityroom.Api;
 
 public sealed class ResultSceneController : MonoBehaviour
 {
+    private const int ClearTimeBoardNumber = 1;
+    private const int DeathCountBoardNumber = 2;
+    private const string ResultBgmCueName = "BGM_result";
+    private const float ResultBgmFadeDuration = 1.0f;
+
     [Header("Result UI")]
     [SerializeField] private TMP_Text clearElapsedTimeText;
     [SerializeField] private string clearElapsedTimeFormat = "Clear Time: {0:F2}s";
@@ -23,6 +28,7 @@ public sealed class ResultSceneController : MonoBehaviour
     private bool isTransitioning;
     private bool isCountingUp;
     private float targetClearTime;
+    private int targetDeathCount;
     private void Awake()
     {
         if (!TryResolveRawInputSource())
@@ -38,7 +44,7 @@ public sealed class ResultSceneController : MonoBehaviour
         // Result シーンの BGM を再生する。
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.FadeIn("BGM_result", 1.0f);
+            AudioManager.Instance.FadeIn(ResultBgmCueName, ResultBgmFadeDuration);
         }
 
         Debug.Log("[ResultSceneController] Start - Scene initialized.");
@@ -49,20 +55,10 @@ public sealed class ResultSceneController : MonoBehaviour
             Debug.Log($"[ResultSceneController] Text component name: {clearElapsedTimeText.gameObject.name}");
         }
 
-        if (FadeController.Instance != null)
+        if (ResultSceneTransitData.TryConsumeClearResult(out float clearElapsedTime, out int deathCount))
         {
-            Debug.Log("[ResultSceneController] FadeController found. Starting fade in.");
-            FadeController.Instance.FadeIn();
-        }
-        else
-        {
-            Debug.LogWarning("[ResultSceneController] FadeController not found.");
-        }
-
-        if (ResultSceneTransitData.TryConsumeClearElapsedTime(out float clearElapsedTime))
-        {
-            Debug.Log($"[ResultSceneController] clearElapsedTime received={clearElapsedTime:F2}s");
-            ApplyClearElapsedTime(clearElapsedTime);
+            Debug.Log($"[ResultSceneController] clearElapsedTime received={clearElapsedTime:F2}s, deathCount={deathCount}");
+            ApplyClearResult(clearElapsedTime, deathCount);
             return;
         }
 
@@ -85,10 +81,15 @@ public sealed class ResultSceneController : MonoBehaviour
         {
             return;
         }
-        systemInputReader.Update();
-        Debug.Log($"[ResultSceneController] SubmitPressed={systemInputReader.SubmitPressed}");
 
-        if (systemInputReader.SubmitPressed)
+        if (systemInputReader == null)
+        {
+            return;
+        }
+
+        systemInputReader.Update();
+
+        if (WasAdvancePressedThisFrame())
         {
             if (isCountingUp)
             {
@@ -111,13 +112,17 @@ public sealed class ResultSceneController : MonoBehaviour
         }
     }
 
+    private bool WasAdvancePressedThisFrame()
+    {
+        bool submitPressed = systemInputReader != null && systemInputReader.SubmitPressed;
+        bool leftMousePressed = rawInputSource != null && rawInputSource.LeftMouseButtonState.PressedThisFrame;
+
+        return submitPressed || leftMousePressed;
+    }
+
     public void ReturnToTitle()
     {
-        // BGM を停止する。
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.Stop("BGM_result");
-        }
+        // BGM をフェードアウトしてからTitleへ戻る。
         if (isTransitioning)
         {
             Debug.LogWarning("[ResultSceneController] ReturnToTitle called but already transitioning.");
@@ -125,27 +130,29 @@ public sealed class ResultSceneController : MonoBehaviour
         }
 
         isTransitioning = true;
-        Debug.Log("[ResultSceneController] ReturnToTitle - Starting transition to Boot scene.");
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.FadeOut(ResultBgmCueName, ResultBgmFadeDuration);
+        }
 
-        if (FadeController.Instance != null)
+        Debug.Log("[ResultSceneController] ReturnToTitle - Starting transition to Title scene.");
+
+        Debug.Log("[ResultSceneController] Starting fade out...");
+        FadeController.EnsureInstance().FadeOut(onComplete: () =>
         {
-            Debug.Log("[ResultSceneController] Starting fade out...");
-            FadeController.Instance.FadeOut(onComplete: () =>
-            {
-                Debug.Log("[ResultSceneController] Fade out complete. Loading Boot scene.");
-                SceneFlow.LoadTitle();
-            });
-        }
-        else
-        {
-            Debug.LogWarning("[ResultSceneController] FadeController not found. Loading boot without fade.");
+            Debug.Log("[ResultSceneController] Fade out complete. Loading Title scene.");
             SceneFlow.LoadTitle();
-        }
+        });
     }
 
     private void ApplyClearElapsedTime(float clearElapsedTime)
     {
-        Debug.Log($"[ResultSceneController] ApplyClearElapsedTime called with time={clearElapsedTime:F2}s");
+        ApplyClearResult(clearElapsedTime, 0);
+    }
+
+    private void ApplyClearResult(float clearElapsedTime, int deathCount)
+    {
+        Debug.Log($"[ResultSceneController] ApplyClearResult called with time={clearElapsedTime:F2}s, deathCount={deathCount}");
         Debug.Log($"[ResultSceneController] clearElapsedTimeText is null: {clearElapsedTimeText == null}");
 
         if (clearElapsedTimeText == null)
@@ -159,6 +166,7 @@ public sealed class ResultSceneController : MonoBehaviour
         Debug.Log($"[ResultSceneController] Text object: {clearElapsedTimeText.gameObject.name}, Active: {clearElapsedTimeText.gameObject.activeInHierarchy}");
 
         targetClearTime = clearElapsedTime;
+        targetDeathCount = Mathf.Max(0, deathCount);
 
         // SE: ドラムロール開始
         if (AudioManager.Instance != null)
@@ -232,7 +240,8 @@ public sealed class ResultSceneController : MonoBehaviour
     {
         // ボード番号(1)にスコアを送信します。
         // 第3引数の ScoreboardWriteMode は適宜変更
-        Debug.Log($"[ResultSceneController] Send ranking score: {targetClearTime}s");
-        UnityroomApiClient.Instance.SendScore(1, targetClearTime, ScoreboardWriteMode.HighScoreAsc);
+        Debug.Log($"[ResultSceneController] Send ranking score: clearTime={targetClearTime}s, deathCount={targetDeathCount}");
+        UnityroomApiClient.Instance.SendScore(ClearTimeBoardNumber, targetClearTime, ScoreboardWriteMode.HighScoreAsc);
+        UnityroomApiClient.Instance.SendScore(DeathCountBoardNumber, targetDeathCount, ScoreboardWriteMode.HighScoreAsc);
     }
 }
