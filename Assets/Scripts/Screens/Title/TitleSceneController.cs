@@ -69,11 +69,7 @@ public sealed class TitleSceneController : MonoBehaviour
             Debug.LogWarning("[TitleSceneController] TitleMenuView is not assigned. Menu selection will not be visible.", this);
         }
 
-        FadeController fadeController = FadeController.Instance;
-        if (fadeController != null)
-        {
-            fadeController.FadeIn();
-        }
+        FadeController.EnsureInstance().FadeIn();
 
         AudioManager audioManager = AudioManager.Instance;
         if (audioManager != null)
@@ -215,13 +211,9 @@ public sealed class TitleSceneController : MonoBehaviour
             audioManager.FadeOut(TitleBgmCueName, titleBgmFadeDuration);
         }
 
-        FadeController fadeController = FadeController.Instance;
-        if (fadeController != null)
-        {
-            fadeController.FadeOut();
-        }
-
-        yield return new WaitForSeconds(titleFadeDuration);
+        bool fadeComplete = false;
+        FadeController.EnsureInstance().FadeOut(titleFadeDuration, onComplete: () => fadeComplete = true);
+        yield return new WaitUntil(() => fadeComplete);
 
         SceneFlow.LoadTutorial();
     }

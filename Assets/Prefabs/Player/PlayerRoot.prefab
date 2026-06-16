@@ -452,7 +452,7 @@ MonoBehaviour:
   - eventName: Jump
     actions:
     - enabled: 1
-      audioId: SE_PLAYER_JUMP
+      audioId: SFX_player_jump
       playMode: 1
       overrideVolume: 0
       volume: 0
@@ -463,7 +463,7 @@ MonoBehaviour:
   - eventName: Land
     actions:
     - enabled: 1
-      audioId: SFX_player_land
+      audioId: SE_PLAYER_JUMP
       playMode: 1
       overrideVolume: 0
       volume: 0
@@ -529,7 +529,7 @@ MonoBehaviour:
   - eventName: GroundDash
     actions:
     - enabled: 1
-      audioId: SE_PLAYER_DASH
+      audioId: SFX_player_step
       playMode: 1
       overrideVolume: 0
       volume: 0
@@ -540,7 +540,7 @@ MonoBehaviour:
   - eventName: AirDash
     actions:
     - enabled: 1
-      audioId: SE_PLAYER_DASH
+      audioId: SFX_player_step
       playMode: 1
       overrideVolume: 0
       volume: 0
@@ -573,7 +573,7 @@ MonoBehaviour:
   - eventName: StrongLand
     actions:
     - enabled: 1
-      audioId: SFX_player_land
+      audioId: SE_PLAYER_JUMP
       playMode: 1
       overrideVolume: 0
       volume: 0

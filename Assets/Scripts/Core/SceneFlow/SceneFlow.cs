@@ -26,10 +26,7 @@ public static class SceneFlow
         Debug.Log("[SceneFlow] LoadTutorial requested.");
         SceneManager.LoadScene(TutorialSceneName, LoadSceneMode.Single);
 
-        if (FadeController.Instance != null)
-        {
-            FadeController.Instance.FadeIn();
-        }
+        FadeController.EnsureInstance().FadeIn();
     }
 
     public static void LoadGame()
@@ -43,6 +40,7 @@ public static class SceneFlow
     {
         Debug.Log("[SceneFlow] LoadResult requested.");
         SceneManager.LoadScene(ResultSceneName, LoadSceneMode.Single);
+        FadeController.EnsureInstance().FadeIn();
     }
 
     public static void ReloadCurrent()

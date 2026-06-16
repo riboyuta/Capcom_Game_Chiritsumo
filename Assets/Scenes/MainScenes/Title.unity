@@ -1058,9 +1058,20 @@ MonoBehaviour:
   bindings:
   - eventName: SceneStart
     actions:
-    - enabled: 0
+    - enabled: 1
       audioId: BGM_title
       playMode: 5
+      overrideVolume: 0
+      volume: 0
+      delay: 0
+      cooldown: 0
+      fadeDuration: 1
+      spatialOrigin: {fileID: 0}
+  - eventName: SceneEnd
+    actions:
+    - enabled: 1
+      audioId: BGM_title
+      playMode: 6
       overrideVolume: 0
       volume: 0
       delay: 0

@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public sealed class GameRoot : MonoBehaviour
@@ -8,6 +9,11 @@ public sealed class GameRoot : MonoBehaviour
         Playing,
         Result
     }
+
+    private const string StageIntroBgmCueName = "BGM_main_beforechase";
+    private const string StageChaseBgmCueName = "BGM_main_afterchase";
+    private const string SceneAudioStageEnemyBgmCueName = "BGM_STAGE1_ENEMY";
+    private const float StageBgmFadeDuration = 2.0f;
 
     [Header("進行フロー: Ready時間")]
     [Tooltip("Ready 状態を維持する時間(秒)です。開始演出や待機時間の長さを調整します。")]
@@ -51,15 +57,9 @@ public sealed class GameRoot : MonoBehaviour
         SubscribePlayerDeathEventIfNeeded();
 
         // シーン開始時に明転させる。
-        if (FadeController.Instance != null)
-        {
-            FadeController.Instance.FadeIn();
-        }
+        FadeController.EnsureInstance().FadeIn();
 
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.FadeIn("BGM_main_beforechase", 2.0f);
-        }
+        StartCoroutine(StartStageIntroBgmAfterSceneStart());
 
         elapsedTime = 0f;
         deathCount = 0;
@@ -115,6 +115,25 @@ public sealed class GameRoot : MonoBehaviour
         }
     }
 
+    private IEnumerator StartStageIntroBgmAfterSceneStart()
+    {
+        yield return null;
+
+        if (hasElapsedTimeStarted)
+        {
+            yield break;
+        }
+
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager == null)
+        {
+            yield break;
+        }
+
+        audioManager.Stop(SceneAudioStageEnemyBgmCueName);
+        audioManager.FadeIn(StageIntroBgmCueName, StageBgmFadeDuration);
+    }
+
     private void EnterReady()
     {
         currentState = State.Ready;
@@ -158,9 +177,14 @@ public sealed class GameRoot : MonoBehaviour
         currentState = State.Result;
 
         // BGM を停止する。
-        if (AudioManager.Instance != null)
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
         {
-            AudioManager.Instance.Stop("BGM_main_afterchase");
+            audioManager.Stop(StageIntroBgmCueName);
+            audioManager.Stop(StageChaseBgmCueName);
+            audioManager.Stop(SceneAudioStageEnemyBgmCueName);
+            // Result 遷移時に Stage 側のループSEを残さない。
+            audioManager.StopAll(AudioChannel.SFX);
         }
     }
 
@@ -168,14 +192,7 @@ public sealed class GameRoot : MonoBehaviour
     {
         isTransitioning = true;
 
-        if (FadeController.Instance != null)
-        {
-            FadeController.Instance.FadeOut(onComplete: SceneFlow.LoadResult);
-            return;
-        }
-
-        Debug.LogWarning("[GameRoot] FadeController not found. Transitioning without fade.");
-        SceneFlow.LoadResult();
+        FadeController.EnsureInstance().FadeOut(onComplete: SceneFlow.LoadResult);
     }
 
     // EnemySpawnTrigger から最初の有効発動時に呼ばせる。
@@ -188,10 +205,12 @@ public sealed class GameRoot : MonoBehaviour
             lastLoggedTime = -1f;
 
             // BGM を変更する。
-            if (AudioManager.Instance != null)
+            AudioManager audioManager = AudioManager.Instance;
+            if (audioManager != null)
             {
-                AudioManager.Instance.Stop("BGM_main_beforechase");
-                AudioManager.Instance.FadeIn("BGM_main_afterchase", 2.0f);
+                audioManager.Stop(StageIntroBgmCueName);
+                audioManager.Stop(SceneAudioStageEnemyBgmCueName);
+                audioManager.FadeIn(StageChaseBgmCueName, StageBgmFadeDuration);
 
                 // SE:最初のスポーン時
                 //AudioManager.Instance.PlayOverlap("SFX_boss_spawn");
