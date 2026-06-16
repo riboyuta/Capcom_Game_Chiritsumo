@@ -63,7 +63,7 @@ internal sealed class PlayerLedgeClimbSystem
             forwardCheckOrigin,
             wallDir,
             deps.Settings.Wall.LedgeDetectForwardDistance,
-            deps.Settings.Detection.GroundLayerMask,
+            deps.Settings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
 
         if (hasWallAhead)
@@ -82,7 +82,7 @@ internal sealed class PlayerLedgeClimbSystem
             Vector3.down,
             out RaycastHit hit,
             groundCheckDistance,
-            deps.Settings.Detection.GroundLayerMask,
+            deps.Settings.Detection.GroundLayerMask | deps.Settings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
 
         if (foundGround)
@@ -150,7 +150,7 @@ internal sealed class PlayerLedgeClimbSystem
             headCheckOrigin,
             Vector3.up,
             deps.Settings.Wall.LedgeDetectUpDistance,
-            deps.Settings.Detection.GroundLayerMask,
+            deps.Settings.Detection.GroundLayerMask | deps.Settings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
 
         if (hasObstacleAbove)
@@ -166,7 +166,7 @@ internal sealed class PlayerLedgeClimbSystem
             forwardCheckOrigin,
             wallDir,
             deps.Settings.Wall.LedgeDetectForwardDistance,
-            deps.Settings.Detection.GroundLayerMask,
+            deps.Settings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
 
         if (hasWallAhead)
@@ -184,7 +184,7 @@ internal sealed class PlayerLedgeClimbSystem
             Vector3.down,
             out RaycastHit hit,
             groundCheckDistance,
-            deps.Settings.Detection.GroundLayerMask,
+            deps.Settings.Detection.GroundLayerMask | deps.Settings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
 
         if (foundGround)
