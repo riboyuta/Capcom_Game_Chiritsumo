@@ -1145,7 +1145,7 @@ MonoBehaviour:
     m_NumAlphaKeys: 4
   useEmission: 1
   emissionColor: {r: 0.36, g: 0.2, b: 1, a: 1}
-  useEmissionColorGradient: 0
+  useEmissionColorGradient: 1
   emissionColorGradient:
     serializedVersion: 2
     key0: {r: 0.82, g: 0.95, b: 1, a: 1}
@@ -1259,6 +1259,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   afterimageMaterial: {fileID: 2100000, guid: 3655098b4a66fbe4bb12916ede82842d, type: 2}
+  logMaterialDiagnostics: 0
 --- !u!1001 &632477157342944301
 PrefabInstance:
   m_ObjectHideFlags: 0
