@@ -72,6 +72,21 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     private bool isActivated;
     private bool isDisabled;
 
+    // 画面外から画面内へ復帰移動しているか
+    private bool isRecoveringToView;
+
+    // プレイヤーが最後に移動していた有効な方向
+    private Vector3 lastPlayerTravelDirection;
+
+    // プレイヤー移動方向の平滑化速度
+    private const float PlayerTravelDirectionSmoothing = 10.0f;
+
+    // プレイヤーが移動中と判断する最低速度
+    private const float MinimumPlayerTravelSpeed = 0.1f;
+
+    // 復帰目標をカメラ中央へ寄せる割合
+    private const float RecoveryCameraCenterBias = 0.25f;
+
     // 初期状態保持（リスポーン用）
     private bool hasCapturedInitialState;
     private Vector3 initialPosition;
@@ -281,22 +296,128 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     // Follow：プレイヤーを追跡しながらソナーで探知する
     private void TickFollow(float deltaTime)
     {
-        // Alert の予備エフェクト用オフセットをリセットする
         view.ResetVisualOffset();
 
-        Vector3 followDirection = targetPlayer.transform.position - transform.position;
-        followDirection.z = 0.0f;
+        // プレイヤーの実移動方向を更新
+        UpdatePlayerTravelDirection(deltaTime);
 
-        movement.TickFollow(targetPlayer.transform.position, Settings, deltaTime);
-        view.ApplyDirection(followDirection);
+        Vector3 playerPosition =
+            targetPlayer.transform.position;
 
-        // ダッシュ入力による即時 Alert 起動チェック
-        if (TryStartAlertByDashInput())
+        Vector3 toPlayer =
+            playerPosition -
+            transform.position;
+
+        toPlayer.z = 0.0f;
+
+        float distanceToPlayer =
+            toPlayer.magnitude;
+
+        bool shouldRecover =
+            ShouldRecoverToCurrentView(
+                distanceToPlayer);
+
+        // 画面外かつ離れすぎている場合は画面内へ復帰する
+        if (shouldRecover)
+        {
+            BeginViewRecovery();
+
+            Vector3 recoveryTarget =
+                CalculateRecoveryTargetPosition();
+
+            Vector3 recoveryDirection =
+                recoveryTarget -
+                transform.position;
+
+            recoveryDirection.z = 0.0f;
+
+            movement.TickFollow(
+                recoveryTarget,
+                Settings.recoverySpeed,
+                deltaTime);
+
+            view.ApplyDirection(
+                recoveryDirection);
+
+            // 復帰中はダッシュ検知・ソナー検知を行わない
             return;
+        }
 
-        // ソナーでプレイヤーを探知したら Alert へ遷移する
-        if (sonarDetector.TickSonar(targetPlayer, playerMotionDetector, Settings, deltaTime, out Vector3 detectedPosition))
+        EndViewRecovery();
+
+        float followSpeed =
+            CalculateFollowSpeed(
+                distanceToPlayer);
+
+        movement.TickFollow(
+            playerPosition,
+            followSpeed,
+            deltaTime);
+
+        view.ApplyDirection(
+            toPlayer);
+
+        // ダッシュ入力による即時Alert
+        if (TryStartAlertByDashInput())
+        {
+            return;
+        }
+
+        // ソナーによるAlert
+        if (sonarDetector.TickSonar(
+            targetPlayer,
+            playerMotionDetector,
+            Settings,
+            deltaTime,
+            out Vector3 detectedPosition))
+        {
             StartAlert(detectedPosition);
+        }
+    }
+
+    // プレイヤーとの距離に応じた追跡速度を計算する
+    private float CalculateFollowSpeed(float distanceToPlayer)
+    {
+        float normalSpeed =
+            Mathf.Max(0.0f, Settings.followSpeed);
+
+        float maxSpeed =
+            Mathf.Max(
+                normalSpeed,
+                Settings.catchUpMaxSpeed);
+
+        float startDistance =
+            Mathf.Max(
+                0.0f,
+                Settings.catchUpStartDistance);
+
+        float maxDistance =
+            Mathf.Max(
+                startDistance,
+                Settings.catchUpMaxDistance);
+
+        // 加速開始距離以内なら通常速度
+        if (distanceToPlayer <= startDistance)
+        {
+            return normalSpeed;
+        }
+
+        // 開始距離と最大距離が同じ場合は即座に最大速度へ切り替える
+        if (maxDistance <= startDistance)
+        {
+            return maxSpeed;
+        }
+
+        float distanceRate =
+            Mathf.InverseLerp(
+                startDistance,
+                maxDistance,
+                distanceToPlayer);
+
+        return Mathf.Lerp(
+            normalSpeed,
+            maxSpeed,
+            distanceRate);
     }
 
     // 状態遷移：Follow → Alert
@@ -718,6 +839,11 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         sonarDetector.ResetDetector(Settings);
         playerMotionDetector.ResetDetector(targetPlayer);
         view.ResetVisualOffset();
+
+        isRecoveringToView = false;
+        lastPlayerTravelDirection = Vector3.zero;
+
+        EnsurePlayerTravelDirection();
     }
 
     // 全コンポーネントを初期状態に戻す
@@ -728,10 +854,19 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         playerMotionDetector.ResetDetector(targetPlayer);
         view.ResetToInitialState();
 
-        lockedChargeTargetPosition = Vector3.zero;
+        lockedChargeTargetPosition =
+            Vector3.zero;
+
+        isRecoveringToView =
+            false;
+
+        lastPlayerTravelDirection =
+            Vector3.zero;
 
         if (chargeWarningView != null)
+        {
             chargeWarningView.ResetView();
+        }
     }
 
     // Idle 状態へ遷移し、アニメーションと表示状態をリセットする
@@ -803,6 +938,371 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         rb.isKinematic = wasKinematic;
+    }
+
+    // 現在カメラに映っている範囲を取得する
+    private bool TryGetCurrentViewBounds(out Bounds viewBounds)
+    {
+        viewBounds = default;
+
+        if (playerCameraController == null)
+        {
+            return false;
+        }
+
+        viewBounds =
+            playerCameraController.GetCurrentViewBounds();
+
+        // カメラ未取得時はサイズ0のBoundsが返るため無効扱いにする
+        return viewBounds.size.x > 0.0001f &&
+               viewBounds.size.y > 0.0001f;
+    }
+
+    // 現在位置とプレイヤー進行方向から、安全な画面内復帰位置を計算する
+    private Vector3 CalculateRecoveryTargetPosition()
+    {
+        if (!TryGetCurrentViewBounds(out Bounds viewBounds))
+        {
+            Vector3 fallback =
+                targetPlayer != null
+                    ? targetPlayer.transform.position
+                    : transform.position;
+
+            fallback.z = transform.position.z;
+            return fallback;
+        }
+
+        float padding =
+            Mathf.Max(
+                0.0f,
+                Settings.recoveryCameraPadding);
+
+        float minX = viewBounds.min.x + padding;
+        float maxX = viewBounds.max.x - padding;
+        float minY = viewBounds.min.y + padding;
+        float maxY = viewBounds.max.y - padding;
+
+        if (minX > maxX)
+        {
+            minX = viewBounds.center.x;
+            maxX = viewBounds.center.x;
+        }
+
+        if (minY > maxY)
+        {
+            minY = viewBounds.center.y;
+            maxY = viewBounds.center.y;
+        }
+
+        // 現在位置から最も近い画面内位置
+        Vector3 nearestEntryPosition =
+            transform.position;
+
+        nearestEntryPosition.x =
+            Mathf.Clamp(
+                nearestEntryPosition.x,
+                minX,
+                maxX);
+
+        nearestEntryPosition.y =
+            Mathf.Clamp(
+                nearestEntryPosition.y,
+                minY,
+                maxY);
+
+        nearestEntryPosition.z =
+            transform.position.z;
+
+        if (targetPlayer == null)
+        {
+            return nearestEntryPosition;
+        }
+
+        EnsurePlayerTravelDirection();
+
+        Vector3 travelDirection =
+            lastPlayerTravelDirection;
+
+        travelDirection.z = 0.0f;
+
+        if (travelDirection.sqrMagnitude <= 0.0001f)
+        {
+            return nearestEntryPosition;
+        }
+
+        travelDirection.Normalize();
+
+        Vector3 playerPosition =
+            targetPlayer.transform.position;
+
+        Vector3 playerToEnemy =
+            transform.position -
+            playerPosition;
+
+        playerToEnemy.z = 0.0f;
+
+        bool isClearlyBehindPlayer = false;
+
+        if (playerToEnemy.sqrMagnitude > 0.0001f)
+        {
+            float directionDot =
+                Vector3.Dot(
+                    playerToEnemy.normalized,
+                    travelDirection);
+
+            // プレイヤー進行方向に対して明確に後方にいる場合だけ、
+            // プレイヤー後方の位置を復帰目標にする
+            isClearlyBehindPlayer =
+                directionDot <= -0.25f;
+        }
+
+        // 敵が前方や側面にいる場合は、
+        // プレイヤーを横切らず最寄りの画面端へ戻す
+        if (!isClearlyBehindPlayer)
+        {
+            return nearestEntryPosition;
+        }
+
+        float behindDistance =
+            Mathf.Max(
+                0.0f,
+                Settings.catchUpStartDistance);
+
+        Vector3 behindTarget =
+            playerPosition -
+            travelDirection *
+            behindDistance;
+
+        behindTarget.z =
+            transform.position.z;
+
+        Vector3 cameraCenter =
+            viewBounds.center;
+
+        cameraCenter.z =
+            transform.position.z;
+
+        Vector3 recoveryTarget =
+            Vector3.Lerp(
+                behindTarget,
+                cameraCenter,
+                RecoveryCameraCenterBias);
+
+        recoveryTarget.x =
+            Mathf.Clamp(
+                recoveryTarget.x,
+                minX,
+                maxX);
+
+        recoveryTarget.y =
+            Mathf.Clamp(
+                recoveryTarget.y,
+                minY,
+                maxY);
+
+        recoveryTarget.z =
+            transform.position.z;
+
+        return recoveryTarget;
+    }
+
+    // 画面外復帰を開始する
+    private void BeginViewRecovery()
+    {
+        if (isRecoveringToView)
+        {
+            return;
+        }
+
+        isRecoveringToView = true;
+
+        // 復帰中に既存のソナーが残らないよう停止する
+        if (sonarDetector != null)
+        {
+            sonarDetector.CancelPulse();
+        }
+
+        // 復帰前のダッシュ入力を復帰終了後に拾わないよう同期する
+        if (playerMotionDetector != null)
+        {
+            playerMotionDetector.SyncDashInputBaseline(
+                targetPlayer);
+        }
+
+        HideChargeWarning();
+
+        LogDebug("View recovery started.");
+    }
+
+    // 画面外復帰を終了する
+    private void EndViewRecovery()
+    {
+        if (!isRecoveringToView)
+        {
+            return;
+        }
+
+        isRecoveringToView = false;
+
+        // 復帰直後に即座に攻撃せず、
+        // ソナー待機時間を最初から開始する
+        if (sonarDetector != null)
+        {
+            sonarDetector.ResetDetector(Settings);
+        }
+
+        if (playerMotionDetector != null)
+        {
+            playerMotionDetector.SyncDashInputBaseline(
+                targetPlayer);
+        }
+
+        LogDebug("View recovery completed.");
+    }
+
+    // SonarChargerが現在の画面範囲内にいるかを返す
+    private bool IsInsideCurrentView(float padding)
+    {
+        // カメラ範囲を取得できない場合は、
+        // 不要な画面外復帰を発生させないため画面内扱いにする
+        if (!TryGetCurrentViewBounds(out Bounds viewBounds))
+        {
+            return true;
+        }
+
+        padding = Mathf.Max(0.0f, padding);
+
+        float minX = viewBounds.min.x + padding;
+        float maxX = viewBounds.max.x - padding;
+        float minY = viewBounds.min.y + padding;
+        float maxY = viewBounds.max.y - padding;
+
+        // 余白が画面サイズの半分を超えた場合は中心へ縮退させる
+        if (minX > maxX)
+        {
+            minX = viewBounds.center.x;
+            maxX = viewBounds.center.x;
+        }
+
+        if (minY > maxY)
+        {
+            minY = viewBounds.center.y;
+            maxY = viewBounds.center.y;
+        }
+
+        Vector3 currentPosition = transform.position;
+
+        return currentPosition.x >= minX &&
+               currentPosition.x <= maxX &&
+               currentPosition.y >= minY &&
+               currentPosition.y <= maxY;
+    }
+
+    // 画面外からの復帰移動を開始する条件を返す
+    private bool ShouldRecoverToCurrentView(float distanceToPlayer)
+    {
+        // 画面内にいる間は復帰しない
+        if (IsInsideCurrentView(0.0f))
+        {
+            return false;
+        }
+
+        float recoveryDistance =
+            Mathf.Max(
+                0.0f,
+                Settings.recoveryStartDistance);
+
+        return distanceToPlayer >= recoveryDistance;
+    }
+
+    // プレイヤーの実速度から移動方向を更新する
+    private void UpdatePlayerTravelDirection(float deltaTime)
+    {
+        if (targetPlayer == null)
+        {
+            return;
+        }
+
+        Vector3 playerVelocity =
+            targetPlayer.CurrentVelocity;
+
+        playerVelocity.z = 0.0f;
+
+        float minimumSpeed =
+            Mathf.Max(
+                0.0f,
+                MinimumPlayerTravelSpeed);
+
+        // 停止中や極低速時は、直前の有効な方向を維持する
+        if (playerVelocity.sqrMagnitude <
+            minimumSpeed * minimumSpeed)
+        {
+            EnsurePlayerTravelDirection();
+            return;
+        }
+
+        Vector3 currentDirection =
+            playerVelocity.normalized;
+
+        // 初回は補間せず、現在の方向をそのまま採用する
+        if (lastPlayerTravelDirection.sqrMagnitude <= 0.0001f)
+        {
+            lastPlayerTravelDirection =
+                currentDirection;
+
+            return;
+        }
+
+        float safeDeltaTime =
+            Mathf.Max(0.0f, deltaTime);
+
+        float blendRate =
+            1.0f -
+            Mathf.Exp(
+                -PlayerTravelDirectionSmoothing *
+                safeDeltaTime);
+
+        lastPlayerTravelDirection =
+            Vector3.Lerp(
+                lastPlayerTravelDirection,
+                currentDirection,
+                blendRate);
+
+        if (lastPlayerTravelDirection.sqrMagnitude > 0.0001f)
+        {
+            lastPlayerTravelDirection.Normalize();
+        }
+    }
+
+    // プレイヤー移動方向が未確定の場合に安全な初期方向を設定する
+    private void EnsurePlayerTravelDirection()
+    {
+        if (lastPlayerTravelDirection.sqrMagnitude > 0.0001f)
+        {
+            return;
+        }
+
+        if (targetPlayer != null)
+        {
+            Vector3 enemyToPlayer =
+                targetPlayer.transform.position -
+                transform.position;
+
+            enemyToPlayer.z = 0.0f;
+
+            // 敵からプレイヤーへの方向を暫定的な進行方向として使う
+            if (enemyToPlayer.sqrMagnitude > 0.0001f)
+            {
+                lastPlayerTravelDirection =
+                    enemyToPlayer.normalized;
+
+                return;
+            }
+        }
+
+        // 方向を一切取得できない場合の最終フォールバック
+        lastPlayerTravelDirection =
+            Vector3.right;
     }
 
     private void LogDebug(string message)

@@ -42,6 +42,36 @@ public sealed class SonarChargerSettings
     [Min(0.0f)]
     public float followSpeed = 1.2f;
 
+    [Header("加速追跡開始距離")]
+    [Tooltip("プレイヤーとの距離がこの値を超えると、通常追跡速度から加速追跡最大速度へ徐々に加速します。")]
+    [Min(0.0f)]
+    public float catchUpStartDistance = 5.0f;
+
+    [Header("加速追跡最大距離")]
+    [Tooltip("この距離以上では、加速追跡最大速度でプレイヤーを追跡します。")]
+    [Min(0.0f)]
+    public float catchUpMaxDistance = 9.0f;
+
+    [Header("加速追跡最大速度")]
+    [Tooltip("プレイヤーから離れた時に使用する追跡速度の最大値です。")]
+    [Min(0.0f)]
+    public float catchUpMaxSpeed = 5.0f;
+
+    [Header("画面外復帰開始距離")]
+    [Tooltip("画面外にいて、かつプレイヤーとの距離がこの値以上の場合に画面内への復帰移動を開始します。")]
+    [Min(0.0f)]
+    public float recoveryStartDistance = 10.0f;
+
+    [Header("画面外復帰速度")]
+    [Tooltip("画面外からカメラ内の復帰位置へ移動する速度です。")]
+    [Min(0.0f)]
+    public float recoverySpeed = 8.0f;
+
+    [Header("画面内復帰位置の余白")]
+    [Tooltip("復帰目標位置をカメラ端からどれだけ内側へ配置するかです。")]
+    [Min(0.0f)]
+    public float recoveryCameraPadding = 1.0f;
+
     [Header("最初のソナー発信遅延")]
     [Tooltip("起動してから最初のソナーを出すまでの時間です。")]
     [Min(0.0f)]
@@ -234,6 +264,34 @@ public sealed class SonarChargerSettings
         disableAfterKill = source.disableAfterKill;
 
         followSpeed = Mathf.Max(0.0f, source.followSpeed);
+
+        catchUpStartDistance =
+            Mathf.Max(0.0f, source.catchUpStartDistance);
+
+        catchUpMaxDistance =
+            Mathf.Max(
+                catchUpStartDistance,
+                source.catchUpMaxDistance);
+
+        catchUpMaxSpeed =
+            Mathf.Max(
+                followSpeed,
+                source.catchUpMaxSpeed);
+
+        recoveryStartDistance =
+            Mathf.Max(
+                catchUpMaxDistance,
+                source.recoveryStartDistance);
+
+        recoverySpeed =
+            Mathf.Max(
+                catchUpMaxSpeed,
+                source.recoverySpeed);
+
+        recoveryCameraPadding =
+            Mathf.Max(
+                0.0f,
+                source.recoveryCameraPadding);
 
         firstSonarDelay = Mathf.Max(0.0f, source.firstSonarDelay);
         sonarInterval = Mathf.Max(0.01f, source.sonarInterval);
