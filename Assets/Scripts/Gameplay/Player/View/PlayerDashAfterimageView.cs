@@ -79,8 +79,12 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
     [SerializeField] private AnimationCurve fadeCurve = CreateDefaultFadeCurve();
 
     [Header("残像マテリアル: 任意指定")]
-    [Tooltip("任意の残像用Material。指定時もMaterial Assetは直接変更せず、実行時コピーをGhost用に調整して破棄時に解放します。未指定の場合は半透明表示用Materialを実行時に作成します。")]
+    [Tooltip("残像Rendererに使うMaterialの土台です。色、透明度、EmissionはafterimageColorGradient、emissionColorGradient、emissionIntensity、emissionIntensityCurve、startAlpha、fadeCurveなどScript側のInspector値で上書き制御します。このMaterialではShader、Transparent描画、RenderQueue、Blend、_EmissionColorなどのPropertyを用意してください。")]
     [SerializeField] private Material afterimageMaterial;
+
+    [Header("残像マテリアル: 診断ログ")]
+    [Tooltip("ONにするとRuntime MaterialのShader名、色Property、_EmissionColorの有無、Script側の発光設定をConsoleに一度だけ出力します。Development Buildで発光が分かりにくい原因確認用で、通常はOFFにしてください。")]
+    [SerializeField] private bool logMaterialDiagnostics;
 
     private const string PoolRootName = "PlayerDashAfterimagePool";
 
@@ -110,6 +114,7 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
     private bool warnedMissingMaterial;
     private bool warnedMissingColorProperties;
     private bool warnedMissingEmissionProperty;
+    private bool loggedMaterialDiagnostics;
 
     private void Awake()
     {
@@ -372,6 +377,7 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
     {
         Material material = EnsureRuntimeMaterial();
         ConfigureRuntimeEmission(material);
+        LogRuntimeMaterialDiagnosticsOnce(material);
         return material;
     }
 
@@ -451,6 +457,7 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
         ApplyMaterialColor(material, GetAfterimageColor(0f, 1f));
         ConfigureRuntimeEmission(material);
         WarnMissingColorPropertiesOnce(material);
+        LogRuntimeMaterialDiagnosticsOnce(material);
     }
 
     private void ConfigureRuntimeEmission(Material material)
@@ -494,6 +501,7 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
         DestroyUnityObject(runtimeMaterial);
         runtimeMaterial = null;
         runtimeMaterialSource = null;
+        loggedMaterialDiagnostics = false;
     }
 
     private void WarnMissingMaterialOnce()
@@ -531,7 +539,24 @@ public sealed class PlayerDashAfterimageView : MonoBehaviour
 
         warnedMissingEmissionProperty = true;
         Debug.LogWarning(
-            $"{nameof(PlayerDashAfterimageView)} runtime material '{material.name}' does not have _EmissionColor. Emission fade will be skipped with this shader.",
+            $"{nameof(PlayerDashAfterimageView)} useEmission is true, but runtime material '{material.name}' does not have _EmissionColor. Script-side emission controls cannot affect this shader, so emission fade will be skipped.",
+            this);
+    }
+
+    private void LogRuntimeMaterialDiagnosticsOnce(Material material)
+    {
+        if (!logMaterialDiagnostics || loggedMaterialDiagnostics || material == null)
+        {
+            return;
+        }
+
+        loggedMaterialDiagnostics = true;
+        string sourceName = runtimeMaterialSource != null ? runtimeMaterialSource.name : "runtime fallback";
+        string shaderName = material.shader != null ? material.shader.name : "None";
+
+        // Build上で発光が見えない時に、Shader Property不足かScript側設定かをConsoleから切り分ける。
+        Debug.Log(
+            $"{nameof(PlayerDashAfterimageView)} runtime material diagnostics: source='{sourceName}', runtime='{material.name}', shader='{shaderName}', hasBaseColor={material.HasProperty(BaseColorId)}, hasColor={material.HasProperty(ColorId)}, hasTintColor={material.HasProperty(TintColorId)}, hasEmissionColor={material.HasProperty(EmissionColorId)}, useEmission={useEmission}, emissionIntensity={emissionIntensity}, startAlpha={startAlpha}. Appearance is controlled by script gradients/curves, not by Material Asset color values.",
             this);
     }
 
