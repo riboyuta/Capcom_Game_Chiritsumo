@@ -6,6 +6,16 @@ public class TileType : MonoBehaviour
 
     public TileGimmickTypeEnum gimmickType;
     public TileGimmickIDEnum gimmickID;
+
+    public void Initialize(
+    TileDefinition definition,
+    GimmickType gimmickType,
+    int gimmickID)
+    {
+        tileDefinition = definition;
+        this.gimmickType = gimmickType;
+        this.gimmickID = gimmickID;
+    }
 }
 
 
@@ -34,15 +44,17 @@ public enum TileGimmickIDEnum
     ID_07,
     ID_08,
     ID_09,
-    ID_010,
-    ID_011,
-    ID_012,
-    ID_013,
-    ID_014,
-    ID_015,
-    ID_016,
-    ID_017,
-    ID_018,
-    ID_019,
-    ID_020
+    ID_10,
+    ID_11,
+    ID_12,
+    ID_13,
+    ID_14,
+    ID_15,
+    ID_16,
+    ID_17,
+    ID_18,
+    ID_19,
+    ID_20
 }
+
+
