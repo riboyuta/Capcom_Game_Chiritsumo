@@ -4,13 +4,11 @@ public class TileType : MonoBehaviour
 {
     [HideInInspector] public TileDefinition tileDefinition; 
 
-    public TileGimmickTypeEnum gimmickType;
-    public TileGimmickIDEnum gimmickID;
+    public TileGimmickTypeEnum gimmickType = TileGimmickTypeEnum.None;
+    public TileGimmickIDEnum gimmickID = TileGimmickIDEnum.None;
 
-    public void Initialize(
-    TileDefinition definition,
-    GimmickType gimmickType,
-    int gimmickID)
+
+    public void Initialize(TileDefinition definition, TileGimmickTypeEnum gimmickType, TileGimmickIDEnum gimmickID)
     {
         tileDefinition = definition;
         this.gimmickType = gimmickType;

@@ -28,8 +28,9 @@ public sealed class ParallaxLayer : MonoBehaviour
     [Tooltip("配置する枚数。n*nで配置")]
     [SerializeField, Range(2, 4)] private int gridSize = 3;
 
-    //間隔を近づける補正値。隙間のちらつき防止
-    const float overlap = 0.01f;
+    [Header("スプライト間隔補正")]
+    [Tooltip("間隔を近づける補正値。隙間のちらつき防止")]
+    [SerializeField] private float overlap = 0.01f;
 
     // スプライト1枚分の幅（ワールド単位）。
     private float spriteWidth;

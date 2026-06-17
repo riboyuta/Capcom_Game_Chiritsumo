@@ -89,7 +89,7 @@ public sealed class ParallaxBackground : MonoBehaviour
             }
         }
 
-        Debug.Log(cameraTransform.position);
+      
     }
 
     
