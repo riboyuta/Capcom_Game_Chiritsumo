@@ -1,4 +1,6 @@
+using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 
 /// 1レイヤー分のパララックススクロールとループ処理を担当する。
@@ -7,18 +9,35 @@ using UnityEngine;
 public sealed class ParallaxLayer : MonoBehaviour
 {
     [Header("スプライト設定")]
-    [Tooltip("1枚目の背景スプライト Transform")]
-    [SerializeField] private Transform spriteA;
+    [Tooltip("背景スプライト Transform")]
+    [SerializeField] private Transform[] sprite;
 
-    [Tooltip("2枚目の背景スプライト Transform（spriteA と同じ画像）")]
-    [SerializeField] private Transform spriteB;
+     //背景の描写イメージはこんな感じ
+     // [A][B]
+     // [C][D]
 
-    [Header("パララックス設定")]
+    [Header("パララックスのX設定")]
     [Tooltip("スクロール速度の倍率。0 = 静止、1 = カメラと同速。遠景ほど小さくする。")]
-    [SerializeField, Range(0f, 1f)] private float speedMultiplier = 0.5f;
+    [SerializeField, Range(0f, 1f)] private float speedMultiplierX = 0.5f;
+
+    [Header("パララックスのY設定")]
+    [Tooltip("スクロール速度の倍率。0 = 静止、1 = カメラと同速。遠景ほど小さくする。")]
+    [SerializeField, Range(0f, 1f)] private float speedMultiplierY = 0.2f;
+
+    [Header("グリッドサイズ")]
+    [Tooltip("配置する枚数。n*nで配置")]
+    [SerializeField, Range(2, 4)] private int gridSize = 3;
+
+    //間隔を近づける補正値。隙間のちらつき防止
+    const float overlap = 0.01f;
 
     // スプライト1枚分の幅（ワールド単位）。
     private float spriteWidth;
+    private float spriteHeight;
+
+    //スプライトにoverlapの補正を掛けた値
+    private float tileWidth;
+    private float tileHeight;
 
     private void Start()
     {
@@ -29,76 +48,139 @@ public sealed class ParallaxLayer : MonoBehaviour
     /// スプライトの幅を SpriteRenderer の bounds から取得する。
     private void CalculateSpriteWidth()
     {
-        SpriteRenderer sr = spriteA.GetComponent<SpriteRenderer>();
+
+        if (sprite == null || sprite.Length == 0)
+        {
+            Debug.LogError("[ParallaxLayer] Sprite が設定されていません。");
+            return;
+        }
+
+        SpriteRenderer sr = sprite[0].GetComponent<SpriteRenderer>();
 
         if (sr != null)
         {
             spriteWidth = sr.bounds.size.x;
+            spriteHeight = sr.bounds.size.y;
         }
         else
         {
-            Renderer renderer = spriteA.GetComponent<Renderer>();
+            Renderer renderer = sprite[0].GetComponent<Renderer>();
 
             if (renderer != null)
             {
                 spriteWidth = renderer.bounds.size.x;
+                spriteHeight = renderer.bounds.size.y;
             }
             else
             {
-                Debug.LogError($"[ParallaxLayer] {spriteA.name} に Renderer がありません。");
+                Debug.LogError($"[ParallaxLayer] {sprite[0].name} に Renderer がありません。");
                 spriteWidth = 20f;
+                spriteHeight = 20f;
             }
         }
+
+        tileWidth = spriteWidth - overlap;
+        tileHeight = spriteHeight - overlap;
+
     }
 
-    /// spriteB を spriteA の右隣に配置する。
+
     private void InitializePositions()
     {
-        Vector3 posB = spriteA.position;
-        posB.x += spriteWidth;
-        spriteB.position = posB;
+        Vector3 origin = sprite[0].position;
+
+        for (int y = 0; y < gridSize; y++)
+        {
+            for (int x = 0; x < gridSize; x++)
+            {
+                int index = y * gridSize + x;
+
+                if (index >= sprite.Length)
+                {
+                    return;
+                }
+
+              
+                sprite[index].position =
+                    origin +
+                    new Vector3(
+                        (tileWidth) * x,
+                        (tileHeight) * y,
+                        0f);
+            }
+
+        }
+
     }
 
-    
+
     /// 指定された移動量に speedMultiplier を掛けてスクロールし、
     /// 画面外に出たスプライトをループさせる。
     /// ParallaxBackground から毎フレーム呼ばれる。
 
     /// <param name="rawDelta">カメラの移動量または自動スクロール量（ワールド単位）。</param>
     /// <param name="cameraX">現在のカメラの X 座標（ループ判定の基準）。</param>
-    public void Scroll(float rawDelta, float cameraX)
+    /// <param name="cameraY">現在のカメラの Y 座標（ループ判定の基準）。</param>
+    ///    
+    public void Scroll(float rawDeltaX, float rawDeltaY, float cameraX, float cameraY)
     {
-        float delta = rawDelta * speedMultiplier;
+        float deltaX = rawDeltaX * speedMultiplierX;
+        float deltaY = rawDeltaY * speedMultiplierY;
 
-        // 両スプライトを移動。
-        spriteA.position += Vector3.left * delta;
-        spriteB.position += Vector3.left * delta;
+        Vector3 move =
+            Vector3.left * deltaX +
+            Vector3.down * deltaY;
 
-        // カメラ位置を基準にループ判定を行う。
-        WrapSprite(spriteA, spriteB, cameraX);
-        WrapSprite(spriteB, spriteA, cameraX);
+        for (int i = 0; i < sprite.Length; i++)
+        {
+            sprite[i].position += move;
+        }
+
+        for (int i = 0; i < sprite.Length; i++)
+        {
+            WrapSprite(
+                sprite[i],
+                cameraX,
+                cameraY);
+        }
+
     }
 
     
     /// check がカメラから spriteWidth 以上離れた場合、
     /// other の反対側に回り込ませる。
 
-    private void WrapSprite(Transform check, Transform other, float cameraX)
+    private void WrapSprite(Transform check, float cameraX, float cameraY)
     {
-        float distance = check.position.x - cameraX;
+        float distanceX = check.position.x - cameraX;
+        float distanceY = check.position.y - cameraY;
 
-        // 左に行き過ぎた → other の右隣へ移動。
-        if (distance < -spriteWidth)
+        float halfWidth = tileWidth * gridSize * 0.5f;
+        float halfHeight = tileHeight * gridSize * 0.5f;
+
+        if (distanceX < -halfWidth)
         {
             Vector3 pos = check.position;
-            pos.x = other.position.x + spriteWidth;
+            pos.x += tileWidth * gridSize;
             check.position = pos;
         }
-        // 右に行き過ぎた → other の左隣へ移動（逆方向スクロール対応）。
-        else if (distance > spriteWidth)
+        else if (distanceX > halfWidth)
         {
             Vector3 pos = check.position;
-            pos.x = other.position.x - spriteWidth;
+            pos.x -= tileWidth * gridSize;
+            check.position = pos;
+        }
+
+        if (distanceY < -halfHeight)
+        {
+            Vector3 pos = check.position;
+            pos.y += tileHeight * gridSize;
+            check.position = pos;
+        }
+        else if (distanceY > halfHeight)
+        {
+            Vector3 pos = check.position;
+            pos.y -= tileHeight * gridSize;
             check.position = pos;
         }
     }
@@ -106,5 +188,5 @@ public sealed class ParallaxLayer : MonoBehaviour
     
     /// パララックス係数を返す（外部参照用）。
 
-    public float SpeedMultiplier => speedMultiplier;
+    public float SpeedMultiplier => speedMultiplierX;
 }
