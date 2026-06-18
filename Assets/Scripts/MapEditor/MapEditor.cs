@@ -361,14 +361,6 @@ public class MapEditor : MonoBehaviour
         tile.transform.position = spawnpos;
         tile.transform.SetParent(mapRoot);
 
-        TileType tileType = tile.GetComponent<TileType>();
-
-        if (tileType != null)
-        {
-            tileType.tileDefinition = currentTile;
-        }
-
-        tileType.tileDefinition = currentTile;
     }
 
     void PlaceTile()
@@ -417,11 +409,12 @@ public class MapEditor : MonoBehaviour
             return;
         }
 
-        GameObject tile = Instantiate(currentTile.prefab);
+        GameObject tile = Instantiate(currentTile.prefab);　//いまここ
         tile.transform.position = spawnPos;
         tile.transform.SetParent(mapRoot);
+
         TileType tileType = tile.GetComponent<TileType>();
-        tileType.tileDefinition = currentTile;
+        tileType.Initialize(currentTile, TileGimmickTypeEnum.None, TileGimmickIDEnum.None);
 
         tiles.Add(gridPos, tile);
         RegisterChunk(gridPos, tile);
@@ -681,11 +674,10 @@ public class MapEditor : MonoBehaviour
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
             tile.transform.SetParent(mapRoot);
-            TileType tileType = tile.GetComponent<TileType>();
 
-            tileType.tileDefinition = def;
-            tileType.gimmickType = data.gimmickType;
-            tileType.gimmickID = data.gimmickID;
+            TileType tileType = tile.GetComponent<TileType>();
+            tileType.Initialize( def, data.gimmickType, data.gimmickID);
+
 
             tiles.Add(gridPos, tile);
             RegisterChunk(gridPos, tile);
@@ -895,11 +887,9 @@ public class MapEditor : MonoBehaviour
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
             tile.transform.SetParent(mapRoot);
-            TileType tileType = tile.GetComponent<TileType>();
 
-            tileType.tileDefinition = def;
-            tileType.gimmickType = data.gimmickType;
-            tileType.gimmickID = data.gimmickID;
+            TileType tileType = tile.GetComponent<TileType>();
+            tileType.Initialize(def, data.gimmickType, data.gimmickID);
 
             tiles.Add(gridPos, tile);
             RegisterChunk(gridPos, tile);
@@ -1057,11 +1047,9 @@ public class MapEditor : MonoBehaviour
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
             tile.transform.SetParent(mapRoot);
-            TileType tileType = tile.GetComponent<TileType>();
 
-            tileType.tileDefinition = def;
-            tileType.gimmickType = data.gimmickType;
-            tileType.gimmickID = data.gimmickID;
+            TileType tileType = tile.GetComponent<TileType>();
+            tileType.Initialize(def, data.gimmickType, data.gimmickID);
 
             tiles.Add(gridPos, tile);
             RegisterChunk(gridPos, tile);
