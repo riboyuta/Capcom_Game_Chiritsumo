@@ -356,6 +356,10 @@ public sealed class WallSettings
     [Tooltip("壁から反発して跳ぶ壁キック機能を有効にします。")]
     [SerializeField] bool useWallKick = true;
 
+    [Header("壁キック横入力なし許可")]
+    [Tooltip("有効にすると、空中で壁に接触中、または壁離脱猶予中に、横入力がなくてもジャンプ入力で壁キックできます。壁捕まり中の真上ジャンプと壁滑りの入力条件は変更しません。")]
+    [SerializeField] bool allowWallKickWithoutHorizontalInput = false;
+
     [Header("壁キック横速度")]
     [Tooltip("壁キック時に壁から離れる横方向速度です。大きいほど壁から強く跳ね返ります。")]
     [Min(0f)]
@@ -431,8 +435,9 @@ public sealed class WallSettings
     public float WallGrabJumpHorizontalLockTime => wallGrabJumpHorizontalLockTime;
 
     public float WallGrabJumpReattachLockTime => wallGrabJumpReattachLockTime;
-    
+
     public bool UseWallKick => useWallKick;
+    public bool AllowWallKickWithoutHorizontalInput => allowWallKickWithoutHorizontalInput;
     public float WallJumpHorizontalVelocity => wallJumpHorizontalVelocity;
     public float WallJumpVerticalVelocity => wallJumpVerticalVelocity;
     public float WallJumpControlLockTime => wallJumpControlLockTime;
