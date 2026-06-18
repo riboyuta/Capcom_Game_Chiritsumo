@@ -119,40 +119,56 @@ public sealed class SonarChargerMovement : MonoBehaviour
         float moveSpeed,
         float deltaTime)
     {
-        Vector3 current = GetWorldPosition();
+        Vector3 current =
+            GetWorldPosition();
 
-        // 目標位置への方向をXY平面上で計算
-        Vector3 toTarget = Flatten(targetPosition - current);
+        Vector3 target =
+            targetPosition;
 
-        // 目標位置とほぼ同じ位置なら停止
+        target.z =
+            current.z;
+
+        Vector3 toTarget =
+            Flatten(
+                target -
+                current);
+
+        // 十分近い場合も、停止するだけではなく目標位置へ合わせる
         if (toTarget.sqrMagnitude <= 0.0001f)
         {
+            SetWorldPosition(target);
             StopImmediate();
             return;
         }
 
-        Vector3 direction = toTarget.normalized;
-        lastMoveDirection = direction;
+        Vector3 direction =
+            toTarget.normalized;
 
-        float speed = Mathf.Max(0.0f, moveSpeed);
-        float safeDeltaTime = Mathf.Max(0.0f, deltaTime);
+        lastMoveDirection =
+            direction;
 
+        float speed =
+            Mathf.Max(
+                0.0f,
+                moveSpeed);
+
+        float safeDeltaTime =
+            Mathf.Max(
+                0.0f,
+                deltaTime);
+
+        // 目標を通り越さないように移動する
         Vector3 next =
-            current +
-            direction *
-            speed *
-            safeDeltaTime;
+            Vector3.MoveTowards(
+                current,
+                target,
+                speed * safeDeltaTime);
 
-        next.z = current.z;
+        next.z =
+            current.z;
+
         SetWorldPosition(next);
     }
-
-    //// 既存呼び出しとの一時的な互換用
-    //// SonarChargerEnemy側を距離連動速度へ変更した後に削除する
-    //public void TickFollow(
-    //Vector3 targetPosition,
-    //float moveSpeed,
-    //float deltaTime)
 
     // Charge状態開始: 突進方向を計算し、カメラ境界情報を初期化
     public void StartCharge(Vector3 targetPosition, PlayerCameraController cameraController, SonarChargerSettings settings)

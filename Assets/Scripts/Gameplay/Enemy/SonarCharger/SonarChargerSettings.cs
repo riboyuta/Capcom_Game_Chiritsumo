@@ -62,6 +62,16 @@ public sealed class SonarChargerSettings
     [Min(0.0f)]
     public float recoveryStartDistance = 10.0f;
 
+    [Header("画面外復帰時の後方距離")]
+    [Tooltip("プレイヤー後方へ復帰する場合に、プレイヤーからどれだけ離れた位置を目標にするかです。")]
+    [Min(0.0f)]
+    public float recoveryBehindDistance = 4.0f;
+
+    [Header("画面外復帰までの許容時間")]
+    [Tooltip("SonarChargerが画面外に連続して留まれる時間です。この時間を超えると、プレイヤーとの距離に関係なく画面内復帰を開始します。0の場合は画面外に出た瞬間に復帰します。")]
+    [Min(0.0f)]
+    public float offscreenRecoveryDelay = 0.6f;
+
     [Header("画面外復帰速度")]
     [Tooltip("画面外からカメラ内の復帰位置へ移動する速度です。")]
     [Min(0.0f)]
@@ -119,6 +129,16 @@ public sealed class SonarChargerSettings
     [Tooltip("感知後、突進方向を確定するまでの溜め時間です。この間はプレイヤー位置を追い続けます。")]
     [Min(0.0f)]
     public float alertTime = 0.4f;
+
+    [Header("溜め中の追跡速度倍率")]
+    [Tooltip("Alert中に通常追跡速度へ掛ける倍率です。0なら停止、1なら通常追跡速度と同じ速度で追跡します。")]
+    [Range(0.0f, 1.0f)]
+    public float alertFollowSpeedMultiplier = 0.5f;
+
+    [Header("溜め中の最低追跡距離")]
+    [Tooltip("Alert中にプレイヤーへこれ以上接近しないための距離です。この距離以内では移動を停止します。")]
+    [Min(0.0f)]
+    public float alertMinimumDistance = 2.0f;
 
     [Header("突進方向確定後の硬直時間")]
     [Tooltip("Alertで突進方向を確定した後、実際に突進するまでの短い硬直時間です。")]
@@ -283,6 +303,16 @@ public sealed class SonarChargerSettings
                 catchUpMaxDistance,
                 source.recoveryStartDistance);
 
+        recoveryBehindDistance =
+            Mathf.Max(
+                0.0f,
+                source.recoveryBehindDistance);
+
+        offscreenRecoveryDelay =
+            Mathf.Max(
+                0.0f,
+                source.offscreenRecoveryDelay);
+
         recoverySpeed =
             Mathf.Max(
                 catchUpMaxSpeed,
@@ -306,6 +336,8 @@ public sealed class SonarChargerSettings
         enableDashInputAlertTrigger = source.enableDashInputAlertTrigger;
 
         alertTime = Mathf.Max(0.0f, source.alertTime);
+        alertFollowSpeedMultiplier = Mathf.Clamp01(source.alertFollowSpeedMultiplier);
+        alertMinimumDistance = Mathf.Max(0.0f,source.alertMinimumDistance);
         lockConfirmTime = Mathf.Max(0.0f, source.lockConfirmTime);
         lockConfirmBandWidthMultiplier = Mathf.Max(1.0f, source.lockConfirmBandWidthMultiplier);
         minChargeTargetDistance = Mathf.Max(0.001f, source.minChargeTargetDistance);
