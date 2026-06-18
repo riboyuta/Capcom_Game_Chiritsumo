@@ -63,7 +63,7 @@ internal sealed class PlayerLedgeClimbSystem
             forwardCheckOrigin,
             wallDir,
             deps.Settings.Wall.LedgeDetectForwardDistance,
-            deps.Settings.Detection.GroundLayerMask,
+            deps.Settings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
 
         if (hasWallAhead)
@@ -82,7 +82,7 @@ internal sealed class PlayerLedgeClimbSystem
             Vector3.down,
             out RaycastHit hit,
             groundCheckDistance,
-            deps.Settings.Detection.GroundLayerMask,
+            deps.Settings.Detection.GroundLayerMask | deps.Settings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
 
         if (foundGround)
@@ -150,7 +150,7 @@ internal sealed class PlayerLedgeClimbSystem
             headCheckOrigin,
             Vector3.up,
             deps.Settings.Wall.LedgeDetectUpDistance,
-            deps.Settings.Detection.GroundLayerMask,
+            deps.Settings.Detection.GroundLayerMask | deps.Settings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
 
         if (hasObstacleAbove)
@@ -166,7 +166,7 @@ internal sealed class PlayerLedgeClimbSystem
             forwardCheckOrigin,
             wallDir,
             deps.Settings.Wall.LedgeDetectForwardDistance,
-            deps.Settings.Detection.GroundLayerMask,
+            deps.Settings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
 
         if (hasWallAhead)
@@ -184,7 +184,7 @@ internal sealed class PlayerLedgeClimbSystem
             Vector3.down,
             out RaycastHit hit,
             groundCheckDistance,
-            deps.Settings.Detection.GroundLayerMask,
+            deps.Settings.Detection.GroundLayerMask | deps.Settings.Detection.WallLayerMask,
             QueryTriggerInteraction.Ignore);
 
         if (foundGround)
@@ -251,8 +251,9 @@ internal sealed class PlayerLedgeClimbSystem
 
         // 崖のぼり中はスクリプト制御にする。
         // ただし当たり判定は残す。
+        deps.Rb.linearVelocity = Vector3.zero;
         deps.Rb.useGravity = false;
-        deps.Rb.isKinematic = false;
+        deps.Rb.isKinematic = true;
         deps.CapsuleCollider.enabled = true;
     }
 
@@ -288,12 +289,18 @@ internal sealed class PlayerLedgeClimbSystem
     private void CompleteLedgeClimb()
     {
         deps.RuntimeState.isLedgeClimbing = false;
+
         MovePlayerPosition(deps.RuntimeState.ledgeClimbTargetPosition);
 
         deps.CapsuleCollider.enabled = true;
-        deps.Rb.isKinematic = false;
-        deps.Rb.useGravity = true;
-        deps.Rb.linearVelocity = Vector3.zero;
+
+        if (deps.Rb != null)
+        {
+            deps.Rb.linearVelocity = Vector3.zero;
+            deps.Rb.isKinematic = false;
+            deps.Rb.useGravity = true;
+        }
+
         deps.RuntimeState.isGrounded = false;
 
         deps.RuntimeState.isWallGrabbing = false;

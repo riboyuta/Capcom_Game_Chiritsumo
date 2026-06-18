@@ -15,23 +15,23 @@ public sealed class AudioDef : ScriptableObject
     [System.Serializable]
     public class Entry
     {
-        [Tooltip("再生ID。スクリプトからこの文字列で再生する")]
+        [Tooltip("AudioManager が再生に使う ID です。AudioEventBinder の Action > Audio ID には、この値を指定します。")]
         public string id;
 
-        [Tooltip("音声クリップ")]
+        [Tooltip("実際に再生する音声クリップです。")]
         public AudioClip clip;
 
-        [Tooltip("BGM / SFX / Voice")]
+        [Tooltip("この音を流すカテゴリです。Mixer Group と音量設定の分類に使います。")]
         public AudioChannel channel;
 
-        [Tooltip("既定の音量 (0〜1)")]
+        [Tooltip("この音の基本音量です。AudioEventBinder 側で Override Volume をオンにすると個別に上書きできます。")]
         [Range(0f, 1f)]
         public float defaultVolume = 1f;
 
-        [Tooltip("ループ再生するか")]
+        [Tooltip("再生時にループするかどうかです。BGM や継続音で使います。")]
         public bool loop;
     }
 
-    [Tooltip("登録する音声エントリの一覧")]
+    [Tooltip("プロジェクトで使う音声 ID と AudioClip の登録一覧です。AudioManager 起動時に読み込まれます。")]
     public Entry[] entries;
 }

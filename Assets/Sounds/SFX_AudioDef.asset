@@ -138,3 +138,63 @@ MonoBehaviour:
     channel: 1
     defaultVolume: 1
     loop: 0
+  - id: SE_PLAYER_WALK
+    clip: {fileID: 8300000, guid: afba699723254ea4face401cd29f55e6, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 1
+  - id: SE_PLAYER_JUMP
+    clip: {fileID: 8300000, guid: e97f6d80f3b8b744d83bc3e6ae80c9b4, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 0
+  - id: SE_PLAYER_DASH
+    clip: {fileID: 8300000, guid: 22336fb49da021a418906421975ad5d6, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 0
+  - id: SE_PLAYER_GRAB
+    clip: {fileID: 8300000, guid: 08ef21ca052eee14e885f23da0e3e253, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 0
+  - id: SE_PLAYER_CLIMB
+    clip: {fileID: 8300000, guid: b5526c115aa8e0b4fb178eab31930ac7, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 0
+  - id: SE_PLAYER_SPAWN
+    clip: {fileID: 8300000, guid: bd1501c85373408428dbf0917890b2c7, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 0
+  - id: SE_PLAYER_DIE
+    clip: {fileID: 8300000, guid: e6bd46a9f180ead40806787bbb1fddbc, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 0
+  - id: SE_ENEMY_THREAT
+    clip: {fileID: 8300000, guid: f99ce7d1ecfa42d4cb0b24841e1268df, type: 3}
+    channel: 1
+    defaultVolume: 0.7
+    loop: 0
+  - id: SE_GIMMICK_DASHHEAL
+    clip: {fileID: 8300000, guid: 9b75c0e56732a6d47b1387b274a2ebf0, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 0
+  - id: SE_GIMMICK_JUMP
+    clip: {fileID: 8300000, guid: 8948d2eab4cbd8045990b73de39b4f35, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 0
+  - id: SE_GIMMICK_BREAKABLEBLOCK
+    clip: {fileID: 8300000, guid: 64f8196ed2f83fe4ba8c0e511d626bca, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 0
+  - id: SE_GIMMICK_DASHHEALV2
+    clip: {fileID: 8300000, guid: 843607f4e7f1d9444a3234beff9a2059, type: 3}
+    channel: 1
+    defaultVolume: 1
+    loop: 0

@@ -1,27 +1,22 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// 鍵のグループを管理するマネージャー。
-// 紐づけられた全ての鍵が取得されたかどうかの状態(IsCompleted)を持つ。
 public class KeyManager : MonoBehaviour, IRespawnResettable
 {
-    [Header("管理する鍵のリスト")]
-    [Tooltip("このマネージャーが管理する鍵オブジェクトを登録します。未登録の場合、起動時にこのオブジェクトの子階層から自動検索します。")]
+    [Header("Keys")]
     [SerializeField] private KeyCollectible[] keys;
 
-    private int collectedCount = 0;
-    private int totalKeysCount = 0;
+    private int collectedCount;
+    private int totalKeysCount;
     private bool hasCapturedInitialState;
 
     private int initialCollectedCount;
     private bool initialIsCompleted;
 
-    // 全ての鍵が集まったら true になるプロパティ
     public bool IsCompleted { get; private set; }
 
     private void Awake()
     {
-        // インスペクタで鍵が指定されていない場合、自動的に子オブジェクトから検索する
         if (keys == null || keys.Length == 0)
         {
             keys = GetComponentsInChildren<KeyCollectible>(true);
@@ -30,8 +25,8 @@ public class KeyManager : MonoBehaviour, IRespawnResettable
         EnsureStableKeys();
 
         totalKeysCount = keys.Length;
-        
-        foreach (var key in keys)
+
+        foreach (KeyCollectible key in keys)
         {
             if (key != null)
             {
@@ -40,7 +35,6 @@ public class KeyManager : MonoBehaviour, IRespawnResettable
         }
     }
 
-    // keys 配列の null を除去して、初期管理集合を安定させる
     private void EnsureStableKeys()
     {
         if (keys == null)
@@ -73,44 +67,22 @@ public class KeyManager : MonoBehaviour, IRespawnResettable
             }
         }
 
-        Debug.LogWarning($"[{nameof(KeyManager)}] null の KeyCollectible 参照を除外しました: {name}", this);
+        Debug.LogWarning($"[{nameof(KeyManager)}] Removed null KeyCollectible references: {name}", this);
         keys = sanitizedKeys.ToArray();
     }
 
-    // 初期の進行状態を保存する
-    private void CaptureManagerInitialState()
-    {
-        initialCollectedCount = collectedCount;
-        initialIsCompleted = IsCompleted;
-    }
-
-    // 保存した初期の進行状態を復元する
-    private void RestoreManagerInitialState()
-    {
-        collectedCount = initialCollectedCount;
-        IsCompleted = initialIsCompleted;
-    }
-
-    // 鍵が取得されたときに KeyCollectible から呼ばれる
     public void NotifyKeyCollected()
     {
         collectedCount++;
-        
-        if (totalKeysCount > 0 && collectedCount >= totalKeysCount)
-        {
-            IsCompleted = true;
-            
-            // SE: コンプリートしたときの音
-            if (AudioManager.Instance != null)
-            {
-                AudioManager.Instance.PlayOverlap("SFX_gimmick_switchwall"); // ※仮の音を設定。必要になれば専用音に変更してください
-            }
-        }
-    }
 
-    // ──────────────────────────────────────────────
-    // IRespawnResettable
-    // ──────────────────────────────────────────────
+        if (totalKeysCount <= 0 || collectedCount < totalKeysCount)
+        {
+            return;
+        }
+
+        IsCompleted = true;
+        AudioEvent.Emit(this, "Completed");
+    }
 
     public void CaptureInitialState()
     {
@@ -119,7 +91,8 @@ public class KeyManager : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        CaptureManagerInitialState();
+        initialCollectedCount = collectedCount;
+        initialIsCompleted = IsCompleted;
         hasCapturedInitialState = true;
     }
 
@@ -130,6 +103,8 @@ public class KeyManager : MonoBehaviour, IRespawnResettable
             CaptureInitialState();
         }
 
-        RestoreManagerInitialState();
+        collectedCount = initialCollectedCount;
+        IsCompleted = initialIsCompleted;
     }
+
 }

@@ -100,6 +100,10 @@ public class MapEditor : MonoBehaviour
     [Tooltip("TileDatabaseスクリプトをここにドラッグしてね")]
     [SerializeField] private TileDatabase tileDatabase;
 
+    [Header("mapRoot")]
+    [Tooltip("mapRoot�I�u�W�F�N�g�������Ƀh���b�v���Ă�")]
+    [SerializeField] private Transform mapRoot;
+
 
     [SerializeField] private int chunkSize = 16;
 
@@ -337,6 +341,36 @@ public class MapEditor : MonoBehaviour
 
 
 
+
+    void InstantiateTile(Vector3 spawnpos)
+    {
+        if (currentTile == null)
+        {
+            Debug.LogWarning("Tileが選択されていません");
+            return;
+        }
+
+        if (currentTile.prefab == null)
+        {
+            Debug.LogWarning("Prefabが設定されていません");
+            return;
+        }
+
+        GameObject tile = Instantiate(currentTile.prefab);
+
+        tile.transform.position = spawnpos;
+        tile.transform.SetParent(mapRoot);
+
+        TileType tileType = tile.GetComponent<TileType>();
+
+        if (tileType != null)
+        {
+            tileType.tileDefinition = currentTile;
+        }
+
+        tileType.tileDefinition = currentTile;
+    }
+
     void PlaceTile()
     {
         if (showPrefabConfirm)
@@ -383,7 +417,9 @@ public class MapEditor : MonoBehaviour
             return;
         }
 
-        GameObject tile = Instantiate(currentTile.prefab, spawnPos, Quaternion.identity);
+        GameObject tile = Instantiate(currentTile.prefab);
+        tile.transform.position = spawnPos;
+        tile.transform.SetParent(mapRoot);
         TileType tileType = tile.GetComponent<TileType>();
         tileType.tileDefinition = currentTile;
 
@@ -644,6 +680,7 @@ public class MapEditor : MonoBehaviour
             }
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
+            tile.transform.SetParent(mapRoot);
             TileType tileType = tile.GetComponent<TileType>();
 
             tileType.tileDefinition = def;
@@ -857,6 +894,7 @@ public class MapEditor : MonoBehaviour
             }
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
+            tile.transform.SetParent(mapRoot);
             TileType tileType = tile.GetComponent<TileType>();
 
             tileType.tileDefinition = def;
@@ -1018,6 +1056,7 @@ public class MapEditor : MonoBehaviour
             }
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
+            tile.transform.SetParent(mapRoot);
             TileType tileType = tile.GetComponent<TileType>();
 
             tileType.tileDefinition = def;

@@ -47,6 +47,21 @@ internal sealed class PlayerRuntimeState
     // ダッシュ残数とは分離し、純粋に見た目の状態として扱う。
     public PlayerHoodVisualState hoodVisualState = PlayerHoodVisualState.Up;
 
+    // 見た目用: フード状態の世代番号。
+    // ダッシュ開始ごとに増やし、古い HoodRecover 完了が新しい Down 状態を上書きしないようにする。
+    public int hoodVisualVersion;
+
+    // 見た目用: HoodRecover 要求のイベントID。
+    // bool だけだと連続要求を区別できないため、回復要求ごとに増やす。
+    public int hoodRecoverRequestId;
+
+    // 見た目用: 現在の HoodRecover 要求が対象にするフード世代。
+    public int hoodRecoverTargetVersion;
+
+    // 見た目用: ダッシュ開始のイベントID。
+    // bool だけでは高速な連続開始を区別できないため、開始ごとに増やす。
+    public int dashStartRequestId;
+
     // 見た目用: この物理フレームでダッシュ開始したか。
     // Snapshot 側で justDashStarted として読むための単発フラグ。
     public bool justDashStartedThisFrame;

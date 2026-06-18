@@ -28,6 +28,9 @@ public sealed class RoomManager : MonoBehaviour
     [Header("参照: プレイヤー公開窓口")]
     [Tooltip("部屋遷移中の入力遮断要求を送る公開窓口です。未設定時は実行時に探索を試みます。")]
     [SerializeField] private PlayerFacade playerFacade;
+    [Header("参照: GameRoot")]
+    [Tooltip("部屋遷移開始時にランキング用タイマーを停止する GameRoot です。未設定時は実行時に自動取得します。")]
+    [SerializeField] private GameRoot gameRoot;
 
     [Header("参照: カメラ")]
     [Tooltip("部屋ごとのカメラ境界と注視設定を反映するカメラ制御です。")]
@@ -184,6 +187,11 @@ public sealed class RoomManager : MonoBehaviour
             playerFacade = FindFirstObjectByType<PlayerFacade>();
         }
 
+        if (gameRoot == null)
+        {
+            gameRoot = FindFirstObjectByType<GameRoot>();
+        }
+
         // 未設定のカメラ参照だけを補完する。
         if (playerCameraController == null)
         {
@@ -201,6 +209,22 @@ public sealed class RoomManager : MonoBehaviour
         {
             stageResetSystem = FindFirstObjectByType<StageResetSystem>();
         }
+    }
+
+    private void PauseRankingTimerOnRoomTransitionBegin()
+    {
+        if (gameRoot == null)
+        {
+            gameRoot = FindFirstObjectByType<GameRoot>();
+        }
+
+        if (gameRoot == null)
+        {
+            return;
+        }
+
+        // 部屋遷移中のカメラ移動時間と次部屋安全エリア待機時間をランキングタイムに含めない。
+        gameRoot.PauseElapsedTime();
     }
 
     private bool BeginRoomTransitionExternalControl()
@@ -347,7 +371,7 @@ public sealed class RoomManager : MonoBehaviour
                 this);
         }
     }
-    private void UpdateCheckpointForRoomEntry(Room room, RoomDirection direction)
+    private void UpdateCheckpointForRoomEntry(Room room)
     {
         // 遷移先の部屋が無ければ更新できない。
         if (room == null)
@@ -363,31 +387,14 @@ public sealed class RoomManager : MonoBehaviour
             return;
         }
 
-        // 遷移方向に対応する復帰位置を選ぶ。
-        Transform respawnPoint = null;
-        switch (direction)
-        {
-            case RoomDirection.Right:
-                respawnPoint = room.RespawnFromLeft;
-                break;
-            case RoomDirection.Left:
-                respawnPoint = room.RespawnFromRight;
-                break;
-            case RoomDirection.Up:
-                respawnPoint = room.RespawnFromDown;
-                break;
-            case RoomDirection.Down:
-                respawnPoint = room.RespawnFromUp;
-                break;
-            case RoomDirection.None:
-                return;
-        }
+        // 部屋ごとに1つだけ持つ復帰位置を使い、入室方向では分岐しない。
+        Transform respawnPoint = room.RespawnPoint;
 
-        // 対応する復帰位置が無い場合は遷移は維持して更新だけ見送る。
+        // 部屋単位の復帰位置が無い場合は遷移は維持して更新だけ見送る。
         if (respawnPoint == null)
         {
             Debug.LogWarning(
-                $"RoomManager: Room '{room.name}' の direction '{direction}' に対応する respawn point が未設定のため checkpoint 更新をスキップします。",
+                $"RoomManager: Room '{room.name}' の respawn point が未設定のため checkpoint 更新をスキップします。",
                 this);
             return;
         }
@@ -399,7 +406,7 @@ public sealed class RoomManager : MonoBehaviour
         if (enableDebugLog)
         {
             Debug.Log(
-                $"RoomManager: checkpoint を更新しました。Room='{room.name}', Direction={direction}, Checkpoint='{respawnPoint.name}'",
+                $"RoomManager: checkpoint を更新しました。Room='{room.name}', Checkpoint='{respawnPoint.name}'",
                 this);
         }
     }
@@ -542,6 +549,8 @@ public sealed class RoomManager : MonoBehaviour
             return false;
         }
 
+        PauseRankingTimerOnRoomTransitionBegin();
+
         // 状態切り替え直後にステージ全体をリセット（カメラ遷移直前に敵を消すため）
         ResetStageOnRoomTransitionBegin();
 
@@ -552,7 +561,7 @@ public sealed class RoomManager : MonoBehaviour
         currentRoom = nextRoom;
         lastTransitionDirection = moveDirection;
         ApplyCurrentRoomCameraSettings();
-        UpdateCheckpointForRoomEntry(currentRoom, moveDirection);
+        UpdateCheckpointForRoomEntry(currentRoom);
         if (playerCameraController != null)
         {
             playerCameraController.BeginRoomTransition(currentRoom);

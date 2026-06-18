@@ -5,7 +5,8 @@ public static class SceneFlow
 {
     private const string BootSceneName = "Boot";
     private const string TitleSceneName = "Title";
-    private const string GameSceneName = "Game";
+    private const string TutorialSceneName = "Tutorial";
+    private const string GameSceneName = "Stage1";
     private const string ResultSceneName = "Result";
 
     public static void LoadBoot()
@@ -20,16 +21,26 @@ public static class SceneFlow
         SceneManager.LoadScene(TitleSceneName, LoadSceneMode.Single);
     }
 
+    public static void LoadTutorial()
+    {
+        Debug.Log("[SceneFlow] LoadTutorial requested.");
+        SceneManager.LoadScene(TutorialSceneName, LoadSceneMode.Single);
+
+        FadeController.EnsureInstance().FadeIn();
+    }
+
     public static void LoadGame()
     {
         Debug.Log("[SceneFlow] LoadGame requested.");
         SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
+        // FadeIn は Stage1 の GameRoot.Start() が担当する。
     }
 
     public static void LoadResult()
     {
         Debug.Log("[SceneFlow] LoadResult requested.");
         SceneManager.LoadScene(ResultSceneName, LoadSceneMode.Single);
+        FadeController.EnsureInstance().FadeIn();
     }
 
     public static void ReloadCurrent()
@@ -47,6 +58,10 @@ public static class SceneFlow
         switch (currentSceneName)
         {
             case TitleSceneName:
+                LoadTutorial();
+                break;
+
+            case TutorialSceneName:
                 LoadGame();
                 break;
 
@@ -75,8 +90,12 @@ public static class SceneFlow
                 LoadResult();
                 break;
 
-            case GameSceneName:
+            case TutorialSceneName:
                 LoadTitle();
+                break;
+
+            case GameSceneName:
+                LoadTutorial();
                 break;
 
             case ResultSceneName:

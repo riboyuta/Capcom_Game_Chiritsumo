@@ -6,6 +6,13 @@ internal sealed class PlayerMovementCore
     private readonly PlayerLocomotionDependencies deps;
     private float landingControlAssistTimer;
 
+    private const float MoveInputThreshold = 0.01f;
+    private const float AutoStepProbeRadiusScale = 0.85f;
+    private const float AutoStepLowerProbeHeightRatio = 0.45f;
+    private const float AutoStepGroundCheckStartPadding = 0.05f;
+    private const float DashVerticalThreshold = 0.1f;
+
+
     internal PlayerMovementCore(PlayerLocomotionDependencies deps)
     {
         this.deps = deps;
@@ -78,15 +85,23 @@ internal sealed class PlayerMovementCore
             return;
         }
 
-        float inputX = Mathf.Clamp(deps.InputReader.Move.x, -1f, 1f);
-        float targetSpeed = inputX * (deps.Settings.Move.MaxSpeed * modifier.moveSpeedMultiplier);
-        bool hasMoveInput = Mathf.Abs(inputX) > 0.01f;
+        float rawInputX = Mathf.Clamp(deps.InputReader.Move.x, -1f, 1f);
+        float moveDirection = ResolveHorizontalMoveDirection(rawInputX);
+
+        float targetSpeed = moveDirection * (deps.Settings.Move.MaxSpeed * modifier.moveSpeedMultiplier);
+        bool hasMoveInput = Mathf.Abs(moveDirection) > MoveInputThreshold;
+
+        if (hasMoveInput)
+        {
+            TryAutoStepUp(moveDirection);
+        }
+
         bool isLandingAssistActive = deps.RuntimeState.isGrounded && landingControlAssistTimer > 0f;
 
         float accel;
         if (hasMoveInput)
         {
-            bool isTurning = deps.Rb.linearVelocity.x * inputX < 0f;
+            bool isTurning = deps.Rb.linearVelocity.x * moveDirection < 0f;
             if (isTurning)
             {
                 accel = deps.RuntimeState.isGrounded
@@ -132,6 +147,25 @@ internal sealed class PlayerMovementCore
         deps.Rb.linearVelocity = velocity;
     }
 
+    // 通常移動用に、横入力を -1 / 0 / 1 に変換する。
+    // 入力の強さではなく「左右どちらへ向かうか」だけを速度計算に使う。
+    private static float ResolveHorizontalMoveDirection(float rawInputX)
+    {
+        const float horizontalMoveThreshold = 0.5f;
+
+        if (rawInputX >= horizontalMoveThreshold)
+        {
+            return 1f;
+        }
+
+        if (rawInputX <= -horizontalMoveThreshold)
+        {
+            return -1f;
+        }
+
+        return 0f;
+    }
+
     // ============================================================
     // 重力
     // ============================================================
@@ -174,4 +208,247 @@ internal sealed class PlayerMovementCore
             deps.Rb.linearVelocity = velocity;
         }
     }
+
+    // ============================================================
+    // 自動段差乗り上げ
+    // ============================================================
+
+    internal bool TryAutoStepUpFromDash()
+    {
+        if (!deps.RuntimeState.isDashing)
+        {
+            return false;
+        }
+
+        Vector2 dashDirection = deps.RuntimeState.dashDirection;
+
+        if (!IsHorizontalDashDirection(dashDirection))
+        {
+            return false;
+        }
+
+        return TryAutoStepUp(dashDirection.x, allowWhileDashing: true);
+    }
+
+    private bool TryAutoStepUp(float rawInputX)
+    {
+        return TryAutoStepUp(rawInputX, allowWhileDashing: false);
+    }
+
+    private bool TryAutoStepUp(float rawInputX, bool allowWhileDashing)
+    {
+        AutoStepSettings autoStep = deps.Settings.AutoStep;
+
+        if (!autoStep.UseAutoStep || !CanAutoStep(allowWhileDashing))
+        {
+            return false;
+        }
+
+        Vector3 direction = GetHorizontalDirection(rawInputX);
+        Vector3 up = deps.Transform.up;
+        Vector3 rbPosition = deps.Rb.position;
+
+        GetCapsulePoints(rbPosition, out Vector3 bottomSphereCenter, out _, out float worldRadius);
+
+        if (!DetectStepObstacle(bottomSphereCenter, direction, up, worldRadius, autoStep))
+        {
+            return false;
+        }
+
+        if (!TryFindStepGround(bottomSphereCenter, direction, up, worldRadius, autoStep, out float raiseAmount))
+        {
+            return false;
+        }
+
+        if (!IsValidStepHeight(raiseAmount, autoStep))
+        {
+            return false;
+        }
+
+        Vector3 targetPosition = rbPosition + up * (raiseAmount + autoStep.ClearanceMargin);
+
+        if (!CanFitAtPositions(targetPosition, direction, worldRadius, autoStep))
+        {
+            return false;
+        }
+
+        ExecuteStepUp(targetPosition);
+        return true;
+    }
+
+    private bool CanAutoStep(bool allowWhileDashing)
+    {
+        PlayerRuntimeState state = deps.RuntimeState;
+
+        return state.isGrounded
+            && (allowWhileDashing || !state.isDashing)
+            && !state.isWallGrabbing
+            && !state.isWallSliding
+            && !state.isLedgeClimbing
+            && !state.isStomping
+            && state.wallJumpControlLockTimer <= 0f
+            && !deps.IsActionLocked()
+            && !deps.IsExternallyControlled();
+    }
+
+    private void GetCapsulePoints(
+        Vector3 rbPosition,
+        out Vector3 bottomSphereCenter,
+        out Vector3 topSphereCenter,
+        out float worldRadius)
+    {
+        Vector3 up = deps.Transform.up;
+        Vector3 worldCenter = CalculateWorldCenterAt(rbPosition);
+
+        worldRadius = deps.GetWorldCapsuleRadius();
+        float sphereOffset = CalculateSphereOffset(worldRadius);
+
+        bottomSphereCenter = worldCenter - up * sphereOffset;
+        topSphereCenter = worldCenter + up * sphereOffset;
+    }
+
+    private bool WouldCapsuleOverlapAt(Vector3 rbPosition)
+    {
+        GetCapsulePoints(rbPosition, out Vector3 bottomSphereCenter, out Vector3 topSphereCenter, out float worldRadius);
+
+        float checkRadius = Mathf.Max(0.01f, worldRadius - deps.Settings.AutoStep.ClearanceMargin);
+        int solidLayerMask = GetSolidLayerMask();
+
+        return Physics.CheckCapsule(
+            bottomSphereCenter,
+            topSphereCenter,
+            checkRadius,
+            solidLayerMask,
+            QueryTriggerInteraction.Ignore);
+    }
+
+    private bool IsHorizontalDashDirection(Vector2 dashDirection)
+    {
+        return Mathf.Abs(dashDirection.x) > MoveInputThreshold
+            && Mathf.Abs(dashDirection.y) <= DashVerticalThreshold;
+    }
+
+    private Vector3 GetHorizontalDirection(float rawInputX)
+    {
+        int directionSign = rawInputX > 0f ? 1 : -1;
+        return deps.Transform.right * directionSign;
+    }
+
+    private bool DetectStepObstacle(
+        Vector3 bottomSphereCenter,
+        Vector3 direction,
+        Vector3 up,
+        float worldRadius,
+        AutoStepSettings autoStep)
+    {
+        float lowerProbeHeight = autoStep.MaxHeight * AutoStepLowerProbeHeightRatio;
+        Vector3 lowerProbeOrigin = bottomSphereCenter + up * lowerProbeHeight;
+        float probeRadius = Mathf.Max(0.01f, worldRadius * AutoStepProbeRadiusScale);
+        float lowerCheckDistance = worldRadius + autoStep.ForwardCheckDistance;
+
+        return Physics.SphereCast(
+            lowerProbeOrigin,
+            probeRadius,
+            direction,
+            out _,
+            lowerCheckDistance,
+            deps.Settings.Detection.WallLayerMask,
+            QueryTriggerInteraction.Ignore);
+    }
+
+    private bool TryFindStepGround(
+        Vector3 bottomSphereCenter,
+        Vector3 direction,
+        Vector3 up,
+        float worldRadius,
+        AutoStepSettings autoStep,
+        out float raiseAmount)
+    {
+        raiseAmount = 0f;
+
+        Vector3 lowestPoint = bottomSphereCenter - up * worldRadius;
+        float lowerCheckDistance = worldRadius + autoStep.ForwardCheckDistance;
+
+        Vector3 groundCheckOrigin = lowestPoint
+            + direction * lowerCheckDistance
+            + up * (autoStep.MaxHeight + AutoStepGroundCheckStartPadding);
+
+        float groundCheckDistance = autoStep.MaxHeight
+            + AutoStepGroundCheckStartPadding
+            + deps.Settings.Detection.GroundCheckDistance;
+
+        bool hasStepGround = Physics.Raycast(
+            groundCheckOrigin,
+            -up,
+            out RaycastHit groundHit,
+            groundCheckDistance,
+            deps.Settings.Detection.GroundLayerMask,
+            QueryTriggerInteraction.Ignore);
+
+        if (hasStepGround)
+        {
+            raiseAmount = Vector3.Dot(groundHit.point - lowestPoint, up);
+        }
+
+        return hasStepGround;
+    }
+
+    private bool IsValidStepHeight(float raiseAmount, AutoStepSettings autoStep)
+    {
+        return raiseAmount > 0f
+            && raiseAmount <= autoStep.MaxHeight + autoStep.ClearanceMargin;
+    }
+
+    private bool CanFitAtPositions(
+        Vector3 targetPosition,
+        Vector3 direction,
+        float worldRadius,
+        AutoStepSettings autoStep)
+    {
+        if (WouldCapsuleOverlapAt(targetPosition))
+        {
+            return false;
+        }
+
+        float forwardStandCheckDistance = worldRadius
+            + autoStep.ForwardCheckDistance
+            + autoStep.ClearanceMargin;
+
+        Vector3 forwardStandPosition = targetPosition + direction * forwardStandCheckDistance;
+
+        return !WouldCapsuleOverlapAt(forwardStandPosition);
+    }
+
+    private void ExecuteStepUp(Vector3 targetPosition)
+    {
+        deps.Rb.MovePosition(targetPosition);
+
+        Vector3 velocity = deps.Rb.linearVelocity;
+        if (velocity.y < 0f)
+        {
+            velocity.y = 0f;
+            deps.Rb.linearVelocity = velocity;
+        }
+    }
+
+    private Vector3 CalculateWorldCenterAt(Vector3 rbPosition)
+    {
+        Vector3 currentWorldCenter = deps.Transform.TransformPoint(deps.CapsuleCollider.center);
+        Vector3 centerOffsetFromRb = currentWorldCenter - deps.Rb.position;
+        return rbPosition + centerOffsetFromRb;
+    }
+
+    private float CalculateSphereOffset(float worldRadius)
+    {
+        float halfHeight = Mathf.Max(deps.CapsuleCollider.height * 0.5f, deps.CapsuleCollider.radius);
+        float worldHalfHeight = halfHeight * Mathf.Abs(deps.Transform.lossyScale.y);
+        return Mathf.Max(0f, worldHalfHeight - worldRadius);
+    }
+
+    private int GetSolidLayerMask()
+    {
+        return deps.Settings.Detection.GroundLayerMask.value
+            | deps.Settings.Detection.WallLayerMask.value;
+    }
+
 }

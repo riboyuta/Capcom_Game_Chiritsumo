@@ -326,11 +326,72 @@ public sealed class PlayerFacade : MonoBehaviour
 {
     // 実際のプレイヤー制御本体。
     private PlayerController playerController;
+    private bool isDeathEventSubscribed;
+
+    public event System.Action<PlayerDeathCause> DeathAccepted;
 
     // 必須コンポーネントを取得してキャッシュする。
     private void Awake()
     {
+        ResolvePlayerControllerIfNeeded();
+    }
+
+    private void OnEnable()
+    {
+        SubscribeDeathAcceptedIfNeeded();
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribeDeathAcceptedIfNeeded();
+    }
+
+    private void ResolvePlayerControllerIfNeeded()
+    {
+        if (playerController != null)
+        {
+            return;
+        }
+
         playerController = GetComponent<PlayerController>();
+    }
+
+    private void SubscribeDeathAcceptedIfNeeded()
+    {
+        if (isDeathEventSubscribed)
+        {
+            return;
+        }
+
+        ResolvePlayerControllerIfNeeded();
+
+        if (playerController == null)
+        {
+            return;
+        }
+
+        playerController.DeathAccepted += OnPlayerDeathAccepted;
+        isDeathEventSubscribed = true;
+    }
+
+    private void UnsubscribeDeathAcceptedIfNeeded()
+    {
+        if (!isDeathEventSubscribed)
+        {
+            return;
+        }
+
+        if (playerController != null)
+        {
+            playerController.DeathAccepted -= OnPlayerDeathAccepted;
+        }
+
+        isDeathEventSubscribed = false;
+    }
+
+    private void OnPlayerDeathAccepted(PlayerDeathCause deathCause)
+    {
+        DeathAccepted?.Invoke(deathCause);
     }
 
     // 現在ダッシュ中か。
@@ -339,11 +400,29 @@ public sealed class PlayerFacade : MonoBehaviour
     // - ダッシュ中だけ反応する敵やスイッチ
     public bool IsDashActive => playerController.IsDashActive;
 
+    // このフレームにダッシュを開始したか。
+    // 用途例:
+    // - ダッシュ開始演出の one-shot 起点
+    public bool JustDashStartedThisFrame => playerController.JustDashStartedThisFrameForFacade;
+
+    // 現在のダッシュ方向。
+    // 用途例:
+    // - ダッシュ方向に応じた演出分岐
+    public Vector2 DashDirection => playerController.DashDirectionForFacade;
+
     // 今この瞬間にダッシュ開始できるか。
     // 用途例:
     // - ダッシュ回復ギミックが「回復が必要か」を見る
     // - UI やチュートリアルで現在ダッシュ可能かを表示する
     public bool CanUseDashNow => playerController.CanUseDashNow();
+
+
+    // 最後に有効なダッシュ入力が受理されたフレーム。
+    // 用途例:
+    // - 外部ギミックや敵AIが新しいダッシュ入力の受理を検知する
+    // - 開始時のフレーム値と比較して、その後の入力受理を判定する
+    public int LastAcceptedDashInputFrame => playerController.LastAcceptedDashInputFrame;
+
     // 壁掴み中か。
     // 用途例:
     // - 壁掴み中だけ反応する壁ギミック
@@ -559,8 +638,31 @@ public sealed class PlayerFacade : MonoBehaviour
     // 固定射出中の落下時重力倍率。
     private float fixedLaunchFallingGravityMultiplier;
 
+    // 外部から固定射出を試みる。
+    public bool TryApplyFixedLaunch(in PlayerFixedLaunchRequest request)
+    {
+        if (playerController == null)
+        {
+            return false;
+        }
+
+        if (!playerController.CanAcceptFixedLaunch(in request))
+        {
+            return false;
+        }
+
+        ApplyFixedLaunchInternal(in request);
+        return true;
+    }
+
     // 外部から固定射出を適用する。
+    // 既存呼び出し互換用。
     public void ApplyFixedLaunch(in PlayerFixedLaunchRequest request)
+    {
+        TryApplyFixedLaunch(in request);
+    }
+
+    private void ApplyFixedLaunchInternal(in PlayerFixedLaunchRequest request)
     {
         Rigidbody rb = playerController.Rigidbody;
         if (rb == null) return;
@@ -640,7 +742,7 @@ public sealed class PlayerFacade : MonoBehaviour
             ForceUnground = true
         };
 
-        ApplyFixedLaunch(in request);
+        TryApplyFixedLaunch(in request);
     }
 
     private void FixedUpdate()

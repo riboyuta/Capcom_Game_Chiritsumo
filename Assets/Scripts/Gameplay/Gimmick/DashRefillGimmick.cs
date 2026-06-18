@@ -21,13 +21,17 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
     private Renderer[] visualRenderers;
     private bool isAvailable = true;
     private float cooldownTimer;
+    private bool initialIsAvailable;
+    private float initialCooldownTimer;
+    private bool initialColliderEnabled;
+    private bool[] initialRendererEnabledStates;
 
     // IRespawnResettable 用
     private bool hasCapturedInitialState;
 
     private void Awake()
     {
-        myCollider = GetComponent<Collider>();
+        EnsureRuntimeReferences();
 
         // トリガー化を保証する
         if (myCollider != null)
@@ -35,18 +39,31 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
             myCollider.isTrigger = true;
         }
 
-        if (visualTransform == null)
-        {
-            visualTransform = transform.childCount > 0 ? transform.GetChild(0) : transform;
-        }
-
-        visualRenderers = visualTransform.GetComponentsInChildren<Renderer>();
-
         // MeshRenderer のソーティングを設定する
         foreach (var r in GetComponentsInChildren<Renderer>())
         {
             r.sortingLayerName = "UseGimmick";
             r.sortingOrder = 0;
+        }
+    }
+
+    private void EnsureRuntimeReferences()
+    {
+        if (myCollider == null)
+        {
+            myCollider = GetComponent<Collider>();
+        }
+
+        if (visualTransform == null)
+        {
+            visualTransform = transform.childCount > 0 ? transform.GetChild(0) : transform;
+        }
+
+        if (visualRenderers == null)
+        {
+            visualRenderers = visualTransform != null
+                ? visualTransform.GetComponentsInChildren<Renderer>(true)
+                : new Renderer[0];
         }
     }
 
@@ -109,10 +126,7 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
         SetVisualActive(false);
 
         // SE: 回復音
-        if (AudioManager.Instance != null)
-        {
-            //AudioManager.Instance.PlayOverlap("SFX_gimmick_dash_refill");
-        }
+        AudioEvent.Emit(this, "Consumed");
     }
 
     // ギミックを再びアクティブにする。
@@ -127,9 +141,40 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
 
     private void SetVisualActive(bool active)
     {
+        if (visualRenderers == null) return;
+
         foreach (var r in visualRenderers)
         {
             if (r != null) r.enabled = active;
+        }
+    }
+
+    private void CaptureRendererInitialStates()
+    {
+        if (visualRenderers == null)
+        {
+            initialRendererEnabledStates = null;
+            return;
+        }
+
+        initialRendererEnabledStates = new bool[visualRenderers.Length];
+        for (int i = 0; i < visualRenderers.Length; i++)
+        {
+            initialRendererEnabledStates[i] = visualRenderers[i] != null && visualRenderers[i].enabled;
+        }
+    }
+
+    private void RestoreRendererInitialStates()
+    {
+        if (visualRenderers == null || initialRendererEnabledStates == null) return;
+
+        int count = Mathf.Min(visualRenderers.Length, initialRendererEnabledStates.Length);
+        for (int i = 0; i < count; i++)
+        {
+            if (visualRenderers[i] != null)
+            {
+                visualRenderers[i].enabled = initialRendererEnabledStates[i];
+            }
         }
     }
 
@@ -140,12 +185,34 @@ public class DashRefillGimmick : MonoBehaviour, IRespawnResettable
     public void CaptureInitialState()
     {
         if (hasCapturedInitialState) return;
+
+        EnsureRuntimeReferences();
+
+        initialIsAvailable = isAvailable;
+        initialCooldownTimer = cooldownTimer;
+        initialColliderEnabled = myCollider != null && myCollider.enabled;
+        CaptureRendererInitialStates();
+
         hasCapturedInitialState = true;
     }
 
     public void ResetToRespawnState()
     {
-        // リスポーン時は使用可能な状態に戻す
-        Reactivate();
+        // リスポーン時は使用可否も初期キャプチャ状態へ戻す。
+        if (!hasCapturedInitialState)
+        {
+            CaptureInitialState();
+        }
+
+        // 死亡復帰では常に再有効化せず、キャプチャした初期状態へ戻す。
+        isAvailable = initialIsAvailable;
+        cooldownTimer = initialCooldownTimer;
+
+        if (myCollider != null)
+        {
+            myCollider.enabled = initialColliderEnabled;
+        }
+
+        RestoreRendererInitialStates();
     }
 }

@@ -1,4 +1,5 @@
 using Game.Input;
+using System;
 using UnityEngine;
 
 // 同一 GameObject への多重アタッチを防ぐ。
@@ -49,6 +50,11 @@ public sealed partial class PlayerController : MonoBehaviour
     [Header("参照: PlayerDeathView")]
     [Tooltip("死亡時の倒れ演出と黒フェード制御を行う見た目コンポーネントです。未設定時は実行時に探索を試みます。")]
     [SerializeField] private PlayerDeathView playerDeathView;
+
+    [Header("参照: PlayerShadowRecorder")]
+    [Tooltip("ShadowChaser 用のプレイヤー履歴レコーダーです。未設定時は同一 GameObject から取得します。")]
+    [SerializeField] private PlayerShadowRecorder playerShadowRecorder;
+
     // 物理移動本体。
     // 速度変更、物理拘束、重力挙動などに使う。
     private Rigidbody rb;
@@ -71,6 +77,8 @@ public sealed partial class PlayerController : MonoBehaviour
     private readonly PlayerRuntimeState runtimeState = new PlayerRuntimeState();
     private readonly PlayerFrameRequests frameRequests = new PlayerFrameRequests();
     internal bool IsDashActive => runtimeState.isDashing;
+    internal bool JustDashStartedThisFrameForFacade => runtimeState.justDashStartedThisFrame;
+    internal Vector2 DashDirectionForFacade => runtimeState.dashDirection;
     internal bool IsGrounded => runtimeState.isGrounded;
     internal bool IsAirborne => !runtimeState.isGrounded;
     internal bool IsWallGrabbing => runtimeState.isWallGrabbing;
@@ -87,6 +95,8 @@ public sealed partial class PlayerController : MonoBehaviour
     internal PlayerAnimationSnapshot CurrentAnimationSnapshot => currentAnimationSnapshot;
 
     // 死亡状態プロパティ
+    internal event Action<PlayerDeathCause> DeathAccepted;
+
     public bool IsDeadState => deathCoordinator != null && deathCoordinator.IsDeadState;
     public bool IsDeathSequencePlaying => deathCoordinator != null && deathCoordinator.IsDeathSequencePlaying;
     public bool IsActionLocked => IsDeadState;
@@ -121,6 +131,40 @@ public sealed partial class PlayerController : MonoBehaviour
     {
         return externalControlSystem != null && externalControlSystem.CanAcceptExternalControl(request);
     }
+
+    // Facade 向け最小 bridge: 固定射出受理可否。
+internal bool CanAcceptFixedLaunch(in PlayerFixedLaunchRequest request)
+{
+    if (rb == null)
+    {
+        return false;
+    }
+
+    if (request.Direction.sqrMagnitude <= Mathf.Epsilon)
+    {
+        return false;
+    }
+
+    if (IsActionLocked || IsDeathSequencePlaying)
+    {
+        return false;
+    }
+
+    // 崖乗り上げ中は、崖乗り上げ側の MovePosition 制御を優先する。
+    // この間にバネなどの外部射出を受けると、位置補間と速度射出が競合してガクつく。
+    if (runtimeState.isLedgeClimbing)
+    {
+        return false;
+    }
+
+    // 大砲・レール・イベント拘束など、別の外部制御中は固定射出を受けない。
+    if (IsExternallyControlled)
+    {
+        return false;
+    }
+
+    return true;
+}
 
     // Facade 向け最小 bridge: 外部制御開始。
     internal bool TryBeginExternalControl(
@@ -215,7 +259,7 @@ public sealed partial class PlayerController : MonoBehaviour
 
     private bool RequestDeathStart(PlayerDeathCause cause)
     {
-        if (deathCoordinator != null && deathCoordinator.IsDeathSequencePlaying)
+        if (deathCoordinator != null && (deathCoordinator.IsDeadState || deathCoordinator.IsDeathSequencePlaying))
         {
             Debug.Log("[PlayerDeath] Death request ignored: already processing");
             return false;
@@ -227,6 +271,11 @@ public sealed partial class PlayerController : MonoBehaviour
         PlayDeathSound(cause);
         deathCoordinator?.StartRespawnSequence(cause);
         return true;
+    }
+
+    private void NotifyDeathAccepted(PlayerDeathCause cause)
+    {
+        DeathAccepted?.Invoke(cause);
     }
 
     private void ResetInputBlockRequestsThisFrame()
@@ -342,6 +391,12 @@ public sealed partial class PlayerController : MonoBehaviour
             enabled = false;
             return;
         }
+
+        if (playerShadowRecorder == null)
+        {
+            playerShadowRecorder = GetComponent<PlayerShadowRecorder>();
+        }
+
         // 入力リーダーを生成する。
         // ここで「生入力」と「入力割り当て設定」を結び付ける。
         playerInputReader = new PlayerInputReader(rawInputSource, inputBindings, movementSettings);
@@ -387,6 +442,7 @@ public sealed partial class PlayerController : MonoBehaviour
         runtimeState.wasGroundedLastFrame = false;
         frameRequests.requestedLocomotionModifierThisTick = PlayerLocomotionModifierRequest.Identity;
 
+
         currentAnimationSnapshot = PlayerAnimationSnapshot.Default;
 
         deathCoordinator = new PlayerDeathCoordinator(
@@ -403,11 +459,14 @@ public sealed partial class PlayerController : MonoBehaviour
             movementSettings,
             () => vibrationController?.StopAllRumble(),
             () => audioController?.StopAllSounds(),
+            PlayRespawnSound,
             () =>
             {
                 justLandedThisFrame = false;
                 justCrossedApexThisFrame = false;
             },
+            respawnPosition => playerShadowRecorder?.ResetHistoryToPosition(respawnPosition),
+            NotifyDeathAccepted,
             LogRespawn,
             LogRespawnWarning);
     }

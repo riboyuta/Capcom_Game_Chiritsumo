@@ -22,6 +22,10 @@ public sealed class PlayerCameraController : MonoBehaviour
     // 通常追従で使う対象位置。
     [SerializeField] private Transform targetAnchor;
 
+[Header("プレイヤー状態 Facade")]
+[Tooltip("横・上下方向ダッシュカメラ補正に使うプレイヤー状態の読み取り窓口です。未設定時は PlayerFacade を自動探索します。")]
+    [SerializeField] private PlayerFacade playerFacade;
+
     [Header("ワールド全体のfallback境界")]
     [Tooltip("常に使える基本のカメラ移動境界です。エリア別の一時境界が未設定のときはこの境界を使ってカメラ位置を制限します。")]
     [FormerlySerializedAs("RoomBounds")]
@@ -62,6 +66,100 @@ public sealed class PlayerCameraController : MonoBehaviour
     // Y 方向の追従の滑らかさ。
     // ジャンプや落下時のカメラ感触に強く影響する。
     [SerializeField] private float smoothTimeY = 0.12f;
+
+    [Header("死亡復帰時の追従スムーズ時間")]
+    [Tooltip("死亡後にリスポーン地点へカメラを戻す間だけ使う追従スムーズ時間です。X/Y両方に同じ値を使い、小さいほど速く復帰地点へ追従します。")]
+    // 死亡復帰中だけ通常時や Room override より優先して使う追従時間。
+    [SerializeField, Min(0f)] private float deathReturnSmoothTime = 0.03f;
+
+    [Header("横方向ダッシュカメラ補正を使うか")]
+    [Tooltip("有効にすると、横方向ダッシュ時だけ X 軸追従と横方向 LookAhead に疾走感用の補正を加えます。")]
+[FormerlySerializedAs("dashCameraEnabled")]
+[SerializeField] private bool horizontalDashCameraEnabled = false;
+
+    [Header("横方向ダッシュ判定 X しきい値")]
+    [Tooltip("ダッシュ方向の X 絶対値がこの値以上の場合に、横方向ダッシュ候補として扱います。")]
+    [SerializeField] private float horizontalDashThreshold = 0.75f;
+
+    [Header("横方向ダッシュ判定 Y 除外しきい値")]
+    [Tooltip("ダッシュ方向の Y 絶対値がこの値以下の場合のみ補正します。上下・斜め方向ダッシュを除外するための値です。")]
+    [SerializeField] private float verticalDashIgnoreThreshold = 0.25f;
+
+    [Header("横方向ダッシュ開始遅延時間")]
+    [Tooltip("横方向ダッシュ開始直後に、専用の遅めの X 軸追従を使う時間です。")]
+    [SerializeField] private float dashStartLagDuration = 0.08f;
+
+    [Header("横方向ダッシュ開始直後の X 軸スムーズ時間")]
+    [Tooltip("横方向ダッシュ開始直後の遅延中に使う X 軸 SmoothDamp 時間です。大きいほど追従が遅れます。")]
+    [SerializeField] private float dashStartSmoothTimeX = 0.16f;
+
+    [Header("横方向ダッシュ中の X 軸スムーズ時間")]
+    [Tooltip("開始直後の遅延が終わった後、横方向ダッシュ中に使う X 軸 SmoothDamp 時間です。")]
+    [SerializeField] private float dashSmoothTimeX = 0.08f;
+
+    [Header("横方向ダッシュ LookAhead 距離")]
+    [Tooltip("横方向ダッシュ中に進行方向へ加算するカメラ LookAhead の距離です。Bounds Clamp 前に適用します。")]
+    [SerializeField] private float dashLookAheadX = 1.2f;
+
+    [Header("横方向ダッシュ LookAhead 復帰時間")]
+    [Tooltip("横方向ダッシュ LookAhead を滑らかに反映し、ダッシュ終了後に 0 へ戻す SmoothDamp 時間です。")]
+    [SerializeField] private float dashLookAheadReturnTime = 0.18f;
+
+[Header("上下方向ダッシュカメラ補正を使うか")]
+[Tooltip("有効にすると、上下方向ダッシュ時だけ Y 軸追従と上下方向 LookAhead に疾走感用の補正を加えます。")]
+[SerializeField] private bool verticalDashCameraEnabled = true;
+
+[Header("上下方向ダッシュ判定 Y しきい値")]
+[Tooltip("ダッシュ方向の Y 絶対値がこの値以上の場合に、上下方向ダッシュ候補として扱います。")]
+[SerializeField] private float verticalDashThreshold = 0.75f;
+
+[Header("上下方向ダッシュ判定 X 除外しきい値")]
+[Tooltip("ダッシュ方向の X 絶対値がこの値以下の場合のみ補正します。横・斜め方向ダッシュを除外するための値です。")]
+[SerializeField] private float horizontalDashIgnoreThreshold = 0.25f;
+
+[Header("上下方向ダッシュ開始遅延時間")]
+[Tooltip("上下方向ダッシュ開始直後に、専用の遅めの Y 軸追従を使う時間です。")]
+[SerializeField] private float verticalDashStartLagDuration = 0.05f;
+
+[Header("上下方向ダッシュ開始直後の Y 軸スムーズ時間")]
+[Tooltip("上下方向ダッシュ開始直後の遅延中に使う Y 軸 SmoothDamp 時間です。大きいほど追従が遅れます。")]
+[SerializeField] private float verticalDashStartSmoothTimeY = 0.14f;
+
+[Header("上下方向ダッシュ中の Y 軸スムーズ時間")]
+[Tooltip("開始直後の遅延が終わった後、上下方向ダッシュ中に使う Y 軸 SmoothDamp 時間です。")]
+[SerializeField] private float verticalDashSmoothTimeY = 0.08f;
+
+[Header("上下方向ダッシュ LookAhead 距離")]
+[Tooltip("上下方向ダッシュ中に進行方向へ加算するカメラ LookAhead の距離です。Bounds Clamp 前に適用します。")]
+[SerializeField] private float verticalDashLookAheadY = 0.8f;
+
+[Header("上下方向ダッシュ LookAhead 復帰時間")]
+[Tooltip("上下方向ダッシュ LookAhead を滑らかに反映し、ダッシュ終了後に 0 へ戻す SmoothDamp 時間です。")]
+[SerializeField] private float verticalDashLookAheadReturnTime = 0.14f;
+
+[Header("斜め方向ダッシュカメラ補正を使うか")]
+[Tooltip("有効にすると、斜め方向ダッシュ時に X / Y 軸それぞれで有効なダッシュカメラ補正を使います。横方向と上下方向の補正は軸ごとに個別判定されます。")]
+[SerializeField] private bool diagonalDashCameraEnabled = true;
+
+[Header("斜め方向ダッシュ判定 X / Y しきい値")]
+[Tooltip("ダッシュ方向の X / Y 絶対値が両方この値以上の場合に、斜め方向ダッシュ候補として扱います。")]
+[SerializeField] private float diagonalDashThreshold = 0.5f;
+
+    [Header("斜め方向ダッシュ LookAhead 倍率")]
+    [Tooltip("斜め方向ダッシュ時の X / Y LookAhead に掛ける倍率です。両軸を同時に動かすため、横方向・上下方向単体より弱める目的で使います。")]
+    [SerializeField] private float diagonalDashLookAheadMultiplier = 1.0f;
+
+    [Header("ダッシュ開始極小シェイク: 有効化")]
+    [Tooltip("有効にすると、ダッシュ開始が成立した瞬間だけカメラへ極小の揺れを加えます。足場や敵の視認性を邪魔しない程度で使います。")]
+    [SerializeField] private bool dashStartMicroShakeEnabled = true;
+
+    [Header("ダッシュ開始極小シェイク: 時間")]
+    [Tooltip("ダッシュ開始シェイクが続く時間です。短いほど入力成立の一瞬だけ揺れます。推奨値は0.04秒です。")]
+    [SerializeField, Min(0f)] private float dashStartMicroShakeDuration = 0.04f;
+
+    [Header("ダッシュ開始極小シェイク: 強度")]
+    [Tooltip("ダッシュ開始シェイクの最大オフセット量です。値を大きくすると揺れが目立つため、0.03程度の極小値を基準に調整します。")]
+    [SerializeField, Min(0f)] private float dashStartMicroShakeAmplitude = 0.03f;
 
     [Header("Orthographic Size 補間時間")]
     [Tooltip("Room ベースの orthographicSize 上書きが切り替わる際の補間時間です。0 のときは即時反映します。")]
@@ -126,6 +224,9 @@ public sealed class PlayerCameraController : MonoBehaviour
     private float activeSmoothTimeXOverride;
     private float activeSmoothTimeYOverride;
 
+    // 死亡復帰中だけ追従時間を一時的に高速化する。
+    private bool isDeathReturnFollowActive;
+
     // 通常時に戻るための World 基準 Orthographic Size 補間時間。
     private float worldOrthographicSizeSmoothTime;
 
@@ -141,6 +242,36 @@ public sealed class PlayerCameraController : MonoBehaviour
     // ref で渡してフレーム間で保持する必要がある。
     private float velocityX;
     private float velocityY;
+
+    // Room ベースのダッシュカメラ補正 有効 / 無効の一時上書き。
+    // hasActiveDashCameraOverride が true のときだけ、Room 側の横 / 上下設定を優先する。
+    private bool hasActiveDashCameraOverride;
+    private bool activeHorizontalDashCameraEnabledOverride;
+    private bool activeVerticalDashCameraEnabledOverride;
+
+    // 横方向ダッシュカメラ補正のランタイム状態。
+    private float dashStartLagTimer;
+    private int dashHorizontalDirectionSign;
+    private float dashLookAheadCurrentX;
+    private float dashLookAheadSmoothDampVelocityX;
+    private bool isHorizontalDashCameraActive;
+    private float activeSmoothTimeXForDebug;
+
+    // 上下方向ダッシュカメラ補正のランタイム状態。
+    private float verticalDashStartLagTimer;
+    private int verticalDashDirectionSign;
+    private float verticalDashLookAheadCurrentY;
+    private float verticalDashLookAheadSmoothDampVelocityY;
+    private bool isVerticalDashCameraActive;
+    private float activeSmoothTimeYForDebug;
+
+    // ダッシュ開始フレームを Facade 経由で補完するためのランタイム状態。
+    private bool wasDashActivePreviousFrame;
+
+    // シェイク済み transform.position を追従計算へ混ぜないため、非シェイクの基準位置を保持する。
+    private readonly DashStartMicroShakeOffset dashStartMicroShake = new DashStartMicroShakeOffset();
+    private Vector3 baseCameraPosition;
+    private bool hasBaseCameraPosition;
 
     // 一時追従ターゲットのランタイム状態。
     // Inspector では設定せず、SetTemporaryTarget / ClearTemporaryTarget でのみ変更する。
@@ -188,18 +319,33 @@ public sealed class PlayerCameraController : MonoBehaviour
         : worldOrthographicSize;
 
     // 実際に使用する X/Y 追従スムーズ時間。
-    private float EffectiveSmoothTimeX => hasActiveFollowSmoothingOverride
-        ? activeSmoothTimeXOverride
-        : worldSmoothTimeX;
+    private float EffectiveSmoothTimeX => isDeathReturnFollowActive
+        ? Mathf.Max(0f, deathReturnSmoothTime)
+        : hasActiveFollowSmoothingOverride
+            ? activeSmoothTimeXOverride
+            : worldSmoothTimeX;
 
-    private float EffectiveSmoothTimeY => hasActiveFollowSmoothingOverride
-        ? activeSmoothTimeYOverride
-        : worldSmoothTimeY;
+    private float EffectiveSmoothTimeY => isDeathReturnFollowActive
+        ? Mathf.Max(0f, deathReturnSmoothTime)
+        : hasActiveFollowSmoothingOverride
+            ? activeSmoothTimeYOverride
+            : worldSmoothTimeY;
 
     // 実際に使用する Orthographic Size 補間時間。
     private float EffectiveOrthographicSizeSmoothTime => hasActiveOrthographicSizeSmoothTimeOverride
         ? activeOrthographicSizeSmoothTimeOverride
         : worldOrthographicSizeSmoothTime;
+
+    // 実際に使用する方向別ダッシュカメラ補正の有効状態。
+    // Room の override が有効なら、横 / 上下の両方を Room 側の値でまとめて上書きする。
+    // override が無効なら PlayerCameraController 側の共通設定を使う。
+    private bool EffectiveHorizontalDashCameraEnabled => hasActiveDashCameraOverride
+        ? activeHorizontalDashCameraEnabledOverride
+        : horizontalDashCameraEnabled;
+
+    private bool EffectiveVerticalDashCameraEnabled => hasActiveDashCameraOverride
+        ? activeVerticalDashCameraEnabledOverride
+        : verticalDashCameraEnabled;
 
     // デバッグや外部参照用の読み取り専用公開プロパティ。
     public Vector3 DesiredPosition => desiredPosition;
@@ -258,8 +404,11 @@ public sealed class PlayerCameraController : MonoBehaviour
         worldSmoothTimeY = Mathf.Max(0f, smoothTimeY);
         worldOrthographicSizeSmoothTime = Mathf.Max(0f, orthographicSizeSmoothTime);
 
-        // 必要に応じて追従対象アンカーを自動解決する。
+        // 必要に応じて追従対象アンカーとプレイヤー状態 Facade を自動解決する。
         ResolveTargetAnchor();
+        ResolvePlayerFacade();
+
+        SetBaseCameraPosition(transform.position);
     }
 
     private void LateUpdate()
@@ -291,7 +440,12 @@ public sealed class PlayerCameraController : MonoBehaviour
             return;
         }
 
-        // 追従対象位置 + カメラオフセット(+必要なら部屋注視オフセット) で理想位置を作る。
+        if (!isRoomTransitionRunning)
+        {
+            TickDashCamera();
+        }
+
+        // 追従対象位置 + カメラオフセット(+必要なら部屋注視オフセット) + 横・上下方向ダッシュ LookAhead で理想位置を作る。
         desiredPosition = BuildFollowDesiredPosition(effectiveTarget);
 
         // 理想位置をカメラ境界内に収めた最終候補位置を作る。
@@ -309,10 +463,11 @@ public sealed class PlayerCameraController : MonoBehaviour
             // Linear の進行率を EaseInOut に変換する。
             float easedT = EvaluateRoomTransitionEaseInOut(linearT);
 
-            transform.position = Vector3.Lerp(
+            Vector3 transitionBasePosition = Vector3.Lerp(
                 roomTransitionStartPosition,
                 roomTransitionTargetPosition,
                 easedT);
+            ApplyCameraPositionWithShake(transitionBasePosition);
 
             // 距離しきい値で早期終了すると終端でガクつきやすい。
             // そのため、遷移終了は「時間が最後まで進み切ったか」で判定する。
@@ -326,20 +481,21 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         // X と Y を別々の SmoothDamp で補間する。
         // これにより、軸ごとの追従感を個別に調整できる。
+        Vector3 currentBasePosition = GetCurrentBaseCameraPosition();
         float finalX = Mathf.SmoothDamp(
-            current: transform.position.x,
+            current: currentBasePosition.x,
             target: clampedPosition.x,
             currentVelocity: ref velocityX,
-            smoothTime: EffectiveSmoothTimeX);
+            smoothTime: activeSmoothTimeXForDebug);
 
         float finalY = Mathf.SmoothDamp(
-            current: transform.position.y,
+            current: currentBasePosition.y,
             target: clampedPosition.y,
             currentVelocity: ref velocityY,
-            smoothTime: EffectiveSmoothTimeY);
+            smoothTime: activeSmoothTimeYForDebug);
 
-        // Z は Clamp 後位置をそのまま採用する。
-        transform.position = new Vector3(finalX, finalY, clampedPosition.z);
+        // Z は Clamp 後位置をそのまま採用し、最後だけシェイクオフセットを加える。
+        ApplyCameraPositionWithShake(new Vector3(finalX, finalY, clampedPosition.z));
 
         // 必要なら、追従対象が画面内のどこに居るかを Viewport 座標で確認する。
         if (logViewportPosition)
@@ -354,6 +510,46 @@ public sealed class PlayerCameraController : MonoBehaviour
     // -----------------------------
     // 初期化・参照解決
     // -----------------------------
+
+    private Vector3 GetCurrentBaseCameraPosition()
+    {
+        if (!hasBaseCameraPosition)
+        {
+            SetBaseCameraPosition(transform.position);
+        }
+
+        return baseCameraPosition;
+    }
+
+    private void SetBaseCameraPosition(Vector3 position)
+    {
+        baseCameraPosition = position;
+        hasBaseCameraPosition = true;
+    }
+
+    private void ApplyCameraPositionWithShake(Vector3 position)
+    {
+        SetBaseCameraPosition(position);
+
+        transform.position = baseCameraPosition + dashStartMicroShake.CurrentOffset;
+        dashStartMicroShake.Tick(Time.deltaTime);
+    }
+
+    private void SnapCameraPosition(Vector3 position)
+    {
+        SetBaseCameraPosition(position);
+        transform.position = position;
+    }
+
+    private void ClearDashStartMicroShake()
+    {
+        dashStartMicroShake.Clear();
+
+        if (hasBaseCameraPosition)
+        {
+            transform.position = baseCameraPosition;
+        }
+    }
 
     private bool ValidateRuntimeReferences()
     {
@@ -377,6 +573,9 @@ public sealed class PlayerCameraController : MonoBehaviour
             }
         }
 
+        // ダッシュ補正は任意機能なので、Facade が無ければ補正無しで通常追従を続ける。
+        ResolvePlayerFacade();
+
         // フォールバック境界が無いと Clamp 計算ができない。
         if (worldBounds == null)
         {
@@ -392,6 +591,14 @@ public sealed class PlayerCameraController : MonoBehaviour
         }
 
         return true;
+    }
+
+    private void ResolvePlayerFacade()
+    {
+        if (playerFacade == null)
+        {
+            playerFacade = FindFirstObjectByType<PlayerFacade>();
+        }
     }
 
     private void ResolveTargetAnchor()
@@ -480,6 +687,9 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     public void ResetCameraMotionForRespawn()
     {
+        // 前回の死亡復帰モードが残っていた場合も、リスポーン初期化で必ず解除する。
+        isDeathReturnFollowActive = false;
+
         // リスポーン後に追従対象を通常状態へ戻す。
         ClearTemporaryTarget();
 
@@ -487,6 +697,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         velocityX = 0f;
         velocityY = 0f;
         orthographicSizeVelocity = 0f;
+        ResetDashCameraState();
 
         // ルーム確認モード中なら通常追従位置へ戻す。
         if (isRoomLookRunning || isRoomLookReturning)
@@ -499,6 +710,31 @@ public sealed class PlayerCameraController : MonoBehaviour
         {
             CancelRoomTransitionAndSnapToTarget();
         }
+    }
+
+    public void BeginDeathReturnFollow()
+    {
+        isDeathReturnFollowActive = true;
+
+        // 通常追従や Room 遷移の慣性を死亡復帰用の高速追従へ持ち越さない。
+        velocityX = 0f;
+        velocityY = 0f;
+        ResetDashCameraState();
+    }
+
+    public void EndDeathReturnFollow()
+    {
+        if (!isDeathReturnFollowActive)
+        {
+            return;
+        }
+
+        isDeathReturnFollowActive = false;
+
+        // 通常追従へ戻る瞬間に死亡復帰中の速度が残らないようにする。
+        velocityX = 0f;
+        velocityY = 0f;
+        ResetDashCameraState();
     }
 
     // -----------------------------
@@ -564,12 +800,44 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     public void ApplyRoomCameraSettings(Room room)
     {
-        // null の部屋は反映せずに警告だけ出す。
+        // null の部屋ではダッシュカメラ補正の Room 上書きを解除する。
         if (room == null)
         {
+            hasActiveDashCameraOverride = false;
+            activeHorizontalDashCameraEnabledOverride = false;
+            activeVerticalDashCameraEnabledOverride = false;
+
+            // override解除時も前Roomのダッシュカメラ状態を残さない。
+            ResetDashCameraState();
+
             Debug.LogWarning("PlayerCameraController: ApplyRoomCameraSettings に null が渡されました。", this);
             return;
         }
+
+
+
+        // ダッシュカメラ補正の Room override を反映する。
+        // Room 側で override が有効な場合だけ、横 / 上下の有効設定をまとめて上書きする。
+        if (room.HasDashCameraOverride)
+        {
+
+            hasActiveDashCameraOverride = true;
+            activeHorizontalDashCameraEnabledOverride = room.HorizontalDashCameraEnabledInRoom;
+            activeVerticalDashCameraEnabledOverride = room.VerticalDashCameraEnabledInRoom;
+
+            // Room切り替え直後に前Roomのダッシュカメラ状態が残らないようにする。
+            ResetDashCameraState();
+        }
+        else
+        {
+            hasActiveDashCameraOverride = false;
+            activeHorizontalDashCameraEnabledOverride = false;
+            activeVerticalDashCameraEnabledOverride = false;
+
+            // override解除時も前Roomのダッシュカメラ状態を残さない。
+            ResetDashCameraState();
+        }
+
 
         // 部屋境界がある場合は境界 override を反映し、無い場合は world 境界に戻す。
         if (room.RoomBounds != null)
@@ -637,17 +905,19 @@ public sealed class PlayerCameraController : MonoBehaviour
             return false;
         }
 
+        ResetDashCameraState();
+
         roomLookBounds = lookBounds;
         isRoomLookRunning = true;
         isRoomLookReturning = false;
         roomLookReturnElapsed = 0f;
 
-        // 現在位置を基準に、RoomLook 用 Bounds 内へ収める。
-        desiredPosition = transform.position;
+        // 現在の非シェイク基準位置を基準に、RoomLook 用 Bounds 内へ収める。
+        desiredPosition = GetCurrentBaseCameraPosition();
         clampedPosition = GetClampedPositionInBounds(desiredPosition, roomLookBounds);
 
         roomLookManualPosition = clampedPosition;
-        transform.position = roomLookManualPosition;
+        SnapCameraPosition(roomLookManualPosition);
 
         // 通常追従の慣性を持ち越さない。
         velocityX = 0f;
@@ -671,12 +941,12 @@ public sealed class PlayerCameraController : MonoBehaviour
             0f) * Mathf.Max(0f, roomLookMoveSpeed) * Mathf.Max(0f, deltaTime);
 
         desiredPosition = roomLookManualPosition + moveDelta;
-        desiredPosition.z = transform.position.z;
+        desiredPosition.z = GetCurrentBaseCameraPosition().z;
 
         clampedPosition = GetClampedPositionInBounds(desiredPosition, roomLookBounds);
 
         roomLookManualPosition = clampedPosition;
-        transform.position = roomLookManualPosition;
+        SnapCameraPosition(roomLookManualPosition);
     }
 
     public void EndRoomLook()
@@ -690,7 +960,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         isRoomLookReturning = true;
         roomLookReturnElapsed = 0f;
 
-        roomLookReturnStartPosition = transform.position;
+        roomLookReturnStartPosition = GetCurrentBaseCameraPosition();
         roomLookReturnTargetPosition = ComputeFollowClampedPosition();
 
         velocityX = 0f;
@@ -699,11 +969,13 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     public void CancelRoomLookAndSnapToFollow()
     {
+        ResetDashCameraState();
+
         isRoomLookRunning = false;
         isRoomLookReturning = false;
 
         Vector3 targetPosition = ComputeFollowClampedPosition();
-        transform.position = targetPosition;
+        SnapCameraPosition(targetPosition);
 
         desiredPosition = targetPosition;
         clampedPosition = targetPosition;
@@ -727,10 +999,11 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         float easedT = EvaluateRoomTransitionEaseInOut(linearT);
 
-        transform.position = Vector3.Lerp(
+        Vector3 roomLookBasePosition = Vector3.Lerp(
             roomLookReturnStartPosition,
             roomLookReturnTargetPosition,
             easedT);
+        SnapCameraPosition(roomLookBasePosition);
 
         desiredPosition = roomLookReturnTargetPosition;
         clampedPosition = roomLookReturnTargetPosition;
@@ -738,7 +1011,8 @@ public sealed class PlayerCameraController : MonoBehaviour
         if (linearT >= 1f)
         {
             isRoomLookReturning = false;
-            transform.position = roomLookReturnTargetPosition;
+            SnapCameraPosition(roomLookReturnTargetPosition);
+            ResetDashCameraState();
 
             velocityX = 0f;
             velocityY = 0f;
@@ -750,7 +1024,7 @@ public sealed class PlayerCameraController : MonoBehaviour
         Transform effectiveTarget = GetEffectiveTargetAnchor();
         if (effectiveTarget == null)
         {
-            return transform.position;
+            return GetCurrentBaseCameraPosition();
         }
 
         Vector3 followDesired = BuildFollowDesiredPosition(effectiveTarget);
@@ -760,15 +1034,185 @@ public sealed class PlayerCameraController : MonoBehaviour
     private Vector3 BuildFollowDesiredPosition(Transform effectiveTarget)
     {
         Vector3 baseDesiredPosition = effectiveTarget.position + cameraOffset;
+        Vector3 focusOffset3D = hasActiveRoomFocusOffset
+            ? new Vector3(-activeRoomFocusOffset.x, activeRoomFocusOffset.y, 0f)
+            : Vector3.zero;
+        // 横方向は X 軸、上下方向は Y 軸だけを Bounds Clamp 前に加算する。
+        Vector3 dashLookAheadOffset = new Vector3(dashLookAheadCurrentX, verticalDashLookAheadCurrentY, 0f);
+        return baseDesiredPosition + focusOffset3D + dashLookAheadOffset;
+    }
 
-        if (hasActiveRoomFocusOffset)
+    private void TickDashCamera()
+    {
+        bool isDashActive = playerFacade != null && playerFacade.IsDashActive;
+        bool didDashStart = playerFacade != null
+            && (playerFacade.JustDashStartedThisFrame || (!wasDashActivePreviousFrame && isDashActive));
+        Vector2 dashDirection = playerFacade != null ? playerFacade.DashDirection : Vector2.zero;
+
+        if (didDashStart)
         {
-            // Inspector の意味を直感に合わせるため、適用時に符号を反転する（+X=右を見せる、+Y=下を見せる）。
-            Vector3 focusOffset3D = new Vector3(-activeRoomFocusOffset.x, activeRoomFocusOffset.y, 0f);
-            return baseDesiredPosition + focusOffset3D;
+            PlayDashStartMicroShake(dashDirection);
         }
 
-        return baseDesiredPosition;
+        // 斜め方向を先に判定し、斜めの場合は横・上下方向単体の判定から除外する。
+        float absX = Mathf.Abs(dashDirection.x);
+        float absY = Mathf.Abs(dashDirection.y);
+        bool isDiagonalDash = absX >= diagonalDashThreshold && absY >= diagonalDashThreshold;
+        bool isHorizontalDash = !isDiagonalDash
+            && absX >= horizontalDashThreshold
+            && absY <= verticalDashIgnoreThreshold;
+        bool isVerticalDash = !isDiagonalDash
+            && absY >= verticalDashThreshold
+            && absX <= horizontalDashIgnoreThreshold;
+        bool isDiagonalDashForHorizontalCamera = diagonalDashCameraEnabled
+            && isDiagonalDash
+            && EffectiveHorizontalDashCameraEnabled;
+        bool isDiagonalDashForVerticalCamera = diagonalDashCameraEnabled
+            && isDiagonalDash
+            && EffectiveVerticalDashCameraEnabled;
+        bool shouldUseHorizontalDashCamera = isHorizontalDash || isDiagonalDashForHorizontalCamera;
+        bool shouldUseVerticalDashCamera = isVerticalDash || isDiagonalDashForVerticalCamera;
+        float horizontalLookAheadMultiplier = isDiagonalDashForHorizontalCamera ? diagonalDashLookAheadMultiplier : 1f;
+        float verticalLookAheadMultiplier = isDiagonalDashForVerticalCamera ? diagonalDashLookAheadMultiplier : 1f;
+
+        TickHorizontalDashCamera(isDashActive, didDashStart, dashDirection, shouldUseHorizontalDashCamera, horizontalLookAheadMultiplier);
+        TickVerticalDashCamera(isDashActive, didDashStart, dashDirection, shouldUseVerticalDashCamera, verticalLookAheadMultiplier);
+        wasDashActivePreviousFrame = isDashActive;
+    }
+
+    private void PlayDashStartMicroShake(Vector2 dashDirection)
+    {
+        if (!dashStartMicroShakeEnabled)
+        {
+            return;
+        }
+
+        dashStartMicroShake.Play(
+            dashDirection,
+            dashStartMicroShakeDuration,
+            dashStartMicroShakeAmplitude);
+    }
+
+    private void TickHorizontalDashCamera(bool isDashActive, bool didDashStart, Vector2 dashDirection, bool shouldUseHorizontalDashCamera, float lookAheadMultiplier)
+    {
+        activeSmoothTimeXForDebug = EffectiveSmoothTimeX;
+
+        if (!EffectiveHorizontalDashCameraEnabled || playerFacade == null)
+        {
+            ResetHorizontalDashCameraState();
+            return;
+        }
+
+        if (didDashStart)
+        {
+            isHorizontalDashCameraActive = false;
+
+            if (shouldUseHorizontalDashCamera)
+            {
+                dashHorizontalDirectionSign = dashDirection.x >= 0f ? 1 : -1;
+                dashStartLagTimer = Mathf.Max(0f, dashStartLagDuration);
+                isHorizontalDashCameraActive = true;
+            }
+        }
+
+        if (!isDashActive)
+        {
+            isHorizontalDashCameraActive = false;
+        }
+
+        if (isHorizontalDashCameraActive && dashStartLagTimer > 0f)
+        {
+            activeSmoothTimeXForDebug = Mathf.Max(0f, dashStartSmoothTimeX);
+            dashStartLagTimer = Mathf.Max(0f, dashStartLagTimer - Time.deltaTime);
+        }
+        else if (isHorizontalDashCameraActive && isDashActive)
+        {
+            activeSmoothTimeXForDebug = Mathf.Max(0f, dashSmoothTimeX);
+        }
+
+        float dashLookAheadTargetX = isHorizontalDashCameraActive
+            ? dashHorizontalDirectionSign * dashLookAheadX * lookAheadMultiplier
+            : 0f;
+        dashLookAheadCurrentX = Mathf.SmoothDamp(
+            current: dashLookAheadCurrentX,
+            target: dashLookAheadTargetX,
+            currentVelocity: ref dashLookAheadSmoothDampVelocityX,
+            smoothTime: Mathf.Max(0f, dashLookAheadReturnTime));
+    }
+
+    private void TickVerticalDashCamera(bool isDashActive, bool didDashStart, Vector2 dashDirection, bool shouldUseVerticalDashCamera, float lookAheadMultiplier)
+    {
+        activeSmoothTimeYForDebug = EffectiveSmoothTimeY;
+
+        if (!EffectiveVerticalDashCameraEnabled || playerFacade == null)
+        {
+            ResetVerticalDashCameraState();
+            return;
+        }
+
+        if (didDashStart)
+        {
+            isVerticalDashCameraActive = false;
+
+            if (shouldUseVerticalDashCamera)
+            {
+                verticalDashDirectionSign = dashDirection.y >= 0f ? 1 : -1;
+                verticalDashStartLagTimer = Mathf.Max(0f, verticalDashStartLagDuration);
+                isVerticalDashCameraActive = true;
+            }
+        }
+
+        if (!isDashActive)
+        {
+            isVerticalDashCameraActive = false;
+        }
+
+        if (isVerticalDashCameraActive && verticalDashStartLagTimer > 0f)
+        {
+            activeSmoothTimeYForDebug = Mathf.Max(0f, verticalDashStartSmoothTimeY);
+            verticalDashStartLagTimer = Mathf.Max(0f, verticalDashStartLagTimer - Time.deltaTime);
+        }
+        else if (isVerticalDashCameraActive && isDashActive)
+        {
+            activeSmoothTimeYForDebug = Mathf.Max(0f, verticalDashSmoothTimeY);
+        }
+
+        float dashLookAheadTargetY = isVerticalDashCameraActive
+            ? verticalDashDirectionSign * verticalDashLookAheadY * lookAheadMultiplier
+            : 0f;
+        verticalDashLookAheadCurrentY = Mathf.SmoothDamp(
+            current: verticalDashLookAheadCurrentY,
+            target: dashLookAheadTargetY,
+            currentVelocity: ref verticalDashLookAheadSmoothDampVelocityY,
+            smoothTime: Mathf.Max(0f, verticalDashLookAheadReturnTime));
+    }
+
+    private void ResetHorizontalDashCameraState()
+    {
+        dashStartLagTimer = 0f;
+        dashHorizontalDirectionSign = 0;
+        dashLookAheadCurrentX = 0f;
+        dashLookAheadSmoothDampVelocityX = 0f;
+        isHorizontalDashCameraActive = false;
+        activeSmoothTimeXForDebug = EffectiveSmoothTimeX;
+    }
+
+    private void ResetVerticalDashCameraState()
+    {
+        verticalDashStartLagTimer = 0f;
+        verticalDashDirectionSign = 0;
+        verticalDashLookAheadCurrentY = 0f;
+        verticalDashLookAheadSmoothDampVelocityY = 0f;
+        isVerticalDashCameraActive = false;
+        activeSmoothTimeYForDebug = EffectiveSmoothTimeY;
+    }
+
+    private void ResetDashCameraState()
+    {
+        ResetHorizontalDashCameraState();
+        ResetVerticalDashCameraState();
+        ClearDashStartMicroShake();
+        wasDashActivePreviousFrame = playerFacade != null && playerFacade.IsDashActive;
     }
 
     public void BeginRoomTransition(Room room)
@@ -780,30 +1224,22 @@ public sealed class PlayerCameraController : MonoBehaviour
             return;
         }
 
-        // 現在位置を開始地点として保存する。
-        roomTransitionStartPosition = transform.position;
+        ResetDashCameraState();
+
+        // 現在の非シェイク基準位置を開始地点として保存する。
+        roomTransitionStartPosition = GetCurrentBaseCameraPosition();
 
         // 現在の反映済み設定から遷移目標位置を再計算して保存する。
         Transform effectiveTarget = GetEffectiveTargetAnchor();
         if (effectiveTarget != null)
         {
-            Vector3 baseDesiredPosition = effectiveTarget.position + cameraOffset;
-            if (hasActiveRoomFocusOffset)
-            {
-                Vector3 focusOffset3D = new Vector3(-activeRoomFocusOffset.x, -activeRoomFocusOffset.y, 0f);
-                desiredPosition = baseDesiredPosition + focusOffset3D;
-            }
-            else
-            {
-                desiredPosition = baseDesiredPosition;
-            }
-
+            desiredPosition = BuildFollowDesiredPosition(effectiveTarget);
             clampedPosition = GetClampedPosition(desiredPosition);
             roomTransitionTargetPosition = clampedPosition;
         }
         else
         {
-            roomTransitionTargetPosition = transform.position;
+            roomTransitionTargetPosition = GetCurrentBaseCameraPosition();
         }
 
         // 遷移時間を部屋設定とデフォルトから確定する。
@@ -818,7 +1254,7 @@ public sealed class PlayerCameraController : MonoBehaviour
 
         if (activeRoomTransitionDuration <= 0f)
         {
-            transform.position = roomTransitionTargetPosition;
+            SnapCameraPosition(roomTransitionTargetPosition);
             isRoomTransitionRunning = false;
             return;
         }
@@ -828,9 +1264,11 @@ public sealed class PlayerCameraController : MonoBehaviour
 
     public void CancelRoomTransitionAndSnapToTarget()
     {
+        ResetDashCameraState();
+
         // 遷移中フラグを落として目標位置へ即時スナップする。
         isRoomTransitionRunning = false;
-        transform.position = roomTransitionTargetPosition;
+        SnapCameraPosition(roomTransitionTargetPosition);
 
         // 遷移キャンセル後に余計な慣性が残らないよう内部速度を初期化する。
         velocityX = 0f;
@@ -841,7 +1279,8 @@ public sealed class PlayerCameraController : MonoBehaviour
     {
         // 遷移終了時は最終目標位置へ確定させてから通常追従へ戻す。
         isRoomTransitionRunning = false;
-        transform.position = roomTransitionTargetPosition;
+        SnapCameraPosition(roomTransitionTargetPosition);
+        ResetDashCameraState();
 
         // 通常追従へ戻る瞬間のガクつきを防ぐため、
         // SmoothDamp の内部速度をここでも明示的に初期化する。

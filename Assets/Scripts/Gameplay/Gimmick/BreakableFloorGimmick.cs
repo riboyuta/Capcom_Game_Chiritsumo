@@ -5,11 +5,22 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
 {
+    private const string InteractedTriggerName = "Interacted";
+
     private enum FloorState
     {
         Idle,
         Vibrating,
         Broken
+    }
+
+    private struct AnimatorInitialState
+    {
+        public bool hasAnimator;
+        public bool enabled;
+        public int[] stateHashes;
+        public float[] normalizedTimes;
+        public float[] layerWeights;
     }
 
     [Header("見た目（ビジュアル）")]
@@ -46,6 +57,10 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
     private FloorState currentState = FloorState.Idle;
 
     private Vector3 initialVisualLocalPos;
+    private FloorState initialState;
+    private bool initialColliderEnabled;
+    private bool[] initialRendererEnabledStates;
+    private AnimatorInitialState[] initialAnimatorStates;
     private Coroutine sequenceCoroutine;
     private bool hasCapturedInitialState;
     private void Awake()
@@ -71,7 +86,7 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
 
 
         // 見た目のRendererを一括取得（オンオフ切り替え用）
-        visualRenderers = visualTransform.GetComponentsInChildren<Renderer>();
+        visualRenderers = visualTransform.GetComponentsInChildren<Renderer>(true);
     }
     public void CaptureInitialState()
     {
@@ -80,27 +95,36 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
             return;
         }
 
+        EnsureRuntimeReferences();
+
+        initialState = currentState;
+        initialColliderEnabled = floorCollider != null && floorCollider.enabled;
+
         if (visualTransform != null)
         {
             initialVisualLocalPos = visualTransform.localPosition;
         }
+
+        CaptureRendererInitialStates();
+        CaptureAnimatorInitialStates();
 
         hasCapturedInitialState = true;
     }
 
     public void ResetToRespawnState()
     {
-        if (sequenceCoroutine != null)
+        if (!hasCapturedInitialState)
         {
-            StopCoroutine(sequenceCoroutine);
-            sequenceCoroutine = null;
+            CaptureInitialState();
         }
 
-        currentState = FloorState.Idle;
+        StopBreakSequence();
+
+        currentState = initialState;
 
         if (floorCollider != null)
         {
-            floorCollider.enabled = true;
+            floorCollider.enabled = initialColliderEnabled;
         }
 
         if (visualTransform != null)
@@ -108,11 +132,175 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
             visualTransform.localPosition = initialVisualLocalPos;
         }
 
-        for (int i = 0; i < visualRenderers.Length; i++)
+        RestoreRendererInitialStates();
+        RestoreAnimatorInitialStates();
+    }
+
+    private void EnsureRuntimeReferences()
+    {
+        if (floorCollider == null)
         {
-            if (visualRenderers[i] != null)
+            floorCollider = GetComponent<Collider>();
+        }
+
+        if (visualTransform == null)
+        {
+            visualTransform = transform.childCount > 0 ? transform.GetChild(0) : transform;
+        }
+
+        if (visualRenderers == null)
+        {
+            visualRenderers = visualTransform != null
+                ? visualTransform.GetComponentsInChildren<Renderer>(true)
+                : new Renderer[0];
+        }
+    }
+
+    private void StopBreakSequence()
+    {
+        // 死亡リセット後に古い破壊/復活処理が状態を書き換えないように停止する。
+        if (sequenceCoroutine == null)
+        {
+            return;
+        }
+
+        StopCoroutine(sequenceCoroutine);
+        sequenceCoroutine = null;
+    }
+
+    private void CaptureRendererInitialStates()
+    {
+        int rendererCount = visualRenderers != null ? visualRenderers.Length : 0;
+        initialRendererEnabledStates = new bool[rendererCount];
+
+        for (int i = 0; i < rendererCount; i++)
+        {
+            initialRendererEnabledStates[i] = visualRenderers[i] != null && visualRenderers[i].enabled;
+        }
+    }
+
+    private void RestoreRendererInitialStates()
+    {
+        int rendererCount = visualRenderers != null ? visualRenderers.Length : 0;
+
+        for (int i = 0; i < rendererCount; i++)
+        {
+            if (visualRenderers[i] == null)
             {
-                visualRenderers[i].enabled = true;
+                continue;
+            }
+
+            bool enabledState = i < initialRendererEnabledStates.Length && initialRendererEnabledStates[i];
+            visualRenderers[i].enabled = enabledState;
+        }
+    }
+
+    private void CaptureAnimatorInitialStates()
+    {
+        int animatorCount = anim != null ? anim.Length : 0;
+        initialAnimatorStates = new AnimatorInitialState[animatorCount];
+
+        for (int i = 0; i < animatorCount; i++)
+        {
+            Animator animator = anim[i];
+            if (animator == null)
+            {
+                continue;
+            }
+
+            AnimatorInitialState state = new AnimatorInitialState
+            {
+                hasAnimator = true,
+                enabled = animator.enabled
+            };
+
+            if (animator.runtimeAnimatorController == null || !animator.gameObject.activeInHierarchy)
+            {
+                initialAnimatorStates[i] = state;
+                continue;
+            }
+
+            int layerCount = animator.layerCount;
+            state.stateHashes = new int[layerCount];
+            state.normalizedTimes = new float[layerCount];
+            state.layerWeights = new float[layerCount];
+
+            for (int layer = 0; layer < layerCount; layer++)
+            {
+                AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(layer);
+                state.stateHashes[layer] = stateInfo.fullPathHash;
+                state.normalizedTimes[layer] = stateInfo.normalizedTime;
+                state.layerWeights[layer] = animator.GetLayerWeight(layer);
+            }
+
+            initialAnimatorStates[i] = state;
+        }
+    }
+
+    private void RestoreAnimatorInitialStates()
+    {
+        // 破壊開始時の Trigger が残らないようにし、可能な範囲で初期再生状態へ戻す。
+        int animatorCount = anim != null ? anim.Length : 0;
+
+        for (int i = 0; i < animatorCount; i++)
+        {
+            Animator animator = anim[i];
+            if (animator == null || initialAnimatorStates == null || i >= initialAnimatorStates.Length)
+            {
+                continue;
+            }
+
+            AnimatorInitialState state = initialAnimatorStates[i];
+            if (!state.hasAnimator)
+            {
+                continue;
+            }
+
+            ResetAnimatorTriggerIfExists(animator, InteractedTriggerName);
+
+            if (animator.runtimeAnimatorController != null
+                && animator.gameObject.activeInHierarchy
+                && state.stateHashes != null)
+            {
+                animator.enabled = true;
+
+                int layerCount = Mathf.Min(animator.layerCount, state.stateHashes.Length);
+                for (int layer = 0; layer < layerCount; layer++)
+                {
+                    if (state.layerWeights != null && layer < state.layerWeights.Length)
+                    {
+                        animator.SetLayerWeight(layer, state.layerWeights[layer]);
+                    }
+
+                    if (state.stateHashes[layer] != 0)
+                    {
+                        float normalizedTime = layer < state.normalizedTimes.Length ? state.normalizedTimes[layer] : 0f;
+                        animator.Play(state.stateHashes[layer], layer, normalizedTime);
+                    }
+                }
+
+                animator.Update(0f);
+            }
+
+            animator.enabled = state.enabled;
+        }
+    }
+
+    private static void ResetAnimatorTriggerIfExists(Animator animator, string triggerName)
+    {
+        if (animator == null || animator.runtimeAnimatorController == null)
+        {
+            return;
+        }
+
+        AnimatorControllerParameter[] parameters = animator.parameters;
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].type == AnimatorControllerParameterType.Trigger
+                && parameters[i].name == triggerName)
+            {
+                animator.ResetTrigger(triggerName);
+                return;
             }
         }
     }
@@ -138,10 +326,7 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
             sequenceCoroutine = StartCoroutine(BreakSequence());
 
             // SE:崩壊を始めた瞬間
-            if (AudioManager.Instance != null)
-            {
-                AudioManager.Instance.PlayOverlap("SFX_gimmick_breakable_enter");
-            }
+            AudioEvent.Emit(this, "BreakStart");
 
             // アニメーション再生
             for (int i = 0; i < 6; i++)
@@ -149,7 +334,7 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
                 if (anim[i] != null)
                 {
                     Debug.Log(anim[i]);
-                    anim[i].SetTrigger("Interacted");
+                    anim[i].SetTrigger(InteractedTriggerName);
 
                 }
             }
@@ -204,10 +389,7 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
         }
 
         // SE:壊れる瞬間
-        if (AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlayOverlap("SFX_gimmick_breakable_break");
-        }
+        AudioEvent.Emit(this, "Break");
     }
 
     private void RespawnFloor()
@@ -220,4 +402,5 @@ public class BreakableFloorGimmick : MonoBehaviour, IRespawnResettable
             r.enabled = true;
         }
     }
+
 }

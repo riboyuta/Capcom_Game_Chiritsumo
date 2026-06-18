@@ -19,7 +19,10 @@ internal sealed class PlayerDeathCoordinator
     private readonly PlayerMovementSettings movementSettings;
     private readonly Action stopAllRumble;
     private readonly Action stopAllSounds;
+    private readonly Action playRespawnSound;
     private readonly Action resetVisualOneShotFlags;
+    private readonly Action<Vector3> resetShadowHistoryForRespawn;
+    private readonly Action<PlayerDeathCause> notifyDeathAccepted;
     private readonly Action<string> logRespawn;
     private readonly Action<string> logRespawnWarning;
 
@@ -32,6 +35,7 @@ internal sealed class PlayerDeathCoordinator
 
     private bool isDead;
     private bool isDeathSequencePlaying;
+    private bool didRespawnThisSequence;
 
     internal bool IsDead => isDead;
     internal bool IsDeadState => isDead;
@@ -51,7 +55,10 @@ internal sealed class PlayerDeathCoordinator
         PlayerMovementSettings movementSettings,
         Action stopAllRumble,
         Action stopAllSounds,
+        Action playRespawnSound,
         Action resetVisualOneShotFlags,
+        Action<Vector3> resetShadowHistoryForRespawn,
+        Action<PlayerDeathCause> notifyDeathAccepted,
         Action<string> logRespawn,
         Action<string> logRespawnWarning)
     {
@@ -68,16 +75,27 @@ internal sealed class PlayerDeathCoordinator
         this.movementSettings = movementSettings;
         this.stopAllRumble = stopAllRumble;
         this.stopAllSounds = stopAllSounds;
+        this.playRespawnSound = playRespawnSound;
         this.resetVisualOneShotFlags = resetVisualOneShotFlags;
+        this.resetShadowHistoryForRespawn = resetShadowHistoryForRespawn;
+        this.notifyDeathAccepted = notifyDeathAccepted;
         this.logRespawn = logRespawn;
         this.logRespawnWarning = logRespawnWarning;
     }
 
     internal void StartRespawnSequence(PlayerDeathCause deathCause)
     {
+        if (isDead || isDeathSequencePlaying)
+        {
+            LogRespawn($"Death request ignored: already processing ({deathCause})");
+            return;
+        }
+
         isDead = true;
         isDeathSequencePlaying = true;
+        didRespawnThisSequence = false;
         lastDeathCause = deathCause;
+        notifyDeathAccepted?.Invoke(deathCause);
         CaptureDeathFacingForVisual();
 
         if (respawnSequenceCoroutine != null)
@@ -90,9 +108,6 @@ internal sealed class PlayerDeathCoordinator
 
     private float ConfiguredDamageDeathIntroDuration => playerDeathView != null ? playerDeathView.DamageDeathIntroDuration : 0f;
     private float ConfiguredDamageDeathTiltAngle => playerDeathView != null ? playerDeathView.DamageDeathTiltAngle : 80f;
-    private float ConfiguredDamageDeathZoomSizeOffset => playerDeathView != null ? playerDeathView.DamageDeathZoomSizeOffset : -0.35f;
-    private float ConfiguredDamageDeathZoomSmoothTime => playerDeathView != null ? playerDeathView.DamageDeathZoomSmoothTime : 0.08f;
-    private float ConfiguredBlackRespawnThreshold => playerDeathView != null ? playerDeathView.BlackRespawnThreshold : 0.85f;
 
     private IEnumerator CoRespawnSequence()
     {
@@ -100,7 +115,6 @@ internal sealed class PlayerDeathCoordinator
 
         if (lastDeathCause == PlayerDeathCause.Damage)
         {
-            PlayDamageDeathZoom();
             PlayDamageDeathIntro();
             yield return WaitForDamageDeathIntro();
         }
@@ -108,27 +122,13 @@ internal sealed class PlayerDeathCoordinator
         ResolvePlayerDeathViewIfNeeded();
         if (playerDeathView != null)
         {
-            if (lastDeathCause == PlayerDeathCause.Hazard)
-            {
-                LogRespawn("Hazard death uses immediate black transition");
-                LogRespawn("Hazard black in started");
-            }
-            else
-            {
-                LogRespawn("Death transition in started");
-            }
-
-            playerDeathView.PlayTransitionIn(lastDeathCause);
-
-            yield return new WaitUntil(() =>
-                playerDeathView == null ||
-                playerDeathView.GetBlackAmount() >= ConfiguredBlackRespawnThreshold);
-
-            LogRespawn("Death transition reached respawn threshold");
+            LogRespawn("Respawn blink close started");
+            yield return playerDeathView.PlayRespawnTransitionIn();
+            LogRespawn("Respawn blink close complete");
         }
         else
         {
-            LogRespawnWarning("PlayerDeathView missing (transition/intro unavailable)");
+            LogRespawnWarning("PlayerDeathView missing (respawn transition unavailable)");
         }
 
         if (stageResetSystem == null)
@@ -166,6 +166,7 @@ internal sealed class PlayerDeathCoordinator
         }
 
         ResetCameraToWorldDefaults();
+        BeginCameraDeathReturnFollow();
 
         LogRespawn($"Respawn checkpoint resolved: {checkpoint.name}");
         RespawnAt(checkpoint.position);
@@ -183,28 +184,23 @@ internal sealed class PlayerDeathCoordinator
 
         if (playerDeathView != null)
         {
-            if (lastDeathCause == PlayerDeathCause.Hazard)
-            {
-                LogRespawn("Hazard black out started");
-            }
-            else
-            {
-                LogRespawn("Death transition out started");
-            }
-
-            playerDeathView.PlayTransitionOut(lastDeathCause);
-
-            yield return new WaitUntil(() =>
-                playerDeathView == null ||
-                playerDeathView.GetBlackAmount() <= 0.01f);
-
-            playerDeathView.ResetTransitionImmediate();
-            LogRespawn("Death transition reset");
+            LogRespawn("Respawn blink open started");
+            yield return playerDeathView.PlayRespawnTransitionOut();
+            playerDeathView.ResetRespawnTransitionImmediate();
+            LogRespawn("Respawn blink open complete");
         }
+
+        if (didRespawnThisSequence)
+        {
+            playRespawnSound?.Invoke();
+        }
+
+        EndCameraDeathReturnFollow();
 
         respawnSequenceCoroutine = null;
         isDead = false;
         isDeathSequencePlaying = false;
+        didRespawnThisSequence = false;
     }
 
     private void ResetCameraToWorldDefaults()
@@ -223,23 +219,24 @@ internal sealed class PlayerDeathCoordinator
         playerCameraController.ResetRuntimeStateForRespawn();
     }
 
-    private void PlayDamageDeathZoom()
+    private void BeginCameraDeathReturnFollow()
     {
         if (playerCameraController == null)
         {
-            playerCameraController = UnityEngine.Object.FindFirstObjectByType<PlayerCameraController>();
-        }
-
-        if (playerCameraController == null)
-        {
-            LogRespawnWarning("PlayerCameraController missing (damage death zoom skipped)");
             return;
         }
 
-        float targetSize = Mathf.Max(0.01f, playerCameraController.EffectiveSize + ConfiguredDamageDeathZoomSizeOffset);
-        playerCameraController.SetActiveOrthographicSizeSmoothTimeOverride(ConfiguredDamageDeathZoomSmoothTime);
-        playerCameraController.SetActiveOrthographicSizeOverride(targetSize);
-        LogRespawn("Damage death zoom applied");
+        playerCameraController.BeginDeathReturnFollow();
+    }
+
+    private void EndCameraDeathReturnFollow()
+    {
+        if (playerCameraController == null)
+        {
+            return;
+        }
+
+        playerCameraController.EndDeathReturnFollow();
     }
 
     private void PlayDamageDeathIntro()
@@ -312,15 +309,17 @@ internal sealed class PlayerDeathCoordinator
         {
             playerTransform.position = worldPosition;
         }
+
+        Physics.SyncTransforms();
+
+        didRespawnThisSequence = true;
+        resetShadowHistoryForRespawn?.Invoke(worldPosition);
     }
 
     private void ResetForRespawn()
     {
         stopAllRumble?.Invoke();
         stopAllSounds?.Invoke();
-
-        isDead = false;
-        isDeathSequencePlaying = false;
 
         runtimeState.isGrounded = false;
         runtimeState.isTouchingWall = false;

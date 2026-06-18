@@ -20,6 +20,7 @@ public sealed class ParallaxBackground : MonoBehaviour
 
     // 前フレームのカメラX座標（追従モード用）。
     private float previousCameraX;
+    private float previousCameraY;
 
     // 自動スクロールかどうか。
     private bool IsAutoScroll => !Mathf.Approximately(autoScrollSpeed, 0f);
@@ -44,6 +45,7 @@ public sealed class ParallaxBackground : MonoBehaviour
         if (cameraTransform != null)
         {
             previousCameraX = cameraTransform.position.x;
+            previousCameraY = cameraTransform.position.y;
         }
     }
 
@@ -53,19 +55,25 @@ public sealed class ParallaxBackground : MonoBehaviour
 
     private void LateUpdate()
     {
-        float delta;
+        float deltaX;
+        float deltaY;
         float cameraX = cameraTransform != null ? cameraTransform.position.x : 0f;
+        float cameraY = cameraTransform != null ? cameraTransform.position.y : 0f;
 
         if (IsAutoScroll)
         {
             // 自動スクロールモード：一定速度でスクロール。
-            delta = autoScrollSpeed * Time.deltaTime;
+            deltaX = autoScrollSpeed * Time.deltaTime;
+            deltaY = 0;
         }
         else if (cameraTransform != null)
         {
             // カメラ追従モード：カメラの移動量を取得。
-            delta = cameraX - previousCameraX;
+            deltaX = cameraX - previousCameraX;
             previousCameraX = cameraX;
+
+            deltaY = cameraY - previousCameraY;
+            previousCameraY = cameraY;
         }
         else
         {
@@ -77,9 +85,11 @@ public sealed class ParallaxBackground : MonoBehaviour
         {
             if (layers[i] != null)
             {
-                layers[i].Scroll(delta, cameraX);
+                layers[i].Scroll(deltaX, deltaY, cameraX, cameraY);
             }
         }
+
+      
     }
 
     

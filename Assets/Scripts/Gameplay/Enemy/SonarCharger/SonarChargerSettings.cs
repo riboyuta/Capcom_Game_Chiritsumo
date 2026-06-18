@@ -7,7 +7,9 @@ public enum SonarChargerMoveDetectMode
 {
     Input,          // 入力だけで判定（MoveInputDirectionの大きさ）
     PositionDelta,  // 位置差分だけで判定（前フレームからの移動量）
-    Either          // 入力または位置差分のいずれか（どちらかで検知）
+    Either,         // 入力または位置差分のいずれか（どちらかで検知）
+    IgnoreMovement  // 無条件検知
+
 }
 
 // SonarChargerEnemy のすべての調整パラメータ
@@ -88,6 +90,16 @@ public sealed class SonarChargerSettings
     [Min(0.0f)]
     public float alertTime = 0.4f;
 
+    [Header("突進方向確定後の硬直時間")]
+    [Tooltip("Alertで突進方向を確定した後、実際に突進するまでの短い硬直時間です。")]
+    [Min(0.0f)]
+    public float lockConfirmTime = 0.15f;
+
+    [Header("方向確定時の帯幅倍率")]
+    [Tooltip("LockConfirmに入った瞬間の突進予測帯の幅倍率です。硬直終了までに通常幅へ戻ります。")]
+    [Min(1.0f)]
+    public float lockConfirmBandWidthMultiplier = 1.3f;
+
     [Header("突進方向の最低距離")]
     [Tooltip("突進方向が短すぎる時の最低距離です。")]
     [Min(0.001f)]
@@ -142,7 +154,130 @@ public sealed class SonarChargerSettings
     [Tooltip("溜め時間が進むほど揺れを強めるかです。")]
     public bool growShakeTowardCharge = true;
 
+    [Header("突進予測線を表示する")]
+    [Tooltip("Alert中に突進方向の予測線を表示するかです。")]
+    public bool showAlertPredictionLine = true;
+
+    [Header("突進予測線の長さ")]
+    [Tooltip("予測線の最大長さです。0以下なら突進最大距離を使います。")]
+    [Min(0.0f)]
+    public float alertPredictionLineLength = 0.0f;
+
+    [Header("突進予測線の芯の太さ")]
+    [Tooltip("予測線の中心線の太さです。")]
+    [Min(0.001f)]
+    public float alertPredictionCoreWidth = 0.04f;
+
+    [Header("突進予測線の発光太さ")]
+    [Tooltip("予測線の外側発光部分の太さです。")]
+    [Min(0.001f)]
+    public float alertPredictionGlowWidth = 0.14f;
+
+    [Header("突進予測線の点滅速度")]
+    [Tooltip("予測線の点滅速度です。")]
+    [Min(0.0f)]
+    public float alertPredictionPulseSpeed = 12.0f;
+
+    [Header("突進予測線の最小透明度")]
+    [Tooltip("予測線の点滅時の最小透明度です。")]
+    [Range(0.0f, 1.0f)]
+    public float alertPredictionMinAlpha = 0.35f;
+
+    [Header("突進予測線の最大透明度")]
+    [Tooltip("予測線の点滅時の最大透明度です。")]
+    [Range(0.0f, 1.0f)]
+    public float alertPredictionMaxAlpha = 1.0f;
+
+    [Header("突進予測線先端マーカーの基準スケール")]
+    [Tooltip("予測線の先端マーカーの基準スケールです。")]
+    [Min(0.0f)]
+    public float alertPredictionTargetMarkerScale = 0.35f;
+
+    [Header("突進予測線先端マーカーの脈動量")]
+    [Tooltip("予測線の先端マーカーの脈動量です。")]
+    [Min(0.0f)]
+    public float alertPredictionTargetMarkerPulseScale = 0.08f;
+
+    [Header("突進予測帯の幅")]
+    [Tooltip("突進予測の帯の幅です。敵本体の当たり判定幅に近い値にすると避けやすくなります。")]
+    [Min(0.01f)]
+    public float alertPredictionBandWidth = 0.8f;
+
+    [Header("突進予測帯のZオフセット")]
+    [Tooltip("突進予測帯を少し手前に表示するためのZオフセットです。")]
+    public float alertPredictionBandZOffset = -0.05f;
+
+    [Header("突進予測帯の基本透明度")]
+    [Tooltip("突進予測帯の基本透明度です。")]
+    [Range(0.0f, 1.0f)]
+    public float alertPredictionBandAlpha = 0.75f;
+
     [Header("デバッグログ出力")]
     [Tooltip("デバッグログを出すかです。")]
     public bool enableDebugLog = false;
+
+    public void CopyFrom(SonarChargerSettings source)
+    {
+        if (source == null)
+        {
+            return;
+        }
+
+        startActive = source.startActive;
+        hideUntilActivated = source.hideUntilActivated;
+
+        playerTag = string.IsNullOrWhiteSpace(source.playerTag)
+            ? "Player"
+            : source.playerTag;
+
+        killPlayerOnContact = source.killPlayerOnContact;
+        disableAfterKill = source.disableAfterKill;
+
+        followSpeed = Mathf.Max(0.0f, source.followSpeed);
+
+        firstSonarDelay = Mathf.Max(0.0f, source.firstSonarDelay);
+        sonarInterval = Mathf.Max(0.01f, source.sonarInterval);
+        sonarExpandSpeed = Mathf.Max(0.01f, source.sonarExpandSpeed);
+        sonarMaxRadius = Mathf.Max(0.01f, source.sonarMaxRadius);
+        sonarRingThickness = Mathf.Max(0.01f, source.sonarRingThickness);
+
+        moveDetectMode = source.moveDetectMode;
+        inputMoveThreshold = Mathf.Max(0.0f, source.inputMoveThreshold);
+        positionMoveThreshold = Mathf.Max(0.0f, source.positionMoveThreshold);
+
+        enableDashInputAlertTrigger = source.enableDashInputAlertTrigger;
+
+        alertTime = Mathf.Max(0.0f, source.alertTime);
+        lockConfirmTime = Mathf.Max(0.0f, source.lockConfirmTime);
+        lockConfirmBandWidthMultiplier = Mathf.Max(1.0f, source.lockConfirmBandWidthMultiplier);
+        minChargeTargetDistance = Mathf.Max(0.001f, source.minChargeTargetDistance);
+        chargeSpeed = Mathf.Max(0.0f, source.chargeSpeed);
+        cameraBoundaryPadding = Mathf.Max(0.0f, source.cameraBoundaryPadding);
+
+        maxChargeDistance = Mathf.Max(0.0f, source.maxChargeDistance);
+        maxChargeTime = Mathf.Max(0.0f, source.maxChargeTime);
+
+        reboundDistance = Mathf.Max(0.0f, source.reboundDistance);
+        reboundDuration = Mathf.Max(0.001f, source.reboundDuration);
+        stunTime = Mathf.Max(0.0f, source.stunTime);
+
+        alertShakeAmplitude = Mathf.Max(0.0f, source.alertShakeAmplitude);
+        alertShakeFrequency = Mathf.Max(0.0f, source.alertShakeFrequency);
+        growShakeTowardCharge = source.growShakeTowardCharge;
+
+        showAlertPredictionLine = source.showAlertPredictionLine;
+        alertPredictionLineLength = Mathf.Max(0.0f, source.alertPredictionLineLength);
+        alertPredictionCoreWidth = Mathf.Max(0.001f, source.alertPredictionCoreWidth);
+        alertPredictionGlowWidth = Mathf.Max(0.001f, source.alertPredictionGlowWidth);
+        alertPredictionPulseSpeed = Mathf.Max(0.0f, source.alertPredictionPulseSpeed);
+        alertPredictionMinAlpha = Mathf.Clamp01(source.alertPredictionMinAlpha);
+        alertPredictionMaxAlpha = Mathf.Clamp01(source.alertPredictionMaxAlpha);
+        alertPredictionTargetMarkerScale = Mathf.Max(0.0f, source.alertPredictionTargetMarkerScale);
+        alertPredictionTargetMarkerPulseScale = Mathf.Max(0.0f, source.alertPredictionTargetMarkerPulseScale);
+        alertPredictionBandWidth = Mathf.Max(0.01f, source.alertPredictionBandWidth);
+        alertPredictionBandZOffset = source.alertPredictionBandZOffset;
+        alertPredictionBandAlpha = Mathf.Clamp01(source.alertPredictionBandAlpha);
+
+        enableDebugLog = source.enableDebugLog;
+    }
 }

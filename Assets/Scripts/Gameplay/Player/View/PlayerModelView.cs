@@ -48,6 +48,20 @@ public sealed class PlayerModelView : MonoBehaviour
     [Tooltip("モデルの正面が左向きに作られている場合は ON にします。")]
     [SerializeField] private bool invertFacing = false;
 
+    [Header("壁キック向き固定")]
+    [Tooltip("ON の場合、壁キック直後だけ見た目の向きを固定します。")]
+    [SerializeField] private bool useWallJumpFacingLock = true;
+
+    [Tooltip("壁キック直後に見た目の向きを固定する時間です。")]
+    [Min(0f)]
+    [SerializeField] private float wallJumpFacingLockDuration = 0.4f;
+
+    [Header("デバッグ(Runtime): 壁キック向き固定")]
+    [SerializeField] private float wallJumpFacingLockTimer;
+    [SerializeField] private int wallJumpLockedFacing = 1;
+
+    private PlayerAnimationState previousDesiredState = PlayerAnimationState.Idle;
+
     [Header("Animator ステート不足対策")]
     [Tooltip("指定ステートが Animator に存在しない場合、Idle にフォールバックします。")]
     [SerializeField] private bool fallbackToIdleWhenStateMissing = true;
@@ -81,6 +95,10 @@ public sealed class PlayerModelView : MonoBehaviour
     [Header("デバッグ(Runtime): フード状態")]
     [Tooltip("現在反映しているフード見た目状態です。")]
     [SerializeField] private PlayerHoodVisualState currentHoodState = PlayerHoodVisualState.Up;
+
+    [Header("デバッグ(Runtime): Dash")]
+    [Tooltip("最後に処理したダッシュ開始イベントIDです。")]
+    [SerializeField] private int lastHandledDashStartRequestId;
 
     [Header("デバッグ(Runtime): 状態経過時間")]
     [Tooltip("現在のアニメーション状態に入ってからの経過時間です。")]
@@ -119,6 +137,8 @@ public sealed class PlayerModelView : MonoBehaviour
 
     [Header("デバッグ(Runtime): HoodRecover")]
     [SerializeField] private bool isHoodRecoverPlaying;
+    [SerializeField] private int lastHandledHoodRecoverRequestId;
+    [SerializeField] private int playingHoodRecoverTargetVersion;
     [SerializeField] private float hoodRecoverTimer;
     [SerializeField] private bool hoodRecoverAppliedUp;
 
@@ -178,6 +198,14 @@ public sealed class PlayerModelView : MonoBehaviour
         hasAnimatorState = false;
         hasMissingStateLog = false;
         playingAnimatorStateName = "None";
+
+        wallJumpFacingLockTimer = 0f;
+        wallJumpLockedFacing = 1;
+        previousDesiredState = PlayerAnimationState.Idle;
+
+        lastHandledDashStartRequestId = 0;
+        lastHandledHoodRecoverRequestId = 0;
+        playingHoodRecoverTargetVersion = 0;
     }
 
     private void Update()
@@ -193,22 +221,59 @@ public sealed class PlayerModelView : MonoBehaviour
         currentStateElapsed = resolver.CurrentStateElapsed;
         currentStateLockRemaining = resolver.CurrentStateLockRemaining;
 
-        ApplyBaseAnimation(desiredState);
-        ApplyModelTransform(snapshot.facing, desiredState);
+        bool restartDashAnimation =
+            desiredState == PlayerAnimationState.Dash &&
+            snapshot.isDashing &&
+            snapshot.dashStartRequestId != 0 &&
+            snapshot.dashStartRequestId != lastHandledDashStartRequestId;
+
+        if (restartDashAnimation)
+        {
+            lastHandledDashStartRequestId = snapshot.dashStartRequestId;
+        }
+
+        TickWallJumpFacingLock(snapshot.facing, desiredState, Time.deltaTime);
+
+        int displayFacing = ResolveDisplayFacing(snapshot.facing);
+
+        ApplyBaseAnimation(desiredState, restartDashAnimation);
+        ApplyModelTransform(displayFacing, desiredState);
 
         TickHoodRecover(snapshot, Time.deltaTime);
         ApplyHoodState(GetDisplayHoodState(snapshot));
     }
 
-    private void ApplyBaseAnimation(PlayerAnimationState nextState)
+    private void ApplyBaseAnimation(PlayerAnimationState nextState,　bool restartSameState)
     {
-        if (!TryResolveAnimatorState(nextState, out int stateHash, out PlayerAnimationState resolvedState, out string resolvedName))
+        if (!TryResolveAnimatorState(
+                nextState,
+                out int stateHash,
+                out PlayerAnimationState resolvedState,
+                out string resolvedName))
         {
             return;
         }
 
-        if (hasAnimatorState && currentState == nextState && currentAnimatorStateHash == stateHash)
+        bool isSameState =
+            hasAnimatorState &&
+            currentState == nextState &&
+            currentAnimatorStateHash == stateHash;
+
+        if (isSameState)
         {
+            if (!restartSameState || resolvedState != nextState)
+            {
+                return;
+            }
+
+            // 高速連打で Dash から別ステートへ切り替わる前に
+            // 次の Dash が始まった場合も、先頭から再生し直す。
+            animator.Play(
+                stateHash,
+                baseLayerIndex,
+                0f);
+
+            playingAnimatorStateName = resolvedName;
             return;
         }
 
@@ -363,6 +428,52 @@ public sealed class PlayerModelView : MonoBehaviour
         modelRoot.localScale = scale;
     }
 
+    private void TickWallJumpFacingLock(int snapshotFacing, PlayerAnimationState nextState, float deltaTime)
+    {
+        if (wallJumpFacingLockTimer > 0f)
+        {
+            wallJumpFacingLockTimer = Mathf.Max(0f, wallJumpFacingLockTimer - Mathf.Max(0f, deltaTime));
+        }
+
+        if (!useWallJumpFacingLock)
+        {
+            previousDesiredState = nextState;
+            return;
+        }
+
+        bool enteredWallJump =
+            nextState == PlayerAnimationState.WallJump &&
+            previousDesiredState != PlayerAnimationState.WallJump;
+
+        if (enteredWallJump)
+        {
+            wallJumpLockedFacing = NormalizeFacing(snapshotFacing);
+            wallJumpFacingLockTimer = wallJumpFacingLockDuration;
+        }
+
+        previousDesiredState = nextState;
+    }
+
+    private int ResolveDisplayFacing(int snapshotFacing)
+    {
+        if (useWallJumpFacingLock && wallJumpFacingLockTimer > 0f)
+        {
+            return wallJumpLockedFacing;
+        }
+
+        return snapshotFacing;
+    }
+
+    private int NormalizeFacing(int facing)
+    {
+        if (facing == 0)
+        {
+            return 1;
+        }
+
+        return facing > 0 ? 1 : -1;
+    }
+
     private void ApplyHoodState(PlayerHoodVisualState hoodState)
     {
         currentHoodState = hoodState;
@@ -380,9 +491,14 @@ public sealed class PlayerModelView : MonoBehaviour
 
     private void TickHoodRecover(PlayerAnimationSnapshot snapshot, float deltaTime)
     {
-        if (snapshot.requestHoodRecover && !isHoodRecoverPlaying)
+        bool hasNewHoodRecoverRequest =
+            snapshot.requestHoodRecover &&
+            snapshot.hoodRecoverRequestId != lastHandledHoodRecoverRequestId;
+
+        if (hasNewHoodRecoverRequest)
         {
-            StartHoodRecover();
+            lastHandledHoodRecoverRequestId = snapshot.hoodRecoverRequestId;
+            StartHoodRecover(snapshot.hoodRecoverTargetVersion);
         }
 
         if (!isHoodRecoverPlaying)
@@ -403,11 +519,12 @@ public sealed class PlayerModelView : MonoBehaviour
         }
     }
 
-    private void StartHoodRecover()
+    private void StartHoodRecover(int targetVersion)
     {
         isHoodRecoverPlaying = true;
         hoodRecoverTimer = 0f;
         hoodRecoverAppliedUp = false;
+        playingHoodRecoverTargetVersion = targetVersion;
 
         PlayUpperBodyState(hoodRecoverUpperStateName);
     }
@@ -418,7 +535,7 @@ public sealed class PlayerModelView : MonoBehaviour
 
         if (playerController != null)
         {
-            playerController.CompleteHoodRecoverVisual();
+            playerController.CompleteHoodRecoverVisual(playingHoodRecoverTargetVersion);
         }
     }
 

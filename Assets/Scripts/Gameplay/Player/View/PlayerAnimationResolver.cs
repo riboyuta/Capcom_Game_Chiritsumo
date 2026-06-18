@@ -87,7 +87,6 @@ internal sealed class PlayerAnimationResolver
 
     private bool hasState;
     private bool wasGrounded = true;
-    private bool airborneFromJump;
 
     private PlayerAnimationState currentState = PlayerAnimationState.Idle;
     private PlayerAnimationState desiredState = PlayerAnimationState.Idle;
@@ -116,7 +115,6 @@ internal sealed class PlayerAnimationResolver
     {
         hasState = false;
         wasGrounded = true;
-        airborneFromJump = false;
 
         currentState = initialState;
         desiredState = initialState;
@@ -145,21 +143,6 @@ internal sealed class PlayerAnimationResolver
     // JumpRise / Fall のフォールバック判断や、今後の演出分岐に使う。
     private void UpdateAirborneContext(in PlayerAnimationSnapshot snapshot)
     {
-        if (snapshot.justJumped)
-        {
-            airborneFromJump = true;
-        }
-
-        if (!wasGrounded && snapshot.isGrounded)
-        {
-            airborneFromJump = false;
-        }
-
-        if (wasGrounded && !snapshot.isGrounded && !snapshot.justJumped)
-        {
-            airborneFromJump = false;
-        }
-
         wasGrounded = snapshot.isGrounded;
     }
 
