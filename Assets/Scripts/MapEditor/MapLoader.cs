@@ -186,20 +186,22 @@ public class MapLoader : MonoBehaviour
 
 #if UNITY_WEBGL && !UNITY_EDITOR
 
-    UnityWebRequest request =
-        UnityWebRequest.Get(FilePath);
+        string resourcePath = $"StreamingAssetsForUnityRoom/{mapFolder}/Stage_{stageNumber}";
+        Debug.Log(resourcePath);
 
-    yield return request.SendWebRequest();
+        TextAsset jsonFile = Resources.Load<TextAsset>($"StreamingAssetsForUnityRoom/{mapFolder}/Stage_{stageNumber}");
+        Debug.Log(jsonFile);
+        
+        if (jsonFile == null)
+        {
+            Debug.LogError("JSON見つからないぜよ");
+            yield break;
+        }
+        
+        string json = jsonFile.text;
 
-    if (request.result != UnityWebRequest.Result.Success)
-    {
-        Debug.LogError(request.error);
-        yield break;
-    }
 
-    string json =
-        request.downloadHandler.text;
-
+  
 #else
 
         if (!File.Exists(FilePath))
