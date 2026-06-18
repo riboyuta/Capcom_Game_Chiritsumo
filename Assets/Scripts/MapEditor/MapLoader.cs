@@ -174,6 +174,10 @@ public class MapLoader : MonoBehaviour
     {
         ClearSpawnedTiles();
 
+        Debug.Log($"StreamingAssetsPath = {Application.streamingAssetsPath}");
+        Debug.Log($"FolderPath = {FolderPath}");
+        Debug.Log($"FilePath = {FilePath}");
+
         if (tileDatabase == null)
         {
             Debug.LogError("TileDatabase が未設定");
