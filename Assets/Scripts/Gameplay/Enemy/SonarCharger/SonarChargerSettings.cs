@@ -42,6 +42,46 @@ public sealed class SonarChargerSettings
     [Min(0.0f)]
     public float followSpeed = 1.2f;
 
+    [Header("加速追跡開始距離")]
+    [Tooltip("プレイヤーとの距離がこの値を超えると、通常追跡速度から加速追跡最大速度へ徐々に加速します。")]
+    [Min(0.0f)]
+    public float catchUpStartDistance = 5.0f;
+
+    [Header("加速追跡最大距離")]
+    [Tooltip("この距離以上では、加速追跡最大速度でプレイヤーを追跡します。")]
+    [Min(0.0f)]
+    public float catchUpMaxDistance = 9.0f;
+
+    [Header("加速追跡最大速度")]
+    [Tooltip("プレイヤーから離れた時に使用する追跡速度の最大値です。")]
+    [Min(0.0f)]
+    public float catchUpMaxSpeed = 5.0f;
+
+    [Header("画面外復帰開始距離")]
+    [Tooltip("画面外にいて、かつプレイヤーとの距離がこの値以上の場合に画面内への復帰移動を開始します。")]
+    [Min(0.0f)]
+    public float recoveryStartDistance = 10.0f;
+
+    [Header("画面外復帰時の後方距離")]
+    [Tooltip("プレイヤー後方へ復帰する場合に、プレイヤーからどれだけ離れた位置を目標にするかです。")]
+    [Min(0.0f)]
+    public float recoveryBehindDistance = 4.0f;
+
+    [Header("画面外復帰までの許容時間")]
+    [Tooltip("SonarChargerが画面外に連続して留まれる時間です。この時間を超えると、プレイヤーとの距離に関係なく画面内復帰を開始します。0の場合は画面外に出た瞬間に復帰します。")]
+    [Min(0.0f)]
+    public float offscreenRecoveryDelay = 0.6f;
+
+    [Header("画面外復帰速度")]
+    [Tooltip("画面外からカメラ内の復帰位置へ移動する速度です。")]
+    [Min(0.0f)]
+    public float recoverySpeed = 8.0f;
+
+    [Header("画面内復帰位置の余白")]
+    [Tooltip("復帰目標位置をカメラ端からどれだけ内側へ配置するかです。")]
+    [Min(0.0f)]
+    public float recoveryCameraPadding = 1.0f;
+
     [Header("最初のソナー発信遅延")]
     [Tooltip("起動してから最初のソナーを出すまでの時間です。")]
     [Min(0.0f)]
@@ -89,6 +129,16 @@ public sealed class SonarChargerSettings
     [Tooltip("感知後、突進方向を確定するまでの溜め時間です。この間はプレイヤー位置を追い続けます。")]
     [Min(0.0f)]
     public float alertTime = 0.4f;
+
+    [Header("溜め中の追跡速度倍率")]
+    [Tooltip("Alert中に通常追跡速度へ掛ける倍率です。0なら停止、1なら通常追跡速度と同じ速度で追跡します。")]
+    [Range(0.0f, 1.0f)]
+    public float alertFollowSpeedMultiplier = 0.5f;
+
+    [Header("溜め中の最低追跡距離")]
+    [Tooltip("Alert中にプレイヤーへこれ以上接近しないための距離です。この距離以内では移動を停止します。")]
+    [Min(0.0f)]
+    public float alertMinimumDistance = 2.0f;
 
     [Header("突進方向確定後の硬直時間")]
     [Tooltip("Alertで突進方向を確定した後、実際に突進するまでの短い硬直時間です。")]
@@ -235,6 +285,44 @@ public sealed class SonarChargerSettings
 
         followSpeed = Mathf.Max(0.0f, source.followSpeed);
 
+        catchUpStartDistance =
+            Mathf.Max(0.0f, source.catchUpStartDistance);
+
+        catchUpMaxDistance =
+            Mathf.Max(
+                catchUpStartDistance,
+                source.catchUpMaxDistance);
+
+        catchUpMaxSpeed =
+            Mathf.Max(
+                followSpeed,
+                source.catchUpMaxSpeed);
+
+        recoveryStartDistance =
+            Mathf.Max(
+                catchUpMaxDistance,
+                source.recoveryStartDistance);
+
+        recoveryBehindDistance =
+            Mathf.Max(
+                0.0f,
+                source.recoveryBehindDistance);
+
+        offscreenRecoveryDelay =
+            Mathf.Max(
+                0.0f,
+                source.offscreenRecoveryDelay);
+
+        recoverySpeed =
+            Mathf.Max(
+                catchUpMaxSpeed,
+                source.recoverySpeed);
+
+        recoveryCameraPadding =
+            Mathf.Max(
+                0.0f,
+                source.recoveryCameraPadding);
+
         firstSonarDelay = Mathf.Max(0.0f, source.firstSonarDelay);
         sonarInterval = Mathf.Max(0.01f, source.sonarInterval);
         sonarExpandSpeed = Mathf.Max(0.01f, source.sonarExpandSpeed);
@@ -248,6 +336,8 @@ public sealed class SonarChargerSettings
         enableDashInputAlertTrigger = source.enableDashInputAlertTrigger;
 
         alertTime = Mathf.Max(0.0f, source.alertTime);
+        alertFollowSpeedMultiplier = Mathf.Clamp01(source.alertFollowSpeedMultiplier);
+        alertMinimumDistance = Mathf.Max(0.0f,source.alertMinimumDistance);
         lockConfirmTime = Mathf.Max(0.0f, source.lockConfirmTime);
         lockConfirmBandWidthMultiplier = Mathf.Max(1.0f, source.lockConfirmBandWidthMultiplier);
         minChargeTargetDistance = Mathf.Max(0.001f, source.minChargeTargetDistance);
