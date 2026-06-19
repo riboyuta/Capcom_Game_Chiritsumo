@@ -253,6 +253,7 @@ MonoBehaviour:
       wallGrabJumpHorizontalLockTime: 0.08
       wallGrabJumpReattachLockTime: 0.3
       useWallKick: 1
+      allowWallKickWithoutHorizontalInput: 1
       wallJumpHorizontalVelocity: 13
       wallJumpVerticalVelocity: 16
       wallJumpControlLockTime: 0.07
