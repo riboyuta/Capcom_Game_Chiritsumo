@@ -46,9 +46,9 @@ MonoBehaviour:
   - tileID: Gimmick_Springpad_Right
     prefab: {fileID: 1266883591494959235, guid: f48109c2c825edf49a956d6f5ce1b30b, type: 3}
     icon: {fileID: 2800000, guid: d8154c13a0da13640b68c59c9bb69102, type: 3}
-  - tileID: 
-    prefab: {fileID: 0}
-    icon: {fileID: 0}
+  - tileID: BreakbleFloor_Cube
+    prefab: {fileID: 6453188548815068593, guid: d830d722a35b81e4da2faf9ae873965c, type: 3}
+    icon: {fileID: 2800000, guid: 29bb897056df7214293a9fb07793e72f, type: 3}
   - tileID: 
     prefab: {fileID: 0}
     icon: {fileID: 0}
