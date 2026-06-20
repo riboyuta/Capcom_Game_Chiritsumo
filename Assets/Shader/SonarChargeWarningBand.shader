@@ -18,8 +18,7 @@ Shader "Custom/Sonar/ChargeWarningBand"
         _LockSweepIntensity("Lock Sweep Intensity", Range(0, 5)) = 2.0
 
         _EdgeSoftness ("Edge Softness", Range(0.01, 0.5)) = 0.18
-        _EndSoftness ("End Softness", Range(0.0, 0.5)) = 0.08
-
+        _EndSoftness("End Fade Distance", Range(0.01, 5.0)) = 1.0
         _CoreWidthRatio("Core Width Ratio", Range(0.4, 0.95)) = 0.78
         _EdgeNoiseScale("Edge Noise Scale", Float) = 1.2
         _EdgeNoiseAmount("Edge Noise Amount", Range(0, 0.25)) = 0.06
@@ -32,6 +31,13 @@ Shader "Custom/Sonar/ChargeWarningBand"
         _FlowSpeed ("Flow Speed", Float) = 1.5
         _FlowStripeScale ("Flow Stripe Scale", Float) = 10.0
         _FlowStrength ("Flow Strength", Range(0, 1)) = 0.45
+
+        _ChevronRepeat("Chevron Repeat", Range(0.25, 4.0)) = 1.2
+        _ChevronTip("Chevron Tip Position", Range(0.5, 0.95)) = 0.82
+        _ChevronDepth("Chevron Depth", Range(0.1, 0.8)) = 0.52     
+        _ChevronWidth("Chevron Width", Range(0.01, 0.3)) = 0.11
+        _ChevronSoftness("Chevron Softness", Range(0.001, 0.15)) = 0.025
+        _ChevronNoiseAmount("Chevron Noise Amount", Range(0.0, 0.15)) = 0.015
 
         _ChargingFlowSpeedMultiplier("Charging Flow Speed Multiplier", Range(1, 6)) = 2.5
         _ChargingFlowStrengthMultiplier("Charging Flow Strength Multiplier", Range(1, 3)) = 1.35
@@ -114,6 +120,13 @@ Shader "Custom/Sonar/ChargeWarningBand"
                 float _FlowStripeScale;
                 float _FlowStrength;
 
+                float _ChevronRepeat;
+                float _ChevronTip;
+                float _ChevronDepth;
+                float _ChevronWidth;
+                float _ChevronSoftness;
+                float _ChevronNoiseAmount;
+
                 float _ChargingFlowSpeedMultiplier;
                 float _ChargingFlowStrengthMultiplier;
                 float _ChargingEdgeGlowMultiplier;
@@ -170,17 +183,30 @@ Shader "Custom/Sonar/ChargeWarningBand"
                     abs(uv.y - 0.5) * 2.0;
             
                 // 前後端を少しフェードさせる。
+                // ワールド上で指定したフェード距離を、帯全体に対するUV割合へ変換する。
+                float warningLength =
+                    max(_WarningLength, 0.001);
+                
+                float endFadeUv =
+                    _EndSoftness / warningLength;
+                
+                // 極端に短い帯でもフェード範囲が全体を覆わないよう制限する。
+                endFadeUv = clamp(
+                    endFadeUv,
+                    0.0001,
+                    0.49);
+                
                 float startFade = smoothstep(
                     0.0,
-                    max(0.0001, _EndSoftness),
+                    endFadeUv,
                     uv.x);
-            
+                
                 float endFade =
                     1.0 - smoothstep(
-                        1.0 - _EndSoftness,
+                        1.0 - endFadeUv,
                         1.0,
                         uv.x);
-            
+                
                 float lengthFade =
                     startFade * endFade;
             
@@ -291,21 +317,52 @@ Shader "Custom/Sonar/ChargeWarningBand"
                         patternX * _NoiseScale
                             - time * activeFlowSpeed,
                         uv.y * _NoiseScale * 0.45));
-            
-                float flowRaw =
-                    sin(
-                        (
-                            patternX * _FlowStripeScale
-                            - time * activeFlowSpeed
-                        )
-                        * 6.28318
-                        + noise * 2.0);
-            
+
+                // 帯の長さ方向に矢羽根模様を繰り返す。
+                // 値を時間でずらすことで、突進方向へ模様を流す。
+                float chevronPhase =
+                    patternX * _ChevronRepeat
+                    - time * activeFlowSpeed;
+                
+                // 1つの繰り返し区間内でのX位置。
+                float chevronX =
+                    frac(chevronPhase);
+                
+                // 帯中央が0、上下端が1。
+                float chevronY =
+                    abs(uv.y - 0.5) * 2.0;
+                
+                // 中央ほど先端側、上下端ほど後方になる線を作る。
+                // この線が「>」型の中心になる。
+                float chevronLineX =
+                    _ChevronTip
+                    - chevronY * _ChevronDepth;
+                
+                // 少量のノイズを加えて、完全な直線になりすぎるのを防ぐ。
+                float chevronNoise =
+                    (noise - 0.5)
+                    * 2.0
+                    * _ChevronNoiseAmount;
+                
+                chevronLineX += chevronNoise;
+                
+                // 繰り返し区間の境界をまたいでも模様が切れにくいよう、
+                // 0～1の周期を考慮した距離を使う。
+                float directDistance =
+                    abs(chevronX - chevronLineX);
+                
+                float wrappedDistance =
+                    1.0 - directDistance;
+                
+                float chevronDistance =
+                    min(directDistance, wrappedDistance);
+                
+                // 矢羽根中心線の周囲に太さを持たせる。
                 float flow =
-                    smoothstep(
-                        0.15,
-                        0.85,
-                        flowRaw * 0.5 + 0.5);
+                    1.0 - smoothstep(
+                        _ChevronWidth,
+                        _ChevronWidth + max(0.0001, _ChevronSoftness),
+                        chevronDistance);
             
                 float activeFlowStrength =
                     _FlowStrength
