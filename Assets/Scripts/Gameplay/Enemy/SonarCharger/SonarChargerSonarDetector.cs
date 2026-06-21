@@ -80,17 +80,83 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
     // =========================================================
 
     // 状態をリセットし、設定値をキャッシュする
-    public void ResetDetector(SonarChargerSettings settings)
+    public void ResetDetector(
+    SonarChargerSettings settings)
     {
-        ResetPulseState(false, false);
-        lastMaxRadius     = settings != null ? settings.sonarMaxRadius      : 0.0f;
-        lastRingThickness = settings != null ? settings.sonarRingThickness  : 0.0f;
+        isPulseActive = false;
+        hasCompletedFirstPulse = false;
+        intervalTimer = 0.0f;
+        previousRadius = 0.0f;
+        currentRadius = 0.0f;
+
+        lastMaxRadius =
+            settings != null
+                ? settings.sonarMaxRadius
+                : 0.0f;
+
+        lastRingThickness =
+            settings != null
+                ? settings.sonarRingThickness
+                : 0.0f;
     }
 
-    // 展開中のパルスを強制キャンセルする
+    // ソナー発信タイマーを進める
+    // 敵が起動中なら、攻撃状態や画面内復帰中でも時間を計測する
+    public void TickInterval(
+        SonarChargerSettings settings,
+        float deltaTime)
+    {
+        if (settings == null)
+        {
+            return;
+        }
+
+        float waitTime =
+            hasCompletedFirstPulse
+                ? Mathf.Max(0.01f, settings.sonarInterval)
+                : Mathf.Max(0.0f, settings.firstSonarDelay);
+
+        intervalTimer =
+            Mathf.Min(
+                intervalTimer + Mathf.Max(0.0f, deltaTime),
+                waitTime);
+    }
+
+    // 展開中のパルスだけをキャンセルする
+    // 次回発信までのタイマーは維持する
     public void CancelPulse()
     {
-        ResetPulseState(false, true);
+        isPulseActive = false;
+        previousRadius = 0.0f;
+        currentRadius = 0.0f;
+    }
+
+    // 画面外移動によってソナーを中断する
+    // 中断したソナーは正常な発信として扱わず、
+    // 次に発信可能になった時点ですぐ再展開できる状態にする
+    public void CancelPulseForViewRecovery(
+        SonarChargerSettings settings)
+    {
+        // 展開中でなければ、現在のインターバルを変更しない
+        if (!isPulseActive)
+        {
+            return;
+        }
+
+        StopPulse();
+
+        if (settings == null)
+        {
+            return;
+        }
+
+        hasCompletedFirstPulse = true;
+
+        // 次回発信の待機を完了済みにする
+        intervalTimer =
+            Mathf.Max(
+                0.01f,
+                settings.sonarInterval);
     }
 
     // ソナーを 1 フレーム分進め、プレイヤーを検知したら true を返す
@@ -127,8 +193,9 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
 
         // 最大半径到達フレームの判定を終えたらリセットする
         if (reachedMaxRadius)
-            ResetPulseState(false, true);
-
+        {
+            StopPulse();
+        }
         return false;
     }
 
@@ -136,7 +203,7 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
     // パルス更新
     // =========================================================
 
-    // インターバル待機 → パルス開始 → 半径拡大 → 終了判定の順で処理する
+    // インターバル完了確認 → パルス開始 → 半径拡大 → 終了判定
     private bool UpdatePulse(
         SonarChargerSettings settings,
         float deltaTime,
@@ -146,31 +213,42 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
 
         if (!isPulseActive)
         {
-            intervalTimer += deltaTime;
-
-            // 初回は firstSonarDelay、以降は sonarInterval で待機する
-            float waitTime = hasCompletedFirstPulse
-                ? settings.sonarInterval
-                : settings.firstSonarDelay;
+            float waitTime =
+                hasCompletedFirstPulse
+                    ? Mathf.Max(0.01f, settings.sonarInterval)
+                    : Mathf.Max(0.0f, settings.firstSonarDelay);
 
             if (intervalTimer < waitTime)
+            {
                 return false;
+            }
 
-            ResetPulseState(true, hasCompletedFirstPulse);
+            StartPulse();
         }
 
-        // スイープ判定用に拡大前の半径を保存する
-        previousRadius = currentRadius;
+        previousRadius =
+            currentRadius;
 
-        float expandDistance = Mathf.Max(0.0f, settings.sonarExpandSpeed)
-                             * Mathf.Max(0.0f, deltaTime);
+        float expandDistance =
+            Mathf.Max(
+                0.0f,
+                settings.sonarExpandSpeed) *
+            Mathf.Max(
+                0.0f,
+                deltaTime);
 
-        currentRadius += expandDistance;
+        currentRadius +=
+            expandDistance;
 
         if (currentRadius >= settings.sonarMaxRadius)
         {
-            currentRadius    = Mathf.Max(0.0f, settings.sonarMaxRadius);
-            reachedMaxRadius = true;
+            currentRadius =
+                Mathf.Max(
+                    0.0f,
+                    settings.sonarMaxRadius);
+
+            reachedMaxRadius =
+                true;
         }
 
         return true;
@@ -205,14 +283,28 @@ public sealed class SonarChargerSonarDetector : MonoBehaviour
         return sonarOrigin != null ? sonarOrigin.position : transform.position;
     }
 
-    // パルス状態を一括リセットする
-    private void ResetPulseState(bool active, bool completed)
+    // 新しいソナーパルスを開始する
+    private void StartPulse()
     {
-        isPulseActive          = active;
-        hasCompletedFirstPulse = completed;
-        intervalTimer          = 0.0f;
-        previousRadius         = 0.0f;
-        currentRadius          = 0.0f;
+        isPulseActive = true;
+
+        // 初回ソナーは開始した時点で完了扱いにする
+        hasCompletedFirstPulse = true;
+
+        // 次回発信までの時間は今回の開始時点から計測する
+        intervalTimer = 0.0f;
+
+        previousRadius = 0.0f;
+        currentRadius = 0.0f;
+    }
+
+    // 現在のパルス表示だけを終了する
+    // 発信タイマーは維持する
+    private void StopPulse()
+    {
+        isPulseActive = false;
+        previousRadius = 0.0f;
+        currentRadius = 0.0f;
     }
 
     // XY 平面で扱うため Z を捨てて Vector2 に変換する

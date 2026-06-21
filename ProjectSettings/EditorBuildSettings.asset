@@ -27,7 +27,7 @@ EditorBuildSettings:
     path: Assets/Scenes/TestPlayScenes/IkedaScenes/IkedaMap/DebugMapScenes/DebugMapScene/TestPlay/DebugMapTestPlay.unity
     guid: dc99dfb525ea013438126baaa3ec3e6f
   - enabled: 0
-    path: Assets/Scenes/DebugScenes/Tomoya/DebugMapScenes/TestPlay/DebugMapTestPlay_v4.unity
+    path: Assets/Scenes/DebugScenes/Tomoya/TestPlay/DebugMapTestPlay_v4.unity
     guid: d09b6fc1b2b621e48bd54c23f2681ab9
   - enabled: 0
     path: Assets/Scenes/DebugScenes/Tomoya/DebugMapScenes/TestPlay/DebugMapTestPlay_v5.unity
