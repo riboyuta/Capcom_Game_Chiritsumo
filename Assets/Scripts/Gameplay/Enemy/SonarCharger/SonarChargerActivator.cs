@@ -13,8 +13,8 @@ public sealed class SonarChargerActivator : MonoBehaviour, IRespawnResettable
     [SerializeField] private SonarChargerEnemy targetEnemy;
 
     [Header("ゲーム進行管理")]
-    [Tooltip("初回有効発動時に経過時間計測の開始通知を送る GameRoot です。未使用なら未設定で構いません。")]
-    [SerializeField] private GameRoot gameRoot;
+    [Tooltip("初回有効発動時に経過時間計測の開始通知を送る GameController です。未使用なら未設定で構いません。")]
+    [SerializeField] private GameController gameController;
 
     [Header("スポーン位置使用フラグ")]
     [Tooltip("起動時に敵をこの位置へ移動させるかです。")]
@@ -180,10 +180,10 @@ public sealed class SonarChargerActivator : MonoBehaviour, IRespawnResettable
         // 起動処理を開始済みとマーク
         hasStartedSpawn = true;
 
-        // GameRootに経過時間開始を通知
-        if (gameRoot != null)
+        // GameControllerに経過時間開始を通知
+        if (gameController != null)
         {
-            gameRoot.StartOrResumeElapsedTime();
+            gameController.StartOrResumeElapsedTime();
         }
 
         // 遅延設定があればコルーチンで遅延起動、なければ即起動
