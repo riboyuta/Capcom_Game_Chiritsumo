@@ -1,5 +1,17 @@
 # AGENTS.md
 
+## Encoding Note
+
+This file is encoded in UTF-8.
+
+If Japanese text appears corrupted or unreadable, reread this file explicitly as UTF-8.
+
+For PowerShell, use:
+
+```powershell
+Get-Content -Raw -Encoding UTF8 -LiteralPath AGENTS.md
+```
+
 ## Project
 
 This is a Unity game project.
