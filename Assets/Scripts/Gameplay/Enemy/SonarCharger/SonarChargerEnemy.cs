@@ -152,7 +152,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
 
     private void Update()
     {
-        // 無効化またはビアクティブな場合は何もしない
+        // 無効化または非アクティブな場合は何もしない
         if (isDisabled || !isActivated)
             return;
 
@@ -225,8 +225,6 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
             LogDebug("Already activated.");
             return;
         }
-
-        HideChargeWarning();
 
         isDisabled = false;
         isActivated = true;
@@ -740,7 +738,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         chargeWarningView.UpdateWarning(start, end, Mathf.Clamp01(progress), stateTimer, Settings);
     }
 
-    // Alert 進捗を 0?1 で返す
+    // Alert の進捗を 0〜1 で返す
     private float GetAlertProgress01()
     {
         if (Settings.alertTime <= 0.0f)
@@ -895,6 +893,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         ResolveComponents();
     }
 
+    // Rigidbody を Kinematic・重力なしに設定する
     private void InitializeRigidbody()
     {
         if (rb != null)
@@ -904,12 +903,14 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         }
     }
 
+    // コライダーをトリガーに設定する
     private void InitializeCollider()
     {
         if (bodyCollider != null)
             bodyCollider.isTrigger = true;
     }
 
+    // プレイヤーとカメラの参照を初期化時に補完する
     private void ResolveReferences()
     {
         ResolvePlayerIfNeeded();
@@ -990,6 +991,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         HideChargeWarning();
     }
 
+    // 移動を即停止し、視覚オフセットをリセットする
     private void StopMovementAndResetView()
     {
         movement.StopImmediate();
@@ -1009,6 +1011,7 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
                Settings.killPlayerOnContact;
     }
 
+    // コライダーから PlayerController を取得する（自身・親の順に探索する）
     private PlayerController GetPlayerFromCollider(Collider other)
     {
         return other.GetComponent<PlayerController>()
