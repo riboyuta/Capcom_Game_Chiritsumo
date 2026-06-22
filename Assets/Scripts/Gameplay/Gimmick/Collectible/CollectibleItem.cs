@@ -69,7 +69,7 @@ public sealed class CollectibleItem : MonoBehaviour
         }
         else if (enableDebugLog)
         {
-            Debug.LogWarning($"[CollectibleItem] CollectibleSessionManager is missing: {FullId}", this);
+            Debug.LogWarning($"[Collectible] CollectibleSessionManager が見つかりません。id={FullId}", this);
         }
     }
 
@@ -96,7 +96,7 @@ public sealed class CollectibleItem : MonoBehaviour
         ResolveSessionManager();
         if (sessionManager == null)
         {
-            Debug.LogWarning($"[CollectibleItem] Temporary collect ignored because manager is missing: {FullId}", this);
+            Debug.LogWarning($"[Collectible] CollectibleSessionManager がないため仮取得できません。id={FullId}", this);
             return;
         }
 

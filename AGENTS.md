@@ -508,7 +508,11 @@ Report:
 When adding or modifying runtime logs such as `Debug.Log`, `Debug.LogWarning`, or `Debug.LogError`:
 
 * Use English log tags.
-* Log messages may be written in short Japanese if it helps the project owner and team understand the runtime behavior quickly.
+* Write the natural-language message body of logs in Japanese by default.
+* Do not write English natural-language log messages.
+* Keep technical identifiers in their exact original spelling, such as variable names, method names, class names, enum values, IDs, asset names, tag names, system names, API names, or existing project-defined terms.
+* Do not translate, paraphrase, or rename technical identifiers into Japanese.
+* When a log refers to a specific script, component, class, or system, use its exact code or project name and write the surrounding explanation in Japanese.
 * Use a consistent tag format such as `[Collectible]`, `[PlayerState]`, `[RoomTransition]`, or `[Camera]`.
 * The tag should identify the system, feature, or responsibility that owns the log.
 * Keep log messages short and easy to understand.
@@ -520,15 +524,25 @@ Good examples:
 
 ```csharp
 Debug.Log("[Collectible] 仮取得状態に追加しました");
-Debug.Log("[Collectible] 死亡したので仮取得状態を破棄しました");
+Debug.Log("[Collectible] 死亡したため仮取得状態を破棄しました");
 Debug.Log("[Collectible] 部屋突破により収集状態を保存しました");
-Debug.LogWarning("[Collectible] Session manager が見つかりません");
+Debug.Log($"[Collectible] 保存済みIDに追加しました: {stageId}/{roomId}/{localId}");
+Debug.LogWarning("[Collectible] SessionManager が見つかりません");
+Debug.LogWarning($"[Collectible] localId が未設定です: {gameObject.name}");
+```
+
+Bad examples:
+
+```csharp
+Debug.Log("[Collectible] Temporary collected");
+Debug.Log("[Collectible] Pending Clear by Death");
+Debug.LogWarning("[Collectible] Session manager not found");
+Debug.LogWarning("[Collectible] セッション管理コンポーネントが見つかりません");
 ```
 
 Japanese comments may be used to explain intent:
 
 ```csharp
 // 死亡時は仮取得を破棄し、次の挑戦で再取得できる状態に戻す。
-Debug.Log("[Collectible] 死亡したので仮取得状態を破棄しました");
+Debug.Log("[Collectible] 死亡したため仮取得状態を破棄しました");
 ```
-

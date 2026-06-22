@@ -22,14 +22,14 @@ public sealed class CollectibleProgressStore : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(fullId))
         {
-            Debug.LogWarning("[CollectibleProgressStore] Empty collectible id was ignored.", this);
+            Debug.LogWarning("[Collectible] fullId が空のため保存しません。", this);
             return false;
         }
 
         bool added = savedIds.Add(fullId);
         if (added && enableDebugLog)
         {
-            Debug.Log($"[CollectibleProgressStore] Saved collectible id: {fullId}", this);
+            Debug.Log($"[Collectible] 保存済みIDに追加しました。id={fullId}", this);
         }
 
         return added;
@@ -41,6 +41,6 @@ public sealed class CollectibleProgressStore : MonoBehaviour
             ? string.Join(", ", savedIds)
             : "(none)";
 
-        Debug.Log($"[CollectibleProgressStore] Saved collectible ids: count={savedIds.Count}, ids={ids}", this);
+        Debug.Log($"[Collectible] 保存済みID一覧です。count={savedIds.Count}, ids={ids}", this);
     }
 }

@@ -82,7 +82,7 @@ public sealed class CollectibleSessionManager : MonoBehaviour
         string fullId = item.FullId;
         if (!item.HasValidId)
         {
-            Debug.LogWarning($"[CollectibleSessionManager] Collectible id is incomplete. Temporary collect ignored: {fullId}", item);
+            Debug.LogWarning($"[Collectible] IDが未設定です。id={fullId}", item);
             return false;
         }
 
@@ -102,7 +102,7 @@ public sealed class CollectibleSessionManager : MonoBehaviour
 
         if (enableDebugLog)
         {
-            Debug.Log($"[CollectibleSessionManager] Temporary collected: {fullId}", item);
+            Debug.Log($"[Collectible] 仮取得しました。id={fullId}", item);
         }
 
         return true;
@@ -152,7 +152,7 @@ public sealed class CollectibleSessionManager : MonoBehaviour
         {
             if (enableDebugLog && !hasWarnedMissingPlayerFacade)
             {
-                Debug.LogWarning("[CollectibleSessionManager] PlayerFacade is missing. Death reset is not subscribed.", this);
+                Debug.LogWarning("[Collectible] PlayerFacade が見つからないため死亡リセットを購読できません。", this);
                 hasWarnedMissingPlayerFacade = true;
             }
 
@@ -184,7 +184,7 @@ public sealed class CollectibleSessionManager : MonoBehaviour
         {
             if (enableDebugLog)
             {
-                Debug.Log($"[CollectibleSessionManager] Death reset: no temporary collectibles. cause={deathCause}", this);
+                Debug.Log($"[Collectible] 死亡リセットしました。仮取得はありません。cause={deathCause}", this);
             }
 
             RefreshRegisteredItems();
@@ -200,7 +200,7 @@ public sealed class CollectibleSessionManager : MonoBehaviour
         if (enableDebugLog)
         {
             Debug.Log(
-                $"[CollectibleSessionManager] Death reset discarded temporary collectibles: cause={deathCause}, count={discardedCount}, ids={discardedIds}",
+                $"[Collectible] 死亡したため仮取得を破棄しました。count={discardedCount}, ids={discardedIds}",
                 this);
         }
     }
