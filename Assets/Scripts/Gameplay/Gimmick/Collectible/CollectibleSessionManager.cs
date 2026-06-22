@@ -1,0 +1,222 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+[DisallowMultipleComponent]
+public sealed class CollectibleSessionManager : MonoBehaviour
+{
+    [Header("参照: プレイヤー")]
+    [Tooltip("死亡受理イベントを購読するPlayerFacadeです。未設定の場合はシーン内から実行時に検索します。")]
+    [SerializeField] private PlayerFacade playerFacade;
+
+    [Header("参照: 収集進行")]
+    [Tooltip("保存済み収集IDを保持するストアです。v1では永続保存せず、同じステージプレイ中のメモリ保存だけに使います。")]
+    [SerializeField] private CollectibleProgressStore progressStore;
+
+    [Header("デバッグ")]
+    [Tooltip("仮取得、死亡破棄、参照不足をDebug.Logへ出力するかを設定します。")]
+    [SerializeField] private bool enableDebugLog = true;
+
+    // 現在の部屋セッション中に取ったが、まだ部屋突破で確定していないID。
+    private readonly HashSet<string> temporaryCollectedIds = new HashSet<string>();
+    private readonly List<CollectibleItem> registeredItems = new List<CollectibleItem>();
+
+    private bool isDeathEventSubscribed;
+    private bool hasWarnedMissingPlayerFacade;
+
+    private void Awake()
+    {
+        ResolveReferences();
+    }
+
+    private void OnEnable()
+    {
+        ResolveReferences();
+        SubscribeDeathEventIfNeeded();
+        RefreshRegisteredItems();
+    }
+
+    private void Start()
+    {
+        ResolveReferences();
+        SubscribeDeathEventIfNeeded();
+        RefreshRegisteredItems();
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribeDeathEventIfNeeded();
+    }
+
+    public void RegisterItem(CollectibleItem item)
+    {
+        if (item == null)
+        {
+            return;
+        }
+
+        if (!registeredItems.Contains(item))
+        {
+            registeredItems.Add(item);
+        }
+
+        item.ApplyCollectedState(IsUnavailable(item.FullId));
+    }
+
+    public void UnregisterItem(CollectibleItem item)
+    {
+        if (item == null)
+        {
+            return;
+        }
+
+        registeredItems.Remove(item);
+    }
+
+    public bool TryTemporarilyCollect(CollectibleItem item)
+    {
+        if (item == null)
+        {
+            return false;
+        }
+
+        string fullId = item.FullId;
+        if (!item.HasValidId)
+        {
+            Debug.LogWarning($"[CollectibleSessionManager] Collectible id is incomplete. Temporary collect ignored: {fullId}", item);
+            return false;
+        }
+
+        if (IsSaved(fullId))
+        {
+            item.ApplyCollectedState(true);
+            return false;
+        }
+
+        if (!temporaryCollectedIds.Add(fullId))
+        {
+            item.ApplyCollectedState(true);
+            return false;
+        }
+
+        item.ApplyCollectedState(true);
+
+        if (enableDebugLog)
+        {
+            Debug.Log($"[CollectibleSessionManager] Temporary collected: {fullId}", item);
+        }
+
+        return true;
+    }
+
+    public bool IsTemporarilyCollected(string fullId)
+    {
+        return !string.IsNullOrWhiteSpace(fullId) && temporaryCollectedIds.Contains(fullId);
+    }
+
+    public bool IsSaved(string fullId)
+    {
+        return progressStore != null && progressStore.IsSaved(fullId);
+    }
+
+    public bool IsUnavailable(string fullId)
+    {
+        return IsSaved(fullId) || IsTemporarilyCollected(fullId);
+    }
+
+    private void ResolveReferences()
+    {
+        if (playerFacade == null)
+        {
+            playerFacade = FindFirstObjectByType<PlayerFacade>();
+        }
+
+        if (progressStore == null)
+        {
+            progressStore = GetComponent<CollectibleProgressStore>();
+        }
+
+        if (progressStore == null)
+        {
+            progressStore = FindFirstObjectByType<CollectibleProgressStore>();
+        }
+    }
+
+    private void SubscribeDeathEventIfNeeded()
+    {
+        if (isDeathEventSubscribed)
+        {
+            return;
+        }
+
+        if (playerFacade == null)
+        {
+            if (enableDebugLog && !hasWarnedMissingPlayerFacade)
+            {
+                Debug.LogWarning("[CollectibleSessionManager] PlayerFacade is missing. Death reset is not subscribed.", this);
+                hasWarnedMissingPlayerFacade = true;
+            }
+
+            return;
+        }
+
+        playerFacade.DeathAccepted += OnPlayerDeathAccepted;
+        isDeathEventSubscribed = true;
+    }
+
+    private void UnsubscribeDeathEventIfNeeded()
+    {
+        if (!isDeathEventSubscribed)
+        {
+            return;
+        }
+
+        if (playerFacade != null)
+        {
+            playerFacade.DeathAccepted -= OnPlayerDeathAccepted;
+        }
+
+        isDeathEventSubscribed = false;
+    }
+
+    private void OnPlayerDeathAccepted(PlayerDeathCause deathCause)
+    {
+        if (temporaryCollectedIds.Count <= 0)
+        {
+            if (enableDebugLog)
+            {
+                Debug.Log($"[CollectibleSessionManager] Death reset: no temporary collectibles. cause={deathCause}", this);
+            }
+
+            RefreshRegisteredItems();
+            return;
+        }
+
+        string discardedIds = string.Join(", ", temporaryCollectedIds);
+        int discardedCount = temporaryCollectedIds.Count;
+
+        temporaryCollectedIds.Clear();
+        RefreshRegisteredItems();
+
+        if (enableDebugLog)
+        {
+            Debug.Log(
+                $"[CollectibleSessionManager] Death reset discarded temporary collectibles: cause={deathCause}, count={discardedCount}, ids={discardedIds}",
+                this);
+        }
+    }
+
+    private void RefreshRegisteredItems()
+    {
+        for (int i = registeredItems.Count - 1; i >= 0; i--)
+        {
+            CollectibleItem item = registeredItems[i];
+            if (item == null)
+            {
+                registeredItems.RemoveAt(i);
+                continue;
+            }
+
+            item.ApplyCollectedState(IsUnavailable(item.FullId));
+        }
+    }
+}

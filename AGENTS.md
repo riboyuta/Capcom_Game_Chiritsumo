@@ -35,11 +35,13 @@ Follow existing project patterns before introducing new abstractions, naming con
 
 ## Active Mode Declaration
 
-At the start of every response, state the active mode:
+For Research Mode, Edit Mode, and Review Mode work, state the active mode at the start of the response:
 
 * Active mode: Research
 * Active mode: Edit
 * Active mode: Review
+
+For small code-understanding, terminology, syntax, or explanation questions covered by the Small Question Rule, do not need to state the active mode.
 
 If the mode is ambiguous, choose Research Mode and state why.
 
@@ -442,7 +444,23 @@ When preparing GitHub-facing text, write it as a project decision, not as an AI 
 
 ---
 
+## Small Question Rule
+
+For small code-understanding, terminology, syntax, or explanation questions, answer directly and briefly.
+
+Do not use the full Research / Edit / Review report format for small questions.
+
+Do not inspect unrelated files or suggest implementation plans unless the user asks for them.
+
+Do not edit files unless the user explicitly asks to modify code.
+
+---
+
 ## Reporting Format
+
+Use the full reporting formats only for heavy, risky, or implementation-related work.
+
+For small explanation questions, terminology questions, or simple code-understanding questions, answer directly without the full report format.
 
 ### Before editing
 
@@ -482,3 +500,35 @@ Report:
 * Manual verification checklist
 * Recommended follow-up actions
 * Explainability check
+
+---
+
+## Log Output Rule
+
+When adding or modifying runtime logs such as `Debug.Log`, `Debug.LogWarning`, or `Debug.LogError`:
+
+* Use English log tags.
+* Log messages may be written in short Japanese if it helps the project owner and team understand the runtime behavior quickly.
+* Use a consistent tag format such as `[Collectible]`, `[PlayerState]`, `[RoomTransition]`, or `[Camera]`.
+* The tag should identify the system, feature, or responsibility that owns the log.
+* Keep log messages short and easy to understand.
+* If extra explanation is needed, add a concise Japanese code comment near the logic instead of making the log message too long.
+* Do not use Japanese log tags.
+* Do not write long explanation-style logs.
+
+Good examples:
+
+```csharp
+Debug.Log("[Collectible] 仮取得状態に追加しました");
+Debug.Log("[Collectible] 死亡したので仮取得状態を破棄しました");
+Debug.Log("[Collectible] 部屋突破により収集状態を保存しました");
+Debug.LogWarning("[Collectible] Session manager が見つかりません");
+```
+
+Japanese comments may be used to explain intent:
+
+```csharp
+// 死亡時は仮取得を破棄し、次の挑戦で再取得できる状態に戻す。
+Debug.Log("[Collectible] 死亡したので仮取得状態を破棄しました");
+```
+

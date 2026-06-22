@@ -33,7 +33,7 @@ public static class SceneFlow
     {
         Debug.Log("[SceneFlow] LoadGame requested.");
         SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
-        // FadeIn は Stage1 の GameRoot.Start() が担当する。
+        // FadeIn は Stage1 の GameController.Start() が担当する。
     }
 
     public static void LoadResult()
