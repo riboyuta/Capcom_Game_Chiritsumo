@@ -244,6 +244,7 @@ GameObject:
   - component: {fileID: 5994568916941441081}
   - component: {fileID: 6444090207509418584}
   - component: {fileID: 1417925466093227198}
+  - component: {fileID: 1183908316336065199}
   m_Layer: 0
   m_Name: EnemySpawnTrigger
   m_TagString: Untagged
@@ -299,14 +300,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b2a5630e83714348b5b0cf5d9721091, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShadowChaserActivator
-  targetEnemy: {fileID: 7109090437168328579}
-  spawnPoint: {fileID: 0}
-  usePlayerTag: 1
   playerTag: Player
   spawnDelay: 0
   parentRoom: {fileID: 0}
-  visualizeSafeZone: 1
-  safeZoneColor: {r: 0, g: 1, b: 0, a: 0.8}
+  targetEnemy: {fileID: 7109090437168328579}
+  spawnPoint: {fileID: 0}
+--- !u!114 &1183908316336065199
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7538254646737796183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ecc6af31a828454ea0181e155f6cb77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SafeZoneWireframeView
+  visible: 1
+  wireframeColor: {r: 0, g: 1, b: 0, a: 0.8}
 --- !u!1 &8890554767865357542
 GameObject:
   m_ObjectHideFlags: 0
