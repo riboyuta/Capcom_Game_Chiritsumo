@@ -28,7 +28,9 @@ public sealed class CollectibleItem : MonoBehaviour
 
     private Collider triggerCollider;
     private Renderer[] visualRenderers = System.Array.Empty<Renderer>();
-    //初期状態をもう記録したか
+
+    // 初期表示状態を一度だけ記録するためのフラグ
+
     private bool hasCapturedInitialVisibility;
     private bool initialColliderEnabled;
     private bool[] initialRendererEnabledStates = System.Array.Empty<bool>();
