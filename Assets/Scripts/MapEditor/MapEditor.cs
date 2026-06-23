@@ -282,7 +282,6 @@ public class MapEditor : MonoBehaviour
             if (!canPlaceTile)
             {
                 PlaceTileFlagTimer--;
-                Debug.Log("a");
 
                 if (PlaceTileFlagTimer <= 0)
                 {
@@ -410,8 +409,16 @@ public class MapEditor : MonoBehaviour
         }
 
         GameObject tile = Instantiate(currentTile.prefab);　//いまここ
+        Debug.Log($"SpawnPosA={spawnPos}");
+        Debug.Log($"CreatedA={tile.transform.position}");
+        Debug.Log($"CreatedLocalA={tile.transform.localPosition}");
         tile.transform.position = spawnPos;
         tile.transform.SetParent(mapRoot);
+        Debug.Log($"SpawnPosB={spawnPos}");
+        Debug.Log($"CreatedB={tile.transform.position}");
+        Debug.Log($"CreatedLocalB={tile.transform.localPosition}");
+
+
 
         TileType tileType = tile.GetComponent<TileType>();
         tileType.Initialize(currentTile, TileGimmickTypeEnum.None, TileGimmickIDEnum.None);
@@ -419,6 +426,7 @@ public class MapEditor : MonoBehaviour
         tiles.Add(gridPos, tile);
         RegisterChunk(gridPos, tile);
 
+       
 
     }
 
@@ -1050,6 +1058,13 @@ public class MapEditor : MonoBehaviour
 
             TileType tileType = tile.GetComponent<TileType>();
             tileType.Initialize(def, data.gimmickType, data.gimmickID);
+
+
+            Debug.Log($"SpawnPos={spawnPos}");
+            Debug.Log($"MapRoot={mapRoot.position}");
+            Debug.Log($"Tile Local={tile.transform.localPosition}");
+            Debug.Log($"Tile World={tile.transform.position}");
+
 
             tiles.Add(gridPos, tile);
             RegisterChunk(gridPos, tile);
