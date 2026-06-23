@@ -9,16 +9,16 @@ public sealed class GoalObject : MonoBehaviour
 
     // 二重遷移防止フラグ。
     private bool isTriggered;
-    [SerializeField] private GameRoot gameRoot;
+    [SerializeField] private GameController gameController;
 
     private void Awake()
     {
-        if (gameRoot == null)
+        if (gameController == null)
         {
-            gameRoot = FindFirstObjectByType<GameRoot>();
-            if (gameRoot == null)
+            gameController = FindFirstObjectByType<GameController>();
+            if (gameController == null)
             {
-                Debug.LogWarning("[GoalObject] GameRoot not found.");
+                Debug.LogWarning("[GoalObject] GameController not found.");
             }
         }
     }
@@ -36,12 +36,12 @@ public sealed class GoalObject : MonoBehaviour
             return;
         }
 
-        if (gameRoot == null)
+        if (gameController == null)
         {
-            Debug.LogWarning("[GoalObject] Goal detected but GameRoot is missing.");
+            Debug.LogWarning("[GoalObject] Goal detected but GameController is missing.");
             return;
         }
-        bool accepted = gameRoot.RequestGoalClear();
+        bool accepted = gameController.RequestGoalClear();
         if (!accepted)
         {
             return;
