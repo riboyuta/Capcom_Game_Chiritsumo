@@ -126,6 +126,27 @@ public sealed partial class PlayerController : MonoBehaviour
         return locomotionSystem != null && locomotionSystem.TryRefillDash(reason);
     }
 
+    public void RequestBreakWallDashRebound(
+    Vector3 reboundDirection,
+    float reboundSpeed,
+    float reboundUpSpeed)
+    {
+        if (IsActionLocked || IsDeathSequencePlaying)
+        {
+            return;
+        }
+
+        if (IsExternallyControlled)
+        {
+            return;
+        }
+
+        locomotionSystem?.ApplyBreakWallDashRebound(
+            reboundDirection,
+            reboundSpeed,
+            reboundUpSpeed);
+    }
+
     // Facade 向け最小 bridge: 外部制御受理可否。
     internal bool CanAcceptExternalControl(in PlayerExternalControlRequest request)
     {

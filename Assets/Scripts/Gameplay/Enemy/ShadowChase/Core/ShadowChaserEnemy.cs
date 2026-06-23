@@ -16,6 +16,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         Idle,       // 非活性
         Appearing,  // 出現演出中
         Following,  // 追跡中
+        Rebounding, 
     }
 
     // =========================================================
@@ -73,6 +74,11 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
     private ShadowChaserState state = ShadowChaserState.Idle;
     private Coroutine appearCoroutine;
     private float appearNormalizedTime = 1f;    // 出現演出の進捗（0〜1）、ShadowChaserModelView から参照される
+
+    private float breakWallReboundTimer;
+    private float breakWallReboundDuration;
+    private Vector3 breakWallReboundStartPosition;
+    private Vector3 breakWallReboundEndPosition;
 
     // 最後に適用したスナップショット（外部参照・Gizmo 用）
     private PlayerShadowSnapshot lastAppliedSnapshot;
@@ -157,6 +163,12 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
 
     private void LateUpdate()
     {
+        if (state == ShadowChaserState.Rebounding)
+        {
+            TickBreakWallRebound(Time.deltaTime);
+            return;
+        }
+
         if (state != ShadowChaserState.Following)
             return;
 
@@ -214,6 +226,11 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         hasLastAppliedSnapshot = false;
         hasSpawnPosition       = false;
         appearNormalizedTime   = 0f;
+
+        breakWallReboundTimer = 0.0f;
+        breakWallReboundDuration = 0.0f;
+        breakWallReboundStartPosition = Vector3.zero;
+        breakWallReboundEndPosition = Vector3.zero;
 
         if (hasCapturedInitialState)
         {
@@ -472,6 +489,69 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         t = Mathf.Clamp01(t);
         float inv = 1f - t;
         return 1f - inv * inv * inv;
+    }
+
+    public void RequestBreakWallDashRebound(
+    Vector3 reboundDirection,
+    float reboundDistance,
+    float duration)
+    {
+        if (state != ShadowChaserState.Following)
+        {
+            return;
+        }
+
+        reboundDirection.z = 0.0f;
+
+        if (reboundDirection.sqrMagnitude <= 0.0001f)
+        {
+            if (hasLastAppliedSnapshot && lastAppliedSnapshot.velocity.sqrMagnitude > 0.0001f)
+            {
+                reboundDirection = -lastAppliedSnapshot.velocity;
+                reboundDirection.z = 0.0f;
+            }
+            else
+            {
+                reboundDirection = -transform.right;
+                reboundDirection.z = 0.0f;
+            }
+        }
+
+        reboundDirection.Normalize();
+
+        breakWallReboundTimer = 0.0f;
+        breakWallReboundDuration = Mathf.Max(0.01f, duration);
+        breakWallReboundStartPosition = transform.position;
+        breakWallReboundEndPosition =
+            breakWallReboundStartPosition +
+            reboundDirection * Mathf.Max(0.0f, reboundDistance);
+
+        state = ShadowChaserState.Rebounding;
+    }
+
+    private void TickBreakWallRebound(float deltaTime)
+    {
+        float duration = Mathf.Max(0.01f, breakWallReboundDuration);
+
+        breakWallReboundTimer += Mathf.Max(0.0f, deltaTime);
+
+        float t = Mathf.Clamp01(breakWallReboundTimer / duration);
+        float eased = 1.0f - Mathf.Pow(1.0f - t, 2.0f);
+
+        transform.position = Vector3.Lerp(
+            breakWallReboundStartPosition,
+            breakWallReboundEndPosition,
+            eased);
+
+        if (t < 1.0f)
+        {
+            return;
+        }
+
+        breakWallReboundTimer = 0.0f;
+        breakWallReboundDuration = 0.0f;
+
+        state = ShadowChaserState.Following;
     }
 
     // =========================================================

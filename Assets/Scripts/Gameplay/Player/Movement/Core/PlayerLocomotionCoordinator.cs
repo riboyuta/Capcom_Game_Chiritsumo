@@ -306,6 +306,17 @@ internal sealed class PlayerLocomotionCoordinator
             () => inputAssistSystem.TryApplyDashCornerCorrection());
     }
 
+    internal void ApplyBreakWallDashRebound(
+    Vector3 reboundDirection,
+    float reboundSpeed,
+    float reboundUpSpeed)
+    {
+        dashSystem.ApplyBreakWallRebound(
+            reboundDirection,
+            reboundSpeed,
+            reboundUpSpeed);
+    }
+
     // ダッシュ終了後の接地スナップ可否を判定する。
     internal bool CanSnapToGroundAfterDash()
     {

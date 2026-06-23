@@ -517,6 +517,62 @@ internal sealed class PlayerDashSystem
         deps.RuntimeState.dashTimer = 0f;
     }
 
+    internal void ApplyBreakWallRebound(
+    Vector3 reboundDirection,
+    float reboundSpeed,
+    float reboundUpSpeed)
+    {
+        if (deps.Rb == null)
+        {
+            return;
+        }
+
+        if (!deps.RuntimeState.isDashing)
+        {
+            return;
+        }
+
+        reboundDirection.z = 0.0f;
+
+        if (reboundDirection.sqrMagnitude <= 0.0001f)
+        {
+            Vector2 dashDirection = deps.RuntimeState.dashDirection;
+
+            reboundDirection = new Vector3(
+                -dashDirection.x,
+                -dashDirection.y,
+                0.0f);
+        }
+
+        if (reboundDirection.sqrMagnitude <= 0.0001f)
+        {
+            reboundDirection = new Vector3(
+                -deps.RuntimeState.facing,
+                0.0f,
+                0.0f);
+        }
+
+        reboundDirection.Normalize();
+
+        // ダッシュを特殊終了する。
+        deps.RuntimeState.isDashing = false;
+        deps.RuntimeState.dashTimer = 0.0f;
+        deps.FrameRequests.dashRequested = false;
+        dashBufferTimer = 0.0f;
+
+        // ストンピングなどの下降固定と競合しないようにする。
+        deps.FrameRequests.wasExternallyLaunchedThisFrame = true;
+
+        Vector3 velocity = reboundDirection * Mathf.Max(0.0f, reboundSpeed);
+
+        if (reboundUpSpeed > 0.0f)
+        {
+            velocity.y = Mathf.Max(velocity.y, reboundUpSpeed);
+        }
+
+        deps.Rb.linearVelocity = velocity;
+    }
+
     // ダッシュ終了処理を実行する。
     internal void EndDash(System.Action setDashEndJumpCutLockTimer)
     {

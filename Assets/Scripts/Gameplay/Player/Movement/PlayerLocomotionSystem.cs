@@ -129,6 +129,17 @@ internal sealed class PlayerLocomotionSystem
     internal void EndStompForWallGrab() => coordinator.EndStompForWallGrab();
     internal void EndStomp() => coordinator.EndStomp();
 
+    internal void ApplyBreakWallDashRebound(
+    Vector3 reboundDirection,
+    float reboundSpeed,
+    float reboundUpSpeed)
+    {
+        coordinator.ApplyBreakWallDashRebound(
+            reboundDirection,
+            reboundSpeed,
+            reboundUpSpeed);
+    }
+
     // ============================================================
     // 崖乗り上げ（コーディネーターへ委譲）
     // ============================================================

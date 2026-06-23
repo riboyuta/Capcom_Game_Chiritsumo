@@ -301,6 +301,21 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
             BeginChase();
     }
 
+    public void RequestBreakWallRebound()
+    {
+        if (!isActivated || isDisabled)
+        {
+            return;
+        }
+
+        if (state != SonarChargerState.Charge)
+        {
+            return;
+        }
+
+        StartRebound();
+    }
+
     // =========================================================
     // 状態別 Tick
     // =========================================================
