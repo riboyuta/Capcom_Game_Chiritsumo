@@ -11,8 +11,8 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
     [SerializeField] private HandChaserEnemy targetEnemy;
 
     [Header("ゲーム進行")]
-    [Tooltip("初回有効発動時に経過時間計測の開始通知を送る GameRoot です。")]
-    [SerializeField] private GameRoot gameRoot;
+    [Tooltip("初回有効発動時に経過時間計測の開始通知を送る GameController です。")]
+    [SerializeField] private GameController gameController;
 
     [Header("判定設定")]
     [Tooltip("プレイヤーとして判定するタグ名です。")]
@@ -55,7 +55,7 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
     private bool initialColliderEnabled;
     private bool initialHasStartedSpawn;
 
-    private bool isPlayerInsideSafeZone;
+
 
     private const float AxisThreshold = 0.0001f;
     private const int WireframeSegments = 24;
@@ -127,13 +127,11 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
         {
             StopSpawnCoroutine();
             hasStartedSpawn = false;
-            isPlayerInsideSafeZone = false;
         }
         else
         {
             StopSpawnCoroutine();
             StopSpawnWarning();
-            isPlayerInsideSafeZone = false;
         }
     }
 
@@ -154,7 +152,6 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        isPlayerInsideSafeZone = true;
         StartSpawnWarningIfNeeded();
     }
 
@@ -165,7 +162,6 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        isPlayerInsideSafeZone = false;
         FadeOutSpawnWarning();
 
         StartSpawnAfterSafeZoneExit();
@@ -175,9 +171,9 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
     {
         hasStartedSpawn = true;
 
-        if (gameRoot != null)
+        if (gameController != null)
         {
-            gameRoot.StartOrResumeElapsedTime();
+            gameController.StartOrResumeElapsedTime();
         }
 
         if (spawnDelay > 0f)
@@ -321,7 +317,6 @@ public sealed class HandChaserActivator : MonoBehaviour, IRespawnResettable
 
         StopSpawnCoroutine();
         StopSpawnWarning();
-        isPlayerInsideSafeZone = false;
 
         if (hasCapturedInitialState)
         {
