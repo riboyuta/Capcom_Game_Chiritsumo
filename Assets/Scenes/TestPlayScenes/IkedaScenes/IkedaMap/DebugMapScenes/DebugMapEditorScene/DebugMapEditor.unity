@@ -632,7 +632,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c2892f1cdcd4874ba1db4dd8327b387, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapEditor
-  stageNumber: 1
+  stageNumber: 2
   mapFolder: Scenes\TestPlayScenes\IkedaScenes\IkedaMap\DebugMapScenes\DebugMapEditorScene\MapData
   gridSizeType: 0
   chunkDrawDistance: 1

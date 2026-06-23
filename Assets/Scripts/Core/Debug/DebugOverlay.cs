@@ -4,8 +4,8 @@ using UnityEngine.InputSystem;
 public sealed class DebugOverlay : MonoBehaviour
 {
     [Header("参照先")]
-    // GameRoot から状態や残り時間を読むための参照
-    [SerializeField] private GameRoot gameRoot;
+    // GameController から状態や残り時間を読むための参照
+    [SerializeField] private GameController gameController;
 
     [Header("表示設定")]
     // デバッグ表示を最初から見せるかどうか
@@ -50,10 +50,10 @@ public sealed class DebugOverlay : MonoBehaviour
             return;
         }
 
-        // GameRoot が未設定なら、何が足りないかだけ表示する
-        if (gameRoot == null)
+        // GameController が未設定なら、何が足りないかだけ表示する
+        if (gameController == null)
         {
-            DrawLine(0, "DebugOverlay : GameRoot が未設定です");
+            DrawLine(0, "DebugOverlay : GameController が未設定です");
             return;
         }
 
@@ -61,10 +61,10 @@ public sealed class DebugOverlay : MonoBehaviour
         DrawLine(0, $"Scene : {SceneManager.GetActiveScene().name}");
 
         // 現在の状態名を表示
-        DrawLine(1, $"State : {gameRoot.GetCurrentStateName()}");
+        DrawLine(1, $"State : {gameController.GetCurrentStateName()}");
 
         // 残りプレイ時間を小数点2桁で表示
-        DrawLine(2, $"Timer : {gameRoot.GetRemainingPlayTime():F2}");
+        DrawLine(2, $"Timer : {gameController.GetRemainingPlayTime():F2}");
     }
 
     private void DrawLine(int lineIndex, string text)
