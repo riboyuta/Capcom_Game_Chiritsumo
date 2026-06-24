@@ -111,7 +111,7 @@ public sealed class GameController : MonoBehaviour
         if (Mathf.FloorToInt(elapsedTime) > Mathf.FloorToInt(lastLoggedTime))
         {
             lastLoggedTime = elapsedTime;
-            Debug.Log($"[GameRoot] Elapsed Time: {elapsedTime:F2}s");
+            Debug.Log($"[GameController] Elapsed Time: {elapsedTime:F2}s");
         }
     }
 
@@ -237,7 +237,7 @@ public sealed class GameController : MonoBehaviour
     {
         deathCount++;
         PauseElapsedTime();
-        Debug.Log($"[GameRoot] Player death recorded. cause={deathCause}, deathCount={deathCount}, elapsedTime={elapsedTime:F2}s");
+        Debug.Log($"[GameController] Player death recorded. cause={deathCause}, deathCount={deathCount}, elapsedTime={elapsedTime:F2}s");
     }
 
     /// ゴール到達を受け付け、Result遷移を開始する。
@@ -251,14 +251,14 @@ public sealed class GameController : MonoBehaviour
 
         if (currentState != State.Playing)
         {
-            Debug.Log($"[GameRoot] GoalClear ignored. currentState={currentState}");
+            Debug.Log($"[GameController] GoalClear ignored. currentState={currentState}");
             return false;
         }
 
         goalClearAccepted = true;
         PauseElapsedTime();
         ResultSceneTransitData.SetClearResult(elapsedTime, deathCount);
-        Debug.Log($"[GameRoot] GoalClear accepted. elapsedTime={elapsedTime:F2}s, deathCount={deathCount}");
+        Debug.Log($"[GameController] GoalClear accepted. elapsedTime={elapsedTime:F2}s, deathCount={deathCount}");
 
         EnterResult();
         return true;

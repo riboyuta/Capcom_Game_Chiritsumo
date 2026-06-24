@@ -1,5 +1,17 @@
 # AGENTS.md
 
+## Encoding Note
+
+This file is encoded in UTF-8.
+
+If Japanese text appears corrupted or unreadable, reread this file explicitly as UTF-8.
+
+For PowerShell, use:
+
+```powershell
+Get-Content -Raw -Encoding UTF8 -LiteralPath AGENTS.md
+```
+
 ## Project
 
 This is a Unity game project.
@@ -35,11 +47,13 @@ Follow existing project patterns before introducing new abstractions, naming con
 
 ## Active Mode Declaration
 
-At the start of every response, state the active mode:
+For Research Mode, Edit Mode, and Review Mode work, state the active mode at the start of the response:
 
 * Active mode: Research
 * Active mode: Edit
 * Active mode: Review
+
+For small code-understanding, terminology, syntax, or explanation questions covered by the Small Question Rule, do not need to state the active mode.
 
 If the mode is ambiguous, choose Research Mode and state why.
 
@@ -442,7 +456,23 @@ When preparing GitHub-facing text, write it as a project decision, not as an AI 
 
 ---
 
+## Small Question Rule
+
+For small code-understanding, terminology, syntax, or explanation questions, answer directly and briefly.
+
+Do not use the full Research / Edit / Review report format for small questions.
+
+Do not inspect unrelated files or suggest implementation plans unless the user asks for them.
+
+Do not edit files unless the user explicitly asks to modify code.
+
+---
+
 ## Reporting Format
+
+Use the full reporting formats only for heavy, risky, or implementation-related work.
+
+For small explanation questions, terminology questions, or simple code-understanding questions, answer directly without the full report format.
 
 ### Before editing
 
@@ -482,3 +512,49 @@ Report:
 * Manual verification checklist
 * Recommended follow-up actions
 * Explainability check
+
+---
+
+## Log Output Rule
+
+When adding or modifying runtime logs such as `Debug.Log`, `Debug.LogWarning`, or `Debug.LogError`:
+
+* Use English log tags.
+* Write the natural-language message body of logs in Japanese by default.
+* Do not write English natural-language log messages.
+* Keep technical identifiers in their exact original spelling, such as variable names, method names, class names, enum values, IDs, asset names, tag names, system names, API names, or existing project-defined terms.
+* Do not translate, paraphrase, or rename technical identifiers into Japanese.
+* When a log refers to a specific script, component, class, or system, use its exact code or project name and write the surrounding explanation in Japanese.
+* Use a consistent tag format such as `[Collectible]`, `[PlayerState]`, `[RoomTransition]`, or `[Camera]`.
+* The tag should identify the system, feature, or responsibility that owns the log.
+* Keep log messages short and easy to understand.
+* If extra explanation is needed, add a concise Japanese code comment near the logic instead of making the log message too long.
+* Do not use Japanese log tags.
+* Do not write long explanation-style logs.
+
+Good examples:
+
+```csharp
+Debug.Log("[Collectible] 仮取得状態に追加しました");
+Debug.Log("[Collectible] 死亡したため仮取得状態を破棄しました");
+Debug.Log("[Collectible] 部屋突破により収集状態を保存しました");
+Debug.Log($"[Collectible] 保存済みIDに追加しました: {stageId}/{roomId}/{localId}");
+Debug.LogWarning("[Collectible] SessionManager が見つかりません");
+Debug.LogWarning($"[Collectible] localId が未設定です: {gameObject.name}");
+```
+
+Bad examples:
+
+```csharp
+Debug.Log("[Collectible] Temporary collected");
+Debug.Log("[Collectible] Pending Clear by Death");
+Debug.LogWarning("[Collectible] Session manager not found");
+Debug.LogWarning("[Collectible] セッション管理コンポーネントが見つかりません");
+```
+
+Japanese comments may be used to explain intent:
+
+```csharp
+// 死亡時は仮取得を破棄し、次の挑戦で再取得できる状態に戻す。
+Debug.Log("[Collectible] 死亡したため仮取得状態を破棄しました");
+```
