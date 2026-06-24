@@ -25,6 +25,7 @@ public enum TileGimmickTypeEnum
     SlideWall, //ƒXƒ‰ƒCƒh‚·‚é•Ç
     Breakable, //‰ó‚ê‚é°
     Spring,    //‚Î‚Ë
+    Key, //Œ®
 
     MAX
 }

@@ -98,13 +98,15 @@ public class KeyManager : MonoBehaviour, IRespawnResettable
 
     public void ResetToRespawnState()
     {
-        if (!hasCapturedInitialState)
-        {
-            CaptureInitialState();
-        }
+        //if (!hasCapturedInitialState)
+        //{
+        //    CaptureInitialState();
+        //}
 
-        collectedCount = initialCollectedCount;
-        IsCompleted = initialIsCompleted;
+        //collectedCount = initialCollectedCount;
+        //IsCompleted = initialIsCompleted;
+
+
     }
 
 }
