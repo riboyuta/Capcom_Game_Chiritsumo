@@ -3,8 +3,9 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class SlideGimmick : MonoBehaviour, IRespawnResettable
 {
+
     [Header("Target")]
-    [SerializeField] private SwitchGimmick targetSwitch;
+    [SerializeField] private KeyManager keyManager;
 
     [Header("Slide")]
     [SerializeField] private Vector3 slideLocalDirection = Vector3.right;
@@ -23,30 +24,30 @@ public class SlideGimmick : MonoBehaviour, IRespawnResettable
     private Renderer[] visualRenderers;
     private bool[] initialRendererEnabledStates;
 
-    public void SetSwitch(SwitchGimmick sw)
-    {
-        targetSwitch = sw;
-    }
 
-    private void Awake()
+    private void Start()
     {
         initialLocalPosition = transform.localPosition;
         initialResetLocalPosition = transform.localPosition;
         myCollider = GetComponentInChildren<Collider>();
         visualRenderers = GetComponentsInChildren<Renderer>(true);
 
+ 
+
     }
 
     private void Update()
     {
-        if (targetSwitch == null)
-        {
-            return;
-        }
+    
+        //Debug.Log($"{name} World={transform.position} Local={transform.localPosition}");
 
         UpdateBlockedState();
 
-        bool shouldOpen = targetSwitch.IsPressed;
+        bool shouldOpen = keyManager != null && keyManager.IsCompleted;
+        if (shouldOpen) Debug.Log($"スライドウォール解放");
+
+
+
         float targetDistance = shouldOpen ? slideDistance : 0f;
         float nextDistance = Mathf.MoveTowards(currentDistance, targetDistance, slideSpeed * Time.deltaTime);
 
@@ -62,6 +63,10 @@ public class SlideGimmick : MonoBehaviour, IRespawnResettable
 
         currentDistance = nextDistance;
         transform.localPosition = initialLocalPosition + (slideLocalDirection.normalized * currentDistance);
+
+
+     
+
     }
 
     private void UpdateBlockedState()

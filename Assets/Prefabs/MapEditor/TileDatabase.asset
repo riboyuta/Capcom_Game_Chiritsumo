@@ -36,7 +36,7 @@ MonoBehaviour:
     icon: {fileID: 2800000, guid: 13e897e8bdb7c1b44bdc4d330d63ac86, type: 3}
   - tileID: Gimmick_KeyObject
     prefab: {fileID: 7927706965222493839, guid: 266b78d911a637a4ebabe76d650eac89, type: 3}
-    icon: {fileID: 2800000, guid: e641e7e43b6ceb146bf722a5b0e10e16, type: 3}
+    icon: {fileID: 2800000, guid: 7d1530168ed90b147a0c3c0d9870e1f8, type: 3}
   - tileID: Oneway_Platform
     prefab: {fileID: 62609154332294644, guid: 08325a80261266f46a7e6e94025fd970, type: 3}
     icon: {fileID: 2800000, guid: c5a3e5b7061ee9c459963638fd62769e, type: 3}
@@ -49,9 +49,9 @@ MonoBehaviour:
   - tileID: BreakbleFloor_Cube
     prefab: {fileID: 6453188548815068593, guid: d830d722a35b81e4da2faf9ae873965c, type: 3}
     icon: {fileID: 2800000, guid: 29bb897056df7214293a9fb07793e72f, type: 3}
-  - tileID: 
-    prefab: {fileID: 0}
-    icon: {fileID: 0}
+  - tileID: Gimmick_SlideWall
+    prefab: {fileID: 2298395400156925019, guid: 8e4a747c04766ec469c07deadef0c7ff, type: 3}
+    icon: {fileID: 2800000, guid: 25a519cea52e87c48ae8168245dc5bb0, type: 3}
   - tileID: 
     prefab: {fileID: 0}
     icon: {fileID: 0}
