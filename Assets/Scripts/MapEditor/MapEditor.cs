@@ -532,7 +532,7 @@ public class MapEditor : MonoBehaviour
 
             selecting = true;
             selectStart = GetGridPosition();
-            Debug.Log("範囲選択開始");
+            //Debug.Log("範囲選択開始");
 
            
         }
@@ -541,7 +541,7 @@ public class MapEditor : MonoBehaviour
         else if ((Input.GetKey(KeyCode.Space)) && selecting)
         {
             selectEnd = GetGridPosition();
-            Debug.Log("範囲選択中");
+            //Debug.Log("範囲選択中");
         }
 
         //離したらコピー
@@ -551,7 +551,7 @@ public class MapEditor : MonoBehaviour
 
             CopyTilesTemporary(selectStart, selectEnd);
 
-            Debug.Log("一時保存が完了しました");
+            //Debug.Log("一時保存が完了しました");
         }
 
 
