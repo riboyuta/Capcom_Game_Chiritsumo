@@ -250,7 +250,7 @@ MonoBehaviour:
       wallClimbDownSpeed: 6
       wallClimbInputThreshold: 0.8
       wallGrabJumpVerticalVelocity: 17
-      wallGrabJumpHorizontalLockTime: 0.16
+      wallGrabJumpHorizontalLockTime: 0.24
       wallGrabJumpReattachLockTime: 0.3
       useWallKick: 1
       allowWallKickWithoutHorizontalInput: 1
@@ -716,8 +716,8 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 5
-  m_Range: 7
+  m_Intensity: 7
+  m_Range: 3
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
