@@ -22,6 +22,9 @@ public sealed partial class PlayerController
         snapshot.velocity = velocity;
         snapshot.facing = facing;
 
+        // 影敵がプレイヤーの過去ダッシュを再現しているか判定するために使う
+        snapshot.isDashing = runtimeState.isDashing;
+
         // モデル表示用
         snapshot.animationSnapshot = CurrentAnimationSnapshot;
 
