@@ -189,7 +189,7 @@ public class MapLoader : MonoBehaviour
         string resourcePath = $"StreamingAssetsForUnityRoom/StreamingAssets/{mapFolder}/Stage_{stageNumber}";
         Debug.Log(resourcePath);
 
-        TextAsset jsonFile = Resources.Load<TextAsset>($"StreamingAssetsForUnityRoom/{mapFolder}/Stage_{stageNumber}");
+        TextAsset jsonFile = Resources.Load<TextAsset>($"StreamingAssetsForUnityRoom/StreamingAssets/{mapFolder}/Stage_{stageNumber}");
         Debug.Log(jsonFile);
         
         if (jsonFile == null)
