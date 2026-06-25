@@ -54,6 +54,12 @@ internal sealed class PlayerLedgeClimbSystem
         Bounds bounds = deps.CapsuleCollider.bounds;
         Vector3 wallDir = Vector3.right * side;
 
+        // 上方向へ壁登りした先でとげに触れるなら、崖検出より先に止める
+        if (HasSpikeBlockOnWallClimbPath(side))
+        {
+            return true;
+        }
+
         // 前方チェック
         Vector3 forwardCheckOrigin = bounds.center;
         forwardCheckOrigin.y += bounds.extents.y * 0.3f;
@@ -203,24 +209,69 @@ internal sealed class PlayerLedgeClimbSystem
         return false;
     }
 
-    // 崖の頂上にとげなどのハザードがあるか確認する。
+    // 崖乗り上げ後のプレイヤーCapsule範囲にとげがあるか確認する。
     private bool HasHazardAtLedgeTop(Vector3 ledgeTopPosition, int side)
     {
-        Vector3 checkPosition = ledgeTopPosition;
-        checkPosition.x += side * deps.Settings.Wall.LedgeClimbForwardOffset;
-        checkPosition.y += deps.Settings.Wall.LedgeClimbUpOffset;
+        Vector3 targetPosition = GetLedgeClimbTargetPosition(ledgeTopPosition, side);
+        return HasSpikeBlockInPlayerCapsuleAt(targetPosition);
+    }
 
-        float checkRadius = deps.CapsuleCollider.radius * 1.2f;
+    // 壁登りで上方向へ進んだ先にとげがあるか確認する。
+    private bool HasSpikeBlockOnWallClimbPath(int side)
+    {
+        Bounds bounds = deps.CapsuleCollider.bounds;
 
-        Collider[] hazards = Physics.OverlapSphere(
-            checkPosition,
+        float lookAheadDistance = Mathf.Max(
+            deps.Settings.Wall.LedgeDetectUpDistance,
+            deps.Settings.Wall.WallClimbUpSpeed * Time.fixedDeltaTime + 0.05f);
+
+        Vector3 checkCenter = bounds.center;
+        checkCenter.y += lookAheadDistance;
+
+        return HasSpikeBlockInPlayerCapsuleAt(checkCenter);
+    }
+
+    // 崖上がり完了後のプレイヤー中心座標を作る。
+    private Vector3 GetLedgeClimbTargetPosition(Vector3 ledgeTopPosition, int side)
+    {
+        Vector3 targetPosition = ledgeTopPosition;
+        targetPosition.x += side * deps.Settings.Wall.LedgeClimbForwardOffset;
+        targetPosition.y += deps.Settings.Wall.LedgeClimbUpOffset;
+        return targetPosition;
+    }
+
+    // 指定位置にプレイヤーCapsuleがあると仮定して、SpikeBlockと重なるか確認する。
+    private bool HasSpikeBlockInPlayerCapsuleAt(Vector3 capsuleCenter)
+    {
+        if (deps.CapsuleCollider == null)
+        {
+            return false;
+        }
+
+        Bounds currentBounds = deps.CapsuleCollider.bounds;
+
+        float radius = deps.CapsuleCollider.radius;
+        float halfCapsuleLineHeight = Mathf.Max(0f, currentBounds.extents.y - radius);
+
+        Vector3 bottom = capsuleCenter + Vector3.down * halfCapsuleLineHeight;
+        Vector3 top = capsuleCenter + Vector3.up * halfCapsuleLineHeight;
+
+        float checkRadius = radius * 1.05f;
+
+        int mask =
+            deps.Settings.Detection.GroundLayerMask |
+            deps.Settings.Detection.WallLayerMask;
+
+        Collider[] hits = Physics.OverlapCapsule(
+            bottom,
+            top,
             checkRadius,
-            deps.Settings.Detection.GroundLayerMask,
+            mask,
             QueryTriggerInteraction.Collide);
 
-        foreach (Collider col in hazards)
+        foreach (Collider hit in hits)
         {
-            if (col.GetComponent<SpikeBlock>() != null)
+            if (hit.GetComponentInParent<SpikeBlock>() != null)
             {
                 return true;
             }
@@ -237,9 +288,7 @@ internal sealed class PlayerLedgeClimbSystem
         deps.RuntimeState.ledgeClimbStartPosition = deps.Rb.position;
 
         int side = deps.RuntimeState.wallGrabSide;
-        Vector3 targetPosition = ledgeTopPosition;
-        targetPosition.x += side * deps.Settings.Wall.LedgeClimbForwardOffset;
-        targetPosition.y += deps.Settings.Wall.LedgeClimbUpOffset;
+        Vector3 targetPosition = GetLedgeClimbTargetPosition(ledgeTopPosition, side);
 
         deps.RuntimeState.ledgeClimbTargetPosition = targetPosition;
 

@@ -15,6 +15,9 @@ public struct PlayerShadowSnapshot
     // 左右の向き（-1: 左、+1: 右）
     public int facing;
 
+    // 記録時点でプレイヤーがダッシュ中だったか。
+    public bool isDashing;
+
     // モデル表示用。
     // ShadowChaserModelView はこれを読んで、プレイヤーと同じアニメーション状態を遅延再生する。
     internal PlayerAnimationSnapshot animationSnapshot;

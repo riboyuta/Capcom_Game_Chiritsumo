@@ -330,6 +330,9 @@ public sealed class PlayerShadowRecorder : MonoBehaviour
 
         result.facing = useA ? a.facing : b.facing;
 
+        // ダッシュ中かどうかは離散状態なので、近い snapshot を採用する。
+        result.isDashing = useA ? a.isDashing : b.isDashing;
+
         // 見た目状態は補間しない。
         // Dash と Idle の中間状態のようなものは存在しないため、近い snapshot を採用する。
         result.animationSnapshot = useA

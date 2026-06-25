@@ -229,7 +229,7 @@ public sealed class HandChaserMovement : MonoBehaviour
 
         rb.MovePosition(next);
 
-        Debug.Log($"[HandChaserMovement] after MovePosition rb.position={rb.position} transform.position={transform.position}", this);
+        //Debug.Log($"[HandChaserMovement] after MovePosition rb.position={rb.position} transform.position={transform.position}", this);
     }
 
     // ──────────────────────────────────────────
