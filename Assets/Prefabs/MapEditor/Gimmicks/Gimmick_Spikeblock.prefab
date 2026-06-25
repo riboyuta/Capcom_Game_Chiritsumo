@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7183462655698018878}
   - component: {fileID: 4987629189240656040}
   - component: {fileID: 209280637686535301}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Gimmick_Spikeblock
   m_TagString: Untagged
   m_Icon: {fileID: 0}
