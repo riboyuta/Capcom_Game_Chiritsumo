@@ -186,7 +186,7 @@ public class MapLoader : MonoBehaviour
 
 #if UNITY_WEBGL && !UNITY_EDITOR
 
-        string resourcePath = $"StreamingAssetsForUnityRoom/{mapFolder}/Stage_{stageNumber}";
+        string resourcePath = $"StreamingAssetsForUnityRoom/StreamingAssets/{mapFolder}/Stage_{stageNumber}";
         Debug.Log(resourcePath);
 
         TextAsset jsonFile = Resources.Load<TextAsset>($"StreamingAssetsForUnityRoom/{mapFolder}/Stage_{stageNumber}");
