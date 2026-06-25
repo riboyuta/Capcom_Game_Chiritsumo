@@ -120,8 +120,8 @@ Material:
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _RimAlpha: 0.1
-    - _RimIntensity: 5
-    - _RimPower: 5
+    - _RimIntensity: 4
+    - _RimPower: 100
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
