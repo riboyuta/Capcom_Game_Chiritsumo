@@ -250,7 +250,7 @@ MonoBehaviour:
       wallClimbDownSpeed: 6
       wallClimbInputThreshold: 0.8
       wallGrabJumpVerticalVelocity: 17
-      wallGrabJumpHorizontalLockTime: 0.08
+      wallGrabJumpHorizontalLockTime: 0.16
       wallGrabJumpReattachLockTime: 0.3
       useWallKick: 1
       allowWallKickWithoutHorizontalInput: 1
@@ -758,7 +758,7 @@ Light:
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
-  m_BounceIntensity: 1
+  m_BounceIntensity: 0
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
@@ -1277,7 +1277,7 @@ MonoBehaviour:
   useEmissionColorGradient: 1
   emissionColorGradient:
     serializedVersion: 2
-    key0: {r: 0.82, g: 0.95, b: 1, a: 1}
+    key0: {r: 0.56924176, g: 0.8647284, b: 0.9811321, a: 1}
     key1: {r: 0.08, g: 0.46, b: 1, a: 1}
     key2: {r: 0.42, g: 0.18, b: 1, a: 0}
     key3: {r: 0, g: 0, b: 0, a: 0}
@@ -1293,7 +1293,7 @@ MonoBehaviour:
     ctime5: 0
     ctime6: 0
     ctime7: 0
-    atime0: 0
+    atime0: 32768
     atime1: 65535
     atime2: 0
     atime3: 0
@@ -1305,7 +1305,7 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 4
     m_NumAlphaKeys: 2
-  emissionIntensity: 4
+  emissionIntensity: 2
   emissionIntensityCurve:
     serializedVersion: 2
     m_Curve:
