@@ -258,6 +258,21 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         ResetToIdleState();
     }
 
+    public void RequestBreakWallRebound()
+    {
+        if (!isActivated || isDisabled)
+        {
+            return;
+        }
+
+        if (state != SonarChargerState.Charge)
+        {
+            return;
+        }
+
+        StartRebound();
+    }
+
     // 現在の状態をリスポーン基準として記録する（2 回目以降は無視）
     public void CaptureInitialState()
     {
@@ -299,21 +314,6 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         // startActive が有効ならリスポーン後に再起動する
         if (Settings.startActive)
             BeginChase();
-    }
-
-    public void RequestBreakWallRebound()
-    {
-        if (!isActivated || isDisabled)
-        {
-            return;
-        }
-
-        if (state != SonarChargerState.Charge)
-        {
-            return;
-        }
-
-        StartRebound();
     }
 
     // =========================================================

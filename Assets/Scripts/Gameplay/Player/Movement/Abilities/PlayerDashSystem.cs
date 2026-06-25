@@ -8,6 +8,13 @@ internal sealed class PlayerDashSystem
     // ダッシュバッファタイマー。
     private float dashBufferTimer;
 
+    private float breakWallReboundTimer;
+    private Vector3 breakWallReboundVelocity;
+
+    private const float BreakWallReboundDuration = 0.12f;
+
+    internal bool IsBreakWallRebounding => breakWallReboundTimer > 0.0f;
+
     // HoodRecover 要求を PlayerModelView が拾えるように短時間保持する。
     private float hoodRecoverRequestHoldTimer;
 
@@ -36,6 +43,9 @@ internal sealed class PlayerDashSystem
     {
         dashBufferTimer = 0f;
         hoodRecoverRequestHoldTimer = 0f;
+
+        breakWallReboundTimer = 0f;
+        breakWallReboundVelocity = Vector3.zero;
 
         deps.RuntimeState.justDashStartedThisFrame = false;
         deps.RuntimeState.requestHoodRecoverThisFrame = false;
@@ -527,11 +537,6 @@ internal sealed class PlayerDashSystem
             return;
         }
 
-        if (!deps.RuntimeState.isDashing)
-        {
-            return;
-        }
-
         reboundDirection.z = 0.0f;
 
         if (reboundDirection.sqrMagnitude <= 0.0001f)
@@ -554,14 +559,10 @@ internal sealed class PlayerDashSystem
 
         reboundDirection.Normalize();
 
-        // ダッシュを特殊終了する。
         deps.RuntimeState.isDashing = false;
         deps.RuntimeState.dashTimer = 0.0f;
         deps.FrameRequests.dashRequested = false;
         dashBufferTimer = 0.0f;
-
-        // ストンピングなどの下降固定と競合しないようにする。
-        deps.FrameRequests.wasExternallyLaunchedThisFrame = true;
 
         Vector3 velocity = reboundDirection * Mathf.Max(0.0f, reboundSpeed);
 
@@ -570,7 +571,43 @@ internal sealed class PlayerDashSystem
             velocity.y = Mathf.Max(velocity.y, reboundUpSpeed);
         }
 
-        deps.Rb.linearVelocity = velocity;
+        breakWallReboundVelocity = velocity;
+        breakWallReboundTimer = BreakWallReboundDuration;
+
+        deps.FrameRequests.wasExternallyLaunchedThisFrame = true;
+        deps.Rb.linearVelocity = breakWallReboundVelocity;
+    }
+
+    internal void UpdateBreakWallReboundTimer(float deltaTime)
+    {
+        if (breakWallReboundTimer <= 0.0f)
+        {
+            return;
+        }
+
+        breakWallReboundTimer = Mathf.Max(
+            0.0f,
+            breakWallReboundTimer - Mathf.Max(0.0f, deltaTime));
+
+        if (breakWallReboundTimer <= 0.0f)
+        {
+            breakWallReboundVelocity = Vector3.zero;
+        }
+    }
+
+    internal void ApplyBreakWallReboundVelocity()
+    {
+        if (breakWallReboundTimer <= 0.0f)
+        {
+            return;
+        }
+
+        if (deps.Rb == null)
+        {
+            return;
+        }
+
+        deps.Rb.linearVelocity = breakWallReboundVelocity;
     }
 
     // ダッシュ終了処理を実行する。

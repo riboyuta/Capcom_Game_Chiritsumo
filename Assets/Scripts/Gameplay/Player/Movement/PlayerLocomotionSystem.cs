@@ -19,6 +19,8 @@ internal sealed class PlayerLocomotionSystem
     internal float DashBufferTimer => coordinator.DashBufferTimer;
     internal bool JustJumpedThisFrame => coordinator.JustJumpedThisFrame;
     internal bool JustWallJumpedThisFrame => coordinator.JustWallJumpedThisFrame;
+    internal bool IsBreakWallRebounding => coordinator.IsBreakWallRebounding;
+
 
     // LocomotionSystem の依存を受け取り、内部でコーディネーターを構築する。
     internal PlayerLocomotionSystem(
@@ -79,6 +81,7 @@ internal sealed class PlayerLocomotionSystem
     internal void UpdateFacingFromMoveInput() => coordinator.UpdateFacingFromMoveInput();
     internal void UpdateWallJumpLockTimer(float deltaTime) => coordinator.UpdateWallJumpLockTimer(deltaTime);
     internal void UpdateDashTimers(float deltaTime) => coordinator.UpdateDashTimers(deltaTime);
+    internal void UpdateBreakWallReboundTimer(float deltaTime) => coordinator.UpdateBreakWallReboundTimer(deltaTime);
     internal void UpdateDashBufferTimer(float deltaTime) => coordinator.UpdateDashBufferTimer(deltaTime);
     internal void UpdateGroundDashCooldownTimer(float deltaTime) => coordinator.UpdateGroundDashCooldownTimer(deltaTime);
     internal void HandleGroundDashCooldownOnLanding() => coordinator.HandleGroundDashCooldownOnLanding();
@@ -138,6 +141,11 @@ internal sealed class PlayerLocomotionSystem
             reboundDirection,
             reboundSpeed,
             reboundUpSpeed);
+    }
+
+    internal void ApplyBreakWallReboundVelocity()
+    {
+        coordinator.ApplyBreakWallReboundVelocity();
     }
 
     // ============================================================

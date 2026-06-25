@@ -53,6 +53,9 @@ internal sealed class PlayerLocomotionCoordinator
     // 見た目更新用の壁ジャンプ単発フラグ。
     internal bool JustWallJumpedThisFrame => jumpSystem.JustWallJumpedThisFrame;
 
+    // 見た目更新用のブレイクウォールリバウンド単発フラグ。
+    internal bool IsBreakWallRebounding => dashSystem.IsBreakWallRebounding;
+
     // LocomotionCoordinator の依存を受け取るコンストラクタ。
     internal PlayerLocomotionCoordinator(
         PlayerRuntimeState runtimeState,
@@ -170,6 +173,11 @@ internal sealed class PlayerLocomotionCoordinator
     internal void UpdateDashTimers(float deltaTime)
     {
         dashSystem.UpdateDashTimers(deltaTime, () => dashSystem.EndDash(() => jumpSystem.SetDashEndJumpCutLockTimer()));
+    }
+
+    internal void UpdateBreakWallReboundTimer(float deltaTime)
+    {
+        dashSystem.UpdateBreakWallReboundTimer(deltaTime);
     }
 
     // ダッシュ入力バッファタイマーを更新する。
@@ -315,6 +323,11 @@ internal sealed class PlayerLocomotionCoordinator
             reboundDirection,
             reboundSpeed,
             reboundUpSpeed);
+    }
+
+    internal void ApplyBreakWallReboundVelocity()
+    {
+        dashSystem.ApplyBreakWallReboundVelocity();
     }
 
     // ダッシュ終了後の接地スナップ可否を判定する。

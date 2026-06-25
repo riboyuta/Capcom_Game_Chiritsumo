@@ -16,7 +16,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         Idle,       // 非活性
         Appearing,  // 出現演出中
         Following,  // 追跡中
-        Rebounding, 
+        Rebounding, // 壁破壊後の跳ね返り中
     }
 
     // =========================================================
@@ -222,15 +222,12 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
     {
         StopAppearCoroutine();
 
-        state                  = ShadowChaserState.Idle;
+        state = ShadowChaserState.Idle;
         hasLastAppliedSnapshot = false;
-        hasSpawnPosition       = false;
-        appearNormalizedTime   = 0f;
+        hasSpawnPosition = false;
+        appearNormalizedTime = 0f;
 
-        breakWallReboundTimer = 0.0f;
-        breakWallReboundDuration = 0.0f;
-        breakWallReboundStartPosition = Vector3.zero;
-        breakWallReboundEndPosition = Vector3.zero;
+        ResetBreakWallReboundState();
 
         if (hasCapturedInitialState)
         {
@@ -249,6 +246,14 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             transform.position = defaultPosition;
             transform.rotation = defaultRotation;
         }
+    }
+
+    private void ResetBreakWallReboundState()
+    {
+        breakWallReboundTimer = 0.0f;
+        breakWallReboundDuration = 0.0f;
+        breakWallReboundStartPosition = Vector3.zero;
+        breakWallReboundEndPosition = Vector3.zero;
     }
 
     // 指定スポーン位置で出現演出を開始し、追跡を有効化する
@@ -278,10 +283,12 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
     {
         StopAppearCoroutine();
 
-        state                  = ShadowChaserState.Idle;
+        state = ShadowChaserState.Idle;
         hasLastAppliedSnapshot = false;
-        hasSpawnPosition       = false;
-        appearNormalizedTime   = 0f;
+        hasSpawnPosition = false;
+        appearNormalizedTime = 0f;
+
+        ResetBreakWallReboundState();
     }
 
     public bool IsActive()
@@ -548,9 +555,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             return;
         }
 
-        breakWallReboundTimer = 0.0f;
-        breakWallReboundDuration = 0.0f;
-
+        ResetBreakWallReboundState();
         state = ShadowChaserState.Following;
     }
 
