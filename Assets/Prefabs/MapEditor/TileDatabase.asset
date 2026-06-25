@@ -40,18 +40,18 @@ MonoBehaviour:
   - tileID: Oneway_Platform
     prefab: {fileID: 62609154332294644, guid: 08325a80261266f46a7e6e94025fd970, type: 3}
     icon: {fileID: 2800000, guid: c5a3e5b7061ee9c459963638fd62769e, type: 3}
-  - tileID: Gimmick_Springpad_Left
-    prefab: {fileID: 3328147863407178414, guid: 6cc9b7b5825a3c440b4a32a2bd5ec2ed, type: 3}
-    icon: {fileID: 2800000, guid: d8154c13a0da13640b68c59c9bb69102, type: 3}
-  - tileID: Gimmick_Springpad_Right
-    prefab: {fileID: 1266883591494959235, guid: f48109c2c825edf49a956d6f5ce1b30b, type: 3}
-    icon: {fileID: 2800000, guid: d8154c13a0da13640b68c59c9bb69102, type: 3}
+  - tileID: Gimmick_Spikeblock_R
+    prefab: {fileID: 6316622782570005443, guid: c4a5482301ad34542aea8ce6bb070009, type: 3}
+    icon: {fileID: 2800000, guid: ef0dac99ff7c969429f91210df7e7dc2, type: 3}
+  - tileID: Gimmick_Spikeblock_L
+    prefab: {fileID: 6316622782570005443, guid: aafa898118b8cdb4aba26363dc67c98b, type: 3}
+    icon: {fileID: 2800000, guid: ef0dac99ff7c969429f91210df7e7dc2, type: 3}
   - tileID: BreakbleFloor_Cube
     prefab: {fileID: 6453188548815068593, guid: d830d722a35b81e4da2faf9ae873965c, type: 3}
     icon: {fileID: 2800000, guid: 29bb897056df7214293a9fb07793e72f, type: 3}
-  - tileID: 
-    prefab: {fileID: 0}
-    icon: {fileID: 0}
+  - tileID: Gimmick_Spikeblock_Up
+    prefab: {fileID: 6316622782570005443, guid: f523070f527bbd84e84ae7fd89484076, type: 3}
+    icon: {fileID: 2800000, guid: 90f6e3cb8e001dd40a80c5594175c2a7, type: 3}
   - tileID: 
     prefab: {fileID: 0}
     icon: {fileID: 0}
