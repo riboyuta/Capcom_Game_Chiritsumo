@@ -29,9 +29,6 @@ public sealed class CollectibleItem : MonoBehaviour
     private Collider triggerCollider;
     private Renderer[] visualRenderers = System.Array.Empty<Renderer>();
 
-    // 初期表示状態を一度だけ記録するためのフラグ
-
-    private bool hasCapturedInitialVisibility;
     private bool initialColliderEnabled;
     private bool[] initialRendererEnabledStates = System.Array.Empty<bool>();
     private string cachedFullId;
@@ -48,7 +45,6 @@ public sealed class CollectibleItem : MonoBehaviour
     {
         get
         {
-            RebuildFullId();
             return cachedFullId;
         }
     }
@@ -62,9 +58,6 @@ public sealed class CollectibleItem : MonoBehaviour
 
     private void OnEnable()
     {
-        EnsureRuntimeReferences();
-        ResolveSessionManager();
-
         if (sessionManager != null)
         {
             sessionManager.RegisterItem(this);
@@ -179,10 +172,6 @@ public sealed class CollectibleItem : MonoBehaviour
 
     private void CaptureInitialVisibility()
     {
-        if (hasCapturedInitialVisibility)
-        {
-            return;
-        }
 
         initialColliderEnabled = triggerCollider != null && triggerCollider.enabled;
         initialRendererEnabledStates = new bool[visualRenderers.Length];
@@ -192,7 +181,6 @@ public sealed class CollectibleItem : MonoBehaviour
             initialRendererEnabledStates[i] = visualRenderers[i] != null && visualRenderers[i].enabled;
         }
 
-        hasCapturedInitialVisibility = true;
     }
 
     private void HideForCollectedState()
