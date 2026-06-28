@@ -850,7 +850,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1754806583867596382}
-  - component: {fileID: 8611083785312970239}
+  - component: {fileID: 156603835944095466}
   - component: {fileID: 17574460292547223}
   - component: {fileID: 1482090338576606591}
   - component: {fileID: 601094815138226411}
@@ -870,14 +870,14 @@ Transform:
   m_GameObject: {fileID: 8700103862714983694}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 11, y: 5.5, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3936201385556345363}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &8611083785312970239
-BoxCollider:
+--- !u!135 &156603835944095466
+SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -895,7 +895,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.2, y: 2, z: 1}
+  m_Radius: 1.5
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &17574460292547223
 MonoBehaviour:
@@ -911,7 +911,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BreakActionHitbox
   actionType: 0
   power: 1
-  hitboxCollider: {fileID: 8611083785312970239}
+  hitboxCollider: {fileID: 156603835944095466}
   disableOnAwake: 1
   useManualOverlapCheck: 1
   manualOverlapLayerMask:
@@ -932,9 +932,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BreakActionHitboxStateBinder
   hitbox: {fileID: 17574460292547223}
-  stateSource: 0
+  stateSource: 1
   playerController: {fileID: 0}
-  sonarChargerEnemy: {fileID: 0}
+  sonarChargerEnemy: {fileID: 3366809900446677861}
   shadowChaserEnemy: {fileID: 0}
   enableDebugLog: 0
 --- !u!114 &601094815138226411
