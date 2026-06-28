@@ -76,10 +76,6 @@ public sealed class CollectibleItem : MonoBehaviour
         }
     }
 
-    private void OnValidate()
-    {
-        RebuildFullId();
-    }
 
     private void OnTriggerEnter(Collider other)
     {
