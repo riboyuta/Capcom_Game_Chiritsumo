@@ -246,6 +246,37 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   allowBlock: 1
+--- !u!1 &622891881
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 622891882}
+  m_Layer: 0
+  m_Name: MapRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &622891882
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 622891881}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 92.48927, y: 61.96935, z: -0.00002}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &687695115
 GameObject:
   m_ObjectHideFlags: 0
@@ -633,13 +664,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapEditor
   stageNumber: 2
-  mapFolder: Scenes\TestPlayScenes\IkedaScenes\IkedaMap\DebugMapScenes\DebugMapEditorScene\MapData
+  mapFolder: Scenes/TestPlayScenes/IkedaScenes/IkedaMap/DebugMapScenes/DebugMapEditorScene/MapData
   gridSizeType: 0
   chunkDrawDistance: 1
   comment: "\uFF10\uFF1D \u901A\u5E38\u30D6\u30ED\u30C3\u30AF\n\uFF11\uFF1D\n\uFF12\uFF1D\n\uFF13\uFF1D\u30B9\u30A4\u30C3\u30C1\uFF08\u30AE\u30DF\u30C3\u30AF\uFF09\n\uFF14\uFF1D\u6249\uFF08\u30AE\u30DF\u30C3\u30AF\uFF09\n\uFF15\uFF1D\u5D29\u308C\u5E8A\uFF08\u30AE\u30DF\u30C3\u30AF\uFF09\n\uFF16\uFF1D\n\uFF17\uFF1D\n\uFF18\uFF1D\n\uFF19\uFF1D\n"
   CSMapeditorTestProfile: {fileID: 11400000, guid: 6c1cd456beb846745ac84239f7d237bd, type: 2}
   tileDatabase: {fileID: 11400000, guid: 512f0d92b1b43fb49a1833d2001dd034, type: 2}
-  mapRoot: {fileID: 0}
+  mapRoot: {fileID: 622891882}
   chunkSize: 16
 --- !u!4 &1470899798
 Transform:
@@ -711,3 +742,4 @@ SceneRoots:
   - {fileID: 473942900}
   - {fileID: 1470899798}
   - {fileID: 1886818040}
+  - {fileID: 622891882}
