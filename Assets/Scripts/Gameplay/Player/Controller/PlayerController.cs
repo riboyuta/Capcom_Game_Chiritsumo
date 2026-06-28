@@ -126,6 +126,27 @@ public sealed partial class PlayerController : MonoBehaviour
         return locomotionSystem != null && locomotionSystem.TryRefillDash(reason);
     }
 
+    public void RequestBreakWallDashRebound(
+    Vector3 reboundDirection,
+    float reboundSpeed,
+    float reboundUpSpeed)
+    {
+        if (IsActionLocked || IsDeathSequencePlaying)
+        {
+            return;
+        }
+
+        if (IsExternallyControlled)
+        {
+            return;
+        }
+
+        locomotionSystem?.ApplyBreakWallDashRebound(
+            reboundDirection,
+            reboundSpeed,
+            reboundUpSpeed);
+    }
+
     // Facade 向け最小 bridge: 外部制御受理可否。
     internal bool CanAcceptExternalControl(in PlayerExternalControlRequest request)
     {
@@ -593,8 +614,12 @@ internal bool CanAcceptFixedLaunch(in PlayerFixedLaunchRequest request)
         // ダッシュの継続時間と再入力ロックを更新する。
         locomotionSystem.UpdateDashTimers(deltaTime);
 
+        // 壁破壊跳ね返りの維持時間を更新する。
+        locomotionSystem.UpdateBreakWallReboundTimer(deltaTime);
+
         // ダッシュ入力バッファタイマーを更新する。
         locomotionSystem.UpdateDashBufferTimer(deltaTime);
+
         if (authority == PlayerAuthority.ExternalControl)
         {
             locomotionSystem.EndStomp();
@@ -608,8 +633,18 @@ internal bool CanAcceptFixedLaunch(in PlayerFixedLaunchRequest request)
             FinalizeVisualState(previousVelocityY);
             return;
         }
+
+        if (locomotionSystem.IsBreakWallRebounding)
+        {
+            locomotionSystem.ApplyBreakWallReboundVelocity();
+
+            UpdateAudioEvents();
+            UpdateVibrationEvents();
+            FinalizeVisualState(previousVelocityY);
+            return;
+        }
+
         locomotionSystem.TryStartStomp();
-        // ダッシュ開始条件を満たす場合は開始する。
         locomotionSystem.TryStartDash();
 
         // ダッシュ中は専用速度を最優先し、通常の縦処理を通さない。

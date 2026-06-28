@@ -102,6 +102,7 @@ Transform:
   m_Children:
   - {fileID: 6649581564321489266}
   - {fileID: 2659245112526274608}
+  - {fileID: 3642412400944405679}
   m_Father: {fileID: 6148093774107944133}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!136 &3289264686410759214
@@ -672,6 +673,123 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!1 &5834280061633274935
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3642412400944405679}
+  - component: {fileID: 3452558799114534969}
+  - component: {fileID: 2491720806909923206}
+  - component: {fileID: 2830013224778442769}
+  - component: {fileID: 3238503723535482653}
+  m_Layer: 9
+  m_Name: DashBreakHitbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3642412400944405679
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5834280061633274935}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4177424851138507442}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &3452558799114534969
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5834280061633274935}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.2, y: 2, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2491720806909923206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5834280061633274935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b721866747f9874186eca44536591b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakActionHitbox
+  actionType: 0
+  power: 1
+  hitboxCollider: {fileID: 3452558799114534969}
+  disableOnAwake: 1
+  useManualOverlapCheck: 1
+  manualOverlapLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  manualOverlapBufferSize: 16
+  syncTransformsBeforeManualOverlap: 1
+--- !u!114 &2830013224778442769
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5834280061633274935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d758862b53579344db875aca70a53748, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakActionHitboxStateBinder
+  hitbox: {fileID: 2491720806909923206}
+  stateSource: 0
+  playerController: {fileID: 9145140670336257411}
+  sonarChargerEnemy: {fileID: 0}
+  shadowChaserEnemy: {fileID: 0}
+  enableDebugLog: 0
+--- !u!114 &3238503723535482653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5834280061633274935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a63dfa208193e6e449438725c43fe73c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakActionImpactResponder
+  hitbox: {fileID: 2491720806909923206}
+  playerController: {fileID: 9145140670336257411}
+  sonarChargerEnemy: {fileID: 0}
+  shadowChaserEnemy: {fileID: 0}
+  playerReboundSpeed: 13
+  playerReboundUpSpeed: 4
+  shadowReboundDistance: 0.45
+  shadowReboundDuration: 0.12
+  enableDebugLog: 0
 --- !u!1 &8365763881969472607
 GameObject:
   m_ObjectHideFlags: 0
