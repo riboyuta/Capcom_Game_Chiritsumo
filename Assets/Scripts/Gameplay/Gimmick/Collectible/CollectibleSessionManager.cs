@@ -4,6 +4,10 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class CollectibleSessionManager : MonoBehaviour
 {
+    // -----------------------------------------------------------------------------
+    // Fields
+    // -----------------------------------------------------------------------------
+
     [Header("参照: プレイヤー")]
     [Tooltip("死亡受理イベントを購読するPlayerFacadeです。未設定の場合はシーン内から実行時に検索します。")]
     [SerializeField] private PlayerFacade playerFacade;
@@ -20,6 +24,9 @@ public sealed class CollectibleSessionManager : MonoBehaviour
     private readonly HashSet<string> temporaryCollectedIds = new HashSet<string>();
     private readonly List<CollectibleItem> registeredItems = new List<CollectibleItem>();
 
+    // -----------------------------------------------------------------------------
+    // Unity Lifecycle
+    // -----------------------------------------------------------------------------
 
     private void Awake()
     {
@@ -36,6 +43,10 @@ public sealed class CollectibleSessionManager : MonoBehaviour
     {
         UnsubscribeDeathEvent();
     }
+
+    // -----------------------------------------------------------------------------
+    // Public API
+    // -----------------------------------------------------------------------------
 
     public bool IsTemporarilyCollected(string fullId)
     {
@@ -114,7 +125,39 @@ public sealed class CollectibleSessionManager : MonoBehaviour
         return true;
     }
 
+    // -----------------------------------------------------------------------------
+    // Event Handlers
+    // -----------------------------------------------------------------------------
 
+    private void OnPlayerDeathAccepted(PlayerDeathCause deathCause)
+    {
+        if (temporaryCollectedIds.Count <= 0)
+        {
+            if (enableDebugLog)
+            {
+                Debug.Log($"[Collectible] 死亡リセットしました。仮取得はありません。cause={deathCause}", this);
+            }
+
+            return;
+        }
+
+        string discardedIds = string.Join(", ", temporaryCollectedIds);
+        int discardedCount = temporaryCollectedIds.Count;
+
+        temporaryCollectedIds.Clear();
+        RefreshRegisteredItems();
+
+        if (enableDebugLog)
+        {
+            Debug.Log(
+                $"[Collectible] 死亡したため仮取得を破棄しました。count={discardedCount}, ids={discardedIds}",
+                this);
+        }
+    }
+
+    // -----------------------------------------------------------------------------
+    // Main Logic
+    // -----------------------------------------------------------------------------
 
     private void ResolveReferences()
     {
@@ -159,32 +202,6 @@ public sealed class CollectibleSessionManager : MonoBehaviour
             playerFacade.DeathAccepted -= OnPlayerDeathAccepted;
         }
 
-    }
-
-    private void OnPlayerDeathAccepted(PlayerDeathCause deathCause)
-    {
-        if (temporaryCollectedIds.Count <= 0)
-        {
-            if (enableDebugLog)
-            {
-                Debug.Log($"[Collectible] 死亡リセットしました。仮取得はありません。cause={deathCause}", this);
-            }
-
-            return;
-        }
-
-        string discardedIds = string.Join(", ", temporaryCollectedIds);
-        int discardedCount = temporaryCollectedIds.Count;
-
-        temporaryCollectedIds.Clear();
-        RefreshRegisteredItems();
-
-        if (enableDebugLog)
-        {
-            Debug.Log(
-                $"[Collectible] 死亡したため仮取得を破棄しました。count={discardedCount}, ids={discardedIds}",
-                this);
-        }
     }
 
     private void RefreshRegisteredItems()

@@ -9,6 +9,10 @@ using UnityEngine;
 
 public sealed class CollectibleItem : MonoBehaviour
 {
+    // -----------------------------------------------------------------------------
+    // Fields
+    // -----------------------------------------------------------------------------
+
     [Header("識別ID")]
     [Tooltip("収集IDのステージ部分です。v1ではInspectorで手入力し、例: Stage_1 のように一意に管理します。")]
     [SerializeField] private string stageId = "Stage_1";
@@ -39,15 +43,9 @@ public sealed class CollectibleItem : MonoBehaviour
     // stageId / roomId / localId から生成した収集アイテム識別ID。
     private string cachedFullId;
 
-    public string StageId => stageId;
-    public string RoomId => roomId;
-    public string LocalId => localId;
-    public bool HasValidId =>
-        !string.IsNullOrWhiteSpace(stageId)
-        && !string.IsNullOrWhiteSpace(roomId)
-        && !string.IsNullOrWhiteSpace(localId);
-
-
+    // -----------------------------------------------------------------------------
+    // Unity Lifecycle
+    // -----------------------------------------------------------------------------
 
     private void Awake()
     {
@@ -75,6 +73,40 @@ public sealed class CollectibleItem : MonoBehaviour
         }
     }
 
+    // -----------------------------------------------------------------------------
+    // Public API
+    // -----------------------------------------------------------------------------
+
+    public string StageId => stageId;
+    public string RoomId => roomId;
+    public string LocalId => localId;
+    public bool HasValidId =>
+        !string.IsNullOrWhiteSpace(stageId)
+        && !string.IsNullOrWhiteSpace(roomId)
+        && !string.IsNullOrWhiteSpace(localId);
+
+    public string FullId
+    {
+        get
+        {
+            return cachedFullId;
+        }
+    }
+
+    public void ApplyCollectedState(bool isCollected)
+    {
+        if (isCollected)
+        {
+            HideForCollectedState();
+            return;
+        }
+
+        RestoreInitialVisibility();
+    }
+
+    // -----------------------------------------------------------------------------
+    // Event Handlers
+    // -----------------------------------------------------------------------------
 
     private void OnTriggerEnter(Collider other)
     {
@@ -97,24 +129,9 @@ public sealed class CollectibleItem : MonoBehaviour
         sessionManager.TryTemporarilyCollect(this);
     }
 
-    public string FullId
-    {
-        get
-        {
-            return cachedFullId;
-        }
-    }
-
-    public void ApplyCollectedState(bool isCollected)
-    {
-        if (isCollected)
-        {
-            HideForCollectedState();
-            return;
-        }
-
-        RestoreInitialVisibility();
-    }
+    // -----------------------------------------------------------------------------
+    // Main Logic
+    // -----------------------------------------------------------------------------
 
     private void EnsureRuntimeReferences()
     {
@@ -141,11 +158,6 @@ public sealed class CollectibleItem : MonoBehaviour
     private void RebuildFullId()
     {
         cachedFullId = $"{NormalizeIdPart(stageId)}/{NormalizeIdPart(roomId)}/{NormalizeIdPart(localId)}";
-    }
-
-    private static string NormalizeIdPart(string idPart)
-    {
-        return string.IsNullOrWhiteSpace(idPart) ? string.Empty : idPart.Trim();
     }
 
     private void CaptureInitialVisibility()
@@ -195,5 +207,14 @@ public sealed class CollectibleItem : MonoBehaviour
                 visualRenderers[i].enabled = initialRendererEnabledStates[i];
             }
         }
+    }
+
+    // -----------------------------------------------------------------------------
+    // Query Helpers
+    // -----------------------------------------------------------------------------
+
+    private static string NormalizeIdPart(string idPart)
+    {
+        return string.IsNullOrWhiteSpace(idPart) ? string.Empty : idPart.Trim();
     }
 }

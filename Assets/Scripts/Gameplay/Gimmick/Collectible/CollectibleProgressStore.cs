@@ -4,8 +4,16 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class CollectibleProgressStore : MonoBehaviour
 {
+    // -----------------------------------------------------------------------------
+    // Fields
+    // -----------------------------------------------------------------------------
+
     // 永続保存せず、同じステージプレイ中だけ保存済みIDを保持する。
     private readonly HashSet<string> savedIds = new HashSet<string>();
+
+    // -----------------------------------------------------------------------------
+    // Public API
+    // -----------------------------------------------------------------------------
 
     public IReadOnlyCollection<string> SavedIds => savedIds;
 
