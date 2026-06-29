@@ -327,6 +327,7 @@ private void ResolveReferences()
 {
 }
 ```
+---
 
 ## Class Responsibility Comment Rule
 
@@ -340,6 +341,8 @@ Use 1-3 lines to describe:
 
 For very small classes, one line is enough.
 
+Place the comment below class-level attributes and immediately above the class declaration.
+
 Keep the comment as a class title, not a method-by-method explanation.
 
 Example:
@@ -352,7 +355,7 @@ public sealed class CollectibleItem : MonoBehaviour
 {
 }
 ```
-
+---
 
 ## Class Member Ordering Rule
 
