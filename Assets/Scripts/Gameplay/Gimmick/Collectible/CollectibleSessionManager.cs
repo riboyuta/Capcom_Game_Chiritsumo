@@ -13,38 +13,43 @@ public sealed class CollectibleSessionManager : MonoBehaviour
     [SerializeField] private CollectibleProgressStore progressStore;
 
     [Header("デバッグ")]
-    [Tooltip("仮取得、死亡破棄、参照不足をDebug.Logへ出力するかを設定します。")]
+    [Tooltip("仮取得、死亡破棄、をDebug.Logへ出力するかを設定します。")]
     [SerializeField] private bool enableDebugLog = true;
 
     // 現在の部屋セッション中に取ったが、まだ部屋突破で確定していないID。
     private readonly HashSet<string> temporaryCollectedIds = new HashSet<string>();
     private readonly List<CollectibleItem> registeredItems = new List<CollectibleItem>();
 
-    private bool isDeathEventSubscribed;
-    private bool hasWarnedMissingPlayerFacade;
 
     private void Awake()
     {
         ResolveReferences();
     }
 
-    private void OnEnable()
-    {
-        ResolveReferences();
-        SubscribeDeathEventIfNeeded();
-        RefreshRegisteredItems();
-    }
-
     private void Start()
     {
-        ResolveReferences();
-        SubscribeDeathEventIfNeeded();
+        SubscribeDeathEvent();
         RefreshRegisteredItems();
     }
 
-    private void OnDisable()
+    private void OnDestroy()
     {
-        UnsubscribeDeathEventIfNeeded();
+        UnsubscribeDeathEvent();
+    }
+
+    public bool IsTemporarilyCollected(string fullId)
+    {
+        return !string.IsNullOrWhiteSpace(fullId) && temporaryCollectedIds.Contains(fullId);
+    }
+
+    public bool IsSaved(string fullId)
+    {
+        return progressStore != null && progressStore.IsSaved(fullId);
+    }
+
+    public bool IsUnavailable(string fullId)
+    {
+        return IsSaved(fullId) || IsTemporarilyCollected(fullId);
     }
 
     public void RegisterItem(CollectibleItem item)
@@ -74,6 +79,7 @@ public sealed class CollectibleSessionManager : MonoBehaviour
 
     public bool TryTemporarilyCollect(CollectibleItem item)
     {
+
         if (item == null)
         {
             return false;
@@ -88,7 +94,7 @@ public sealed class CollectibleSessionManager : MonoBehaviour
 
         if (IsSaved(fullId))
         {
-            item.ApplyCollectedState(true);
+            item.ApplyCollectedState( true);
             return false;
         }
 
@@ -98,7 +104,7 @@ public sealed class CollectibleSessionManager : MonoBehaviour
             return false;
         }
 
-        item.ApplyCollectedState(true);
+        item.ApplyCollectedState( true);
 
         if (enableDebugLog)
         {
@@ -108,20 +114,7 @@ public sealed class CollectibleSessionManager : MonoBehaviour
         return true;
     }
 
-    public bool IsTemporarilyCollected(string fullId)
-    {
-        return !string.IsNullOrWhiteSpace(fullId) && temporaryCollectedIds.Contains(fullId);
-    }
 
-    public bool IsSaved(string fullId)
-    {
-        return progressStore != null && progressStore.IsSaved(fullId);
-    }
-
-    public bool IsUnavailable(string fullId)
-    {
-        return IsSaved(fullId) || IsTemporarilyCollected(fullId);
-    }
 
     private void ResolveReferences()
     {
@@ -141,41 +134,31 @@ public sealed class CollectibleSessionManager : MonoBehaviour
         }
     }
 
-    private void SubscribeDeathEventIfNeeded()
+    private void SubscribeDeathEvent()
     {
-        if (isDeathEventSubscribed)
-        {
-            return;
-        }
+
 
         if (playerFacade == null)
         {
-            if (enableDebugLog && !hasWarnedMissingPlayerFacade)
+            if (enableDebugLog)
             {
                 Debug.LogWarning("[Collectible] PlayerFacade が見つからないため死亡リセットを購読できません。", this);
-                hasWarnedMissingPlayerFacade = true;
             }
 
             return;
         }
 
         playerFacade.DeathAccepted += OnPlayerDeathAccepted;
-        isDeathEventSubscribed = true;
     }
 
-    private void UnsubscribeDeathEventIfNeeded()
+    private void UnsubscribeDeathEvent()
     {
-        if (!isDeathEventSubscribed)
-        {
-            return;
-        }
 
         if (playerFacade != null)
         {
             playerFacade.DeathAccepted -= OnPlayerDeathAccepted;
         }
 
-        isDeathEventSubscribed = false;
     }
 
     private void OnPlayerDeathAccepted(PlayerDeathCause deathCause)
@@ -187,7 +170,6 @@ public sealed class CollectibleSessionManager : MonoBehaviour
                 Debug.Log($"[Collectible] 死亡リセットしました。仮取得はありません。cause={deathCause}", this);
             }
 
-            RefreshRegisteredItems();
             return;
         }
 

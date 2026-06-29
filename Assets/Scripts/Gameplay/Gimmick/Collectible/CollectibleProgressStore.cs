@@ -4,11 +4,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class CollectibleProgressStore : MonoBehaviour
 {
-    [Header("デバッグ")]
-    [Tooltip("保存済みIDの追加や一覧確認をDebug.Logへ出力するかを設定します。v1ではメモリ上の確認用途だけに使います。")]
-    [SerializeField] private bool enableDebugLog = true;
-
-    // v1では永続保存せず、同じステージプレイ中だけ保存済みIDを保持する。
+    // 永続保存せず、同じステージプレイ中だけ保存済みIDを保持する。
     private readonly HashSet<string> savedIds = new HashSet<string>();
 
     public IReadOnlyCollection<string> SavedIds => savedIds;
@@ -27,7 +23,7 @@ public sealed class CollectibleProgressStore : MonoBehaviour
         }
 
         bool added = savedIds.Add(fullId);
-        if (added && enableDebugLog)
+        if (added)
         {
             Debug.Log($"[Collectible] 保存済みIDに追加しました。id={fullId}", this);
         }

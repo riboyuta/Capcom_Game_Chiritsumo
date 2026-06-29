@@ -22,10 +22,6 @@ public sealed class CollectibleItem : MonoBehaviour
     [Tooltip("仮取得状態を管理するCollectibleSessionManagerです。未設定の場合はシーン内から実行時に検索します。")]
     [SerializeField] private CollectibleSessionManager sessionManager;
 
-    [Header("デバッグ")]
-    [Tooltip("参照不足や取得判定をDebug.Logへ出力するかを設定します。")]
-    [SerializeField] private bool enableDebugLog = true;
-
     private Collider triggerCollider;
     private Renderer[] visualRenderers = System.Array.Empty<Renderer>();
 
@@ -56,16 +52,15 @@ public sealed class CollectibleItem : MonoBehaviour
         RebuildFullId();
     }
 
+
+    
     private void OnEnable()
     {
         if (sessionManager != null)
         {
             sessionManager.RegisterItem(this);
         }
-        else if (enableDebugLog)
-        {
-            Debug.LogWarning($"[Collectible] CollectibleSessionManager が見つかりません。id={FullId}", this);
-        }
+
     }
 
     private void OnDisable()
@@ -84,7 +79,11 @@ public sealed class CollectibleItem : MonoBehaviour
             return;
         }
 
-        ResolveSessionManager();
+        if (sessionManager == null)
+        {
+            sessionManager = FindFirstObjectByType<CollectibleSessionManager>();
+        }
+
         if (sessionManager == null)
         {
             Debug.LogWarning($"[Collectible] CollectibleSessionManager がないため仮取得できません。id={FullId}", this);
@@ -94,12 +93,9 @@ public sealed class CollectibleItem : MonoBehaviour
         sessionManager.TryTemporarilyCollect(this);
     }
 
-    public void ApplyCollectedState(bool isCollected)
+    public void ApplyCollectedState(bool isUnavailable)
     {
-        EnsureRuntimeReferences();
-        CaptureInitialVisibility();
-
-        if (isCollected)
+        if (isUnavailable)
         {
             HideForCollectedState();
             return;
@@ -130,16 +126,6 @@ public sealed class CollectibleItem : MonoBehaviour
             : System.Array.Empty<Renderer>();
     }
 
-    private void ResolveSessionManager()
-    {
-        if (sessionManager != null)
-        {
-            return;
-        }
-
-        sessionManager = FindFirstObjectByType<CollectibleSessionManager>();
-    }
-
     private void RebuildFullId()
     {
         cachedFullId = $"{NormalizeIdPart(stageId)}/{NormalizeIdPart(roomId)}/{NormalizeIdPart(localId)}";
@@ -148,22 +134,6 @@ public sealed class CollectibleItem : MonoBehaviour
     private static string NormalizeIdPart(string idPart)
     {
         return string.IsNullOrWhiteSpace(idPart) ? string.Empty : idPart.Trim();
-    }
-
-    private void SetVisualVisible(bool visible)
-    {
-        if (visualRenderers == null)
-        {
-            return;
-        }
-
-        for (int i = 0; i < visualRenderers.Length; i++)
-        {
-            if (visualRenderers[i] != null)
-            {
-                visualRenderers[i].enabled = visible;
-            }
-        }
     }
 
     private void CaptureInitialVisibility()
@@ -187,7 +157,13 @@ public sealed class CollectibleItem : MonoBehaviour
             triggerCollider.isTrigger = true;
         }
 
-        SetVisualVisible(false);
+        for (int i = 0; i < visualRenderers.Length; i++)
+        {
+            if (visualRenderers[i] != null)
+            {
+                visualRenderers[i].enabled = false;
+            }
+        }
     }
 
     private void RestoreInitialVisibility()

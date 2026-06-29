@@ -529,10 +529,10 @@
             "gimmickID": 0
         },
         {
-            "x": 302,
-            "y": -48,
+            "x": 303,
+            "y": -47,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "Gimmick_Springpad",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -2321,10 +2321,10 @@
             "gimmickID": 0
         },
         {
-            "x": 304,
-            "y": -48,
+            "x": 301,
+            "y": -47,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -6297,10 +6297,10 @@
             "gimmickID": 0
         },
         {
-            "x": 250,
-            "y": -42,
+            "x": 264,
+            "y": -35,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -6473,14 +6473,6 @@
             "gimmickID": 0
         },
         {
-            "x": 258,
-            "y": -54,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 231,
             "y": -40,
             "z": 0,
@@ -6513,14 +6505,6 @@
             "gimmickID": 0
         },
         {
-            "x": 259,
-            "y": -54,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 239,
             "y": -40,
             "z": 0,
@@ -6529,104 +6513,8 @@
             "gimmickID": 0
         },
         {
-            "x": 263,
-            "y": -55,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": -54,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": -54,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": -54,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
-            "y": -54,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 245,
             "y": 0,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": -54,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": -54,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": -54,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 252,
-            "y": -54,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 251,
-            "y": -54,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 250,
-            "y": -54,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 249,
-            "y": -54,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -6697,22 +6585,6 @@
             "gimmickID": 0
         },
         {
-            "x": 256,
-            "y": -54,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
-            "y": -53,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 251,
             "y": 5,
             "z": 0,
@@ -6721,10 +6593,10 @@
             "gimmickID": 0
         },
         {
-            "x": 248,
-            "y": -40,
+            "x": 265,
+            "y": -21,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -6749,54 +6621,6 @@
             "y": -4,
             "z": 0,
             "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -53,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -53,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": -53,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": -53,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": -53,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": -53,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -6845,46 +6669,6 @@
             "y": -40,
             "z": 0,
             "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": -53,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 252,
-            "y": -53,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 251,
-            "y": -53,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 250,
-            "y": -53,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 249,
-            "y": -53,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -6985,8 +6769,8 @@
             "gimmickID": 0
         },
         {
-            "x": 271,
-            "y": -44,
+            "x": 266,
+            "y": -22,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -7081,8 +6865,8 @@
             "gimmickID": 0
         },
         {
-            "x": 256,
-            "y": -62,
+            "x": 260,
+            "y": -63,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -7153,22 +6937,6 @@
             "gimmickID": 0
         },
         {
-            "x": 258,
-            "y": -49,
-            "z": 0,
-            "tileID": "Gimmick_Dashrefill",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 247,
-            "y": -52,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 245,
             "y": -51,
             "z": 0,
@@ -7193,8 +6961,8 @@
             "gimmickID": 0
         },
         {
-            "x": 267,
-            "y": -41,
+            "x": 265,
+            "y": -28,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -7225,42 +6993,26 @@
             "gimmickID": 0
         },
         {
-            "x": 257,
-            "y": -62,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -62,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -62,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 262,
-            "y": -61,
+            "y": -62,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 263,
-            "y": -58,
+            "x": 261,
+            "y": -62,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 260,
+            "y": -62,
+            "z": 0,
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -8465,8 +8217,8 @@
             "gimmickID": 0
         },
         {
-            "x": 256,
-            "y": -31,
+            "x": 260,
+            "y": -36,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -8593,8 +8345,8 @@
             "gimmickID": 0
         },
         {
-            "x": 257,
-            "y": -31,
+            "x": 270,
+            "y": -22,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -16401,8 +16153,8 @@
             "gimmickID": 0
         },
         {
-            "x": 248,
-            "y": -41,
+            "x": 264,
+            "y": -32,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -21033,7 +20785,7 @@
             "gimmickID": 0
         },
         {
-            "x": 303,
+            "x": 304,
             "y": -47,
             "z": 0,
             "tileID": "ground",
@@ -21209,24 +20961,8 @@
             "gimmickID": 0
         },
         {
-            "x": 304,
-            "y": -47,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 302,
-            "y": -47,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 301,
-            "y": -47,
+            "x": 303,
+            "y": -48,
             "z": 0,
             "tileID": "ground",
             "gimmickType": 0,
@@ -27434,17 +27170,9 @@
         },
         {
             "x": 301,
-            "y": -46,
+            "y": -48,
             "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 302,
-            "y": -46,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -27465,10 +27193,10 @@
             "gimmickID": 0
         },
         {
-            "x": 303,
-            "y": -46,
+            "x": 304,
+            "y": -48,
             "z": 0,
-            "tileID": "Gimmick_Springpad",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -29153,8 +28881,8 @@
             "gimmickID": 0
         },
         {
-            "x": 250,
-            "y": -43,
+            "x": 263,
+            "y": -32,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -30049,18 +29777,18 @@
             "gimmickID": 0
         },
         {
-            "x": 256,
-            "y": -29,
+            "x": 269,
+            "y": -23,
             "z": 0,
-            "tileID": "Gimmick_Springpad",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 255,
-            "y": -29,
+            "x": 270,
+            "y": -23,
             "z": 0,
-            "tileID": "Gimmick_Springpad",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -30089,18 +29817,18 @@
             "gimmickID": 0
         },
         {
-            "x": 256,
-            "y": -30,
+            "x": 270,
+            "y": -21,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 257,
-            "y": -30,
+            "x": 269,
+            "y": -24,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -31537,30 +31265,6 @@
             "gimmickID": 0
         },
         {
-            "x": 262,
-            "y": -60,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -61,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -61,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 247,
             "y": -63,
             "z": 0,
@@ -31578,15 +31282,15 @@
         },
         {
             "x": 257,
-            "y": -61,
+            "y": -56,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "Gimmick_Dashrefill",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 256,
-            "y": -61,
+            "x": 261,
+            "y": -63,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -31596,7 +31300,7 @@
             "x": 255,
             "y": -61,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -31625,14 +31329,6 @@
             "gimmickID": 0
         },
         {
-            "x": 262,
-            "y": -59,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 253,
             "y": -61,
             "z": 0,
@@ -31643,22 +31339,6 @@
         {
             "x": 249,
             "y": -62,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": -61,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": -57,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -32564,15 +32244,15 @@
             "x": 263,
             "y": -63,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 263,
-            "y": -62,
+            "x": 248,
+            "y": -54,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -42329,14 +42009,6 @@
             "gimmickID": 0
         },
         {
-            "x": 247,
-            "y": -40,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 254,
             "y": 6,
             "z": 0,
@@ -42563,14 +42235,6 @@
         {
             "x": 266,
             "y": 10,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 249,
-            "y": -42,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -47209,10 +46873,10 @@
             "gimmickID": 0
         },
         {
-            "x": 301,
+            "x": 302,
             "y": -48,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -47713,14 +47377,6 @@
             "gimmickID": 0
         },
         {
-            "x": 248,
-            "y": -53,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 244,
             "y": -53,
             "z": 0,
@@ -47761,32 +47417,8 @@
             "gimmickID": 0
         },
         {
-            "x": 250,
-            "y": -48,
-            "z": 0,
-            "tileID": "Gimmick_Dashrefill",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 245,
             "y": -52,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 248,
-            "y": -52,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 247,
-            "y": -53,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -47933,30 +47565,6 @@
             "y": -31,
             "z": 0,
             "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": -55,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": -55,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": -54,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -55897,10 +55505,10 @@
             "gimmickID": 0
         },
         {
-            "x": 303,
-            "y": -48,
+            "x": 302,
+            "y": -47,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "Gimmick_Springpad",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -56113,14 +55721,6 @@
             "gimmickID": 0
         },
         {
-            "x": 249,
-            "y": -41,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 248,
             "y": -4,
             "z": 0,
@@ -56281,10 +55881,10 @@
             "gimmickID": 0
         },
         {
-            "x": 249,
-            "y": -36,
+            "x": 263,
+            "y": -38,
             "z": 0,
-            "tileID": "Gimmick_Dashrefill",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -56297,8 +55897,8 @@
             "gimmickID": 0
         },
         {
-            "x": 246,
-            "y": -39,
+            "x": 263,
+            "y": -33,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -56321,34 +55921,18 @@
             "gimmickID": 0
         },
         {
-            "x": 260,
-            "y": -58,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
+            "x": 251,
             "y": -57,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 260,
-            "y": -60,
+            "x": 251,
+            "y": -52,
             "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
-            "y": -61,
-            "z": 0,
-            "tileID": "underground",
+            "tileID": "Gimmick_Dashrefill",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -56369,10 +55953,10 @@
             "gimmickID": 0
         },
         {
-            "x": 260,
+            "x": 259,
             "y": -62,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -56385,18 +55969,10 @@
             "gimmickID": 0
         },
         {
-            "x": 263,
-            "y": -60,
+            "x": 250,
+            "y": -56,
             "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": -62,
-            "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -56441,10 +56017,10 @@
             "gimmickID": 0
         },
         {
-            "x": 260,
-            "y": -63,
+            "x": 258,
+            "y": -62,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -56833,64 +56409,24 @@
             "gimmickID": 0
         },
         {
-            "x": 261,
-            "y": -57,
+            "x": 247,
+            "y": -53,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 261,
-            "y": -58,
+            "x": 256,
+            "y": -62,
             "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": -59,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": -60,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": -61,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": -63,
-            "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 262,
             "y": -64,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": -59,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -57041,14 +56577,6 @@
             "gimmickID": 0
         },
         {
-            "x": 248,
-            "y": -54,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 239,
             "y": -58,
             "z": 0,
@@ -57164,119 +56692,15 @@
             "x": 249,
             "y": -55,
             "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 250,
-            "y": -55,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 250,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 251,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 252,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 257,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
-            "y": -59,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
             "y": -62,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -57291,94 +56715,6 @@
         {
             "x": 262,
             "y": -65,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -55,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -55,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": -55,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": -55,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": -55,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": -55,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 251,
-            "y": -55,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 252,
-            "y": -55,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
-            "y": -55,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": -55,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -57609,94 +56945,6 @@
             "gimmickID": 0
         },
         {
-            "x": 251,
-            "y": -57,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 252,
-            "y": -57,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": -57,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": -57,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": -57,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": -57,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": -57,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -57,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -57,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -60,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 249,
             "y": -60,
             "z": 0,
@@ -57730,14 +56978,6 @@
         },
         {
             "x": 253,
-            "y": -60,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
             "y": -60,
             "z": 0,
             "tileID": "underground",
@@ -57804,7 +57044,7 @@
             "x": 254,
             "y": -60,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -57873,102 +57113,6 @@
             "gimmickID": 0
         },
         {
-            "x": 256,
-            "y": -60,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": -60,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": -56,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -58,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -58,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": -58,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": -58,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": -58,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": -58,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": -58,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": -58,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 252,
-            "y": -58,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 252,
             "y": -59,
             "z": 0,
@@ -57980,71 +57124,15 @@
             "x": 253,
             "y": -59,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 254,
-            "y": -59,
+            "x": 252,
+            "y": -58,
             "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": -59,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": -59,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": -59,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -59,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -59,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": -57,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -60,
-            "z": 0,
-            "tileID": "underground",
+            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -61777,8 +60865,8 @@
             "gimmickID": 0
         },
         {
-            "x": 270,
-            "y": -43,
+            "x": 267,
+            "y": -19,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -66209,8 +65297,8 @@
             "gimmickID": 0
         },
         {
-            "x": 397,
-            "y": 32,
+            "x": 392,
+            "y": 33,
             "z": 0,
             "tileID": "Oneway_Platform",
             "gimmickType": 0,
@@ -66249,8 +65337,8 @@
             "gimmickID": 0
         },
         {
-            "x": 394,
-            "y": 32,
+            "x": 395,
+            "y": 33,
             "z": 0,
             "tileID": "Oneway_Platform",
             "gimmickType": 0,
@@ -66393,8 +65481,8 @@
             "gimmickID": 0
         },
         {
-            "x": 396,
-            "y": 32,
+            "x": 393,
+            "y": 33,
             "z": 0,
             "tileID": "Oneway_Platform",
             "gimmickType": 0,
@@ -68217,8 +67305,8 @@
             "gimmickID": 0
         },
         {
-            "x": 395,
-            "y": 32,
+            "x": 394,
+            "y": 33,
             "z": 0,
             "tileID": "Oneway_Platform",
             "gimmickType": 0,
@@ -68249,8 +67337,8 @@
             "gimmickID": 0
         },
         {
-            "x": 393,
-            "y": 32,
+            "x": 396,
+            "y": 33,
             "z": 0,
             "tileID": "Oneway_Platform",
             "gimmickType": 0,
@@ -74945,14 +74033,6 @@
             "gimmickID": 0
         },
         {
-            "x": 246,
-            "y": -38,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 260,
             "y": 9,
             "z": 0,
@@ -74981,14 +74061,6 @@
             "y": 9,
             "z": 0,
             "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 247,
-            "y": -39,
-            "z": 0,
-            "tileID": "ground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -75329,200 +74401,16 @@
             "gimmickID": 0
         },
         {
-            "x": 258,
-            "y": -29,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": -29,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -30,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -31,
+            "x": 269,
+            "y": -22,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 259,
-            "y": -28,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
-            "y": -29,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
-            "y": -28,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": -28,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": -28,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 267,
-            "y": -40,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -30,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": -34,
-            "z": 0,
-            "tileID": "Gimmick_Dashrefill",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 264,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 265,
-            "y": -43,
+            "x": 268,
+            "y": -20,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -75530,33 +74418,89 @@
         },
         {
             "x": 270,
-            "y": -42,
+            "y": -20,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 267,
-            "y": -39,
+            "x": 269,
+            "y": -25,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 266,
-            "y": -28,
+            "x": 271,
+            "y": -23,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 265,
-            "y": -28,
+            "x": 270,
+            "y": -18,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -18,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -22,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -19,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -37,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -23,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -36,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -33,
+            "z": 0,
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -75564,45 +74508,141 @@
             "x": 264,
             "y": -28,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 263,
-            "y": -28,
+            "y": -39,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -38,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -26,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -29,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": -31,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": -32,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -18,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -38,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -24,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -37,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -21,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -20,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -26,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": -36,
+            "z": 0,
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 258,
-            "y": -32,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": -32,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": -32,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": -32,
+            "y": -37,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -75705,98 +74745,82 @@
             "gimmickID": 0
         },
         {
-            "x": 256,
-            "y": -42,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": -42,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": -42,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": -42,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": -42,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -42,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -42,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 264,
-            "y": -42,
+            "y": -21,
             "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
-            "y": -42,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": -42,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": -42,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 263,
-            "y": -42,
+            "y": -37,
             "z": 0,
-            "tileID": "Gimmick_Springpad",
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": -20,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -20,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -24,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 263,
+            "y": -36,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -23,
+            "z": 0,
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -75809,56 +74833,8 @@
             "gimmickID": 0
         },
         {
-            "x": 269,
-            "y": -43,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 266,
-            "y": -37,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 267,
-            "y": -36,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 269,
-            "y": -42,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 269,
-            "y": -41,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 269,
-            "y": -40,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 269,
-            "y": -39,
+            "y": -22,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -75866,7 +74842,55 @@
         },
         {
             "x": 271,
-            "y": -43,
+            "y": -26,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": -29,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": -23,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": -25,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -23,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -25,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": -24,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -75881,8 +74905,32 @@
             "gimmickID": 0
         },
         {
-            "x": 265,
-            "y": -38,
+            "x": 271,
+            "y": -30,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -20,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -31,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -19,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -75890,7 +74938,47 @@
         },
         {
             "x": 265,
-            "y": -39,
+            "y": -26,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -19,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -21,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -20,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": -33,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -31,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -75900,45 +74988,13 @@
             "x": 265,
             "y": -37,
             "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 271,
-            "y": -42,
-            "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 271,
-            "y": -41,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 271,
-            "y": -40,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 271,
-            "y": -39,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 271,
-            "y": -38,
+            "x": 265,
+            "y": -35,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -75946,71 +75002,7 @@
         },
         {
             "x": 265,
-            "y": -44,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 254,
-            "y": -44,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 255,
-            "y": -44,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 256,
-            "y": -44,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 257,
-            "y": -44,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 260,
-            "y": -44,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 261,
-            "y": -44,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 262,
-            "y": -44,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 263,
-            "y": -44,
+            "y": -34,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -76018,47 +75010,15 @@
         },
         {
             "x": 264,
-            "y": -44,
+            "y": -25,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 259,
-            "y": -44,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 258,
-            "y": -44,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -31,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -29,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 259,
-            "y": -32,
+            "x": 264,
+            "y": -27,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -76066,7 +75026,7 @@
         },
         {
             "x": 265,
-            "y": -40,
+            "y": -30,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -76074,15 +75034,55 @@
         },
         {
             "x": 265,
-            "y": -41,
+            "y": -36,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 265,
-            "y": -42,
+            "x": 264,
+            "y": -22,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -21,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -19,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -20,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 263,
+            "y": -35,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 263,
+            "y": -34,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -77073,152 +76073,8 @@
             "gimmickID": 0
         },
         {
-            "x": 269,
-            "y": -36,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 270,
-            "y": -36,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 267,
-            "y": -37,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 268,
-            "y": -43,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 266,
-            "y": -41,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 266,
-            "y": -42,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 266,
-            "y": -43,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 268,
-            "y": -39,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 270,
-            "y": -41,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 270,
-            "y": -40,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 266,
-            "y": -39,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 266,
-            "y": -40,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 268,
-            "y": -42,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 268,
-            "y": -37,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 269,
-            "y": -37,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 268,
-            "y": -41,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 269,
-            "y": -38,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 270,
-            "y": -38,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 270,
-            "y": -39,
+            "y": -24,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -77226,15 +76082,7 @@
         },
         {
             "x": 267,
-            "y": -42,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 267,
-            "y": -43,
+            "y": -25,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -77242,7 +76090,7 @@
         },
         {
             "x": 266,
-            "y": -38,
+            "y": -27,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -77251,38 +76099,6 @@
         {
             "x": 267,
             "y": -38,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 267,
-            "y": -44,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 268,
-            "y": -38,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 266,
-            "y": -44,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 268,
-            "y": -40,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -77290,33 +76106,217 @@
         },
         {
             "x": 271,
-            "y": -37,
+            "y": -33,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 271,
-            "y": -36,
+            "y": -34,
             "z": 0,
-            "tileID": "Gimmick_Springpad",
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -35,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -37,
+            "z": 0,
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 266,
-            "y": -36,
+            "y": -18,
             "z": 0,
-            "tileID": "Gimmick_Springpad",
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -23,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -28,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -29,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -38,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -37,
+            "z": 0,
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
             "x": 265,
+            "y": -22,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -37,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -26,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -26,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -21,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": -27,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -28,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -27,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -38,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -37,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -38,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
             "y": -36,
             "z": 0,
-            "tileID": "Gimmick_Springpad",
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": -38,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -22,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -24,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -25,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -32,
+            "z": 0,
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -77337,16 +76337,8 @@
             "gimmickID": 0
         },
         {
-            "x": 268,
-            "y": -36,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 268,
-            "y": -44,
+            "x": 267,
+            "y": -37,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -77354,15 +76346,15 @@
         },
         {
             "x": 270,
-            "y": -37,
+            "y": -38,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 270,
-            "y": -44,
+            "x": 267,
+            "y": -18,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -77370,57 +76362,65 @@
         },
         {
             "x": 269,
-            "y": -44,
+            "y": -18,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 252,
-            "y": -42,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 251,
-            "y": -42,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 252,
-            "y": -43,
-            "z": 0,
-            "tileID": "ground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 253,
-            "y": -44,
+            "x": 267,
+            "y": -21,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 251,
-            "y": -43,
+            "x": 266,
+            "y": -19,
             "z": 0,
-            "tileID": "ground",
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 255,
-            "y": -37,
+            "x": 264,
+            "y": -19,
             "z": 0,
-            "tileID": "Gimmick_Dashrefill",
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 265,
+            "y": -19,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -30,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 271,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 264,
+            "y": -34,
+            "z": 0,
+            "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -77437,14 +76437,6 @@
             "y": 2,
             "z": 0,
             "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
-            "x": 300,
-            "y": -46,
-            "z": 0,
-            "tileID": "Gimmick_Springpad",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -77577,8 +76569,8 @@
             "gimmickID": 0
         },
         {
-            "x": 392,
-            "y": 32,
+            "x": 397,
+            "y": 33,
             "z": 0,
             "tileID": "Oneway_Platform",
             "gimmickType": 0,
@@ -94449,16 +93441,16 @@
             "gimmickID": 0
         },
         {
-            "x": 252,
-            "y": -44,
+            "x": 270,
+            "y": -39,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
             "gimmickID": 0
         },
         {
-            "x": 251,
-            "y": -44,
+            "x": 269,
+            "y": -39,
             "z": 0,
             "tileID": "underground",
             "gimmickType": 0,
@@ -96873,10 +95865,10 @@
             "gimmickID": 0
         },
         {
-            "x": 391,
-            "y": 32,
+            "x": 394,
+            "y": 30,
             "z": 0,
-            "tileID": "underground",
+            "tileID": "Gimmick_Dashrefill",
             "gimmickType": 0,
             "gimmickID": 0
         },
@@ -97361,14 +96353,6 @@
             "gimmickID": 0
         },
         {
-            "x": 183,
-            "y": 42,
-            "z": 0,
-            "tileID": "underground",
-            "gimmickType": 0,
-            "gimmickID": 0
-        },
-        {
             "x": 193,
             "y": 56,
             "z": 0,
@@ -97533,6 +96517,1182 @@
             "y": 56,
             "z": 0,
             "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -24,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -25,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -26,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -27,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -28,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -29,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -30,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -31,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -35,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -34,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -33,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -32,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -29,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 270,
+            "y": -36,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -32,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -31,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -27,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -24,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -28,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -30,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -33,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -34,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -35,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -27,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -26,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -25,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 269,
+            "y": -36,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -31,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -30,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -29,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -28,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -32,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -33,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -34,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -35,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 268,
+            "y": -36,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -30,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -29,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -28,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -27,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -34,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -33,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -32,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -31,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -35,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 267,
+            "y": -36,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -32,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -31,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -30,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -29,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -33,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -34,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -35,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 266,
+            "y": -36,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 261,
+            "y": -38,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": -37,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 260,
+            "y": -38,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 258,
+            "y": -36,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": -38,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": -35,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 258,
+            "y": -38,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 260,
+            "y": -34,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": -38,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 261,
+            "y": -33,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 262,
+            "y": -38,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 262,
+            "y": -32,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 260,
+            "y": -35,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 261,
+            "y": -35,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 261,
+            "y": -34,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 262,
+            "y": -34,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 262,
+            "y": -33,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 258,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 260,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 261,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": -38,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 252,
+            "y": -42,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": -39,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 253,
+            "y": -41,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": -40,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 251,
+            "y": -43,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 250,
+            "y": -44,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 248,
+            "y": -46,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 249,
+            "y": -45,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": -37,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 260,
+            "y": -37,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 261,
+            "y": -36,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 262,
+            "y": -36,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 262,
+            "y": -35,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 261,
+            "y": -37,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": -40,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 262,
+            "y": -39,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 262,
+            "y": -37,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 260,
+            "y": -40,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 258,
+            "y": -41,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": -41,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": -41,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": -42,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": -42,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": -42,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 253,
+            "y": -42,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 252,
+            "y": -43,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 250,
+            "y": -45,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 251,
+            "y": -44,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 249,
+            "y": -46,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 252,
+            "y": -44,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 253,
+            "y": -43,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": -43,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": -41,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": -41,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": -40,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": -40,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 251,
+            "y": -45,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 250,
+            "y": -46,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": -40,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 258,
+            "y": -40,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": -43,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 253,
+            "y": -44,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": -41,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 258,
+            "y": -42,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": -44,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 253,
+            "y": -45,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 252,
+            "y": -46,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": -44,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": -43,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": -43,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 252,
+            "y": -45,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 251,
+            "y": -46,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": -45,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": -42,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": -44,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": -45,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 253,
+            "y": -46,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 254,
+            "y": -46,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 390,
+            "y": 27,
+            "z": 0,
+            "tileID": "Oneway_Platform",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 250,
+            "y": -37,
+            "z": 0,
+            "tileID": "Gimmick_Dashrefill",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": -29,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": -28,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 256,
+            "y": -30,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 257,
+            "y": -29,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 258,
+            "y": -28,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": -27,
+            "z": 0,
+            "tileID": "underground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 258,
+            "y": -27,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 259,
+            "y": -26,
+            "z": 0,
+            "tileID": "ground",
+            "gimmickType": 0,
+            "gimmickID": 0
+        },
+        {
+            "x": 255,
+            "y": -29,
+            "z": 0,
+            "tileID": "Gimmick_Springpad",
             "gimmickType": 0,
             "gimmickID": 0
         }
