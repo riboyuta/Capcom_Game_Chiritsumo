@@ -14,7 +14,6 @@ Get-Content -Raw -Encoding UTF8 -LiteralPath AGENTS.md
 
 When editing this file or any file containing Japanese text, preserve UTF-8 encoding.
 
-After editing Japanese text, check that Japanese characters are not corrupted or replaced with unreadable mojibake.
 
 
 ## Project
