@@ -304,6 +304,55 @@ Do not move scripts between folders unless explicitly requested.
 
 ---
 
+## ResolveReferences Rule
+
+After generating or editing a MonoBehaviour, gather runtime reference setup into `ResolveReferences()` when the class needs reference preparation.
+
+Use `ResolveReferences()` for:
+
+* `GetComponent`
+* `GetComponentInChildren`
+* `GetComponentsInChildren`
+* assigning fallback child references
+* simple Component setup such as `Collider.isTrigger`
+* Manager lookup only when the dependency or trade-off is explained
+
+Call `ResolveReferences()` from `Awake()` before initialization that uses those references.
+
+Place this comment immediately above the method:
+
+```csharp
+// 実行時に必要な参照を取得し、使用前の状態に整える
+private void ResolveReferences()
+{
+}
+```
+
+## Class Responsibility Comment Rule
+
+When creating a new C# class, add a short Japanese `///` responsibility comment immediately above the class declaration.
+
+Use 1-3 lines to describe:
+
+* what the class represents
+* what responsibility it owns
+* what it delegates to other classes, if important
+
+For very small classes, one line is enough.
+
+Keep the comment as a class title, not a method-by-method explanation.
+
+Example:
+
+```csharp
+/// 収集アイテム単体を表すコンポーネント
+/// Playerとの接触を検知し、CollectibleSessionManagerへ仮取得を依頼する
+/// Managerから渡された取得状態に応じて、見た目と当たり判定を切り替える
+public sealed class CollectibleItem : MonoBehaviour
+{
+}
+```
+
 
 ## Class Member Ordering Rule
 
