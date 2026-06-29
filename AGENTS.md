@@ -4,13 +4,18 @@
 
 This file is encoded in UTF-8.
 
-If Japanese text appears corrupted or unreadable, reread this file explicitly as UTF-8.
+Always read this file as UTF-8.
 
 For PowerShell, use:
 
 ```powershell
 Get-Content -Raw -Encoding UTF8 -LiteralPath AGENTS.md
 ```
+
+When editing this file or any file containing Japanese text, preserve UTF-8 encoding.
+
+After editing Japanese text, check that Japanese characters are not corrupted or replaced with unreadable mojibake.
+
 
 ## Project
 
@@ -173,17 +178,16 @@ Review output should include:
 
 ## Core Workflow
 
-For heavy features:
+For heavy gameplay features, work in this order:
 
-1. Read the related files first.
-2. Do not edit files during the research step.
-3. Explain the current responsibility structure before editing.
-4. Implement one Event / Slice at a time.
-5. Avoid completing a large feature in one uncontrolled change.
-6. After editing, summarize changed files, behavior changes, risks, and manual test steps.
-7. After editing, inspect the diff when possible.
-8. Do not claim behavior was verified unless it was actually verified.
-9. Confirm that the final implementation is explainable by the project owner.
+1. Research related files first.
+2. Explain current responsibilities before editing.
+3. Implement one Event / Slice at a time.
+4. Keep the diff small and reviewable.
+5. Inspect the diff when possible.
+6. Report changed behavior, risks, and manual test steps.
+7. Do not claim verification unless it was actually performed.
+8. Confirm that the final implementation is explainable by the project owner.
 
 Heavy features include, but are not limited to:
 
@@ -288,12 +292,6 @@ Do not move scripts between folders unless explicitly requested.
 * If a field is exposed in the Inspector but does not need `[Header]` and `[Tooltip]`, explain why it is intentionally exempt.
 * Do not rename serialized fields only to improve Inspector wording.
 * Do not add noisy headers or tooltips to purely internal fields that are not intended to be configured in the Unity Editor.
-* When adding or modifying non-trivial C# gameplay code, add concise Japanese comments that explain responsibility, intent, side effects, or important assumptions.
-* Prefer comments that explain why the code exists or what responsibility it owns, not line-by-line explanations of obvious syntax.
-* For Unity gameplay scripts, use Japanese comments when they help explain serialized settings, state transitions, lifecycle methods, collision conditions, time control, camera behavior, or game feel behavior.
-* Do not add noisy comments to self-explanatory code.
-* Do not leave commented-out old code unless explicitly requested.
-* Do not paste AI reasoning logs, Codex logs, or raw conversation text into code comments.
 * After implementation, the project owner should be able to explain the new behavior from names, Inspector headers/tooltips, and concise Japanese comments.
 * Do not introduce singletons, static mutable state, or global state without explaining why.
 * Preserve existing public APIs unless explicitly requested.
@@ -304,6 +302,100 @@ Do not move scripts between folders unless explicitly requested.
 * Avoid adding Update-loop work that scales poorly without explaining the cost.
 * Do not change MonoBehaviour lifecycle methods such as `Awake`, `Start`, `Update`, `FixedUpdate`, `OnEnable`, or `OnDisable` without considering existing execution order and side effects.
 * Keep gameplay logic explainable by the project owner.
+
+---
+
+
+## Class Member Ordering Rule
+
+When creating a new C# class, organize members in the preferred order below.
+
+When modifying an existing class, apply this order only to the touched class if it keeps the diff small and reviewable.
+
+Do not reorder unrelated existing code only to satisfy this rule.
+
+### MonoBehaviour order
+
+1. Fields
+2. Unity Lifecycle
+3. Public API
+4. Event Handlers
+5. Main Logic
+6. Query Helpers
+7. Internal Helpers
+
+Use these section headers when the section exists:
+
+```csharp
+// -----------------------------------------------------------------------------
+// Fields
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Unity Lifecycle
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Public API
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Event Handlers
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Main Logic
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Query Helpers
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Internal Helpers
+// -----------------------------------------------------------------------------
+```
+
+### Plain C# class order
+
+1. Fields
+2. Constructor
+3. Public API
+4. Main Logic
+5. Query Helpers
+6. Internal Helpers
+
+Use these section headers when the section exists:
+
+```csharp
+// -----------------------------------------------------------------------------
+// Fields
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Constructor
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Public API
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Main Logic
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Query Helpers
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Internal Helpers
+// -----------------------------------------------------------------------------
+```
+
+Do not add empty section headers.
+
+If a class is very small, section headers may be omitted when they add more noise than clarity.
 
 ---
 
@@ -424,24 +516,6 @@ If the implementation is too complex for the project owner to explain, stop and 
 
 ---
 
-## AI Usage and Documentation Rule
-
-Do not paste AI conversation logs, Codex reasoning logs, or raw research transcripts into code comments, Issues, PR descriptions, or documentation.
-
-When preparing GitHub-facing text, summarize the result as the project owner's design decision.
-
-Good documentation should explain:
-
-* What was changed
-* Why the change was needed
-* What alternatives or risks were considered
-* How the behavior was verified
-* What remains as a future task
-
-Do not write documentation that makes the change look like it was blindly generated by AI.
-
----
-
 ## Output Style
 
 Keep reports concise and action-oriented.
@@ -467,51 +541,6 @@ Do not inspect unrelated files or suggest implementation plans unless the user a
 Do not edit files unless the user explicitly asks to modify code.
 
 ---
-
-## Reporting Format
-
-Use the full reporting formats only for heavy, risky, or implementation-related work.
-
-For small explanation questions, terminology questions, or simple code-understanding questions, answer directly without the full report format.
-
-### Before editing
-
-Report:
-
-* Active mode
-* Files inspected
-* Current responsibility structure
-* Files planned to modify
-* Risks or assumptions
-
-### After editing
-
-Report:
-
-* Active mode
-* Changed files
-* What changed
-* Why it changed
-* Possible risks
-* Manual test steps in Unity Editor
-* Any required Inspector setup
-* Tests or verification actually performed
-* Tests or verification not performed
-* Explainability check
-
-### During review
-
-Report:
-
-* Active mode
-* Diff summary
-* Event / Slice completion judgment
-* Responsibility boundary check
-* Unity-specific risks
-* Unrelated or suspicious changes
-* Manual verification checklist
-* Recommended follow-up actions
-* Explainability check
 
 ---
 

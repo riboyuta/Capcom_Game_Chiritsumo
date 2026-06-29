@@ -2,6 +2,11 @@ using UnityEngine;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider))]
+
+/// 収集アイテム単体を表すコンポーネント。
+/// Playerとの接触を検知し、CollectibleSessionManagerへ仮取得を依頼する。
+/// Managerから渡された取得状態に応じて、見た目と当たり判定を切り替える。
+
 public sealed class CollectibleItem : MonoBehaviour
 {
     [Header("識別ID")]
@@ -22,11 +27,16 @@ public sealed class CollectibleItem : MonoBehaviour
     [Tooltip("仮取得状態を管理するCollectibleSessionManagerです。未設定の場合はシーン内から実行時に検索します。")]
     [SerializeField] private CollectibleSessionManager sessionManager;
 
+    // 取得判定に使うCollider。
     private Collider triggerCollider;
+
+    // 表示切替対象のRenderer一覧。
     private Renderer[] visualRenderers = System.Array.Empty<Renderer>();
 
     private bool initialColliderEnabled;
     private bool[] initialRendererEnabledStates = System.Array.Empty<bool>();
+
+    // stageId / roomId / localId から生成した収集アイテム識別ID。
     private string cachedFullId;
 
     public string StageId => stageId;
@@ -37,13 +47,7 @@ public sealed class CollectibleItem : MonoBehaviour
         && !string.IsNullOrWhiteSpace(roomId)
         && !string.IsNullOrWhiteSpace(localId);
 
-    public string FullId
-    {
-        get
-        {
-            return cachedFullId;
-        }
-    }
+
 
     private void Awake()
     {
@@ -93,9 +97,17 @@ public sealed class CollectibleItem : MonoBehaviour
         sessionManager.TryTemporarilyCollect(this);
     }
 
-    public void ApplyCollectedState(bool isUnavailable)
+    public string FullId
     {
-        if (isUnavailable)
+        get
+        {
+            return cachedFullId;
+        }
+    }
+
+    public void ApplyCollectedState(bool isCollected)
+    {
+        if (isCollected)
         {
             HideForCollectedState();
             return;
@@ -139,6 +151,8 @@ public sealed class CollectibleItem : MonoBehaviour
     private void CaptureInitialVisibility()
     {
 
+
+
         initialColliderEnabled = triggerCollider != null && triggerCollider.enabled;
         initialRendererEnabledStates = new bool[visualRenderers.Length];
 
@@ -151,12 +165,12 @@ public sealed class CollectibleItem : MonoBehaviour
 
     private void HideForCollectedState()
     {
+
         if (triggerCollider != null)
         {
             triggerCollider.enabled = false;
-            triggerCollider.isTrigger = true;
         }
-
+            
         for (int i = 0; i < visualRenderers.Length; i++)
         {
             if (visualRenderers[i] != null)
@@ -171,7 +185,6 @@ public sealed class CollectibleItem : MonoBehaviour
         if (triggerCollider != null)
         {
             triggerCollider.enabled = initialColliderEnabled;
-            triggerCollider.isTrigger = true;
         }
 
         int restoreCount = Mathf.Min(visualRenderers.Length, initialRendererEnabledStates.Length);
