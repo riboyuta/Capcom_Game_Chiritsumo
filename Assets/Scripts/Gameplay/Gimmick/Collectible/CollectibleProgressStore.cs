@@ -105,6 +105,31 @@ public sealed class CollectibleProgressStore : MonoBehaviour
         return false;
     }
 
+    // 開発用に保存ファイルとメモリ上の保存済みIDを全削除する
+    public bool ClearSavedIdsForDebug()
+    {
+        ResolveReferences();
+
+        if (saveRepository == null)
+        {
+            savedIds.Clear();
+            Debug.LogWarning("[CollectibleProgressStore] CollectibleSaveRepository がないため保存ファイルは削除できません メモリ上の保存済みIDだけクリアしました", this);
+            return false;
+        }
+
+        bool deleteSucceeded = saveRepository.DeleteSaveFile();
+        savedIds.Clear();
+
+        if (deleteSucceeded)
+        {
+            Debug.Log($"[CollectibleProgressStore] 保存済みIDを全削除しました path={saveRepository.SavePath}", this);
+            return true;
+        }
+
+        Debug.LogWarning($"[CollectibleProgressStore] 保存ファイルの削除に失敗しました メモリ上の保存済みIDはクリアしました path={saveRepository.SavePath}", this);
+        return false;
+    }
+
     // デバッグ用に保存済みID一覧を出力する
     public void LogSavedIds()
     {

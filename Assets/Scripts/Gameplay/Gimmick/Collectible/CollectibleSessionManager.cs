@@ -148,6 +148,32 @@ public sealed class CollectibleSessionManager : MonoBehaviour
     // Event Handlers
     // -----------------------------------------------------------------------------
 
+    // 開発用に永続保存と現在セッション中の取得状態をクリアする
+    [ContextMenu("Clear Collectible Save For Debug")]
+    private void ClearCollectibleSaveForDebug()
+    {
+        ResolveReferences();
+
+        int temporaryCount = temporaryCollectedIds.Count;
+        temporaryCollectedIds.Clear();
+
+        if (progressStore == null)
+        {
+            Debug.LogWarning(
+                $"[CollectibleSessionManager] CollectibleProgressStore が見つからないため保存済みIDを削除できません temporaryCleared={temporaryCount}",
+                this);
+            RefreshRegisteredItems();
+            return;
+        }
+
+        bool clearSucceeded = progressStore.ClearSavedIdsForDebug();
+        RefreshRegisteredItems();
+
+        Debug.Log(
+            $"[CollectibleSessionManager] 開発用に収集セーブを削除しました succeeded={clearSucceeded}, temporaryCleared={temporaryCount}",
+            this);
+    }
+
     // 死亡時に仮取得IDを破棄し、Itemの表示状態を再反映する
     private void OnPlayerDeathAccepted(PlayerDeathCause deathCause)
     {
