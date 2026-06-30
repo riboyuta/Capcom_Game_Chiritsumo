@@ -293,14 +293,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57c460482ac48f1478b7eca46fa618c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandChaserMovement
-  enableAdaptiveSpeed: 0
-  nearSpeed: 7
-  idealSpeed: 9
+  enableAdaptiveSpeed: 1
+  nearSpeed: 9
+  idealSpeed: 9.5
   farSpeed: 12
   nearThreshold: 4
-  idealMinDistance: 6
-  idealMaxDistance: 8
-  farThreshold: 12
+  idealMinDistance: 12
+  idealMaxDistance: 16
+  farThreshold: 28
   speedSmoothTime: 0.15
 --- !u!114 &8742252961490900893
 MonoBehaviour:
