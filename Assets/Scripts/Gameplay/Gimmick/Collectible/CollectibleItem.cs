@@ -55,6 +55,7 @@ public sealed class CollectibleItem : MonoBehaviour
         ResolveReferences();
         CaptureInitialVisibility();
         RebuildFullId();
+        LogWarningIfIdConfigurationInvalid();
     }
 
 
@@ -94,6 +95,8 @@ public sealed class CollectibleItem : MonoBehaviour
         && !string.IsNullOrWhiteSpace(roomId)
         && !string.IsNullOrWhiteSpace(localId);
 
+    public bool HasValidFullId => HasValidId && !string.IsNullOrWhiteSpace(FullId);
+
     // 外部へこのアイテムの識別IDを渡す
     public string FullId
     {
@@ -127,6 +130,11 @@ public sealed class CollectibleItem : MonoBehaviour
             return;
         }
 
+        if (!HasValidFullId)
+        {
+            Debug.LogWarning($"[CollectibleItem] FullIdが無効なため仮取得をスキップしました object={gameObject.name}, fullId={FullId}", this);
+            return;
+        }
 
         if (sessionManager == null)
         {
@@ -175,6 +183,19 @@ public sealed class CollectibleItem : MonoBehaviour
     private void RebuildFullId()
     {
         cachedFullId = $"{NormalizeIdPart(stageId)}/{NormalizeIdPart(roomId)}/{NormalizeIdPart(localId)}";
+    }
+
+    // ID未入力の配置ミスをPlay Mode開始時に見つける
+    private void LogWarningIfIdConfigurationInvalid()
+    {
+        if (HasValidId)
+        {
+            return;
+        }
+
+        Debug.LogWarning(
+            $"[CollectibleItem] ID設定が不足しています object={gameObject.name}, fullId={FullId}, stageId={stageId}, roomId={roomId}, localId={localId}",
+            this);
     }
 
     // 死亡時に復元できるよう、ColliderとRendererの初期状態を保存する

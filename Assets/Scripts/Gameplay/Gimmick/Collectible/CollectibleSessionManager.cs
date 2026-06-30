@@ -91,6 +91,7 @@ public sealed class CollectibleSessionManager : MonoBehaviour
             registeredItems.Add(item);
         }
 
+        LogWarningIfDuplicateFullId(item);
         item.ApplyCollectedState(IsUnavailable(item.FullId));
     }
 
@@ -115,9 +116,9 @@ public sealed class CollectibleSessionManager : MonoBehaviour
         }
 
         string fullId = item.FullId;
-        if (!item.HasValidId)
+        if (!item.HasValidFullId)
         {
-            Debug.LogWarning($"[Collectible] IDが未設定ですid={fullId}", item);
+            Debug.LogWarning($"[CollectibleSessionManager] FullIdが無効なため仮取得をスキップしました object={item.gameObject.name}, fullId={fullId}", item);
             return false;
         }
 
@@ -317,6 +318,38 @@ public sealed class CollectibleSessionManager : MonoBehaviour
 
             item.ApplyCollectedState(IsUnavailable(item.FullId));
         }
+    }
+
+    // 登録済みItemの中で同じFullIdを持つ配置を検出する
+    private void LogWarningIfDuplicateFullId(CollectibleItem targetItem)
+    {
+        if (targetItem == null || !targetItem.HasValidFullId)
+        {
+            return;
+        }
+
+        string fullId = targetItem.FullId;
+        List<string> objectNames = new List<string>();
+
+        for (int i = 0; i < registeredItems.Count; i++)
+        {
+            CollectibleItem item = registeredItems[i];
+            if (item == null || !item.HasValidFullId || item.FullId != fullId)
+            {
+                continue;
+            }
+
+            objectNames.Add(item.gameObject.name);
+        }
+
+        if (objectNames.Count <= 1)
+        {
+            return;
+        }
+
+        Debug.LogWarning(
+            $"[CollectibleSessionManager] Collectible FullId が重複しています fullId={fullId}, objects={string.Join(", ", objectNames)}",
+            targetItem);
     }
 
     // -----------------------------------------------------------------------------
