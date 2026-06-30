@@ -50,6 +50,6 @@ public sealed class CollectibleProgressStore : MonoBehaviour
             ? string.Join(", ", savedIds)
             : "(none)";
 
-        Debug.Log($"[Collectible] 保存済みID一覧ですcount={savedIds.Count}, ids={ids}", this);
+        Debug.Log($"[CollectibleProgressStore] 保存済みID一覧ですcount={savedIds.Count}, ids={ids}", this);
     }
 }

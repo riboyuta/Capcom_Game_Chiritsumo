@@ -16,6 +16,10 @@ public sealed class CollectibleSessionManager : MonoBehaviour
     [Tooltip("死亡受理イベントを購読するPlayerFacadeです未設定の場合はシーン内から実行時に検索します")]
     [SerializeField] private PlayerFacade playerFacade;
 
+    [Header("参照: 部屋管理")]
+    [Tooltip("部屋遷移完了イベントを購読するRoomManagerです未設定の場合はシーン内から実行時に検索します")]
+    [SerializeField] private RoomManager roomManager;
+
     [Header("参照: 収集進行")]
     [Tooltip("保存済み収集IDを保持するストアですv1では永続保存せず、同じステージプレイ中のメモリ保存だけに使います")]
     [SerializeField] private CollectibleProgressStore progressStore;
@@ -42,12 +46,14 @@ public sealed class CollectibleSessionManager : MonoBehaviour
     private void Start()
     {
         SubscribeDeathEvent();
+        SubscribeRoomTransitionEvent();
         RefreshRegisteredItems();
     }
 
     private void OnDestroy()
     {
         UnsubscribeDeathEvent();
+        UnsubscribeRoomTransitionEvent();
     }
 
     // -----------------------------------------------------------------------------
@@ -168,6 +174,12 @@ public sealed class CollectibleSessionManager : MonoBehaviour
         }
     }
 
+    // 部屋遷移完了時に仮取得IDを保存済みIDへ確定する
+    private void OnRoomTransitionComplete(Room newRoom)
+    {
+        CommitTemporaryCollectedIdsOnRoomTransition(newRoom);
+    }
+
     // -----------------------------------------------------------------------------
     // Main Logic
     // -----------------------------------------------------------------------------
@@ -178,6 +190,11 @@ public sealed class CollectibleSessionManager : MonoBehaviour
         if (playerFacade == null)
         {
             playerFacade = FindFirstObjectByType<PlayerFacade>();
+        }
+
+        if (roomManager == null)
+        {
+            roomManager = FindFirstObjectByType<RoomManager>();
         }
 
         if (progressStore == null)
@@ -209,6 +226,22 @@ public sealed class CollectibleSessionManager : MonoBehaviour
         playerFacade.DeathAccepted += OnPlayerDeathAccepted;
     }
 
+    // RoomManagerの部屋遷移完了イベントへ登録する
+    private void SubscribeRoomTransitionEvent()
+    {
+        if (roomManager == null)
+        {
+            if (enableDebugLog)
+            {
+                Debug.LogWarning("[CollectibleSessionManager] RoomManager が見つからないため部屋遷移コミットを購読できません", this);
+            }
+
+            return;
+        }
+
+        roomManager.OnRoomTransitionComplete += OnRoomTransitionComplete;
+    }
+
     // Manager破棄時にPlayer死亡時の登録を解除する
     private void UnsubscribeDeathEvent()
     {
@@ -218,6 +251,56 @@ public sealed class CollectibleSessionManager : MonoBehaviour
             playerFacade.DeathAccepted -= OnPlayerDeathAccepted;
         }
 
+    }
+
+    // Manager破棄時に部屋遷移完了イベントの登録を解除する
+    private void UnsubscribeRoomTransitionEvent()
+    {
+        if (roomManager != null)
+        {
+            roomManager.OnRoomTransitionComplete -= OnRoomTransitionComplete;
+        }
+    }
+
+    // 部屋遷移完了時に仮取得IDを保存済みIDへ移し、表示状態を更新する
+    private void CommitTemporaryCollectedIdsOnRoomTransition(Room room)
+    {
+        string roomId = GetRoomId(room);
+
+        if (temporaryCollectedIds.Count <= 0)
+        {
+            if (enableDebugLog)
+            {
+                Debug.Log($"[CollectibleSessionManager] 部屋遷移コミットをスキップしました 仮取得はありません room={roomId}", this);
+            }
+
+            return;
+        }
+
+        if (progressStore == null)
+        {
+            Debug.LogWarning($"[CollectibleSessionManager] CollectibleProgressStore が見つからないため保存確定できません room={roomId}", this);
+            return;
+        }
+
+        List<string> committedIds = new List<string>(temporaryCollectedIds);
+        string joinedIds = string.Join(", ", committedIds);
+
+        for (int i = 0; i < committedIds.Count; i++)
+        {
+            progressStore.AddSaved(committedIds[i]);
+        }
+
+        temporaryCollectedIds.Clear();
+        RefreshRegisteredItems();
+
+        if (enableDebugLog)
+        {
+            Debug.Log(
+                $"[CollectibleSessionManager] 部屋遷移で仮取得を保存確定しました room={roomId}, count={committedIds.Count}, ids={joinedIds}",
+                this);
+            progressStore.LogSavedIds();
+        }
     }
 
     // 保存済み・仮取得済みの状態をもとに、登録済みItemの表示状態を更新する
@@ -234,5 +317,14 @@ public sealed class CollectibleSessionManager : MonoBehaviour
 
             item.ApplyCollectedState(IsUnavailable(item.FullId));
         }
+    }
+
+    // -----------------------------------------------------------------------------
+    // Query Helpers
+    // -----------------------------------------------------------------------------
+
+    private static string GetRoomId(Room room)
+    {
+        return room != null ? room.RoomId : "(none)";
     }
 }
