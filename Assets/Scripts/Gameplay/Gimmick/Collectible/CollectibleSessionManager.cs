@@ -292,6 +292,8 @@ public sealed class CollectibleSessionManager : MonoBehaviour
             progressStore.AddSaved(committedIds[i]);
         }
 
+        bool saveSucceeded = progressStore.SaveCurrentIds();
+
         temporaryCollectedIds.Clear();
         RefreshRegisteredItems();
 
@@ -299,6 +301,9 @@ public sealed class CollectibleSessionManager : MonoBehaviour
         {
             Debug.Log(
                 $"[CollectibleSessionManager] 部屋遷移で仮取得を保存確定しました room={roomId}, count={committedIds.Count}, ids={joinedIds}",
+                this);
+            Debug.Log(
+                $"[CollectibleSessionManager] 部屋遷移コミット後の永続保存結果 saved={saveSucceeded}, room={roomId}, count={committedIds.Count}, ids={joinedIds}",
                 this);
             progressStore.LogSavedIds();
         }
