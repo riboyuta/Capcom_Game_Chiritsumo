@@ -17,10 +17,10 @@ MonoBehaviour:
     prefab: {fileID: 6820152497163776757, guid: dfb45666341461048a2fff4757a55ced, type: 3}
     icon: {fileID: 2800000, guid: d75da9a588426e042a7d7d4c0de1ebbe, type: 3}
   - tileID: ground
-    prefab: {fileID: 5409637655077809295, guid: 9c7aed6dd85cc384aa4f6e96d3d43986, type: 3}
+    prefab: {fileID: 5409637655077809295, guid: 7f68b8e9b732406419aa83082bf3d92d, type: 3}
     icon: {fileID: 2800000, guid: 09e895f517dfda040aefa350bd9b85af, type: 3}
   - tileID: underground
-    prefab: {fileID: 7244324344399976800, guid: 6bd48dcf2babce94a810e8149468f20f, type: 3}
+    prefab: {fileID: 7244324344399976800, guid: 88ffcacf4cc7df643b0cad6ab1a7f11a, type: 3}
     icon: {fileID: 2800000, guid: 1bd0d8f539651094a8b82bcc029c207d, type: 3}
   - tileID: Gimmick_Springpad
     prefab: {fileID: 5335550493632219275, guid: 0898126087786a24083a3b29e84c564e, type: 3}
@@ -52,12 +52,12 @@ MonoBehaviour:
   - tileID: Gimmick_SlideWall
     prefab: {fileID: 2298395400156925019, guid: 8e4a747c04766ec469c07deadef0c7ff, type: 3}
     icon: {fileID: 2800000, guid: 25a519cea52e87c48ae8168245dc5bb0, type: 3}
-  - tileID: 
-    prefab: {fileID: 0}
-    icon: {fileID: 0}
-  - tileID: 
-    prefab: {fileID: 0}
-    icon: {fileID: 0}
+  - tileID: Slope_Right
+    prefab: {fileID: 5409637655077809295, guid: 4f983a9d66195f34a8d393e58be01bea, type: 3}
+    icon: {fileID: 2800000, guid: 7c681ffb5a436684fa3e98a9b66775c0, type: 3}
+  - tileID: Slope_Left
+    prefab: {fileID: 5409637655077809295, guid: 7ac5945077f5faf409fb341a80cf80bb, type: 3}
+    icon: {fileID: 2800000, guid: 7c681ffb5a436684fa3e98a9b66775c0, type: 3}
   - tileID: 
     prefab: {fileID: 0}
     icon: {fileID: 0}
