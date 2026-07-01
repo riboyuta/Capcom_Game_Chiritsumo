@@ -5,12 +5,20 @@ internal sealed class PlayerMovementCore
 {
     private readonly PlayerLocomotionDependencies deps;
     private float landingControlAssistTimer;
+    private bool autoStepInterpolationActive;
+    private Vector3 autoStepInterpolationStartPosition;
+    private Vector3 autoStepInterpolationTargetPosition;
+    private Vector3 autoStepInterpolationUp;
+    private float autoStepInterpolationElapsed;
+    private float autoStepInterpolationDuration;
+    private float autoStepInterpolationStartTime;
 
     private const float MoveInputThreshold = 0.01f;
     private const float AutoStepProbeRadiusScale = 0.85f;
     private const float AutoStepLowerProbeHeightRatio = 0.45f;
     private const float AutoStepGroundCheckStartPadding = 0.05f;
     private const float DashVerticalThreshold = 0.1f;
+    private const float AutoStepInterpolationStaleTime = 0.1f;
 
 
     internal PlayerMovementCore(PlayerLocomotionDependencies deps)
@@ -85,15 +93,17 @@ internal sealed class PlayerMovementCore
             return;
         }
 
+        bool updatedAutoStepInterpolation = UpdateAutoStepInterpolation(deltaTime, allowWhileDashing: false);
+
         float rawInputX = Mathf.Clamp(deps.InputReader.Move.x, -1f, 1f);
         float moveDirection = ResolveHorizontalMoveDirection(rawInputX);
 
         float targetSpeed = moveDirection * (deps.Settings.Move.MaxSpeed * modifier.moveSpeedMultiplier);
         bool hasMoveInput = Mathf.Abs(moveDirection) > MoveInputThreshold;
 
-        if (hasMoveInput)
+        if (hasMoveInput && !updatedAutoStepInterpolation)
         {
-            TryAutoStepUp(moveDirection);
+            TryAutoStepUp(moveDirection, deltaTime);
         }
 
         bool isLandingAssistActive = deps.RuntimeState.isGrounded && landingControlAssistTimer > 0f;
@@ -224,19 +234,30 @@ internal sealed class PlayerMovementCore
 
         if (!IsHorizontalDashDirection(dashDirection))
         {
+            CancelAutoStepInterpolation();
             return false;
         }
 
-        return TryAutoStepUp(dashDirection.x, allowWhileDashing: true);
+        if (UpdateAutoStepInterpolation(Time.fixedDeltaTime, allowWhileDashing: true))
+        {
+            return true;
+        }
+
+        return TryAutoStepUp(dashDirection.x, true, Time.fixedDeltaTime);
     }
 
-    private bool TryAutoStepUp(float rawInputX)
+    private bool TryAutoStepUp(float rawInputX, float deltaTime)
     {
-        return TryAutoStepUp(rawInputX, allowWhileDashing: false);
+        return TryAutoStepUp(rawInputX, false, deltaTime);
     }
 
-    private bool TryAutoStepUp(float rawInputX, bool allowWhileDashing)
+    private bool TryAutoStepUp(float rawInputX, bool allowWhileDashing, float deltaTime)
     {
+        if (UpdateAutoStepInterpolation(deltaTime, allowWhileDashing))
+        {
+            return true;
+        }
+
         AutoStepSettings autoStep = deps.Settings.AutoStep;
 
         if (!autoStep.UseAutoStep || !CanAutoStep(allowWhileDashing))
@@ -272,7 +293,7 @@ internal sealed class PlayerMovementCore
             return false;
         }
 
-        ExecuteStepUp(targetPosition);
+        BeginStepUpInterpolation(targetPosition, allowWhileDashing, deltaTime);
         return true;
     }
 
@@ -287,6 +308,7 @@ internal sealed class PlayerMovementCore
             && !state.isLedgeClimbing
             && !state.isStomping
             && state.wallJumpControlLockTimer <= 0f
+            && !IsAutoStepInterruptedByUpwardVelocity()
             && !deps.IsActionLocked()
             && !deps.IsExternallyControlled();
     }
@@ -419,16 +441,111 @@ internal sealed class PlayerMovementCore
         return !WouldCapsuleOverlapAt(forwardStandPosition);
     }
 
-    private void ExecuteStepUp(Vector3 targetPosition)
+    private void BeginStepUpInterpolation(Vector3 targetPosition, bool allowWhileDashing, float deltaTime)
     {
-        deps.Rb.MovePosition(targetPosition);
+        autoStepInterpolationActive = true;
+        autoStepInterpolationStartPosition = deps.Rb.position;
+        autoStepInterpolationTargetPosition = targetPosition;
+        autoStepInterpolationUp = deps.Transform.up;
+        autoStepInterpolationElapsed = 0f;
+        autoStepInterpolationDuration = ResolveAutoStepSmoothDuration(allowWhileDashing);
+        autoStepInterpolationStartTime = Time.fixedTime;
 
+        UpdateAutoStepInterpolation(deltaTime, allowWhileDashing);
+    }
+
+    private bool UpdateAutoStepInterpolation(float deltaTime, bool allowWhileDashing)
+    {
+        if (!autoStepInterpolationActive)
+        {
+            return false;
+        }
+
+        if (!CanContinueAutoStepInterpolation(allowWhileDashing) || IsAutoStepInterpolationStale())
+        {
+            CancelAutoStepInterpolation();
+            return false;
+        }
+
+        float safeDuration = Mathf.Max(Time.fixedDeltaTime, autoStepInterpolationDuration);
+        autoStepInterpolationElapsed = Mathf.Min(
+            safeDuration,
+            autoStepInterpolationElapsed + Mathf.Max(0f, deltaTime));
+
+        float progress = Mathf.Clamp01(autoStepInterpolationElapsed / safeDuration);
+        ApplyAutoStepInterpolatedPosition(progress);
+        ClampDownwardVelocityForAutoStep();
+
+        if (progress >= 1f)
+        {
+            CancelAutoStepInterpolation();
+        }
+
+        return true;
+    }
+
+    private void ApplyAutoStepInterpolatedPosition(float progress)
+    {
+        Vector3 currentPosition = deps.Rb.position;
+        float startHeight = Vector3.Dot(autoStepInterpolationStartPosition, autoStepInterpolationUp);
+        float targetHeight = Vector3.Dot(autoStepInterpolationTargetPosition, autoStepInterpolationUp);
+        float currentHeight = Vector3.Dot(currentPosition, autoStepInterpolationUp);
+        float nextHeight = Mathf.Lerp(startHeight, targetHeight, progress);
+        Vector3 nextPosition = currentPosition + autoStepInterpolationUp * (nextHeight - currentHeight);
+
+        deps.Rb.MovePosition(nextPosition);
+    }
+
+    private bool CanContinueAutoStepInterpolation(bool allowWhileDashing)
+    {
+        PlayerRuntimeState state = deps.RuntimeState;
+
+        return (allowWhileDashing || !state.isDashing)
+            && !state.isWallGrabbing
+            && !state.isWallSliding
+            && !state.isLedgeClimbing
+            && !state.isStomping
+            && state.wallJumpControlLockTimer <= 0f
+            && !IsAutoStepInterruptedByUpwardVelocity()
+            && !deps.IsActionLocked()
+            && !deps.IsExternallyControlled();
+    }
+
+    private bool IsAutoStepInterruptedByUpwardVelocity()
+    {
+        return !deps.RuntimeState.isDashing
+            && !deps.RuntimeState.isGrounded
+            && deps.Rb.linearVelocity.y > 0f;
+    }
+
+    private bool IsAutoStepInterpolationStale()
+    {
+        float maxAge = Mathf.Max(AutoStepInterpolationStaleTime, autoStepInterpolationDuration * 4f);
+        return Time.fixedTime - autoStepInterpolationStartTime > maxAge;
+    }
+
+    private float ResolveAutoStepSmoothDuration(bool allowWhileDashing)
+    {
+        AutoStepSettings autoStep = deps.Settings.AutoStep;
+        return allowWhileDashing
+            ? autoStep.DashStepSmoothDuration
+            : autoStep.StepSmoothDuration;
+    }
+
+    private void ClampDownwardVelocityForAutoStep()
+    {
         Vector3 velocity = deps.Rb.linearVelocity;
         if (velocity.y < 0f)
         {
             velocity.y = 0f;
             deps.Rb.linearVelocity = velocity;
         }
+    }
+
+    private void CancelAutoStepInterpolation()
+    {
+        autoStepInterpolationActive = false;
+        autoStepInterpolationElapsed = 0f;
     }
 
     private Vector3 CalculateWorldCenterAt(Vector3 rbPosition)

@@ -254,6 +254,9 @@ public sealed class DetectionSettings
 [Serializable]
 public sealed class AutoStepSettings
 {
+    private const float DefaultStepSmoothDuration = 0.05f;
+    private const float DefaultDashStepSmoothDuration = 0.03f;
+
     [Header("自動段差乗り上げを使う")]
     [Tooltip("有効にすると、地上移動中に1段分の段差を自動で乗り上げます。")]
     [SerializeField] bool useAutoStep = true;
@@ -273,10 +276,22 @@ public sealed class AutoStepSettings
     [Min(0f)]
     [SerializeField] float clearanceMargin = 0.03f;
 
+    [Header("通常移動時の段差補間時間")]
+    [Tooltip("通常移動でAutoStepに成功したとき、段差上方向の補正を何秒かけて行うかです。0以下の場合は既定値を使います。")]
+    [Min(0f)]
+    [SerializeField] float stepSmoothDuration = DefaultStepSmoothDuration;
+
+    [Header("ダッシュ時の段差補間時間")]
+    [Tooltip("ダッシュ中にAutoStepに成功したとき、段差上方向の補正を何秒かけて行うかです。長すぎると段差へ刺さりやすくなるため短めに調整します。0以下の場合は既定値を使います。")]
+    [Min(0f)]
+    [SerializeField] float dashStepSmoothDuration = DefaultDashStepSmoothDuration;
+
     public bool UseAutoStep => useAutoStep;
     public float MaxHeight => maxHeight;
     public float ForwardCheckDistance => forwardCheckDistance;
     public float ClearanceMargin => clearanceMargin;
+    public float StepSmoothDuration => stepSmoothDuration > 0f ? stepSmoothDuration : DefaultStepSmoothDuration;
+    public float DashStepSmoothDuration => dashStepSmoothDuration > 0f ? dashStepSmoothDuration : DefaultDashStepSmoothDuration;
 }
 
 [Serializable]
