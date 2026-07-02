@@ -52,9 +52,9 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
     [Tooltip("出現位置を固定スポーン位置ではなく、遅延履歴上の位置に合わせるかです。")]
     [SerializeField] private bool appearOnDelayedTrail = true;
 
-    [Header("接触判定半径")]
-    [Tooltip("この半径内にプレイヤー中心が入ったら即死扱いにします。")]
-    [SerializeField] private float contactRadius = 0.4f;
+    [Header("接触死判定")]
+    [Tooltip("プレイヤーに触れた時に接触死として扱う Trigger 用 CapsuleCollider です。Radius / Height / Center / Direction は Inspector で調整します。")]
+    [SerializeField] private CapsuleCollider killContactCollider;
 
     [Header("Gizmo 表示")]
     [Tooltip("現在参照中の履歴位置を Gizmo で表示します。")]
@@ -105,7 +105,6 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
     private float   initialAppearDuration;
     private Vector3 initialAppearOffset;
     private bool    initialAppearOnDelayedTrail;
-    private float   initialContactRadius;
     private bool    initialShowTargetGizmo;
     private Color   initialTargetGizmoColor;
     private bool    initialShowSpawnGizmo;
@@ -127,12 +126,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
 
     private void Awake()
     {
-        // 未設定の参照をシーンから自動解決する
-        if (recorder == null)
-            recorder = FindFirstObjectByType<PlayerShadowRecorder>();
-
-        if (targetPlayer == null && recorder != null)
-            targetPlayer = recorder.GetComponent<PlayerController>();
+        ResolveReferences();
 
         // デフォルト Transform を記憶（リセット基準値）
         defaultPosition = transform.position;
@@ -144,6 +138,8 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
 
         state = ShadowChaserState.Idle;
 
+        SetKillContactColliderEnabled(false);
+
         CaptureInitialState();
     }
 
@@ -151,7 +147,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
     {
         delayTime      = Mathf.Max(0f, delayTime);
         appearDuration = Mathf.Max(0f, appearDuration);
-        contactRadius  = Mathf.Max(0f, contactRadius);
+        EnsureKillContactColliderTrigger();
     }
 
     private void Start()
@@ -173,7 +169,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             return;
 
         UpdateFollow();
-        CheckKillContact();
+        UpdateKillContactColliderEnabled();
     }
 
     // =========================================================
@@ -194,7 +190,6 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         appearOffset         = settings.appearOffset;
         appearOnDelayedTrail = settings.appearOnDelayedTrail;
 
-        contactRadius        = Mathf.Max(0f, settings.contactRadius);
 
         showTargetGizmo      = settings.showTargetGizmo;
         targetGizmoColor     = settings.targetGizmoColor;
@@ -226,6 +221,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         hasLastAppliedSnapshot = false;
         hasSpawnPosition = false;
         appearNormalizedTime = 0f;
+        SetKillContactColliderEnabled(false);
 
         ResetBreakWallReboundState();
 
@@ -287,6 +283,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         hasLastAppliedSnapshot = false;
         hasSpawnPosition = false;
         appearNormalizedTime = 0f;
+        SetKillContactColliderEnabled(false);
 
         ResetBreakWallReboundState();
     }
@@ -363,6 +360,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         appearNormalizedTime = 1f;
         state                = ShadowChaserState.Following;
         appearCoroutine      = null;
+        UpdateKillContactColliderEnabled();
     }
 
     // =========================================================
@@ -382,6 +380,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
 
         state                = ShadowChaserState.Following;
         appearNormalizedTime = 0f;
+        UpdateKillContactColliderEnabled();
     }
 
     // 毎フレーム、遅延スナップショットを取得して位置を更新する
@@ -418,24 +417,6 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         hasLastAppliedSnapshot = true;
     }
 
-    // =========================================================
-    // 接触判定
-    // =========================================================
-
-    // プレイヤーが contactRadius 以内に入ったらハザード死を要求する
-    private void CheckKillContact()
-    {
-        if (targetPlayer == null)
-            return;
-
-        float sqrDistance      = (transform.position - targetPlayer.transform.position).sqrMagnitude;
-        float sqrContactRadius = contactRadius * contactRadius;
-
-        if (sqrDistance <= sqrContactRadius)
-            targetPlayer.RequestHazardDeath();
-    }
-
-    // =========================================================
     // 設定値の保存・復元
     // =========================================================
 
@@ -450,7 +431,6 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         initialAppearOffset         = appearOffset;
         initialAppearOnDelayedTrail = appearOnDelayedTrail;
 
-        initialContactRadius        = contactRadius;
 
         initialShowTargetGizmo      = showTargetGizmo;
         initialTargetGizmoColor     = targetGizmoColor;
@@ -469,7 +449,6 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
         appearOffset         = initialAppearOffset;
         appearOnDelayedTrail = initialAppearOnDelayedTrail;
 
-        contactRadius        = initialContactRadius;
 
         showTargetGizmo      = initialShowTargetGizmo;
         targetGizmoColor     = initialTargetGizmoColor;
@@ -480,6 +459,75 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
     // =========================================================
     // ユーティリティ
     // =========================================================
+
+    // 実行時に必要な参照を取得し、使用前の状態に整える
+    private void ResolveReferences()
+    {
+        // 未設定の参照をシーンから自動解決する
+        if (recorder == null)
+            recorder = FindFirstObjectByType<PlayerShadowRecorder>();
+
+        if (targetPlayer == null && recorder != null)
+            targetPlayer = recorder.GetComponent<PlayerController>();
+
+        EnsureKillContactColliderTrigger();
+    }
+
+    private void EnsureKillContactColliderTrigger()
+    {
+        if (killContactCollider == null)
+            return;
+
+        killContactCollider.isTrigger = true;
+    }
+
+    private void UpdateKillContactColliderEnabled()
+    {
+        SetKillContactColliderEnabled(CanUseKillContact());
+    }
+
+    private void SetKillContactColliderEnabled(bool enabled)
+    {
+        if (killContactCollider == null)
+            return;
+
+        killContactCollider.enabled = enabled;
+    }
+
+    private bool CanUseKillContact()
+    {
+        return IsActive()
+            && state == ShadowChaserState.Following
+            && hasLastAppliedSnapshot;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        TryRequestKillContact(other);
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        TryRequestKillContact(other);
+    }
+
+    private void TryRequestKillContact(Collider other)
+    {
+        if (!CanUseKillContact() || killContactCollider == null || !killContactCollider.enabled)
+            return;
+
+        PlayerController player = other != null ? other.GetComponentInParent<PlayerController>() : null;
+        if (player == null)
+            return;
+
+        if (targetPlayer != null && player != targetPlayer)
+            return;
+
+        if (targetPlayer == null)
+            targetPlayer = player;
+
+        targetPlayer.RequestHazardDeath();
+    }
 
     private void StopAppearCoroutine()
     {
@@ -534,6 +582,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
             reboundDirection * Mathf.Max(0.0f, reboundDistance);
 
         state = ShadowChaserState.Rebounding;
+        UpdateKillContactColliderEnabled();
     }
 
     private void TickBreakWallRebound(float deltaTime)
@@ -557,6 +606,7 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
 
         ResetBreakWallReboundState();
         state = ShadowChaserState.Following;
+        UpdateKillContactColliderEnabled();
     }
 
     // =========================================================
@@ -565,10 +615,6 @@ public sealed class ShadowChaserEnemy : MonoBehaviour, IRespawnResettable
 
     private void OnDrawGizmosSelected()
     {
-        // 接触判定円
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, contactRadius);
-
         // 現在の追跡目標位置
         if (showTargetGizmo && hasLastAppliedSnapshot)
         {
