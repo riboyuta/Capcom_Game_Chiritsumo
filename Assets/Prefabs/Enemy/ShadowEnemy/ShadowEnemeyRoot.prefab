@@ -601,7 +601,7 @@ MonoBehaviour:
   appearDuration: 0.3
   appearOffset: {x: 0, y: -1, z: 0}
   appearOnDelayedTrail: 1
-  contactRadius: 0.8
+  contactRadius: 0.9
   showTargetGizmo: 1
   targetGizmoColor: {r: 0, g: 1, b: 1, a: 1}
   showSpawnGizmo: 1
