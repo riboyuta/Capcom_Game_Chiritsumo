@@ -98,6 +98,19 @@ public sealed class HandChaserModelView : MonoBehaviour
     [Tooltip("手モデルごとのアニメーション開始位置のズレです。")]
     [SerializeField] private float animationOffsetStep = 0.11f;
 
+    [Header("モデル回転")]
+    [Tooltip("生成した手モデルを回転させ続けるかどうかです。")]
+    [SerializeField] private bool rotateSpawnedModels = true;
+
+    [Tooltip("1秒あたりの回転角度です。正の値で指定軸方向、負の値で逆回転します。")]
+    [SerializeField] private float modelRotationSpeed = 90.0f;
+
+    [Tooltip("回転軸です。例: Z軸なら (0, 0, 1) です。")]
+    [SerializeField] private Vector3 modelRotationAxis = Vector3.forward;
+
+    [Tooltip("Time.timeScaleの影響を受けずに回転させるかどうかです。")]
+    [SerializeField] private bool useUnscaledRotationTime;
+
     [Header("デバッグ")]
     [Tooltip("生成ログを出すかどうかです。")]
     [SerializeField] private bool enableDebugLog;
@@ -129,6 +142,56 @@ public sealed class HandChaserModelView : MonoBehaviour
     private void Reset()
     {
         modelRoot = transform;
+    }
+
+    private void Update()
+    {
+        RotateSpawnedModels();
+    }
+
+    // 生成済みの手モデルを回転させる
+    private void RotateSpawnedModels()
+    {
+        if (!rotateSpawnedModels)
+        {
+            return;
+        }
+
+        if (spawnedModels.Count <= 0)
+        {
+            return;
+        }
+
+        Vector3 axis = modelRotationAxis;
+        if (axis.sqrMagnitude <= 0.0001f)
+        {
+            return;
+        }
+
+        axis.Normalize();
+
+        float deltaTime = useUnscaledRotationTime ? Time.unscaledDeltaTime : Time.deltaTime;
+        float angle = modelRotationSpeed * deltaTime;
+        if (Mathf.Approximately(angle, 0.0f))
+        {
+            return;
+        }
+
+        for (int i = 0; i < spawnedModels.Count; i++)
+        {
+            Transform model = spawnedModels[i];
+            if (model == null)
+            {
+                continue;
+            }
+
+            if (!model.gameObject.activeInHierarchy)
+            {
+                continue;
+            }
+
+            model.Rotate(axis, angle, Space.Self);
+        }
     }
 
     // 生成時にアニメーションを初期再生する
@@ -499,8 +562,8 @@ public sealed class HandChaserModelView : MonoBehaviour
     private Vector3 GetLocalPositionFromLine(float linePosition, MoveDirection direction)
     {
         bool isHorizontal = direction == MoveDirection.Right || direction == MoveDirection.Left;
-        return isHorizontal 
-            ? new Vector3(0.0f, linePosition, 0.0f) 
+        return isHorizontal
+            ? new Vector3(0.0f, linePosition, 0.0f)
             : new Vector3(linePosition, 0.0f, 0.0f);
     }
 
