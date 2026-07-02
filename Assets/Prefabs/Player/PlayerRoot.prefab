@@ -1392,7 +1392,7 @@ MonoBehaviour:
     m_NumAlphaKeys: 4
   useEmission: 1
   emissionColor: {r: 0.36, g: 0.2, b: 1, a: 1}
-  useEmissionColorGradient: 1
+  useEmissionColorGradient: 0
   emissionColorGradient:
     serializedVersion: 2
     key0: {r: 0.56924176, g: 0.8647284, b: 0.9811321, a: 1}
@@ -1423,7 +1423,7 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 4
     m_NumAlphaKeys: 2
-  emissionIntensity: 2
+  emissionIntensity: 4
   emissionIntensityCurve:
     serializedVersion: 2
     m_Curve:
