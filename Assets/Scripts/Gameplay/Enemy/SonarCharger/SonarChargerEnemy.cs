@@ -43,6 +43,13 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     [Tooltip("突進停止に使う playerCamera です。未設定時はシーンから探します。")]
     [SerializeField] private PlayerCameraController playerCameraController;
 
+    [Header("エフェクト")]
+    [Tooltip("SonarChargerEnemy のエフェクト再生に使う EffectPlayer です。")]
+    [SerializeField] private GameEffectPlayer effectPlayer;
+
+    [Tooltip("エフェクトの発生基準です。未設定時はこの Transform を使います。")]
+    [SerializeField] private Transform effectOrigin;
+
     [Header("表示コンポーネント")]
     [SerializeField] private SonarChargerMovement movement;
     [SerializeField] private SonarChargerSonarDetector sonarDetector;
@@ -92,6 +99,9 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
 
     // 復帰目標を完了判定境界より内側へ配置するための追加余白
     private const float RecoveryTargetExtraInset = 0.1f;
+
+    // エフェクト発生基準の Transform。未設定時はこの Transform を使う。
+    private Transform EffectOrigin => effectOrigin != null ? effectOrigin : transform;
 
     // 初期状態保持（リスポーン用）
     private bool hasCapturedInitialState;
@@ -219,7 +229,6 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     // 敵を起動し、Follow 状態でプレイヤーの追跡を開始する
     public void BeginChase()
     {
-        // 既に起動済みの場合は無視する
         if (isActivated)
         {
             LogDebug("Already activated.");
@@ -234,6 +243,9 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
 
         ApplyActivationVisualState();
         HideChargeWarning();
+
+        effectPlayer?.SetActive(GameEffectKey.EnemySonarAura, EffectOrigin, true);
+
         ChangeState(SonarChargerState.Follow);
         view.PlayFollow();
 
@@ -500,7 +512,11 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
         HideChargeWarning();
 
         if (chargeWarningView != null)
+        {
             chargeWarningView.SetTracking();
+        }
+
+        effectPlayer?.SetActive(GameEffectKey.EnemySonarChargePrepare, EffectOrigin, true);
 
         ChangeState(SonarChargerState.Alert);
         view.PlayAlert();
@@ -649,12 +665,16 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
             Settings);
 
         if (chargeWarningView != null)
+        {
             chargeWarningView.SetCharging();
+        }
 
         view.ApplyDirection(movement.ChargeDirection);
 
-        // Charge 開始時に警告ラインの終端を確定して固定する
         PrepareChargeWarningForCharge();
+
+        effectPlayer?.SetActive(GameEffectKey.EnemySonarChargePrepare, EffectOrigin, false);
+        effectPlayer?.SetActive(GameEffectKey.EnemySonarChargeDebris, EffectOrigin, true);
 
         ChangeState(SonarChargerState.Charge);
         view.PlayCharge();
@@ -682,6 +702,12 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     private void StartRebound()
     {
         HideChargeWarning();
+
+        effectPlayer?.SetActive(GameEffectKey.EnemySonarChargePrepare, EffectOrigin, false);
+        effectPlayer?.SetActive(GameEffectKey.EnemySonarChargeDebris, EffectOrigin, false);
+
+        effectPlayer?.Play(GameEffectKey.EnemySonarWallHit, EffectOrigin);
+
         movement.StartRebound(Settings);
         ChangeState(SonarChargerState.Rebound);
         view.PlayRebound();
@@ -1000,6 +1026,10 @@ public sealed class SonarChargerEnemy : MonoBehaviour, IRespawnResettable
     // Idle 状態へ遷移し、アニメーションと表示状態をリセットする
     private void ResetToIdleState()
     {
+        effectPlayer?.Stop(GameEffectKey.EnemySonarAura, EffectOrigin);
+        effectPlayer?.Stop(GameEffectKey.EnemySonarChargePrepare, EffectOrigin);
+        effectPlayer?.Stop(GameEffectKey.EnemySonarChargeDebris, EffectOrigin);
+
         ChangeState(SonarChargerState.Idle);
         view.PlayIdle();
         ApplyActivationVisualState();

@@ -27,12 +27,12 @@ public enum GameEffectKey
     GimmickKeyGet,
 
     // Enemy
-    EnemyHandAura,
-    EnemyShadowAura,
-    EnemyShadowSpawn,
-    EnemySonarAura,
-    EnemySonarWallHit,
-    EnemySonarChargePrepare,
-    EnemySonarChargeSpeedLine,
-    EnemySonarChargeDebris
+    EnemyHandAura,  
+    EnemyShadowAura,    
+    EnemyShadowSpawn,   
+    EnemySonarAura,     //突進敵のオーラ
+    EnemySonarPulseRing,     //突進敵のソナーリング
+    EnemySonarWallHit,      //突進敵の壁ヒット
+    EnemySonarChargePrepare,        //突進敵のチャージ溜め
+    EnemySonarChargeDebris  
 }

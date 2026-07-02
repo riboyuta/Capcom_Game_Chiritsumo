@@ -8,9 +8,6 @@ public sealed class HandChaserModelView : MonoBehaviour
     [System.Serializable]
     private struct DirectionModelCorrection
     {
-        [Tooltip("この方向で生成する手モデルのローカル位置補正です。")]
-        public Vector3 positionOffset;
-
         [Tooltip("この方向で生成する手モデルのローカル回転補正です。")]
         public Vector3 rotationEuler;
 
@@ -26,7 +23,7 @@ public sealed class HandChaserModelView : MonoBehaviour
     [SerializeField] private Transform modelRoot;
 
     [Header("配置")]
-    [Tooltip("手モデル同士の間隔です。小さいほど密度が高くなります。")]
+    [Tooltip("手モデルを1体生成するごとに、線上で何座標分ずらすかです。小さいほどモデル同士が重なります。")]
     [SerializeField] private float modelSpacing = 1.2f;
 
     [Tooltip("生成する手モデル数の上限です。設定ミスによる大量生成を防ぎます。")]
@@ -38,12 +35,13 @@ public sealed class HandChaserModelView : MonoBehaviour
     [Tooltip("奥行き方向に何列重ねるかです。1なら一列だけです。")]
     [SerializeField] private int rowCount = 1;
 
-    [Tooltip("複数列にした時の列ごとのズレです。")]
-    [SerializeField] private Vector3 rowOffset = new Vector3(0.15f, 0.15f, -0.2f);
+    [Tooltip("生成モデル全体の配置補正です。X=並び方向、Y=進行方向、Z=奥行き方向です。")]
+    [SerializeField] private Vector3 modelPlacementOffset = new Vector3(0.0f, -0.3f, 0.0f);
+
+    [Tooltip("複数列にした時の列ごとのズレです。X=並び方向、Y=進行方向、Z=奥行き方向です。")]
+    [SerializeField] private Vector3 rowPlacementOffset = new Vector3(0.15f, 0.15f, -0.2f);
 
     [Header("モデル補正: 共通")]
-    [Tooltip("方向別補正を使わない場合に使う、生成モデルのローカル位置補正です。")]
-    [SerializeField] private Vector3 modelPositionOffset;
 
     [Tooltip("方向別補正を使わない場合に使う、生成モデルのローカル回転補正です。")]
     [SerializeField] private Vector3 modelRotationEuler;
@@ -59,7 +57,6 @@ public sealed class HandChaserModelView : MonoBehaviour
     [SerializeField]
     private DirectionModelCorrection rightCorrection = new DirectionModelCorrection
     {
-        positionOffset = new Vector3(-0.3f, 0.0f, 0.0f),
         rotationEuler = new Vector3(0.0f, 180.0f, 0.0f),
         scale = Vector3.one
     };
@@ -68,7 +65,6 @@ public sealed class HandChaserModelView : MonoBehaviour
     [SerializeField]
     private DirectionModelCorrection leftCorrection = new DirectionModelCorrection
     {
-        positionOffset = new Vector3(0.3f, 0.0f, 0.0f),
         rotationEuler = new Vector3(0.0f, 0.0f, 0.0f),
         scale = Vector3.one
     };
@@ -77,7 +73,6 @@ public sealed class HandChaserModelView : MonoBehaviour
     [SerializeField]
     private DirectionModelCorrection upCorrection = new DirectionModelCorrection
     {
-        positionOffset = new Vector3(0.0f, -0.3f, 0.0f),
         rotationEuler = new Vector3(0.0f, 0.0f, -90.0f),
         scale = Vector3.one
     };
@@ -86,7 +81,6 @@ public sealed class HandChaserModelView : MonoBehaviour
     [SerializeField]
     private DirectionModelCorrection downCorrection = new DirectionModelCorrection
     {
-        positionOffset = new Vector3(0.0f, 0.3f, 0.0f),
         rotationEuler = new Vector3(0.0f, 0.0f, 90.0f),
         scale = Vector3.one
     };
@@ -300,7 +294,7 @@ public sealed class HandChaserModelView : MonoBehaviour
             Debug.Log(
                 $"[HandChaserModelView] Rebuilt models from collider. " +
                 $"direction={direction}, colliderSize={boxCollider.size}, colliderCenter={boxCollider.center}, " +
-                $"fillLength={fillLength}, spacing={modelSpacing}, count={modelCount}, rowCount={rowCount}, " +
+                $"fillLength={fillLength}, step={modelSpacing}, count={modelCount}, rowCount={rowCount}, " +
                 $"viewLossyScale={transform.lossyScale}, modelRootLossyScale={modelRoot.lossyScale}",
                 this);
         }
@@ -399,17 +393,93 @@ public sealed class HandChaserModelView : MonoBehaviour
     // 横方向の壁は高さ、縦方向の壁は幅を使用し、余白も追加
     private float GetFillLength(Bounds bounds, MoveDirection direction)
     {
-        bool isHorizontal = direction == MoveDirection.Right || direction == MoveDirection.Left;
-        float baseLength = isHorizontal ? bounds.size.y : bounds.size.x;
+        Vector3 lineAxis = GetLineAxis(direction);
+        float baseLength = GetBoundsSizeAlongAxis(bounds, lineAxis);
         return baseLength + fillPadding * 2.0f;
     }
 
+    // 進行方向を取得
+    private Vector3 GetMoveAxis(MoveDirection direction)
+    {
+        switch (direction)
+        {
+            case MoveDirection.Right:
+                return Vector3.right;
+
+            case MoveDirection.Left:
+                return Vector3.left;
+
+            case MoveDirection.Up:
+                return Vector3.up;
+
+            case MoveDirection.Down:
+                return Vector3.down;
+
+            default:
+                return Vector3.right;
+        }
+    }
+
+    // 壁としてモデルを並べる方向を取得
+    // 左右に進む壁なら縦方向、上下に進む壁なら横方向に並べる。
+    private Vector3 GetLineAxis(MoveDirection direction)
+    {
+        switch (direction)
+        {
+            case MoveDirection.Right:
+            case MoveDirection.Left:
+                return Vector3.up;
+
+            case MoveDirection.Up:
+            case MoveDirection.Down:
+                return Vector3.right;
+
+            default:
+                return Vector3.up;
+        }
+    }
+
+    // Boundsのサイズを指定軸方向で取得
+    private float GetBoundsSizeAlongAxis(Bounds bounds, Vector3 axis)
+    {
+        Vector3 absoluteAxis = new Vector3(
+            Mathf.Abs(axis.x),
+            Mathf.Abs(axis.y),
+            Mathf.Abs(axis.z));
+
+        return bounds.size.x * absoluteAxis.x +
+               bounds.size.y * absoluteAxis.y +
+               bounds.size.z * absoluteAxis.z;
+    }
+
+    // 壁基準の配置補正を、このオブジェクトのローカル座標に変換する
+    // offset.x = 並び方向
+    // offset.y = 進行方向
+    // offset.z = 奥行き方向
+    private Vector3 ConvertPlacementOffsetToLocal(Vector3 offset, MoveDirection direction)
+    {
+        Vector3 lineAxis = GetLineAxis(direction);
+        Vector3 moveAxis = GetMoveAxis(direction);
+        Vector3 depthAxis = Vector3.forward;
+
+        return lineAxis * offset.x +
+               moveAxis * offset.y +
+               depthAxis * offset.z;
+    }
+
+    // 配置に使う安全なステップ量を取得
+    // modelSpacing は「空き間隔」ではなく「1体ごとにずらす座標量」として扱う。
+    private float GetSafeModelStep()
+    {
+        return Mathf.Max(MinimumSpacing, Mathf.Abs(modelSpacing));
+    }
+
     // 必要なモデル数を算出
-    // 最小間隔と最大数でクランプして異常値を防ぐ
+    // ステップ量と最大数でクランプして異常値を防ぐ
     private int CalculateModelCount(float fillLength)
     {
-        float safeSpacing = Mathf.Max(MinimumSpacing, modelSpacing);
-        int count = Mathf.CeilToInt(fillLength / safeSpacing) + 1;
+        float safeStep = GetSafeModelStep();
+        int count = Mathf.CeilToInt(fillLength / safeStep) + 1;
         int safeMaxCount = Mathf.Max(1, maxModelCount);
         return Mathf.Clamp(count, 1, safeMaxCount);
     }
@@ -419,23 +489,30 @@ public sealed class HandChaserModelView : MonoBehaviour
     private void SpawnModels(float fillLength, int modelCount, MoveDirection direction, BoxCollider boxCollider)
     {
         int safeRowCount = Mathf.Max(1, rowCount);
-        float start = -fillLength * 0.5f;
-        float end = fillLength * 0.5f;
+        float step = GetSafeModelStep();
+
+        // 端から端へLerpで均等配置するのではなく、
+        // 1体ごとに step 座標ずつずらして配置する。
+        // これにより、step をモデルの見た目サイズより小さくすれば一部分を重ねられる。
+        float start = -step * (modelCount - 1) * 0.5f;
+
         DirectionModelCorrection correction = GetCorrection(direction);
 
         // 行ごとにループ（奥行き方向の層）
         for (int row = 0; row < safeRowCount; row++)
         {
-            // 各行のモデルを等間隔で配置
+            // 各行のモデルを一定座標ずつずらして配置
             for (int i = 0; i < modelCount; i++)
             {
-                // 0～1の補間値を計算（端から端まで均等配置）
-                float t = modelCount <= 1 ? 0.0f : (float)i / (modelCount - 1);
-                float linePosition = Mathf.Lerp(start, end, t);
+                float linePosition = start + step * i;
 
                 // 位置計算（BoxColliderがあれば精密配置、なければ単純配置）
                 Vector3 localPosition = GetModelPosition(linePosition, direction, boxCollider);
-                localPosition += correction.positionOffset + rowOffset * row;
+
+                Vector3 modelOffset = ConvertPlacementOffsetToLocal(modelPlacementOffset, direction);
+                Vector3 rowOffset = ConvertPlacementOffsetToLocal(rowPlacementOffset, direction) * row;
+
+                localPosition += modelOffset + rowOffset;
 
                 // モデルをインスタンス化して配置
                 Transform model = CreateHandModel(localPosition, correction);
@@ -497,7 +574,6 @@ public sealed class HandChaserModelView : MonoBehaviour
         {
             return new DirectionModelCorrection
             {
-                positionOffset = modelPositionOffset,
                 rotationEuler = modelRotationEuler,
                 scale = modelScale
             };
@@ -521,7 +597,6 @@ public sealed class HandChaserModelView : MonoBehaviour
             default:
                 return new DirectionModelCorrection
                 {
-                    positionOffset = modelPositionOffset,
                     rotationEuler = modelRotationEuler,
                     scale = modelScale
                 };
@@ -534,19 +609,8 @@ public sealed class HandChaserModelView : MonoBehaviour
     // 横方向の壁ならY軸、縦方向の壁ならX軸に配置
     private Vector3 GetColliderLocalPosition(BoxCollider boxCollider, float linePosition, MoveDirection direction)
     {
-        Vector3 localPosition = boxCollider.center;
-        bool isHorizontal = direction == MoveDirection.Right || direction == MoveDirection.Left;
-
-        if (isHorizontal)
-        {
-            localPosition.y += linePosition;
-        }
-        else
-        {
-            localPosition.x += linePosition;
-        }
-
-        return localPosition;
+        Vector3 lineAxis = GetLineAxis(direction);
+        return boxCollider.center + lineAxis * linePosition;
     }
 
     // オーナー（HandChaserEnemy本体）のローカル座標を、modelRootのローカル座標に変換
@@ -561,10 +625,8 @@ public sealed class HandChaserModelView : MonoBehaviour
     // Collider無しの場合に使用する簡易配置
     private Vector3 GetLocalPositionFromLine(float linePosition, MoveDirection direction)
     {
-        bool isHorizontal = direction == MoveDirection.Right || direction == MoveDirection.Left;
-        return isHorizontal
-            ? new Vector3(0.0f, linePosition, 0.0f)
-            : new Vector3(linePosition, 0.0f, 0.0f);
+        Vector3 lineAxis = GetLineAxis(direction);
+        return lineAxis * linePosition;
     }
 
     // 2つのBoundsがほぼ同じかどうかを判定
