@@ -215,7 +215,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShadowChaserDashAfterimageView
   shadowEnemy: {fileID: 7109090437168328579}
   modelRoot: {fileID: 7739214259632440699}
-  afterimageColor: {r: 0.45, g: 0.02, b: 0.08, a: 1}
+  afterimageColor: {r: 0.3962264, g: 0.09158064, b: 0.1331232, a: 1}
   useColorGradient: 1
   afterimageColorGradient:
     serializedVersion: 2
@@ -248,12 +248,12 @@ MonoBehaviour:
     m_NumColorKeys: 3
     m_NumAlphaKeys: 3
   useEmission: 1
-  emissionColor: {r: 0.49120814, g: 0.013064048, b: 0, a: 1}
+  emissionColor: {r: 0.2830189, g: 0, b: 0, a: 1}
   useEmissionColorGradient: 1
   emissionColorGradient:
     serializedVersion: 2
     key0: {r: 1.5, g: 0.06, b: 0.02, a: 1}
-    key1: {r: 0.6, g: 0.02, b: 0.02, a: 1}
+    key1: {r: 0.1509434, g: 0.032039877, b: 0.032039877, a: 1}
     key2: {r: 0, g: 0, b: 0, a: 0}
     key3: {r: 0, g: 0, b: 0, a: 0}
     key4: {r: 0, g: 0, b: 0, a: 0}
@@ -261,7 +261,7 @@ MonoBehaviour:
     key6: {r: 0, g: 0, b: 0, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 0
-    ctime1: 36044
+    ctime1: 40863
     ctime2: 65535
     ctime3: 0
     ctime4: 0
@@ -280,7 +280,7 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 3
     m_NumAlphaKeys: 2
-  emissionIntensity: 2
+  emissionIntensity: 1
   startAlpha: 0.4
   lifetime: 0.24
   afterimageDepthOffset: 1
