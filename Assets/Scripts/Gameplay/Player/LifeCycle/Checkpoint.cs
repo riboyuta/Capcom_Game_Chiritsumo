@@ -27,6 +27,12 @@ public sealed class Checkpoint : MonoBehaviour
             return;
         }
 
+        PlayerController player = other.GetComponentInParent<PlayerController>();
+        if (player != null && (player.IsDeadState || player.IsDeathSequencePlaying))
+        {
+            return;
+        }
+
         if (respawnPoint == null)
         {
             Debug.LogWarning("[Checkpoint] respawnPoint is null.", this);
