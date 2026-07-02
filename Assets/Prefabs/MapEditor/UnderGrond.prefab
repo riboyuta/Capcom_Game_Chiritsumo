@@ -82,6 +82,7 @@ MonoBehaviour:
     icon: {fileID: 0}
   gimmickType: 3
   gimmickID: 0
+  tileCollisionBuildType: 0
 --- !u!1001 &3972142860543672690
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -92,15 +93,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 2d06871569facf64ab371f368616040e, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.55
+      value: 1.6000001
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2d06871569facf64ab371f368616040e, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.55
+      value: 1.6000001
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2d06871569facf64ab371f368616040e, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.55
+      value: 1.6000001
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2d06871569facf64ab371f368616040e, type: 3}
       propertyPath: m_LocalPosition.x

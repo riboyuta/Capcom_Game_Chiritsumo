@@ -61,6 +61,7 @@ MonoBehaviour:
     icon: {fileID: 0}
   gimmickType: 0
   gimmickID: 0
+  tileCollisionBuildType: 0
 --- !u!65 &-7863572024843087998
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -92,15 +93,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: d462fecf18e962849bfa3bd633f6df57, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.55
+      value: 1.6000001
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d462fecf18e962849bfa3bd633f6df57, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.55
+      value: 1.6000001
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d462fecf18e962849bfa3bd633f6df57, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.55
+      value: 1.6000001
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d462fecf18e962849bfa3bd633f6df57, type: 3}
       propertyPath: m_LocalPosition.x
