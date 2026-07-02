@@ -399,14 +399,14 @@ internal sealed class PlayerWallActionSystem
         float threshold = deps.Settings.Detection.WallInputThreshold;
         bool hasHorizontalInput = Mathf.Abs(inputX) >= threshold;
 
-        if (!hasHorizontalInput)
+        if (!deps.Settings.Wall.AllowWallKickWithoutHorizontalInput && !hasHorizontalInput)
         {
             return false;
         }
 
         if (deps.RuntimeState.isWallGrabbing)
         {
-            // 壁掴まり中だけ「壁と反対入力」で壁キック
+            // 壁掴まり中は既存通り「壁と反対入力」でだけ壁キックし、横入力なしは真上ジャンプ側に任せる。
             bool pushingAwayFromWall = inputX * side < -threshold;
             if (!pushingAwayFromWall)
             {

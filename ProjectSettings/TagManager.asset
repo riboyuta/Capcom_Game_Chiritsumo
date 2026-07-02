@@ -16,8 +16,8 @@ TagManager:
   - One Way Platform
   - Wall
   - Player
-  - 
-  - 
+  - PostProcessing
+  - SpikeBlock
   - 
   - 
   - 
@@ -47,9 +47,6 @@ TagManager:
     locked: 0
   - name: Player
     uniqueID: 3188537091
-    locked: 0
-  - name: CameraSoritingLayer
-    uniqueID: 1829854529
     locked: 0
   m_RenderingLayers:
   - Default

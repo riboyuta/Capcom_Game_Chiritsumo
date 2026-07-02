@@ -76,6 +76,7 @@ GameObject:
   - component: {fileID: 7245845037038200275}
   - component: {fileID: 5824345467123610462}
   - component: {fileID: 7433358084784078943}
+  - component: {fileID: 7405780541332387158}
   m_Layer: 0
   m_Name: EnemySpawnTrigger
   m_TagString: Untagged
@@ -131,13 +132,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: def240e382888554abf044f8350dcbf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandChaserActivator
-  targetEnemy: {fileID: 6611207109860754603}
-  gameRoot: {fileID: 0}
   playerTag: Player
   spawnDelay: 0
   parentRoom: {fileID: 0}
-  visualizeSafeZone: 1
-  safeZoneColor: {r: 0, g: 1, b: 0, a: 0.8}
+  targetEnemy: {fileID: 6611207109860754603}
+  gameController: {fileID: 0}
   spawnWarningView: {fileID: 0}
   targetMovement: {fileID: 2433565921475156991}
   useSpawnWarning: 1
@@ -156,6 +155,20 @@ MonoBehaviour:
   parentRoom: {fileID: 0}
   usePlayerTag: 1
   playerTag: Player
+--- !u!114 &7405780541332387158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2035429403228887289}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ecc6af31a828454ea0181e155f6cb77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SafeZoneWireframeView
+  visible: 1
+  wireframeColor: {r: 0, g: 1, b: 0, a: 0.8}
 --- !u!1 &8533222570096685435
 GameObject:
   m_ObjectHideFlags: 0
@@ -280,14 +293,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57c460482ac48f1478b7eca46fa618c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandChaserMovement
-  enableAdaptiveSpeed: 0
-  nearSpeed: 7
-  idealSpeed: 9
+  enableAdaptiveSpeed: 1
+  nearSpeed: 9
+  idealSpeed: 9.5
   farSpeed: 12
   nearThreshold: 4
-  idealMinDistance: 6
-  idealMaxDistance: 8
-  farThreshold: 12
+  idealMinDistance: 12
+  idealMaxDistance: 16
+  farThreshold: 28
   speedSmoothTime: 0.15
 --- !u!114 &8742252961490900893
 MonoBehaviour:

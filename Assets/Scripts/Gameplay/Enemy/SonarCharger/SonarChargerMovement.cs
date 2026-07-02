@@ -113,27 +113,60 @@ public sealed class SonarChargerMovement : MonoBehaviour
         ResetAllChargeStates();
     }
 
-    // Follow状態: プレイヤーへ向かって移動
-    public void TickFollow(Vector3 targetPosition, SonarChargerSettings settings, float deltaTime)
+    // Follow状態: 指定された速度で目標位置へ移動
+    public void TickFollow(
+        Vector3 targetPosition,
+        float moveSpeed,
+        float deltaTime)
     {
-        Vector3 current = GetWorldPosition();
-        // 目標位置へのベクトルを計算（Z座標は無0）
-        Vector3 toTarget = Flatten(targetPosition - current);
+        Vector3 current =
+            GetWorldPosition();
 
-        // 目標までの距離が極小なら停止
+        Vector3 target =
+            targetPosition;
+
+        target.z =
+            current.z;
+
+        Vector3 toTarget =
+            Flatten(
+                target -
+                current);
+
+        // 十分近い場合も、停止するだけではなく目標位置へ合わせる
         if (toTarget.sqrMagnitude <= 0.0001f)
         {
+            SetWorldPosition(target);
             StopImmediate();
             return;
         }
 
-        // 移動方向を正規化し、最後の移動方向として記録
-        Vector3 direction = toTarget.normalized;
-        lastMoveDirection = direction;
+        Vector3 direction =
+            toTarget.normalized;
 
-        // 次のフレームの位置を計算（速度 * デルタタイム）
-        Vector3 next = current + direction * settings.followSpeed * deltaTime;
-        next.z = current.z; // Z座標は固定
+        lastMoveDirection =
+            direction;
+
+        float speed =
+            Mathf.Max(
+                0.0f,
+                moveSpeed);
+
+        float safeDeltaTime =
+            Mathf.Max(
+                0.0f,
+                deltaTime);
+
+        // 目標を通り越さないように移動する
+        Vector3 next =
+            Vector3.MoveTowards(
+                current,
+                target,
+                speed * safeDeltaTime);
+
+        next.z =
+            current.z;
+
         SetWorldPosition(next);
     }
 

@@ -5,29 +5,32 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MainScenes/Boot.unity
     guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MainScenes/Title.unity
     guid: a088c8ed9a86dae4f801ed0f4c71eec5
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MainScenes/Tutorial.unity
     guid: 3ad2a5b154b8ae7489de96ddbe04e541
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MainScenes/Stage1.unity
     guid: da5f6f736b2022f45ac680fccbd97c32
+  - enabled: 1
+    path: Assets/Scenes/MainScenes/Stage2.unity
+    guid: 3753e8ea7e6e4274ca492bc5924b1ec2
   - enabled: 0
     path: Assets/Scenes/MainScenes/Game.unity
     guid: 0b1d881368c6cc946a85caf2618f0e09
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MainScenes/Result.unity
     guid: 370940ae0cdc67b46b5a1d9ab6e3c769
   - enabled: 0
     path: Assets/Scenes/TestPlayScenes/IkedaScenes/IkedaMap/DebugMapScenes/DebugMapScene/TestPlay/DebugMapTestPlay.unity
     guid: dc99dfb525ea013438126baaa3ec3e6f
   - enabled: 0
-    path: Assets/Scenes/DebugScenes/Tomoya/DebugMapScenes/TestPlay/DebugMapTestPlay_v4.unity
+    path: Assets/Scenes/DebugScenes/Tomoya/TestPlay/DebugMapTestPlay_v4.unity
     guid: d09b6fc1b2b621e48bd54c23f2681ab9
   - enabled: 0
     path: Assets/Scenes/DebugScenes/Tomoya/DebugMapScenes/TestPlay/DebugMapTestPlay_v5.unity

@@ -225,11 +225,11 @@ public sealed class HandChaserMovement : MonoBehaviour
         Vector3 before   = rb.position;
         Vector3 next     = rb.position + moveAxis * (effectiveSpeed * Time.fixedDeltaTime);
 
-        Debug.Log($"[HandChaserMovement] before={before} next={next} axis={moveAxis} speed={effectiveSpeed:F2} isKinematic={rb.isKinematic}", this);
+        //Debug.Log($"[HandChaserMovement] before={before} next={next} axis={moveAxis} speed={effectiveSpeed:F2} isKinematic={rb.isKinematic}", this);
 
         rb.MovePosition(next);
 
-        Debug.Log($"[HandChaserMovement] after MovePosition rb.position={rb.position} transform.position={transform.position}", this);
+        //Debug.Log($"[HandChaserMovement] after MovePosition rb.position={rb.position} transform.position={transform.position}", this);
     }
 
     // ──────────────────────────────────────────

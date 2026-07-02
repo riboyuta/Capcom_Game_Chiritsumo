@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Networking;
 using static MapEditor;
 
 /// MapEditor で保存した JSON ファイルを読み込んでタイルを生成するローダー。
@@ -53,68 +54,10 @@ public class MapLoader : MonoBehaviour
             return;
         }
 
-        LoadMap();
+        StartCoroutine(LoadMapCoroutine());
     }
 
-    /// JSON ファイルを読み込んでタイルを生成します。
-    /// 既に生成済みのタイルがあれば先に破棄してから再生成します。
-    public void LoadMap()
-    {
-        ClearSpawnedTiles();
-
-        if (tileDatabase == null)
-        {
-            Debug.LogError("[MapLoader] TileDatabase が未設定です。Inspector でセットしてください。", this);
-            return;
-        }
-
-        if (!File.Exists(FilePath))
-        {
-            Debug.LogWarning($"[MapLoader] マップファイルが見つかりません: {FilePath}", this);
-            return;
-        }
-
-        string json = File.ReadAllText(FilePath);
-        MapData mapData = JsonUtility.FromJson<MapData>(json);
-
-        if (mapData == null || mapData.tiles == null)
-        {
-            Debug.LogError("[MapLoader] JSON の解析に失敗しました。", this);
-            return;
-        }
-
-        foreach (TileData data in mapData.tiles)
-        {
-            // tileID に対応する定義を TileDatabase から検索する
-            TileDefinition def = tileDatabase.tiles.Find(t => t != null && t.tileID == data.tileID);
-            if (def == null)
-            {
-                Debug.LogWarning($"[MapLoader] tileID '{data.tileID}' が TileDatabase に見つかりません。スキップします。", this);
-                continue;
-            }
-
-            Vector3 spawnPos = new Vector3(
-                data.x * gridSize,
-                data.y * gridSize,
-                data.z * gridSize - 0.01f
-            );
-
-            GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity, mapRoot);
-
-            TileType tileType = tile.GetComponent<TileType>();
-            if (tileType != null)
-            {
-                tileType.tileDefinition = def;
-                tileType.gimmickType    = data.gimmickType;
-                tileType.gimmickID      = data.gimmickID;
-            }
-
-            spawnedTiles.Add(tile);
-        }
-
-        Debug.Log($"[MapLoader] ロード完了: Stage_{stageNumber}.json ({spawnedTiles.Count} タイル生成)", this);
-        ScheduleStageResetRecollect();
-    }
+  
 
     private void ScheduleStageResetRecollect()
     {
@@ -190,16 +133,114 @@ public class MapLoader : MonoBehaviour
         }
     }
 
+
+    private void SpawnTiles(MapData mapData)
+    {
+        foreach (TileData data in mapData.tiles)
+        {
+            // tileID に対応する定義を TileDatabase から検索する
+            TileDefinition def = tileDatabase.tiles.Find(t => t != null && t.tileID == data.tileID);
+            if (def == null)
+            {
+                Debug.LogWarning($"[MapLoader] tileID '{data.tileID}' が TileDatabase に見つかりません。スキップします。", this);
+                continue;
+            }
+
+            Vector3 spawnPos = new Vector3(
+                data.x * gridSize,
+                data.y * gridSize,
+                data.z * gridSize - 0.01f
+            );
+
+            GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity, mapRoot);
+
+            TileType tileType = tile.GetComponent<TileType>();
+            if (tileType != null)
+            {
+                tileType.tileDefinition = def;
+                tileType.gimmickType = data.gimmickType;
+                tileType.gimmickID = data.gimmickID;
+            }
+
+            spawnedTiles.Add(tile);
+        }
+
+        Debug.Log($"ロード完了: {spawnedTiles.Count}");
+        ScheduleStageResetRecollect();
+    }
+
+
+    private IEnumerator LoadMapCoroutine()
+    {
+        ClearSpawnedTiles();
+
+        Debug.Log($"StreamingAssetsPath = {Application.streamingAssetsPath}");
+        Debug.Log($"FolderPath = {FolderPath}");
+        Debug.Log($"FilePath = {FilePath}");
+
+        if (tileDatabase == null)
+        {
+            Debug.LogError("TileDatabase が未設定");
+            yield break;
+        }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+
+        string resourcePath = $"StreamingAssetsForUnityRoom/StreamingAssets/{mapFolder}/Stage_{stageNumber}";
+        Debug.Log(resourcePath);
+
+        TextAsset jsonFile = Resources.Load<TextAsset>($"StreamingAssetsForUnityRoom/StreamingAssets/{mapFolder}/Stage_{stageNumber}");
+        Debug.Log(jsonFile);
+        
+        if (jsonFile == null)
+        {
+            Debug.LogError("JSON見つからないぜよ");
+            yield break;
+        }
+        
+        string json = jsonFile.text;
+
+
+  
+#else
+
+        if (!File.Exists(FilePath))
+        {
+            Debug.LogWarning($"ファイルが見つかりません: {FilePath}");
+            yield break;
+        }
+
+        string json =
+            File.ReadAllText(FilePath);
+
+#endif
+
+        MapData mapData =
+            JsonUtility.FromJson<MapData>(json);
+
+        if (mapData == null)
+        {
+            Debug.LogError("JSON解析失敗");
+            yield break;
+        }
+
+        SpawnTiles(mapData);
+    }
+
+
     // ===== Editor 専用: Inspector 右クリック から呼び出し =====
 
     [ContextMenu("Load Map (Editor)")]
     private void LoadMapInEditor()
     {
-        if (mapRoot == null)
         {
-            mapRoot = transform;
+            if (mapRoot == null)
+            {
+                mapRoot = transform;
+            }
+
+            StartCoroutine(LoadMapCoroutine());
         }
-        LoadMap();
     }
 
     [ContextMenu("Clear Map (Editor)")]

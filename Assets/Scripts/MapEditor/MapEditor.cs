@@ -282,7 +282,6 @@ public class MapEditor : MonoBehaviour
             if (!canPlaceTile)
             {
                 PlaceTileFlagTimer--;
-                Debug.Log("a");
 
                 if (PlaceTileFlagTimer <= 0)
                 {
@@ -361,14 +360,6 @@ public class MapEditor : MonoBehaviour
         tile.transform.position = spawnpos;
         tile.transform.SetParent(mapRoot);
 
-        TileType tileType = tile.GetComponent<TileType>();
-
-        if (tileType != null)
-        {
-            tileType.tileDefinition = currentTile;
-        }
-
-        tileType.tileDefinition = currentTile;
     }
 
     void PlaceTile()
@@ -417,15 +408,25 @@ public class MapEditor : MonoBehaviour
             return;
         }
 
-        GameObject tile = Instantiate(currentTile.prefab);
+        GameObject tile = Instantiate(currentTile.prefab);　//いまここ
+        Debug.Log($"SpawnPosA={spawnPos}");
+        Debug.Log($"CreatedA={tile.transform.position}");
+        Debug.Log($"CreatedLocalA={tile.transform.localPosition}");
         tile.transform.position = spawnPos;
         tile.transform.SetParent(mapRoot);
+        Debug.Log($"SpawnPosB={spawnPos}");
+        Debug.Log($"CreatedB={tile.transform.position}");
+        Debug.Log($"CreatedLocalB={tile.transform.localPosition}");
+
+
+
         TileType tileType = tile.GetComponent<TileType>();
-        tileType.tileDefinition = currentTile;
+        tileType.Initialize(currentTile, TileGimmickTypeEnum.None, TileGimmickIDEnum.None);
 
         tiles.Add(gridPos, tile);
         RegisterChunk(gridPos, tile);
 
+       
 
     }
 
@@ -531,7 +532,7 @@ public class MapEditor : MonoBehaviour
 
             selecting = true;
             selectStart = GetGridPosition();
-            Debug.Log("範囲選択開始");
+            //Debug.Log("範囲選択開始");
 
            
         }
@@ -540,7 +541,7 @@ public class MapEditor : MonoBehaviour
         else if ((Input.GetKey(KeyCode.Space)) && selecting)
         {
             selectEnd = GetGridPosition();
-            Debug.Log("範囲選択中");
+            //Debug.Log("範囲選択中");
         }
 
         //離したらコピー
@@ -550,7 +551,7 @@ public class MapEditor : MonoBehaviour
 
             CopyTilesTemporary(selectStart, selectEnd);
 
-            Debug.Log("一時保存が完了しました");
+            //Debug.Log("一時保存が完了しました");
         }
 
 
@@ -681,11 +682,10 @@ public class MapEditor : MonoBehaviour
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
             tile.transform.SetParent(mapRoot);
-            TileType tileType = tile.GetComponent<TileType>();
 
-            tileType.tileDefinition = def;
-            tileType.gimmickType = data.gimmickType;
-            tileType.gimmickID = data.gimmickID;
+            TileType tileType = tile.GetComponent<TileType>();
+            tileType.Initialize( def, data.gimmickType, data.gimmickID);
+
 
             tiles.Add(gridPos, tile);
             RegisterChunk(gridPos, tile);
@@ -895,11 +895,9 @@ public class MapEditor : MonoBehaviour
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
             tile.transform.SetParent(mapRoot);
-            TileType tileType = tile.GetComponent<TileType>();
 
-            tileType.tileDefinition = def;
-            tileType.gimmickType = data.gimmickType;
-            tileType.gimmickID = data.gimmickID;
+            TileType tileType = tile.GetComponent<TileType>();
+            tileType.Initialize(def, data.gimmickType, data.gimmickID);
 
             tiles.Add(gridPos, tile);
             RegisterChunk(gridPos, tile);
@@ -1057,11 +1055,16 @@ public class MapEditor : MonoBehaviour
 
             GameObject tile = Instantiate(def.prefab, spawnPos, Quaternion.identity);
             tile.transform.SetParent(mapRoot);
-            TileType tileType = tile.GetComponent<TileType>();
 
-            tileType.tileDefinition = def;
-            tileType.gimmickType = data.gimmickType;
-            tileType.gimmickID = data.gimmickID;
+            TileType tileType = tile.GetComponent<TileType>();
+            tileType.Initialize(def, data.gimmickType, data.gimmickID);
+
+
+            Debug.Log($"SpawnPos={spawnPos}");
+            Debug.Log($"MapRoot={mapRoot.position}");
+            Debug.Log($"Tile Local={tile.transform.localPosition}");
+            Debug.Log($"Tile World={tile.transform.position}");
+
 
             tiles.Add(gridPos, tile);
             RegisterChunk(gridPos, tile);

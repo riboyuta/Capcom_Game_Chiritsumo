@@ -1,5 +1,21 @@
 # AGENTS.md
 
+## Encoding Note
+
+This file is encoded in UTF-8.
+
+Always read this file as UTF-8.
+
+For PowerShell, use:
+
+```powershell
+Get-Content -Raw -Encoding UTF8 -LiteralPath AGENTS.md
+```
+
+When editing this file or any file containing Japanese text, preserve UTF-8 encoding.
+
+
+
 ## Project
 
 This is a Unity game project.
@@ -35,11 +51,13 @@ Follow existing project patterns before introducing new abstractions, naming con
 
 ## Active Mode Declaration
 
-At the start of every response, state the active mode:
+For Research Mode, Edit Mode, and Review Mode work, state the active mode at the start of the response:
 
 * Active mode: Research
 * Active mode: Edit
 * Active mode: Review
+
+For small code-understanding, terminology, syntax, or explanation questions covered by the Small Question Rule, do not need to state the active mode.
 
 If the mode is ambiguous, choose Research Mode and state why.
 
@@ -159,17 +177,16 @@ Review output should include:
 
 ## Core Workflow
 
-For heavy features:
+For heavy gameplay features, work in this order:
 
-1. Read the related files first.
-2. Do not edit files during the research step.
-3. Explain the current responsibility structure before editing.
-4. Implement one Event / Slice at a time.
-5. Avoid completing a large feature in one uncontrolled change.
-6. After editing, summarize changed files, behavior changes, risks, and manual test steps.
-7. After editing, inspect the diff when possible.
-8. Do not claim behavior was verified unless it was actually verified.
-9. Confirm that the final implementation is explainable by the project owner.
+1. Research related files first.
+2. Explain current responsibilities before editing.
+3. Implement one Event / Slice at a time.
+4. Keep the diff small and reviewable.
+5. Inspect the diff when possible.
+6. Report changed behavior, risks, and manual test steps.
+7. Do not claim verification unless it was actually performed.
+8. Confirm that the final implementation is explainable by the project owner.
 
 Heavy features include, but are not limited to:
 
@@ -274,12 +291,6 @@ Do not move scripts between folders unless explicitly requested.
 * If a field is exposed in the Inspector but does not need `[Header]` and `[Tooltip]`, explain why it is intentionally exempt.
 * Do not rename serialized fields only to improve Inspector wording.
 * Do not add noisy headers or tooltips to purely internal fields that are not intended to be configured in the Unity Editor.
-* When adding or modifying non-trivial C# gameplay code, add concise Japanese comments that explain responsibility, intent, side effects, or important assumptions.
-* Prefer comments that explain why the code exists or what responsibility it owns, not line-by-line explanations of obvious syntax.
-* For Unity gameplay scripts, use Japanese comments when they help explain serialized settings, state transitions, lifecycle methods, collision conditions, time control, camera behavior, or game feel behavior.
-* Do not add noisy comments to self-explanatory code.
-* Do not leave commented-out old code unless explicitly requested.
-* Do not paste AI reasoning logs, Codex logs, or raw conversation text into code comments.
 * After implementation, the project owner should be able to explain the new behavior from names, Inspector headers/tooltips, and concise Japanese comments.
 * Do not introduce singletons, static mutable state, or global state without explaining why.
 * Preserve existing public APIs unless explicitly requested.
@@ -290,6 +301,152 @@ Do not move scripts between folders unless explicitly requested.
 * Avoid adding Update-loop work that scales poorly without explaining the cost.
 * Do not change MonoBehaviour lifecycle methods such as `Awake`, `Start`, `Update`, `FixedUpdate`, `OnEnable`, or `OnDisable` without considering existing execution order and side effects.
 * Keep gameplay logic explainable by the project owner.
+
+---
+
+## ResolveReferences Rule
+
+After generating or editing a MonoBehaviour, gather runtime reference setup into `ResolveReferences()` when the class needs reference preparation.
+
+Use `ResolveReferences()` for:
+
+* `GetComponent`
+* `GetComponentInChildren`
+* `GetComponentsInChildren`
+* assigning fallback child references
+* simple Component setup such as `Collider.isTrigger`
+* Manager lookup only when the dependency or trade-off is explained
+
+Call `ResolveReferences()` from `Awake()` before initialization that uses those references.
+
+Place this comment immediately above the method:
+
+```csharp
+// 実行時に必要な参照を取得し、使用前の状態に整える
+private void ResolveReferences()
+{
+}
+```
+---
+
+## Class Responsibility Comment Rule
+
+When creating a new C# class, add a short Japanese `///` responsibility comment immediately above the class declaration.
+
+Use 1-3 lines to describe:
+
+* what the class represents
+* what responsibility it owns
+* what it delegates to other classes, if important
+
+For very small classes, one line is enough.
+
+Place the comment below class-level attributes and immediately above the class declaration.
+
+Keep the comment as a class title, not a method-by-method explanation.
+
+Example:
+
+```csharp
+/// 収集アイテム単体を表すコンポーネント
+/// Playerとの接触を検知し、CollectibleSessionManagerへ仮取得を依頼する
+/// Managerから渡された取得状態に応じて、見た目と当たり判定を切り替える
+public sealed class CollectibleItem : MonoBehaviour
+{
+}
+```
+---
+
+## Class Member Ordering Rule
+
+When creating a new C# class, organize members in the preferred order below.
+
+When modifying an existing class, apply this order only to the touched class if it keeps the diff small and reviewable.
+
+Do not reorder unrelated existing code only to satisfy this rule.
+
+### MonoBehaviour order
+
+1. Fields
+2. Unity Lifecycle
+3. Public API
+4. Event Handlers
+5. Main Logic
+6. Query Helpers
+7. Internal Helpers
+
+Use these section headers when the section exists:
+
+```csharp
+// -----------------------------------------------------------------------------
+// Fields
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Unity Lifecycle
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Public API
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Event Handlers
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Main Logic
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Query Helpers
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Internal Helpers
+// -----------------------------------------------------------------------------
+```
+
+### Plain C# class order
+
+1. Fields
+2. Constructor
+3. Public API
+4. Main Logic
+5. Query Helpers
+6. Internal Helpers
+
+Use these section headers when the section exists:
+
+```csharp
+// -----------------------------------------------------------------------------
+// Fields
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Constructor
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Public API
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Main Logic
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Query Helpers
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Internal Helpers
+// -----------------------------------------------------------------------------
+```
+
+Do not add empty section headers.
+
+If a class is very small, section headers may be omitted when they add more noise than clarity.
 
 ---
 
@@ -410,24 +567,6 @@ If the implementation is too complex for the project owner to explain, stop and 
 
 ---
 
-## AI Usage and Documentation Rule
-
-Do not paste AI conversation logs, Codex reasoning logs, or raw research transcripts into code comments, Issues, PR descriptions, or documentation.
-
-When preparing GitHub-facing text, summarize the result as the project owner's design decision.
-
-Good documentation should explain:
-
-* What was changed
-* Why the change was needed
-* What alternatives or risks were considered
-* How the behavior was verified
-* What remains as a future task
-
-Do not write documentation that makes the change look like it was blindly generated by AI.
-
----
-
 ## Output Style
 
 Keep reports concise and action-oriented.
@@ -442,43 +581,60 @@ When preparing GitHub-facing text, write it as a project decision, not as an AI 
 
 ---
 
-## Reporting Format
+## Small Question Rule
 
-### Before editing
+For small code-understanding, terminology, syntax, or explanation questions, answer directly and briefly.
 
-Report:
+Do not use the full Research / Edit / Review report format for small questions.
 
-* Active mode
-* Files inspected
-* Current responsibility structure
-* Files planned to modify
-* Risks or assumptions
+Do not inspect unrelated files or suggest implementation plans unless the user asks for them.
 
-### After editing
+Do not edit files unless the user explicitly asks to modify code.
 
-Report:
+---
 
-* Active mode
-* Changed files
-* What changed
-* Why it changed
-* Possible risks
-* Manual test steps in Unity Editor
-* Any required Inspector setup
-* Tests or verification actually performed
-* Tests or verification not performed
-* Explainability check
+---
 
-### During review
+## Log Output Rule
 
-Report:
+When adding or modifying runtime logs such as `Debug.Log`, `Debug.LogWarning`, or `Debug.LogError`:
 
-* Active mode
-* Diff summary
-* Event / Slice completion judgment
-* Responsibility boundary check
-* Unity-specific risks
-* Unrelated or suspicious changes
-* Manual verification checklist
-* Recommended follow-up actions
-* Explainability check
+* Use English log tags.
+* Write the natural-language message body of logs in Japanese by default.
+* Do not write English natural-language log messages.
+* Keep technical identifiers in their exact original spelling, such as variable names, method names, class names, enum values, IDs, asset names, tag names, system names, API names, or existing project-defined terms.
+* Do not translate, paraphrase, or rename technical identifiers into Japanese.
+* When a log refers to a specific script, component, class, or system, use its exact code or project name and write the surrounding explanation in Japanese.
+* Use a consistent tag format such as `[Collectible]`, `[PlayerState]`, `[RoomTransition]`, or `[Camera]`.
+* The tag should identify the system, feature, or responsibility that owns the log.
+* Keep log messages short and easy to understand.
+* If extra explanation is needed, add a concise Japanese code comment near the logic instead of making the log message too long.
+* Do not use Japanese log tags.
+* Do not write long explanation-style logs.
+
+Good examples:
+
+```csharp
+Debug.Log("[Collectible] 仮取得状態に追加しました");
+Debug.Log("[Collectible] 死亡したため仮取得状態を破棄しました");
+Debug.Log("[Collectible] 部屋突破により収集状態を保存しました");
+Debug.Log($"[Collectible] 保存済みIDに追加しました: {stageId}/{roomId}/{localId}");
+Debug.LogWarning("[Collectible] SessionManager が見つかりません");
+Debug.LogWarning($"[Collectible] localId が未設定です: {gameObject.name}");
+```
+
+Bad examples:
+
+```csharp
+Debug.Log("[Collectible] Temporary collected");
+Debug.Log("[Collectible] Pending Clear by Death");
+Debug.LogWarning("[Collectible] Session manager not found");
+Debug.LogWarning("[Collectible] セッション管理コンポーネントが見つかりません");
+```
+
+Japanese comments may be used to explain intent:
+
+```csharp
+// 死亡時は仮取得を破棄し、次の挑戦で再取得できる状態に戻す。
+Debug.Log("[Collectible] 死亡したため仮取得状態を破棄しました");
+```

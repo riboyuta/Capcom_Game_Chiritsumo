@@ -532,9 +532,10 @@ MonoBehaviour:
   - {fileID: 6238066904070751030}
   - {fileID: 6139632670625560805}
   - {fileID: 9157783388480228803}
-  speedMultiplierX: 0.15
-  speedMultiplierY: 0.1
+  speedMultiplierX: 0.018
+  speedMultiplierY: 0.018
   gridSize: 3
+  overlap: 0.03
 --- !u!1 &3849503295552574121
 GameObject:
   m_ObjectHideFlags: 0
