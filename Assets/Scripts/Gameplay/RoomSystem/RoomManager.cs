@@ -156,6 +156,12 @@ public sealed class RoomManager : MonoBehaviour
             return;
         }
 
+        // 死亡確定後に境界外へ動いても、部屋入室由来のcheckpoint更新へ進ませない。
+        if (playerController.IsDeadState || playerController.IsDeathSequencePlaying)
+        {
+            return;
+        }
+
         // 現在部屋の境界情報が無い場合は警告して処理を止める。
         if (currentRoom.RoomBounds == null)
         {
