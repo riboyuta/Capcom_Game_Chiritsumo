@@ -6,7 +6,7 @@ public class TileType : MonoBehaviour
 
     public TileGimmickTypeEnum gimmickType = TileGimmickTypeEnum.None;
     public TileGimmickIDEnum gimmickID = TileGimmickIDEnum.None;
-
+    public TileCollisionBuildType tileCollisionBuildType = TileCollisionBuildType.None;
 
     public void Initialize(TileDefinition definition, TileGimmickTypeEnum gimmickType, TileGimmickIDEnum gimmickID)
     {
@@ -54,6 +54,13 @@ public enum TileGimmickIDEnum
     ID_18,
     ID_19,
     ID_20
+}
+
+public enum TileCollisionBuildType
+{
+    None,
+    MergeSolid,
+    Individual
 }
 
 
